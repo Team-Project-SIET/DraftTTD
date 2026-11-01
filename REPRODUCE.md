@@ -142,3 +142,129 @@ sweep/receipt classes over those retained page bytes (see
 [the completion record](docs/p08-classification-v2-native-capture-completion.md)),
 not any new launch. Native capture runs remain one-shot authorized events with
 consumed identities; never re-run them from this file.
+
+## 2026-10-31 addendum — D5-CORRIDOR-EXTENSION-3 offline validation (checked)
+
+The terrain-survey pipeline's documented offline command of record (no launch,
+no AdminPort, no candidate lifecycle; exact result 2026-10-31: 130 passed,
+1 skipped, 0 failed, 0 errors; the skip is the `typeof` note at
+`tests/test_corridor_terrain_survey.py:346`):
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 .venv/bin/python -m pytest \
+  tests/test_secure_admin.py \
+  tests/test_corridor_terrain_survey.py \
+  tests/test_corridor_terrain_survey_native.py \
+  -q -p no:cacheprovider -rs
+```
+
+Read-only status proves on retained D5-CORRIDOR-EXTENSION-3 candidates (never
+a reproduction of any consumed attempt; candidate-2 is stale-by-source-drift
+and never-consumed, candidate-3 is consumed COMPLETE — `SURVEY_COMPLETION_VERIFIED`):
+
+```bash
+.venv/bin/python -m app.simulation.openttd.proof.corridor_terrain_survey_native \
+  verify artifacts/experiments/d5-corridor-extension-3-survey-native-candidate-2
+
+.venv/bin/python -m app.simulation.openttd.proof.corridor_terrain_survey_native \
+  verify artifacts/experiments/d5-corridor-extension-3-survey-native-candidate-3
+```
+
+`PRELAUNCH`/`preflight`/`run` are staging or native-execution entry points:
+run them only under the exact staging/approval gates recorded in phase-a
+record §11.4. A candidate whose staged bytes verify is one operator signature
+and one launch approval away from execution — neither is granted by a
+documentation task.
+
+## 2026-11-01 addendum — D5 A1 v2 offline implementation validation (checked)
+
+The corridor-extension A1 implementation of record (phase-a §14; no launch,
+no AdminPort, no staging, no claim). All five offline suites in one run,
+exact result 2026-11-01: 240 passed, 0 failed (exit 0):
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 .venv/bin/python -m pytest \
+  tests/test_corridor_extension.py \
+  tests/test_corridor_extension_native.py \
+  tests/test_corridor_construction_native.py \
+  tests/test_corridor_terrain_survey_native.py \
+  tests/test_corridor_construction.py \
+  -q -p no:cacheprovider -rs
+```
+
+Offline facts re-derivable in a plain interpreter (values of record:
+schedule kinds full/road/spur/station, 31-tile witness ending
+50864, 50863, 50862, plan digest
+aa88bc99fb80056423b4d1fdc40994abf66aff3afffeb51c710e163ba5447535,
+budgets 13 planned / 18-cap, attempt D5-CORRIDOR-EXTENSION-3,
+FUNDS_PIN − Σ(454,71,143,307) = 491174):
+
+```bash
+.venv/bin/python - <<'EOF'
+from app.simulation.openttd.proof import corridor_extension_native as e
+from app.simulation.openttd.proof.corridor_construction_native import plan_digest_of
+sched = e.extension_schedule()
+print([x["kind"] for x in sched], e.PINNED_WITNESS[-3:], len(e.PINNED_WITNESS))
+print(plan_digest_of(sched), e.PLANNED_EXTENSION_REQUESTS, e.EXTENSION_REQUEST_BUDGET)
+print(e.EXTENSION_ATTEMPT, e.FUNDS_PIN - sum((454, 71, 143, 307)))
+print(e.extension_schedule_v1())
+EOF
+```
+
+Read-only consumed-record proof (never a reproduction of a consumed
+attempt; candidate-2 is permanent consumed history and stays byte-untouched;
+exact results: v1 re-derivation digest match True and schedule equal,
+live replay ATTEMPT_FAILED_EVIDENCE_PRESERVED, result_status FAILED):
+
+```bash
+.venv/bin/python - <<'EOF'
+import json
+from pathlib import Path
+from app.simulation.openttd.proof import corridor_extension_native as e
+from app.simulation.openttd.proof.corridor_construction_native import plan_digest_of
+d = Path("artifacts/experiments/d5-corridor-extension-native-candidate-2")
+plan = json.loads((d / "PRELAUNCH.json").read_text())["plan_policy"]
+sched = e._staged_extension_schedule(plan)
+print(plan["plan_digest"] == plan_digest_of(sched), plan["schedule"] == sched)
+print(e.verify_extension_attempt(d)["verification"])
+EOF
+```
+
+The extension module's `prepare_extension_candidate`/`extension_preflight`
+/`run` are staging or native-execution entry points: run them only under the
+staging/approval gates of phase-a record §14.5. The staged A1 record
+(dated 2026-11-01, checked): `artifacts/experiments/d5-corridor-extension-native-candidate-3/`
+seal `404d42d9fa1e113542e74655858f6bc669407d611057eec0c036612ddfa6acd8`,
+payload digest `c511dd38a068c1cef5539d3cc422819ef76d73842c42e4d1601b4199debdf94f`,
+Gate-C Option-1 signed (2026-11-01, phase-a §16/E43):
+`AUTHORIZATION.json` sha `371a524b85add4347a991478909a04da3e7dac8b62b2636b6c7694b32bebe200`,
+`verify_authorization` PASS under the pinned anchor
+`sha256-ed25519-public-key:cbb63ff58f17f13df3e1be0735fad18497e3a0c6ad6b5dd55491d708ae40c614`,
+`PREFLIGHT PASS`; read-only `verify` →
+`AUTHORIZATION_UNVERIFIED`/`CLAIM_ABSENT` (authorized, never consumed)
+and standalone `preflight` → `PREFLIGHT PASS` remain re-runnable
+read-only proofs. Staging and signing are complete; the launch was granted and executed
+exactly once (2026-11-01, phase-a §17/E44): `run` → exit 0,
+`NATIVE_EXTENSION_VERIFIED`, claim consumed once, all four ops built
+with native-quote-verified costs (spur £299, station £307,
+`DISTINCT_NEW_STATION`), route `ROUTE_VERIFIED` 30/30 pairs, funds
+£490,257, authoritative `after.sav` sha
+`3748e00ce57bcb076466f50cac3776c202b4fd130d6c6071935e9d43e45420bd`,
+replay `verify` → `EXTENSION_COMPLETION_VERIFIED` (exit 0), certified
+cleanup all-true, manifest 0 mismatches. Read-only reproduction of the
+consumed attempt (never a re-run):
+
+```bash
+.venv/bin/python - <<'EOF'
+import json
+from pathlib import Path
+from app.simulation.openttd.proof import corridor_extension_native as e
+from app.simulation.openttd.proof.operator_authorization import verify_authorization
+from app.simulation.openttd.proof.harness import sha256
+d = Path("artifacts/experiments/d5-corridor-extension-native-candidate-3")
+metadata = json.loads((d / "PRELAUNCH.json").read_text())
+v = verify_authorization(d, metadata, sha256(d / "PRELAUNCH.json"))
+print(v.authorization_sha256, v.operator_key_identity)
+print(e.verify_extension_attempt(d)["verification"])
+EOF
+```

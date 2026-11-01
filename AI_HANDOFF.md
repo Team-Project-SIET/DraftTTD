@@ -58,6 +58,9 @@ acceptance; FAILED is an immutable consumed outcome; UNKNOWN means missing facts
 | Attempt 19 | Five economy years recorded, original native terminal FAILED at finalization (`company-policy.json` already existed). Separate offline recovery valid within derived scope; never relabel original terminal. E3. |
 | Random World implementation | Controlled/offline implementation available in dirty tree; native generation/discovery/GUI verified in Seed 17, native service execution remains unverified. E4/E5. |
 | Tile Classification V2 capture | NATIVE VERIFIED capture completed 2026-10-18 (90/90 pages, 450/450 tiles, schema 2, staged AI + GameScript startup, zero script deaths, 0 mutations, cleanup PASS); SOURCE_SAVE_FUSION verdict **REJECTED** — 83 projected-flag disagreements, nothing fused; the 19 historically UNKNOWN tiles were observed CLEAR in the fresh census and stay UNKNOWN in the retained assessment; P08 remains `INCOMPLETE_TILE_CLASSIFICATION`. E16. |
+| D4 corridor construction | Native road + station construction PROVEN for the reviewed v3 scope (candidate-5, `RECEIPT_VERIFIED`, authoritative after-save `a81ac836…ef261`; £492,149 funds pin). E35. |
+| D5 corridor freight | ATTEMPTED, NOT DELIVERED: `D5-FREIGHT-1` consumed with the native delivery-stop cargo-1 acceptance 0 finding of record; no freight delivery, no OPEX/profit fact. M8 optimizer route-selection NOT demonstrated (no competing executable route). E36. |
+| D5 corridor extension | A0 SURVEY COMPLETE — VERIFIED NATIVE (E40); A1 NATIVE COMPLETE, VERIFIED (`D5-CORRIDOR-EXTENSION-3` consumed, `EXTENSION_COMPLETION_VERIFIED`, after-save `3748e00c…5420bd`, funds £490,257; E42–E44, phase-a §15–§17). **POST-A1 CENSUS OFFLINE IMPLEMENTATION COMPLETE (E46, design §8)**: protocol-6 retargeted to `D5-ACCEPT-SURVEY-2` — version selector `SURVEY_SCHEDULE_VERSION = 2` + versioned plan contract in the wire module (v1 plan digest `2d2e47b2…02e7` byte-preserved, consumed candidate-1 still replays `SURVEY_COMPLETION_VERIFIED` through the production verifier), native versioning on the extension precedent (attempt map, schema map, prerequisite pins with v2 = consumed A1 candidate-3 end-to-end re-verified), 4-exchange census (radius-00, accept-00 control 50351 = 0, accept-01 stop 50862, prod-00), B1 GameScript re-bake (4 rows, `ACCEPT_CANDIDATES [50862]`, no handler-logic change), suites green (65 + four-suite 148/1-skip + freight 42 + A1 240-baseline). **CENSUS FRESH CANDIDATE STAGED, READY-FOR-GATE-C (E47, design §9)**: `d5-accept-survey-native-candidate-2/` staged offline via production `prepare` → `PRELAUNCH PASS`, read-only `preflight` → `PREFLIGHT PASS`, `verify` → `AUTHORIZATION_UNVERIFIED`/`CLAIM_ABSENT` (exit 1); seal `237a4f84…37daa4`, v2 plan digest `67fce856…80be2`, schedule digest `1222db02…389d`, authorization payload digest `b1f3e209…00bd`, world = A1 after-save `3748e00c…5420bd` (staged source.sav verified), hypotheses {50351: 0, 50862: 8}, funds 490,257 proven from A1 route receipts, frozen closure 3,491 entries, no authorization/claim/journal anywhere; independent fresh-context prerequisite inspection `PREREQUISITE VERIFIED` and staged-byte review `READY-FOR-GATE-C` (0 blockers/majors/minors). **GATE C OPTION-1 SIGNED (E48, design §10)**: `AUTHORIZATION.json` written exactly once after full identity re-validation and clean refusal gates; record sha == `authorization_sha256` `d87c2c450e192e4341f8bf4ac6a6ff553194ac0134f8353293bff42250bf4ae3`, `operator_key_identity` `sha256-ed25519-public-key:cbb63ff5…c614`, payload binds attempt `D5-ACCEPT-SURVEY-2`/milestone `D5-ACCEPT-SURVEY`/seal `237a4f84…37daa4`; seed env-only and cleared after final use; two earlier internal script invocations refused cleanly before any write (recorded in §10); post-signing `verify` → `AUTHORIZATION_UNVERIFIED`/`CLAIM_ABSENT` (exit 1), `preflight` → `PREFLIGHT PASS`, exactly one new file in the candidate root; all consumed precedent records re-sealed byte-identical. **Nothing claimed, launched or executed for the census**; remaining gates: the separate native launch approval, then the census report — each its own operator gate. Freight delivery and M8 route-selection proof remain separate future attempts; wheel reachability, road-bit directions and pathfinding stay UNKNOWN (census proves acceptance only, never traversal). E37–E47, phase-a record §10–§17, [design doc](docs/d5-post-a1-acceptance-survey-design.md) §1–§9. |
 | Seed 17 smoke | FAILED under old capture-area gate; no service construction/delivery; P05 NOT_RUN. E4. |
 | Larger random capture | Controlled/offline correction, no new native run: 512 fully observed tiles per rectangle; fixed demo stays 256; road path stays 47. E5. |
 | Fourth vehicle / matched experiments | Native intervention and matched A/B outcome not established by reload-only Q3. Retain as future scoped work. |
@@ -187,6 +190,69 @@ the 19 fresh-CLEAR/retained-UNKNOWN tiles and the resulting feasibility
 statement — which needs its own reviewed record; anything beyond offline
 analysis requires fresh, separately authorized frozen inputs. Stable demo
 verification and canonical engineering do not remove the missing random facts.
+
+Next for D5 (per the 2026-10-31 record): D5-CORRIDOR-EXTENSION-3 **Phase A-A0
+is COMPLETE — VERIFIED NATIVE (E40)**: candidate-3 `D5CE3-SURVEY-3` was
+launched exactly once under all operator gates, the one-shot claim was
+consumed, the replay verdict is `SURVEY_COMPLETION_VERIFIED`, cleanup is
+certified, and the ten-exchange survey observed delivery-stop tile `50862`
+at 8/8 cargo-1 acceptance (control `50351` 0/8). The candidate is consumed
+history: never re-run, re-signed or re-claimed; candidate-2 (stale,
+never-consumed) stays preserved untouched. The next step is **A1
+(corridor spur + bay-truck-stop construction, phase-a §1 solver work)**, a
+separate native attempt: its **v2 design is now carried offline (2026-11-01,
+phase-a §14, E41)** — the postmortem §3 four-op schedule (dedicated `spur`
+road op 50864→50863 then the bay stop 50862 fronting 50863 with
+`STATION_NEW`) is implemented in the shared protocol-4 contract, the
+extension staging pipeline (`EXTENSION_SCHEDULE_VERSION = 2`, attempt
+`D5-CORRIDOR-EXTENSION-3`) and the GameScript handler, validated by the
+five focused suites (240 tests) plus a read-only replay of the consumed v1
+candidate-2 that still returns `ATTEMPT_FAILED_EVIDENCE_PRESERVED`. What
+remains for A1 is exactly the gated sequence: a fresh never-consumed
+candidate staging (`d5-corridor-extension-native-candidate-3`), PRELAUNCH
+plus independent review, Gate C Option-1 signing and a separate explicit
+launch approval. All of the signing-side work is now done (2026-11-01,
+phase-a §16, E43): the candidate is staged, reviewed (READY-FOR-GATE-C)
+and Gate-C-signed — `AUTHORIZATION.json` sha
+`371a524b85add4347a991478909a04da3e7dac8b62b2636b6c7694b32bebe200`
+verified under the pinned production anchor (operator identity
+`sha256-ed25519-public-key:cbb63ff5…40c614`) over seal
+`404d42d9…6acd8` / payload `c511dd38…f94f`; `PREFLIGHT PASS`; claim and
+launch-consumed markers absent; `verify` →
+`AUTHORIZATION_UNVERIFIED`/`CLAIM_ABSENT`. The remaining gate for A1 is
+a separate explicit operator launch approval, then a single native
+attempt through the remediated lifecycle. The attempt has now been
+granted and executed exactly once (2026-11-01, phase-a §17, E44):
+exit 0, `NATIVE_EXTENSION_VERIFIED` — all four v2 ops built and
+independently confirmed (spur 50864→50863 and bay stop 50862 fronting
+50863 included), route `ROUTE_VERIFIED` 30/30 pairs with funds read
+natively £490,257, replay `EXTENSION_COMPLETION_VERIFIED`, certified
+cleanup all-true, manifest 0 mismatches, claim consumed once. The
+remaining D5 A1 gate is the cargo-1 acceptance census on this
+attempt's after-save (a separate read-only survey session, required
+before any freight order or vehicle purchase); freight delivery and
+M8 route selection remain unproven and are never covered by A1. The
+census is now designed offline (2026-11-01,
+[docs/d5-post-a1-acceptance-survey-design.md](docs/d5-post-a1-acceptance-survey-design.md),
+E45): a versioned `D5-ACCEPT-SURVEY-2` retarget of the protocol-6
+survey pipeline bound to the consumed A1 candidate-3 after-save
+`3748e00c…5420bd`, 4-exchange census (radius 3 first, control 50351
+= 0, stop 50862 = 8/8, prod 104), zero mutation, replay
+`SURVEY_COMPLETION_VERIFIED`; independent review applied (v2
+GameScript pin-table re-bake required; plan contract versioned).
+**The implementation of that design is complete offline (2026-11-01,
+E46, design §8), the fresh census candidate
+`d5-accept-survey-native-candidate-2/` is STAGED, READY-FOR-GATE-C
+(2026-11-01, E47, design §9: seal `237a4f84…37daa4`), and Gate C
+Option-1 signing is EXECUTED (2026-11-01, E48, design §10:
+`AUTHORIZATION.json` record sha `d87c2c45…4ae3`, verified under the
+production anchor; signature only — no claim, no launch).** The
+signature is a prerequisite, not approval: the separate explicit
+native launch approval is the next operator gate; freight delivery
+and M8 stay unproven. Freight
+delivery and M8 route-selection proof remain separate, unsatisfied D5
+requirements and are never covered by the A0 survey. CONTEXT.md is not
+edited here: its bytes stay pinned by the E26 authority record.
 
 ## Shared language for continuation
 

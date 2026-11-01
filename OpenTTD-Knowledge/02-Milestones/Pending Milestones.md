@@ -2,7 +2,7 @@
 title: "Pending Milestones"
 type: milestone
 status: current
-updated: 2026-10-22
+updated: 2026-10-26
 tags:
   - openttd
   - milestone
@@ -15,7 +15,12 @@ Nothing here is authorized. Pending ≠ prepared ≠ verified:
 [[07-Reference/Status Definitions]]. Confirm live state per
 [[05-Planning/Task Board]] before acting.
 
-## D4 — Native road & station construction → ATTEMPT CONSUMED, `INCOMPLETE` (E21, 2026-10-22)
+## D4 — Native road & station construction → closed 2026-10-26 as COMPLETE (native; E35; history E21, E28, E32, E33)
+
+D4 is no longer pending: identity `D4-CORRIDOR-5` completed the reviewed
+v3 schedule natively on 2026-10-26 (close-out at the end of this section;
+scoping and limits in [[02-Milestones/Completed Milestones]]). The material
+below is the retained history of identities 1–4 and stays exactly as recorded.
 
 The staged candidate `D4-CORRIDOR-1` was consumed by its ONE operator-authorized launch
 2026-10-22; the ceremony ended `PHASE_HALTED_PREFIX_PRESERVED` with `verified: false`:
@@ -35,11 +40,172 @@ The staged candidate `D4-CORRIDOR-1` was consumed by its ONE operator-authorized
   gated on the staging-time decision in [[05-Planning/Blockers]] §8. None staged or
   authorized. Full record: `docs/handoff/2026-10-22/d4-corridor-native-candidate-1-outcome.md`.
 
-## D5+ — Vehicle purchase, orders, delivery on the corridor — NOT DESIGNED
+**Restage decision (2026-10-22, offline, E22/ADR-011):** Option C was chosen and
+implemented offline — the fresh schedule stages 8 ops (run A; run-B segments
+45999→48047 and 48303→50095 with the separate interior join 48047↔48303 after
+both; unchanged corner join, stops and depot) inside the **unchanged £2,000
+per-operation ceiling**, with 25 planned exchanges (budget 31) and a
+schedule-version selector keeping the consumed attempt's replay re-derivable.
+This is controlled offline work: **no native quote, command, receipt or
+authorization exists for the new schedule, so D4 remains INCOMPLETE (native)** —
+the historical £2,549/£785 quotes are controlled references only, and the
+worst-case theoretical exposure of 8 × £2,000 = £16,000 (if every op quoted the
+ceiling) is an exposure bound, never a budget. Recorded in
+`docs/handoff/2026-10-22/d4-corridor-option-c-implementation.md`. **Review outcome
+(2026-10-22, offline, E23):** the independent offline review of that implementation
+returned **`PASS WITH CONCERNS`** — the implementation and its 55 controlled tests are
+review-cleared for fresh-candidate preparation via the existing authorization process;
+two non-blocking code observations and one documentation defect (fixed during the
+review) are recorded in
+`docs/handoff/2026-10-22/d4-corridor-option-c-implementation-review.md`. **Staging
+outcome (2026-10-22, offline, E24):** the fresh candidate **`D4-CORRIDOR-2`** is
+staged at `artifacts/experiments/d4-corridor-native-candidate-2/` —
+`PRELAUNCH PASS` + standalone read-only `PREFLIGHT PASS`, seal
+`de0e16f7…04f00`, plan digest `2a30e950…cabb3a` (v2, eight ops), 25 planned
+exchanges / budget 31, source world byte-bound to the D3 after-save
+`fbebef54…d59e`; the attempt identity was operator-approved before staging
+(module constant moved from the consumed `D4-CORRIDOR-1` to the never-consumed
+`D4-CORRIDOR-2`), with the focused suites re-run 55/55 PASS afterward.
+**Read-only payload verification (2026-10-22):** the staged authorization
+payload was rebuilt offline and matched its staged digest
+`e85ea64b…52ff17` (full
+`e85ea64ba8ec15c383e913a72df7d1e4bd13569496a83d297bf7ee2c1952ff17`,
+2,393 bytes), the frozen closure hash-verifying 3,447/3,447 (0 missing,
+0 mismatches) — verification only: nothing signed, no claim, no launch.
+Record:
+`docs/handoff/2026-10-22/d4-corridor-native-candidate-2-payload-verification.md`.
+At that stage the remaining requirement was ONE fresh explicit operator
+authorization — later issued for candidate-3 (E28). D4 remains INCOMPLETE
+(native), and no native quote for the eight-op schedule existed then. Staging
+record:
+`docs/handoff/2026-10-22/d4-corridor-native-candidate-2-preparation.md`.
 
-After D4, separately scoped milestones would put a vehicle on the built corridor. No
-candidate exists; nothing here is prepared. Road/station admission does not imply
-purchase/run/verify capability.
+**2026-10-25 restage (E27):** candidate-2's frozen closure was proved stale
+against the accepted ADR-012/ADR-013 source edits (read-only preflight fails
+`verify_freeze`; never consumed, not edited). Fresh candidate
+**`D4-CORRIDOR-3`** is staged at
+`artifacts/experiments/d4-corridor-native-candidate-3/`: `PRELAUNCH PASS` +
+read-only `PREFLIGHT PASS`, seal `8cc8c1f7…7d24`, plan digest
+`2a30e950…cabb3a`, payload `e1163d09…068d`, 3,448-entry frozen closure,
+focused suites 55/55 PASS. At that stage ONE fresh explicit operator
+authorization was required; it was then issued and the candidate was consumed
+(E28). D4 remains INCOMPLETE (native). Record:
+`docs/handoff/2026-10-25/d4-corridor-native-candidate-3-preparation.md`.
+
+**2026-10-25 native outcome (E28):** the operator authorized signing, then the
+one-shot native run. `D4-CORRIDOR-3` was consumed exactly once after all
+pre-run gates passed. `op-00`–`op-02` built and read back (£785 + £1,398 +
+£1,151; funds £496,543 → £493,209); `op-03` (interior join `48047↔48303`) was
+refused at admission as `NOT_BUILDABLE` with cost 0 and `pairs_ok 1`, so the
+runner halted with `ValueError: native READY admission with positive tested cost
+required`. `op-04`–`op-07` and the route read never executed. The result is
+`PARTIAL_EXECUTION_EVIDENCE`, `verified: false`, `status: FAILED_CLEANUP`;
+`after-diagnostic.sav` (`b52d0ecf…970b`) is not an authoritative save, no
+`after.sav`/`receipt.json` exists, and read-only replay refuses `halted attempt
+cleanup incomplete` (a TCP state-5 observation prevented workspace/credential
+disposal; no listener remains). Manifest 48/48 OK. No retry, re-sign or
+replacement candidate. **D4 remains INCOMPLETE (native).** Record:
+`docs/handoff/2026-10-25/d4-corridor-native-candidate-3-outcome.md`.
+
+**2026-10-25 cleanup remediation and fresh candidate-4 (E30/E31):** the reported
+candidate-3 credential removal and workspace disposal were verified read-only:
+`credential_removed: true`, `workspace_disposed: true`, workspace absent,
+`isolated/` empty, no candidate-3 secret/config file or remaining process. The
+historical `verification_error`, missing `sockets_closed`, `FAILED_CLEANUP`
+result and replay refusal are unchanged, and the 48/48 manifest now covers the
+remediated `cleanup.json` (earlier manifest bytes not retained). Separately,
+`D4-CORRIDOR-4` was staged from the reviewed v3 schedule: seal
+`88cd1ecc…fd22c3`, plan digest `b5b472ff…2283a78`, payload `4037c5d8…487c7f`,
+7 ops / 22 planned / cap 28 / £2,000 per-op, no redundant interior join, corner
+`45743↔45999` retained, source world `fbebef54…d59e`; focused suites 55/55 PASS,
+`PRELAUNCH PASS` + `PREFLIGHT PASS`. **D4 remains INCOMPLETE (native).** Records:
+`docs/handoff/2026-10-25/d4-corridor-native-candidate-3-cleanup-remediation.md`
+and `docs/handoff/2026-10-25/d4-corridor-native-candidate-4-preparation.md`.
+
+**2026-10-25 native candidate-4 outcome (E32):** the cleanup-certification
+issue was resolved as attempt-scoped. Candidate-3's historical `FAILED_CLEANUP`
+and missing `sockets_closed` stay unchanged and are not a hard prerequisite for
+a fresh candidate; current isolation was verified independently (no process,
+listener, workspace or staged secret). `D4-CORRIDOR-4` was signed
+(authorization `b069b484…5db6d`) and consumed exactly once. `op-00`–`op-05`
+built and read back (£4,004; £496,543 → £492,539), including the perpendicular
+corner `45743↔45999` and both stops. `op-06` (depot) was dispatched; the native
+log reports `D4_RESPONSE depot-06 BUILT` and the retained frame reports
+`BUILT`/£390/£492,149, but its 513-byte response exceeded the then-hard-coded
+512-byte application limit and was rejected before parsing. No `confirm-06`,
+receipt or authoritative `after.sav`; result `PARTIAL_EXECUTION_EVIDENCE`,
+`verified: false`, `status: PHASE_HALTED_PREFIX_PRESERVED`; cleanup PASS;
+manifest 80/80; replay raised the same `MalformedMessage` at the time. Offline
+E33 corrects protocol 4's decode bound to 640 (default 512 unchanged); the
+retained frame now parses, but replay still refuses for missing durable
+confirmation. No retry, re-sign, replacement or claim reuse. **D4 remains
+INCOMPLETE (native).** Records:
+`docs/handoff/2026-10-25/d4-corridor-native-candidate-4-outcome.md`,
+`docs/handoff/2026-10-25/d4-corridor-response-limit-fix.md`.
+
+**2026-10-26 close-out (E35):** under the explicit operator authorization
+covering signing plus exactly one native attempt, the same reviewed v3
+schedule was staged as `D4-CORRIDOR-5` (staging 2026-10-25; fresh-context
+independent review **PASS 20/20**), every pre-signing gate was re-verified
+fresh (seal `505b5d49…4a7c`, payload `77a965f0…0e4` over 2,307 canonical
+bytes, plan digest `b5b472ff…2283a78`, source world `fbebef54…d59e`,
+3,448-entry frozen closure, protocol 640/512/32763 statics + dynamics,
+focused suites 129/129, runtime isolation, never-consumed state), and the
+candidate was signed by the documented approved checklist (Option 1
+repository tooling; seed captured, never displayed, logged or persisted;
+signature verified under the pinned production anchor before writing; record
+`55486971…dec03`) and consumed exactly once: **1 launch / 1 X25519
+connection / 22 of 28 requests.** All seven v3 operations were dispatched
+with positive tested quotes equal to native costs within the £2,000 per-op
+ceiling (£785 + £1,398 + £1,151 + £71 + £307 + £292 + £390 = £4,394) and each
+was independently read back via its intent-scoped `confirm-XX`, including
+`confirm-06` — the depot readback on the durable 513-byte
+`depot-06-response.json` under the E33 640-byte bound. Phase
+`PHASE_COMPLETE`, `verified: true`, `NATIVE_CORRIDOR_VERIFIED`; funds
+£496,543 − £4,394 = **£492,149** verified twice (route read and depot
+readback path); route read `ROUTE_VERIFIED` 23/23 with `first_fail_index −1`;
+`receipt.json` binds before-save `a3e6b510…5c5c` and the authoritative
+`after.sav` `a81ac836…ef261` (distinct `after-diagnostic.sav` retained, never
+a substitute); cleanup certified (all four fields true, endpoints certified,
+workspace disposed, credential removed); manifest 90/90 OK; the independent
+read-only replay returns **`RECEIPT_VERIFIED`**. Historical evidence
+(candidate-1/2/3/4, D2/D3) was re-verified byte-unchanged (candidate-4
+manifest 80/80 before and after). **Milestone D4 is COMPLETE (native) for
+exactly the reviewed v3 scope and has moved to
+[[02-Milestones/Completed Milestones]].** Limits: no vehicle/order/delivery/
+OPEX/ROI claim; the claim is consumed and identity `D4-CORRIDOR-5` must not
+be retried. Record:
+`docs/handoff/2026-10-26/d4-corridor-native-candidate-5-outcome.md`.
+
+## D5 — Corridor freight cycle on the built D4 corridor → OFFLINE T1–T6 COMPLETE, T7 REVIEW NEXT (2026-10-26)
+
+After D4 (completed natively 2026-10-26, E35), the next milestone would put a
+vehicle on the built corridor kept by candidate-5's authoritative `after.sav`
+`a81ac836…ef261`. **The D5 scope is now designed offline and
+implementation-ready: exactly one native cargo-1 pickup→delivery freight
+cycle on that corridor** — site admission gates (both stops truck-stop-typed,
+depot present, 24-tile witness re-check, delivery-stop cargo-1 acceptance ≥
+1/8, funds £492,149), one compatible engine purchased once under a positive
+tested quote ≤ £2,000, the exact two-stop order set (pickup `OF_FULL_LOAD`,
+delivery `OF_NO_LOAD`), observed loading → transit → unloading with
+GSCargoMonitor pickup/delivery amounts equal to the observed load,
+per-exchange funds reconciliation, and a receipt-bound before/after save
+pair replay-verified to `RECEIPT_VERIFIED` with certified cleanup. Design:
+`docs/d5-corridor-freight-design.md` (2026-10-26; not committed at design
+time). **Status (updated 2026-10-26, offline): T1–T6 complete, uncommitted**
+— protocol-5 contracts, the bounded fifteen-exchange package, the
+staging/preflight/replay proof module, 32 controlled Squirrel-VM tests and
+29 temporary-staging native-orchestration tests pass. The T6 record is
+`docs/d5-corridor-freight-preparation.md`; it documents the actual 15.3
+acceptance API (no `GSStation.GetCargoAcceptance`), the TileID/65535 safety
+bound, 13 logical ops versus 15 exchanges, and transit-window behavior while
+the vehicle is still in its depot. **Status discipline:** staging (T8) is
+gated on an independent fresh-context review (T7); signing and launching
+(T9) require ONE fresh explicit operator authorization from the operator
+alone; no candidate, claim, seal, signature or authorization exists; no
+native attempt has run, so native freight delivery remains UNKNOWN. Road/
+station admission does not imply purchase/run/verify capability, and full
+OPEX/net-profit/ROI remain UNKNOWN regardless of a D5 outcome.
 
 ## Random World native service execution — BLOCKED (infeasibility + open facts)
 
@@ -49,13 +215,13 @@ purchase/run/verify capability.
   disconnected in the supported corridor graph → `NO_BOUNDED_CORRIDOR` (E8, E9),
   structurally unrecoverable even with classified levelling
   (`NO_CONNECTED_LEVELED_CORRIDOR`, E10).
-- Classification: 19 UNKNOWN tiles + 83 `PROJECTED_FLAGS_DIFFER` disagreements keep
-  `INCOMPLETE_TILE_CLASSIFICATION` (E16). Uncommitted 2026-10-18 offline reconciliation
-  returned `SEMANTICALLY_RECONCILED_TEMPORAL_UNRESOLVED` (77 definitional, 6 temporal
-  tiles 43951/47286/47288/48042/48309/51378, 0 contradictions) — the recorded minimum
-  additional evidence is a bounded same-instant re-observation of exactly those six tiles
-  and/or an explicit operator policy decision sealed in a new reviewed candidate
-  ([[05-Planning/Blockers]]).
+- Classification: 83 `PROJECTED_FLAGS_DIFFER` disagreements remain sealed. The offline
+  reconciliation is `SEMANTICALLY_RECONCILED_TEMPORAL_UNRESOLVED` (77 definitional, 6
+  temporal tiles, 0 contradictions). ADR-012 (six temporal, planning evidence only) and
+  ADR-013 (19 definitional, accepted 2026-10-25) are active in the derived layer; the
+  combined P08 planning binding is allowed with `p08_complete: false`, while the fusion
+  gate remains **CLOSED**. Native Random World execution and native classification
+  evidence remain separate, authorization-gated work ([[05-Planning/Blockers]]).
 - A new native random run requires fresh reviewed frozen inputs + separate authorization;
   never retry a consumed identity (E8's `playable-demo-698799a2d…` is consumed).
 
