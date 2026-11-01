@@ -1155,3 +1155,35 @@ extension candidate-2 `6d912a3d…c15d`, A0 survey candidate-3
 native execution, no commit. Signature is NOT launch approval: the
 separate explicit native launch approval is the next ungranted
 operator gate. Record: design doc §10; evidence index E48.
+
+### 2026-11-01 — D5-ACCEPT-SURVEY-2 native census lifecycle COMPLETE (E49, design §11)
+
+One operator approval, this lifecycle only. Pre-launch revalidation
+matched all identities cryptographically (seal `237a4f84…37daa4`,
+payload `b1f3e209…00bd`, record `d87c2c45…4ae3` =
+`VerifiedAuthorization` under anchor `cbb63ff5…c614`, plan
+`67fce856…80be2`, schedule `1222db02…389d`, schema v2, A1 after-save
+`3748e00c…5420bd`, A1 prereq seal `404d42d9…6acd8` consumed);
+preflight `PREFLIGHT PASS` immediately before consumption; executed
+the signed `execution_command` exactly. `CLAIM.json` consumed once
+(`launches_allowed: 1`, `retries: 0`, binding all three digests),
+`LAUNCH-CONSUMED.json` schema `d5-native-launch-consumed`. One
+OpenTTD 15.3 launch (pid 71098), one encrypted X25519 connection, 4
+of 32 requests, 0 retries/reconnects, welcome == signed expectation
+(seed 17, 15.3, 256×256, start day 712223). Observed census: radius
+**3**; control 50351 acceptance **0**; A1 station 50862 acceptance
+**8/8**; production **104**; all receipts sealed + plan-bound with
+funds £490,257; every response `cost: 0`; `state_changed: false`.
+No mutation of any kind. Run exit 0 `NATIVE_SURVEY_COMPLETE`
+`verified: true`; replay `verify` → `SURVEY_COMPLETION_VERIFIED`
+exit 0. Session-owned `session-before.sav` re-save sha
+`1966b5c7…d40b7` bound into the receipt (OpenTTD re-serialization of
+the identical pinned world state; verifier re-derives and accepts —
+documented owned-save behavior, not drift); A1 record `after.sav`
+re-hashed exactly `3748e00c…5420bd` post-run. Cleanup certified:
+`reaped: true` (returncode 0), credentials removed, sockets closed,
+AdminPort 53023 canceled + probe false + rebindable, workspace
+disposed, zero cleanup errors; manifest 24 entries 0 mismatches;
+frames/requests/responses/identities/logs retained. No freight
+delivery, no reachability, no traversal, no YAPF, no M8 claims. No
+commit. Record: design doc §11; evidence index E49.
