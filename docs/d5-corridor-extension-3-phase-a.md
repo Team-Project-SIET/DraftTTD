@@ -1016,3 +1016,117 @@ authorization payload digest
 `c511dd38a068c1cef5539d3cc422819ef76d73842c42e4d1601b4199debdf94f`, then a
 separate explicit launch approval. No signature, authorization file,
 claim or launch exists at the time of this record.
+
+## 16. Gate C Option-1 signing record (appended 2026-11-01, operator-approved)
+
+Following one explicit operator approval ("execute A1 Candidate-3 — Gate C
+Option-1 Signing"), the documented repository-tooling signing checklist
+([key provisioning §1/§2/§4](docs/handoff/2026-10-17/operator-key-provisioning.md),
+same pipeline validated for the D5 survey candidate-3, §12.5/E39) was
+executed exactly once:
+
+- Read-only inspection of the procedure and candidate state was delegated
+  to a fresh subagent (seal and payload digest re-verified live against
+  the staged bytes; the completed READY-FOR-GATE-C review was not
+  repeated).
+- Refusal gates checked first: `AUTHORIZATION.json`, `CLAIM.json`,
+  `LAUNCH-CONSUMED.json` and the attempt journal all absent (§15.1 state
+  unchanged at signing time).
+- Seal re-verified `404d42d9fa1e113542e74655858f6bc669407d611057eec0c036612ddfa6acd8`
+  (`PRELAUNCH.sha256` == recomputed sha256 of `PRELAUNCH.json`);
+  authorization payload digest re-verified
+  `c511dd38a068c1cef5539d3cc422819ef76d73842c42e4d1601b4199debdf94f`
+  over the recomputed canonical bytes before any signing.
+- A first script invocation failed at shell setup (`shopt -s pipefail` is
+  not a valid bash invocation; `set -o pipefail` is) **before any seed
+  extraction, digest check or write**; nothing had been read or written,
+  and the corrected invocation re-ran the complete checklist from the
+  refusal gates.
+- Seed extracted from the operator-held PEM
+  (`~/.local/share/openttd-operator/operator-private.pem`, outside the
+  git repository) into a shell variable via the corrected
+  exit-status/shape-checked pipeline (bash, `set -o pipefail`); never
+  printed, written to a file or passed as a command-line argument.
+- Derived public key checked equal to the pinned production anchor
+  `5063982b…4880f` **before** signing.
+- 64-byte RFC 8032 Ed25519 signature verified under the pinned anchor
+  over the exact canonical payload bytes **before** any write; then
+  `AUTHORIZATION.json` written by `write_authorization_record`
+  (exactly once).
+- Record sha-256 (== `authorization_sha256`):
+  `371a524b85add4347a991478909a04da3e7dac8b62b2636b6c7694b32bebe200`;
+  seed cleared immediately after final use (`unset`, verified empty).
+- Read-only post-write verification: `verify_authorization` → PASS;
+  `operator_key_identity` =
+  `sha256-ed25519-public-key:cbb63ff58f17f13df3e1be0735fad18497e3a0c6ad6b5dd55491d708ae40c614`
+  (unchanged production anchor); payload binds attempt
+  `D5-CORRIDOR-EXTENSION-3` / milestone `D5-CORRIDOR-EXTENSION` to seal
+  `404d42d9…6acd8`. `CLAIM.json`, `LAUNCH-CONSUMED.json` and the attempt
+  journal remain absent; read-only `verify` still returns
+  `AUTHORIZATION_UNVERIFIED`/`CLAIM_ABSENT` (authorized, never consumed,
+  exit 1); standalone `preflight` → **PREFLIGHT PASS**. Staged bytes
+  otherwise unchanged: only `AUTHORIZATION.json` was added.
+- The authorization signature is NOT launch approval. Per §14.6 step 6
+  the next gate is a separate explicit operator launch approval for
+  exactly one native A1 attempt (no retry on any failure), then replay +
+  certified cleanup. This record reached that gate and stopped.
+
+## 17. A1 Native Extension completion record (appended 2026-11-01, operator-approved launch)
+
+Following one explicit operator launch approval ("ONE native launch of
+A1 Candidate-3 … Do not retry or relaunch if execution fails … do not
+proceed to freight delivery or M8"), the remediated lifecycle was
+executed exactly once: `corridor_extension_native run
+artifacts/experiments/d5-corridor-extension-native-candidate-3` →
+**exit 0, `NATIVE_EXTENSION_VERIFIED`, `verified: true`**.
+
+- Consumption: preflight PASS; one-shot `CLAIM.json` minted and consumed
+  once, bound to authorization sha `371a524b…bebe200` / operator identity
+  `sha256-ed25519-public-key:cbb63ff5…40c614` / seal
+  `404d42d9…6acd8`; `LAUNCH-CONSUMED.json` written
+  (`d5-native-launch-consumed`). 1 launch (OpenTTD 15.3, pid 29574), 1
+  encrypted connection, 13 of 18 request budget, 0 retries.
+- All four v2 schedule ops built and independently read back
+  (`NATIVE_STATE_CHANGED` each; native quote == cost, every op within
+  the £2,000 per-op ceiling):
+  - op-00 `full` 50096→50864, 4 tiles, £1,144 (`CMD_BUILD_ROAD`).
+  - op-01 `road` 50095↔50096, 2 tiles, £142.
+  - op-02 `spur` 50864→50863, 2 tiles, £299 (`ROAD_SPUR`, first native
+    spur execution).
+  - op-03 `station` tile 50862 fronting 50863, £307
+    (`CMD_BUILD_ROAD_STATION`), station receipt
+    `DISTINCT_NEW_STATION` — route_delivery sid 2 vs existing sids 0/1.
+- Route readback: `ROUTE_VERIFIED` — 30/30 expected pairs connected,
+  first_fail −1, funds £490,257 read natively (start £492,149; total
+  native spend £1,892 = 1,144+142+299+307).
+- Phase outcome `corridor-phase-outcome-v1`: `PHASE_COMPLETE`, computed
+  `false`, pending empty.
+- World state of record: `session-before.sav` sha
+  `59fbb20a71e1b6dba0cabaaadecdfc4215605729fdb2e7a549bde4d61e5b397c`
+  (== staged world bind), authoritative `after.sav` sha
+  `3748e00ce57bcb076466f50cac3776c202b4fd130d6c6071935e9d43e45420bd`
+  bound into `receipt.json`, `after-diagnostic.sav` sha
+  `ca08e171e31dc00280f83527d3d4f7aa2fb2703b829292d8912a46729f1dd84b`.
+- Read-only replay: `corridor_extension_native verify` →
+  `EXTENSION_COMPLETION_VERIFIED` (exit 0) — receipt re-verified from
+  retained evidence; `receipt.json` matches the live run's phase
+  outcome byte-for-byte at every re-derivation point.
+- Certified cleanup: `reaped true` (pid 29574, returncode 0),
+  `sockets_closed true`, `credential_removed true`,
+  `reservation_released true`, `workspace_disposed true`, cleanup_error
+  empty; kernel record shows the client sockets already gone
+  (`TIME_WAIT` `127.0.0.1:40540↔44059`); no remaining processes.
+- `artifact-manifest.sha256` re-verified: 0 mismatches (all entries OK).
+- Acceptance status: the construction facts are natively verified; the
+  cargo-1 acceptance census on this attempt's after-save (delivery stop
+  50862) remains, per the receipt statement of record, a separate
+  read-only survey session required **before any freight order or
+  vehicle purchase** — deferred, not granted here, and no further
+  candidate was staged (prohibited by the launch approval's terms).
+- The wood-wheel reachability / road-bit direction / pathfinding facts
+  stay open until a vehicle actually traverses the corridor (freight
+  scope). D5 stays ATTEMPTED, NOT DELIVERED: freight delivery
+  (`D5-FREIGHT-1` FAILED-of-record) and M8 route selection remain
+  unproven; A1 construction is now COMPLETE (verified native) within
+  its v2 scope. Next works: A1 acceptance census gate, then a fresh
+  gated freight/M8 flow.

@@ -232,6 +232,39 @@ EOF
 
 The extension module's `prepare_extension_candidate`/`extension_preflight`
 /`run` are staging or native-execution entry points: run them only under the
-staging/approval gates of phase-a record §14.5. No A1 candidate exists yet;
-staging, signing and launching each require their own explicit operator
-approval.
+staging/approval gates of phase-a record §14.5. The staged A1 record
+(dated 2026-11-01, checked): `artifacts/experiments/d5-corridor-extension-native-candidate-3/`
+seal `404d42d9fa1e113542e74655858f6bc669407d611057eec0c036612ddfa6acd8`,
+payload digest `c511dd38a068c1cef5539d3cc422819ef76d73842c42e4d1601b4199debdf94f`,
+Gate-C Option-1 signed (2026-11-01, phase-a §16/E43):
+`AUTHORIZATION.json` sha `371a524b85add4347a991478909a04da3e7dac8b62b2636b6c7694b32bebe200`,
+`verify_authorization` PASS under the pinned anchor
+`sha256-ed25519-public-key:cbb63ff58f17f13df3e1be0735fad18497e3a0c6ad6b5dd55491d708ae40c614`,
+`PREFLIGHT PASS`; read-only `verify` →
+`AUTHORIZATION_UNVERIFIED`/`CLAIM_ABSENT` (authorized, never consumed)
+and standalone `preflight` → `PREFLIGHT PASS` remain re-runnable
+read-only proofs. Staging and signing are complete; the launch was granted and executed
+exactly once (2026-11-01, phase-a §17/E44): `run` → exit 0,
+`NATIVE_EXTENSION_VERIFIED`, claim consumed once, all four ops built
+with native-quote-verified costs (spur £299, station £307,
+`DISTINCT_NEW_STATION`), route `ROUTE_VERIFIED` 30/30 pairs, funds
+£490,257, authoritative `after.sav` sha
+`3748e00ce57bcb076466f50cac3776c202b4fd130d6c6071935e9d43e45420bd`,
+replay `verify` → `EXTENSION_COMPLETION_VERIFIED` (exit 0), certified
+cleanup all-true, manifest 0 mismatches. Read-only reproduction of the
+consumed attempt (never a re-run):
+
+```bash
+.venv/bin/python - <<'EOF'
+import json
+from pathlib import Path
+from app.simulation.openttd.proof import corridor_extension_native as e
+from app.simulation.openttd.proof.operator_authorization import verify_authorization
+from app.simulation.openttd.proof.harness import sha256
+d = Path("artifacts/experiments/d5-corridor-extension-native-candidate-3")
+metadata = json.loads((d / "PRELAUNCH.json").read_text())
+v = verify_authorization(d, metadata, sha256(d / "PRELAUNCH.json"))
+print(v.authorization_sha256, v.operator_key_identity)
+print(e.verify_extension_attempt(d)["verification"])
+EOF
+```

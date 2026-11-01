@@ -211,7 +211,27 @@ candidate-2 that still returns `ATTEMPT_FAILED_EVIDENCE_PRESERVED`. What
 remains for A1 is exactly the gated sequence: a fresh never-consumed
 candidate staging (`d5-corridor-extension-native-candidate-3`), PRELAUNCH
 plus independent review, Gate C Option-1 signing and a separate explicit
-launch approval. Freight
+launch approval. All of the signing-side work is now done (2026-11-01,
+phase-a §16, E43): the candidate is staged, reviewed (READY-FOR-GATE-C)
+and Gate-C-signed — `AUTHORIZATION.json` sha
+`371a524b85add4347a991478909a04da3e7dac8b62b2636b6c7694b32bebe200`
+verified under the pinned production anchor (operator identity
+`sha256-ed25519-public-key:cbb63ff5…40c614`) over seal
+`404d42d9…6acd8` / payload `c511dd38…f94f`; `PREFLIGHT PASS`; claim and
+launch-consumed markers absent; `verify` →
+`AUTHORIZATION_UNVERIFIED`/`CLAIM_ABSENT`. The remaining gate for A1 is
+a separate explicit operator launch approval, then a single native
+attempt through the remediated lifecycle. The attempt has now been
+granted and executed exactly once (2026-11-01, phase-a §17, E44):
+exit 0, `NATIVE_EXTENSION_VERIFIED` — all four v2 ops built and
+independently confirmed (spur 50864→50863 and bay stop 50862 fronting
+50863 included), route `ROUTE_VERIFIED` 30/30 pairs with funds read
+natively £490,257, replay `EXTENSION_COMPLETION_VERIFIED`, certified
+cleanup all-true, manifest 0 mismatches, claim consumed once. The
+remaining D5 A1 gate is the cargo-1 acceptance census on this
+attempt's after-save (a separate read-only survey session, required
+before any freight order or vehicle purchase); freight delivery and
+M8 route selection remain unproven and are never covered by A1. Freight
 delivery and M8 route-selection proof remain separate, unsatisfied D5
 requirements and are never covered by the A0 survey. CONTEXT.md is not
 edited here: its bytes stay pinned by the E26 authority record.

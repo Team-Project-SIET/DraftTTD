@@ -932,3 +932,75 @@ over seal
 payload
 `c511dd38a068c1cef5539d3cc422819ef76d73842c42e4d1601b4199debdf94f` and
 the separate explicit launch approval remain ungranted operator gates. Record: phase-a §15; evidence index E42.
+
+### 2026-11-01 — D5-CORRIDOR-EXTENSION-3 A1 candidate-3 Gate C Option-1 signed (operator-approved)
+
+The operator authorized Gate C Option-1 signing of the existing staged
+candidate `artifacts/experiments/d5-corridor-extension-native-candidate-3/`
+(no claim, no launch, no candidate modification; launch approval remains
+a separate gate). The documented checklist
+([key provisioning §1/§2/§4](docs/handoff/2026-10-17/operator-key-provisioning.md),
+pipeline of §12.5/E39) was executed: refusal gates first (no
+`AUTHORIZATION.json`/`CLAIM.json`/`LAUNCH-CONSUMED.json`/journal), seal
+re-verified `404d42d9fa1e113542e74655858f6bc669407d611057eec0c036612ddfa6acd8`,
+payload digest re-verified
+`c511dd38a068c1cef5539d3cc422819ef76d73842c42e4d1601b4199debdf94f`,
+seed handled only as an environment variable via the corrected pipeline
+(never printed/argument-passed/written, cleared after final use), derived
+key ≡ pinned production anchor `5063982b…4880f`, signature verified
+under the pinned anchor over the exact canonical payload bytes before
+any write; `AUTHORIZATION.json` written exactly once, record sha
+`371a524b85add4347a991478909a04da3e7dac8b62b2636b6c7694b32bebe200`. A
+first invocation failed at shell setup (`shopt -s pipefail`) before any
+seed extraction or write and was re-run once from the refusal gates. A
+single read-only inspection of procedure/candidate state was delegated
+to a fresh subagent; the READY-FOR-GATE-C review was not repeated.
+
+Post-sign read-only state: `verify_authorization` → PASS with
+`operator_key_identity sha256-ed25519-public-key:cbb63ff58f17f13df3e1be0735fad18497e3a0c6ad6b5dd55491d708ae40c614`;
+`CLAIM.json`/`LAUNCH-CONSUMED.json` remain absent; standalone `verify` →
+`AUTHORIZATION_UNVERIFIED`/`CLAIM_ABSENT` (exit 1); standalone
+`preflight` → **PREFLIGHT PASS**. No native execution, no AdminPort
+connection, no OpenTTD launch, no restage, no commit.
+
+**Signing is not launch approval.** D5 stays ATTEMPTED, NOT DELIVERED:
+freight delivery unproven, M8 route selection not demonstrated. Stopped
+at the separate Native Launch Approval gate. Record: phase-a §16;
+evidence index E43.
+
+### 2026-11-01 — D5-CORRIDOR-EXTENSION-3 A1 candidate-3 native launch COMPLETE (verified)
+
+The operator granted exactly one native launch of A1 candidate-3 (no
+retry, no new candidate, no freight/M8 progression). The remediated
+lifecycle ran once: `corridor_extension_native run
+artifacts/experiments/d5-corridor-extension-native-candidate-3` →
+**exit 0, `NATIVE_EXTENSION_VERIFIED`, verified true**. Consumption:
+preflight PASS, one-shot `CLAIM.json` consumed (bound to authorization
+sha `371a524b85add4347a991478909a04da3e7dac8b62b2636b6c7694b32bebe200`,
+operator identity
+`sha256-ed25519-public-key:cbb63ff5…40c614`), `LAUNCH-CONSUMED.json`
+written; 1 launch (OpenTTD 15.3, pid 29574), 1 connection, 13/18
+requests, 0 retries. All four v2 ops built, each a `NATIVE_STATE_CHANGED`
+with native quote == cost under the £2,000 per-op ceiling: op-00 full
+50096→50864 £1,144; op-01 road 50095↔50096 £142; op-02 spur
+50864→50863 £299 (first native spur); op-03 station 50862 fronting
+50863 £307 with `DISTINCT_NEW_STATION` (sid 2 vs 0/1). Route
+`ROUTE_VERIFIED` 30/30 pairs, funds read natively £490,257 (start
+£492,149, spend £1,892). Phase `PHASE_COMPLETE`; saves: before
+`59fbb20a…5397c` (== staged world bind), authoritative `after.sav`
+`3748e00c…5420bd` bound into `receipt.json`, diagnostic
+`ca08e171…dd84b`. Replay `verify` → `EXTENSION_COMPLETION_VERIFIED`
+(exit 0); certified cleanup all flags true (reaped pid 29574, sockets
+closed, credential removed, reservation released, workspace disposed,
+kernel `TIME_WAIT` record); manifest 0 mismatches.
+
+Wide-open A1 risk status update: wheel reachability, road-bit
+directions and pathfinding remain demonstrated for construction only —
+actual truck traversal is freight scope. The cargo-1 acceptance census
+on this attempt's after-save is, per the receipt statement, a separate
+gated read-only survey session required before any freight order or
+vehicle purchase; no candidate was staged and no freight/M8 work was
+started. D5 stays ATTEMPTED, NOT DELIVERED: freight delivery
+(`D5-FREIGHT-1` FAILED-of-record) and M8 route selection remain
+unproven. A1 construction is COMPLETE (verified native) within its v2
+scope. Nothing committed. Record: phase-a §17; evidence index E44.
