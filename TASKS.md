@@ -1121,3 +1121,37 @@ and after. Nothing committed. Stop: Gate C Option-1 signing over
 `237a4f84…37daa4`/`b1f3e209…00bd` and the separate launch approval
 are ungranted operator gates. Record: design doc §9; evidence index
 E47.
+
+### 2026-11-01 — Gate C Option-1 signing executed for D5-ACCEPT-SURVEY-2 (E48, design §10)
+
+One operator approval, this signing operation only. Pre-signing
+re-validation matched every expected identity exactly: seal
+`237a4f84…37daa4`, payload digest `b1f3e209…00bd`, plan digest
+`67fce856…80be2`, schedule digest `1222db02…389d`, A1 after-save
+`3748e00c…5420bd`, A1 prereq seal `404d42d9…6acd8`; refusal gates all
+clean (`AUTHORIZATION.json`/`CLAIM.json`/`LAUNCH-CONSUMED.json`/
+journal absent). Documented checklist executed: seed env-only
+(no seed material in chat/logs/files), derived key == anchor
+`5063982b…4880f`, signature verified under anchor pre-write, single
+`write_authorization_record`, `unset SEED_HEX` after final use.
+Two earlier internal script invocations refused cleanly with nothing
+written: run 1 `AttributeError: … ed25519_rfc8032 has no attribute
+public_key_hex` (module exposes `public_from_seed`), run 2
+`REFUSED: signature does not verify under the anchor` (anchor hex
+string passed instead of `bytes` to total `verify`; script bug, not
+tooling). Result: `AUTHORIZATION.json` record sha ==
+`authorization_sha256` `d87c2c450e192e4341f8bf4ac6a6ff553194ac0134f
+8353293bff42250bf4ae3`, `operator_key_identity`
+`sha256-ed25519-public-key:cbb63ff58f17f13df3e1be0735fad18497e3a0c6a
+d6b5dd55491d708ae40c614`, payload binds attempt `D5-ACCEPT-SURVEY-2`/
+milestone `D5-ACCEPT-SURVEY`/seal `237a4f84…37daa4`. Post-signing
+read-only re-checks: `verify` → `AUTHORIZATION_UNVERIFIED`/
+`CLAIM_ABSENT` (exit 1), `preflight` → `PREFLIGHT PASS`; exactly one
+new file in the candidate root, all other staged bytes unchanged. All
+consumed precedent records re-sealed byte-identical after signing
+(candidate-1 `38b7667e…b06b`, A1 candidate-3 `404d42d9…6acd8`,
+extension candidate-2 `6d912a3d…c15d`, A0 survey candidate-3
+`6743fc3c…8df8`). No claim, no launch-consumption, no journal, no
+native execution, no commit. Signature is NOT launch approval: the
+separate explicit native launch approval is the next ungranted
+operator gate. Record: design doc §10; evidence index E48.

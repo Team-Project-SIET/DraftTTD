@@ -482,3 +482,86 @@ The task stops at §6 item 5: Gate C Option-1 signing over seal
 `237a4f84…37daa4` and payload digest `b1f3e209…00bd`, and then the
 separate explicit launch approval, each remain ungranted operator
 actions exactly like every predecessor gate.
+
+## 10. Gate C Option-1 signing record (appended 2026-11-01, operator-approved)
+
+Following one explicit operator approval ("Execute Gate C Option-1
+Signing — D5 Acceptance Survey Candidate-2", which authorized this exact
+signing operation only and explicitly did not authorize candidate
+consumption, native execution or OpenTTD launch), the documented
+repository-tooling signing checklist
+([key provisioning §1/§2/§4](docs/handoff/2026-10-17/operator-key-provisioning.md),
+same pipeline as the A1 precedent, phase-a §16) was executed for
+`artifacts/experiments/d5-accept-survey-native-candidate-2/` and no
+other candidate:
+
+- Every refusal gate was checked first: `AUTHORIZATION.json`,
+  `CLAIM.json`, `LAUNCH-CONSUMED.json` and any attempt journal were all
+  absent, and no conflicting authorization or consumption state had
+  appeared since staging.
+- The staged identity was re-validated live against the expected values
+  before any signing: seal `237a4f84cb7fc1c880ad23321c3e06663dbdc7d61
+  ff82c72687fc962af37daa4` (`PRELAUNCH.sha256` == recomputed sha256 of
+  `PRELAUNCH.json`), authorization payload digest
+  `b1f3e209e71090e970d68a7f419a05e3e66c0963acbb7f956e50b8abe8dc00bd`
+  over the canonical recomputed bytes, plan model digest
+  `67fce856130310b540dd384d4a903468da02b4afecde9c791eda76513d480be2`,
+  schedule digest
+  `1222db02bdb96b1724010bf1444b09ef03e788f82e9ce2b7191dbdbae775389d`,
+  A1 after-save binding `3748e00ce57bcb076466f50cac3776c202b4fd130d6c
+  6071935e9d43e45420bd`, and A1 prerequisite seal
+  `404d42d9fa1e113542e74655858f6bc669407d611057eec0c036612ddfa6acd8`.
+  All matched exactly; nothing was repaired, regenerated or restaged.
+- The private seed never entered chat, logs or any file: it was
+  extracted from the operator-held PEM through the documented pipeline
+  directly into the shell environment, and `unset SEED_HEX` ran in the
+  same shell immediately after the final use (verified empty).
+- The derived public key from the seed was checked equal to the pinned
+  production anchor
+  `5063982bd28d48573705f334ed4f396618c4930ce21083789dfbbf13a564880f`
+  before any signing step.
+- Two earlier internal invocations of the signing script were refused
+  cleanly before any write and are recorded here for the trail. First,
+  during one checklist invocation the shell hit the documented
+  `set -o pipefail` lesson (the E43 episode: the checklist must be run
+  as `bash -c` with pipefail set in the invocation itself, which is why
+  the refusal-gate hygiene check survived a failed inner script); then
+  invocation 1 of the Python helper failed with
+  `AttributeError: module 'app.simulation.openttd.proof.ed25519_rfc8032' has no attribute 'public_key_hex'`
+  (the module exposes `public_from_seed`, not a hex accessor — script
+  bug, tooling correct), and invocation 2 failed with
+  `REFUSED: signature does not verify under the anchor` because that
+  script passed the anchor's hex string instead of `bytes` to the total
+  `ed25519_cryptography.verify` primitive, which returns `False` on
+  malformed input types rather than raising. Both refusals happened
+  before `write_authorization_record`; nothing was written, and the
+  seed was cleared after each invocation. A dry diagnostic run (without
+  writing) then confirmed the derived key equals the anchor through
+  both verifiers, after which the corrected invocation proceeded.
+- The corrected invocation executed exactly once: pre-write
+  verification of the signature under the anchor succeeded, and
+  `write_authorization_record` was called exactly once.
+- Resulting record of record: `AUTHORIZATION.json` sha256 and
+  `authorization_sha256`
+  `d87c2c450e192e4341f8bf4ac6a6ff553194ac0134f8353293bff42250bf4ae3`,
+  `operator_key_identity`
+  `sha256-ed25519-public-key:cbb63ff58f17f13df3e1be0735fad18497e3a0c6a
+  d6b5dd55491d708ae40c614`, binding attempt `D5-ACCEPT-SURVEY-2`,
+  milestone `D5-ACCEPT-SURVEY`, and seal `237a4f84…37daa4` in the
+  signed payload.
+- Post-signing read-only re-checks: standalone `verify` →
+  `AUTHORIZATION_UNVERIFIED` / `CLAIM_ABSENT` (exit 1, correct
+  authorized-but-never-consumed state); standalone `preflight` →
+  `PREFLIGHT PASS` (exit 0). The candidate root now contains exactly
+  one new file, `AUTHORIZATION.json`; every other staged byte is
+  unchanged. `CLAIM.json`, `LAUNCH-CONSUMED.json` and the attempt
+  journal remain absent.
+- All consumed precedent records were re-sealed byte-identical after
+  signing: survey candidate-1 `38b7667e…b06b` (consumed, replay-compat),
+  A1 candidate-3 `404d42d9…6acd8` (consumed), extension candidate-2
+  `6d912a3d…c15d` (consumed), A0 survey candidate-3 `6743fc3c…8df8`
+  (consumed).
+- The authorization signature is NOT launch approval. The next gate is
+  a separate explicit operator launch approval for the census lifecycle,
+  per the phase-a precedent (§16 then §17 as two distinct approvals).
+  This record reached that gate and stopped.
