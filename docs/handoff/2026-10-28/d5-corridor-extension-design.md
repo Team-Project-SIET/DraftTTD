@@ -388,3 +388,29 @@ Nothing was committed, staged, launched or authorized. The consumed
 dirty/untracked files are preserved. `D5-CORRIDOR-EXTENSION-1` remains
 unstaged; construction still requires the explicit operator authorization
 described in section 6.
+
+---
+
+## Post-dated correction note (appended 2026-11-01, v2 of record)
+
+The body of this document was written against the v1 three-op design whose
+attempt was consumed as `D5-CORRIDOR-EXTENSION-2` (route pair 28 failed:
+the stop 50607 never became reachable, and the successor ground readings
+proved the delivery-edge tiles live-sloped). The approved v2 design of
+record — postmortem §3 of
+`docs/d5-corridor-extension-2-connectivity-postmortem.md`, carried offline
+into `corridor_extension_native.py` — replaces the v1 stop placement with a
+four-op schedule: op-2 is a dedicated `spur` road op `50864 → 50863`
+(native `CMD_BUILD_ROAD` `ROAD_FULL`) and op-3 is the bay truck stop at
+tile **50862**, fronting **50863**, `STATION_NEW`. The route witness is now
+**31 tiles / 30 pairs**, ending `… 50096, 50352, 50608, 50864, 50863,
+50862`; the v1-era 29-tile witness table in §4 above ends at 50607 and is
+historical only.
+
+The pinned funds inclusion boundary in the last section above reads
+`492149 − 454 − 71 − 307 = 491317`; with the v2 spur cost included the
+arithmetic of record is
+`492149 − (454 + 71 + 143 + 307) = 491174` (op cost placeholders
+454/71/143/307, sum 975), which is what every v2 gate and test pins. The
+stale v1 figures above are never rewritten: this dated body stays as
+written, and this note is the only correction.

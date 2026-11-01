@@ -11,9 +11,10 @@ Design constraints mirrored from the proven ceremonies:
 
 - The wire stays small and bounded: requests serialize below 512 bytes and
   every response binds below 640 bytes — the final route read echoes the
-  ordered 24-tile corridor witness (24 five-digit tile ids) plus its
-  observation set, which cannot honestly fit the historical 512 response
-  bound; every other response stays far below it and the Guard() numeric
+  ordered 31-tile corridor witness (31 five-digit tile ids, 30 adjacent
+  pairs) plus its observation set, which cannot honestly fit the historical
+  512 response bound; every other response stays far below it and the
+  Guard() numeric
   bounds still make any oversized or spoofed readback a refused frame.
 - Tile bounds are 256×256-safe (``TileID <= 65535``); the historical 64×64
   road contracts cannot address this corridor (tiles ≈ 45k) and are neither
@@ -160,7 +161,7 @@ class CorridorRequest(Contract):
     """One protocol-4 corridor exchange request.
 
     A request carries exactly the pins of its own op kind: road builds
-    (``full``/``road``) carry ``start``/``end``, site builds
+    (``full``/``road``/``spur``) carry ``start``/``end``, site builds
     (``station``/``depot``) carry ``tile``/``front``, the route read carries
     ``tiles``. ``inspect``/``read`` repeat the pinned shape of the operation
     they admit or re-verify (with ``target`` naming that op kind) and the
@@ -714,6 +715,11 @@ def verify_corridor_route(
         or tuple(route.tiles or ()) != tuple(expected_path)
     ):
         raise ValueError("route evidence is not a correlated route observation")
+    # The witness path itself must be the staged adjacency chain (the same
+    # shape rule the handler enforces on the wire before it will reply).
+    for a, b in zip(expected_path, expected_path[1:]):
+        if abs(a % 256 - b % 256) + abs(a // 256 - b // 256) != 1:
+            raise ValueError("route evidence is not a correlated route observation")
     if (
         route.connected_pairs is None
         or route.first_fail is None

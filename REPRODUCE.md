@@ -175,3 +175,63 @@ run them only under the exact staging/approval gates recorded in phase-a
 record §11.4. A candidate whose staged bytes verify is one operator signature
 and one launch approval away from execution — neither is granted by a
 documentation task.
+
+## 2026-11-01 addendum — D5 A1 v2 offline implementation validation (checked)
+
+The corridor-extension A1 implementation of record (phase-a §14; no launch,
+no AdminPort, no staging, no claim). All five offline suites in one run,
+exact result 2026-11-01: 240 passed, 0 failed (exit 0):
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 .venv/bin/python -m pytest \
+  tests/test_corridor_extension.py \
+  tests/test_corridor_extension_native.py \
+  tests/test_corridor_construction_native.py \
+  tests/test_corridor_terrain_survey_native.py \
+  tests/test_corridor_construction.py \
+  -q -p no:cacheprovider -rs
+```
+
+Offline facts re-derivable in a plain interpreter (values of record:
+schedule kinds full/road/spur/station, 31-tile witness ending
+50864, 50863, 50862, plan digest
+aa88bc99fb80056423b4d1fdc40994abf66aff3afffeb51c710e163ba5447535,
+budgets 13 planned / 18-cap, attempt D5-CORRIDOR-EXTENSION-3,
+FUNDS_PIN − Σ(454,71,143,307) = 491174):
+
+```bash
+.venv/bin/python - <<'EOF'
+from app.simulation.openttd.proof import corridor_extension_native as e
+from app.simulation.openttd.proof.corridor_construction_native import plan_digest_of
+sched = e.extension_schedule()
+print([x["kind"] for x in sched], e.PINNED_WITNESS[-3:], len(e.PINNED_WITNESS))
+print(plan_digest_of(sched), e.PLANNED_EXTENSION_REQUESTS, e.EXTENSION_REQUEST_BUDGET)
+print(e.EXTENSION_ATTEMPT, e.FUNDS_PIN - sum((454, 71, 143, 307)))
+print(e.extension_schedule_v1())
+EOF
+```
+
+Read-only consumed-record proof (never a reproduction of a consumed
+attempt; candidate-2 is permanent consumed history and stays byte-untouched;
+exact results: v1 re-derivation digest match True and schedule equal,
+live replay ATTEMPT_FAILED_EVIDENCE_PRESERVED, result_status FAILED):
+
+```bash
+.venv/bin/python - <<'EOF'
+import json
+from pathlib import Path
+from app.simulation.openttd.proof import corridor_extension_native as e
+from app.simulation.openttd.proof.corridor_construction_native import plan_digest_of
+d = Path("artifacts/experiments/d5-corridor-extension-native-candidate-2")
+plan = json.loads((d / "PRELAUNCH.json").read_text())["plan_policy"]
+sched = e._staged_extension_schedule(plan)
+print(plan["plan_digest"] == plan_digest_of(sched), plan["schedule"] == sched)
+print(e.verify_extension_attempt(d)["verification"])
+EOF
+```
+
+The extension module's `prepare_extension_candidate`/`extension_preflight`
+/`run` are staging or native-execution entry points: run them only under the
+staging/approval gates of phase-a record §14.5. No A1 candidate exists yet;
+staging, signing and launching each require their own explicit operator
+approval.

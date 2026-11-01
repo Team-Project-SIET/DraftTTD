@@ -116,7 +116,11 @@ class D5CorridorExtensionProof extends GSController {
      * survey measured both 0), the delivery front must hold its built
      * company road, and BOTH independent road commands — the whole branch
      * full run and the horizontal join — must pass native test-mode
-     * validation at a positive price on the live world. Sloped run tiles are
+     * validation at a positive price on the live world. (The front
+     * 50863's live vacancy is not this gate's own proof: the dedicated
+     * spur's Eligible clause — a company-invalid roadless end corner —
+     * proves it at the spur's stage, and the consumed A0 survey binds the
+     * tile as roadless unowned buildable ground.) Sloped run tiles are
      * NOT refused here on their slope: the consumed A0 native survey
      * D5CE3-SURVEY-3 receipts of record measured 50096, 50352 live slope 12 and 50608 live slope 8 —
      * escarpment-side ramp tiles the 15.3 road command legitimately admit
@@ -328,6 +332,10 @@ class D5CorridorExtensionProof extends GSController {
      *     its front must be live-vacant and live-unowned ground, the stop
      *     tile and its front live-flat (the survey measured both slope 0),
      *     and the delivery front must hold its built company road.
+     *     (The stop's live vacancy is this gate's own proof; the front
+     *     50863's live vacancy is proven by the dedicated spur's Eligible
+     *     clause — a company-invalid roadless end corner — at the spur's
+     *     stage, with the consumed A0 survey binding the tile.)
      *     This is exactly the terrace edge whose stale census grade hid
      *     the native slope 9 that sank D5-CORRIDOR-EXTENSION-1 after two
      *     road builds had already mutated the world.

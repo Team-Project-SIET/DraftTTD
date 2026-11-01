@@ -71,7 +71,8 @@ PINNED_SCHEDULE = [
         kind="full", index=0, start=50096, end=50864, run_len=4, tiles=[50096, 50352, 50608, 50864]
     ),
     dict(kind="road", index=1, start=50095, end=50096, run_len=2, tiles=[50095, 50096]),
-    dict(kind="station", index=2, tile=50863, front=50864, stop_role="delivery"),
+    dict(kind="spur", index=2, start=50864, end=50863, run_len=2, tiles=[50864, 50863]),
+    dict(kind="station", index=3, tile=50862, front=50863, stop_role="delivery"),
 ]
 
 
@@ -166,14 +167,18 @@ def build_attempt(seal: str, source_digest: str, position: int, *, spent: int, s
     cost = OP_COSTS[position]
     funds_before = FUNDS - spent
     funds_after = funds_before - cost
-    if kind in ("full", "road"):
+    if kind in ("full", "road", "spur"):
         run_len = entry["run_len"]
         if kind == "full":
             pre = road_fields(run_len, owners=(-1, -1), roads=(False, False), covered=0, pairs_ok=0)
-        else:
+        elif kind == "road":
             pre = road_fields(
                 run_len, owners=(0, 0), roads=(True, True), covered=run_len, pairs_ok=0
             )
+        else:
+            # The spur's admission state: a built company-road start corner,
+            # company-invalid roadless end ground, the pair unlinked.
+            pre = road_fields(run_len, owners=(0, -1), roads=(True, False), covered=1, pairs_ok=0)
         post = road_fields(
             run_len, owners=(0, 0), roads=(True, True), covered=run_len, pairs_ok=run_len - 1
         )
@@ -377,7 +382,7 @@ def materialize_consumed(
     directory: Path,
     source: Path,
     *,
-    ops: int = 3,
+    ops: int = 4,
     route: bool = True,
     station_sid: int = 2,
     result: dict | None = None,
@@ -461,7 +466,7 @@ def materialize_consumed(
         )
     else:
         _certified_cleanup(directory)
-        # The halt tail: op-02 holds its inspection evidence only — the READY
+        # The halt tail: that op holds its inspection evidence only — the READY
         # admission refused (its readbacks never reach a build command).
         position = ops
         tail = build_attempt(seal, source_digest, position, spent=spent, sid=station_sid)
@@ -547,7 +552,7 @@ def test_extension_schedule_is_the_pinned_approved_design():
     assert e.corridor_station_sids() == (0, 1)
     assert e._expected_funds(0) == e.FUNDS_PIN == 492149
     route_policy = e.extension_route_policy()
-    assert route_policy["expected_pairs"] == len(WITNESS) - 1 == 29
+    assert route_policy["expected_pairs"] == len(WITNESS) - 1 == 30
     assert route_policy["statement"].startswith("the route read is pure observation")
 
 
@@ -603,8 +608,8 @@ def test_pinned_witness_disagreement_refuses_the_schedule(monkeypatch):
 
 def test_front_adjacency_gate_refuses_the_schedule(monkeypatch):
     monkeypatch.setattr(e, "_adjacent", lambda a, b: False)
-    with pytest.raises(e.ExtensionStagingError, match="not adjacent"):
-        e.extension_schedule()
+    with pytest.raises(e.ExtensionStagingError, match="same-row adjacency"):
+        e.network_pins()
 
 
 def d4_census() -> dict:
@@ -638,7 +643,7 @@ def test_plan_policy_carries_the_extension_scopes():
     assert policy["max_cost"] == e.PER_OP_MAX_COST == 2000
     assert policy["target_tile"] == int(WITNESS[25]) == 50096
     assert policy["schedule"] == PINNED_SCHEDULE
-    assert policy["schedule_version"] == e.EXTENSION_SCHEDULE_VERSION == 1
+    assert policy["schedule_version"] == e.EXTENSION_SCHEDULE_VERSION == 2
     assert policy["funds_initial"] == 492149
     assert (
         "GSRoad.BuildRoadStation" in policy["command"]
@@ -655,13 +660,13 @@ def test_plan_policy_carries_the_extension_scopes():
 def test_budgets_and_wire_bounds():
     budgets = e.extension_budgets()
     assert budgets["launches"] == budgets["connection_attempts"] == 1
-    assert budgets["requests"] == e.EXTENSION_REQUEST_BUDGET == 16
-    assert budgets["planned_exchanges"] == e.PLANNED_EXTENSION_REQUESTS == 10
+    assert budgets["requests"] == e.EXTENSION_REQUEST_BUDGET == 18
+    assert budgets["planned_exchanges"] == e.PLANNED_EXTENSION_REQUESTS == 13
     assert budgets["gsadmin_bytes"] == 512
     assert budgets["response_bytes"] == 640
     assert budgets["expected_funds"] == 492149
     assert budgets["per_op_max_cost"] == 2000
-    for position in range(3):
+    for position in range(4):
         for request in _op_requests(SEAL, position):
             assert len(request.to_bytes()) <= 512
     attempt = build_attempt(SEAL, "0" * 64, 0, spent=0)
@@ -688,7 +693,7 @@ def test_exit_status_discipline():
 def test_staged_candidate_binds_the_extension_lineage(staged):
     metadata = metadata_of(staged)
     assert metadata["schema"] == e.D5_EXTENSION_PRELAUNCH_SCHEMA
-    assert metadata["attempt"] == e.EXTENSION_ATTEMPT == "D5-CORRIDOR-EXTENSION-2"
+    assert metadata["attempt"] == e.EXTENSION_ATTEMPT == "D5-CORRIDOR-EXTENSION-3"
     assert metadata["milestone"] == e.MILESTONE_EXTENSION == "D5-CORRIDOR-EXTENSION"
     assert metadata["kind"] == e.KIND == "corridor-extension"
     assert metadata["prerequisite"]["after_save_sha256"] == e.PINNED_PREREQUISITE_AFTER_SAVE
@@ -720,9 +725,10 @@ def test_staged_composition_binds_the_extension_package(staged):
 
 def test_design_pins_and_accepted_sharing_records(staged):
     pins = e.extension_staging_pins()
-    assert pins["schema"] == "d5-corridor-extension-design-pins-v1"
+    assert pins["schema"] == "d5-corridor-extension-design-pins-v2"
     assert pins["branch_run"] == [50096, 50352, 50608, 50864]
-    assert pins["branch_stop"] == 50863 and pins["branch_front"] == 50864
+    assert pins["spur_start"] == 50864 and pins["spur_end"] == 50863
+    assert pins["branch_stop"] == 50862 and pins["branch_front"] == 50863
     assert pins["existing_station_sids"] == [0, 1]
     assert pins["census_facts"]["50096"]["buildable"] is True
     assert "no acceptance hypotheses" in pins["statement"]
@@ -979,13 +985,13 @@ def test_replay_verifies_the_synthetic_consumed_attempt(consumed, monkeypatch):
     assert verdict["verification"] == "EXTENSION_COMPLETION_VERIFIED"
     receipt = verdict["receipt"]
     assert receipt["verification"] == "PHASE_COMPLETE"
-    assert [entry["kind"] for entry in receipt["completed"]] == ["full", "road", "station"]
-    assert len(e.extension_request_sequence(e.extension_schedule())) == 10
+    assert [entry["kind"] for entry in receipt["completed"]] == ["full", "road", "spur", "station"]
+    assert len(e.extension_request_sequence(e.extension_schedule())) == 13
     assert receipt["station_receipt"]["verdict"] == "DISTINCT_NEW_STATION"
     assert receipt["station_receipt"]["existing_sids"] == [0, 1]
     assert receipt["station_receipt"]["route_delivery_sid"] == 2
     assert receipt["station_receipt"]["route_delivery_sid"] not in (0, 1)
-    assert receipt["route"]["funds"] == FUNDS - sum(OP_COSTS.values()) == 491317
+    assert receipt["route"]["funds"] == FUNDS - sum(OP_COSTS.values()) == 491174
     assert receipt["acceptance_recheck"] == e.ACCEPTANCE_RECHECK_STATEMENT
     assert e.verdict_exit_status(verdict) == 0
 
@@ -1019,19 +1025,19 @@ def test_replay_fails_closed_on_per_op_ceiling_drift(consumed, tmp_path, monkeyp
 
 def test_replay_fails_closed_on_station_merge_sid1(consumed, tmp_path, monkeypatch):
     target = _clone(consumed, tmp_path)
-    _revise(target, "ext-02-built.json", sid=1)
+    _revise(target, "ext-03-built.json", sid=1)
     _restamp(target)
     monkeypatch.setattr(e, "replay_authorization_state", lambda *a, **k: None)
-    with pytest.raises(ValueError, match="station-merge defect at op-02"):
+    with pytest.raises(ValueError, match="station-merge defect at op-03"):
         e.verify_extension_attempt(target)
 
 
 def test_replay_fails_closed_on_drive_through_stop(consumed, tmp_path, monkeypatch):
     target = _clone(consumed, tmp_path)
-    _revise(target, "ext-02-built.json", drive_through=True)
+    _revise(target, "ext-03-built.json", drive_through=True)
     _restamp(target)
     monkeypatch.setattr(e, "replay_authorization_state", lambda *a, **k: None)
-    with pytest.raises(ValueError, match="drive-through stop refused at op-02"):
+    with pytest.raises(ValueError, match="drive-through stop refused at op-03"):
         e.verify_extension_attempt(target)
 
 
@@ -1387,7 +1393,7 @@ def reopen_prepared(directory: Path) -> PreparedProof:
     )
 
 
-def scripted_world(seal: str, source_digest: str, *, ops=3, route=True, mutate=None):
+def scripted_world(seal: str, source_digest: str, *, ops=4, route=True, mutate=None):
     """The full scripted protocol-4 world for one candidate seal.
 
     Every readback is built by the same synthetic helpers the replay fixtures
@@ -1463,7 +1469,7 @@ def execution_candidate(staged, tmp_path):
     metadata = json.loads((target / "PRELAUNCH.json").read_text())
     source_digest = metadata["world"]["save_sha256"]
 
-    def factory(mutate=None, ops=3, route=True, **backend_kwargs):
+    def factory(mutate=None, ops=4, route=True, **backend_kwargs):
         responses, spent = scripted_world(seal, source_digest, ops=ops, route=route, mutate=mutate)
 
         def build(directory):
@@ -1478,8 +1484,8 @@ def execution_candidate(staged, tmp_path):
 
 
 def test_execution_completes_the_full_schedule_and_verifies(execution_candidate, monkeypatch):
-    """The successful path: three inspect-command-read groups, the 30-tile
-    (29 expected pairs) route read, exact cumulative funds accounting and
+    """The successful path: four inspect-command-read groups, the 31-tile
+    (30 expected pairs) route read, exact cumulative funds accounting and
     the verified receipt,
     re-verified by the production replay over the retained evidence."""
     build, responses, spent = execution_candidate["factory"]()
@@ -1488,7 +1494,7 @@ def test_execution_completes_the_full_schedule_and_verifies(execution_candidate,
     assert result["status"] == "NATIVE_EXTENSION_VERIFIED"
     assert result["verified"] is True
     assert result["halt"] is None
-    assert result["built_ops"] == ["op-00", "op-01", "op-02"]
+    assert result["built_ops"] == ["op-00", "op-01", "op-02", "op-03"]
     assert result["phase"]["verification"] == "PHASE_COMPLETE"
     # Every scheduled exchange reached the wire, in schedule order, ending
     # with the independent route read: proof the arm ran to completion.
@@ -1500,12 +1506,15 @@ def test_execution_completes_the_full_schedule_and_verifies(execution_candidate,
         "road-01",
         "confirm-01",
         "inspect-02",
-        "station-02",
+        "spur-02",
         "confirm-02",
+        "inspect-03",
+        "station-03",
+        "confirm-03",
         "route-00",
     ]
-    assert result["requests"] == 10 == e.PLANNED_EXTENSION_REQUESTS
-    assert len(responses["route-00"].tiles) == 30
+    assert result["requests"] == 13 == e.PLANNED_EXTENSION_REQUESTS
+    assert len(responses["route-00"].tiles) == 31
     # Cumulative cost/funds accounting: each op's retained post-debit
     # balance is the pin minus the verified prefix cost, and the route read
     # closes at the pin minus the full spend.
@@ -1843,16 +1852,16 @@ def test_execution_halts_on_station_merge_defect(execution_candidate, monkeypatc
     station-merge defect: halt before any later operation."""
 
     def merge(position, name, readback):
-        if position == 2 and name == "built":
+        if position == 3 and name == "built":
             return readback.model_copy(update={"sid": 1})  # an existing corridor sid
         return readback
 
     build, _, _ = execution_candidate["factory"](mutate=merge)
     result, backend = run_execution(execution_candidate["directory"], build, monkeypatch)
     assert result["verified"] is False
-    assert result["halt"]["label"] == "op-02"
+    assert result["halt"]["label"] == "op-03"
     assert "station-merge defect" in result["halt"]["error"]
-    assert backend.session.served[-1] == "station-02"
+    assert backend.session.served[-1] == "station-03"
     assert "route-00" not in backend.session.served
     assert not (execution_candidate["directory"] / "receipt.json").exists()
 
@@ -1862,21 +1871,21 @@ def test_execution_halts_on_invalid_station_identity(execution_candidate, monkey
     refused before the independent read or any later operation."""
 
     def invalid(position, name, readback):
-        if position == 2 and name == "built":
+        if position == 3 and name == "built":
             return readback.model_copy(update={"drive_through": True})
         return readback
 
     build, _, _ = execution_candidate["factory"](mutate=invalid)
     result, backend = run_execution(execution_candidate["directory"], build, monkeypatch)
     assert result["verified"] is False
-    assert result["halt"]["label"] == "op-02"
+    assert result["halt"]["label"] == "op-03"
     assert "drive-through stop refused" in result["halt"]["error"]
-    assert backend.session.served[-1] == "station-02"
+    assert backend.session.served[-1] == "station-03"
     assert not (execution_candidate["directory"] / "receipt.json").exists()
 
 
 def test_execution_refuses_success_on_route_read_mismatch(execution_candidate, monkeypatch):
-    """All three ops build, but the final 30-tile (29 expected pairs) route
+    """All four ops build, but the final 31-tile (30 expected pairs) route
     read reports an
     incomplete corridor: no route receipt, no completion verdict, no
     verified success."""
@@ -1931,7 +1940,13 @@ def test_terrain_survey_facts_match_the_pinned_evidence_of_record():
     assert facts["tiles"]["50608"]["slope"] == 8
     assert facts["tiles"]["50096"]["buildable"] is True
     assert facts["tiles"]["50095"]["road"] is True
-    assert facts["acceptance"] == {"50351": 0, "50863": 8}
+    # The A0 survey's own addition: the v2 bay-stop site 50862 is live-flat,
+    # buildable, roadless and unowned, with the full 8/8 acceptance of
+    # record (the v1 stop acceptance on 50863 is history, not bound here).
+    assert facts["tiles"]["50862"]["slope"] == 0
+    assert facts["tiles"]["50862"]["buildable"] is True
+    assert facts["tiles"]["50862"]["road"] is False
+    assert facts["acceptance"] == {"50351": 0, "50862": 8}
     assert facts["statement"].startswith("the consumed read-only survey")
 
 
@@ -1972,11 +1987,11 @@ def test_terrain_survey_identity_drift_refuses(tmp_path):
 
 
 def test_terrain_survey_acceptance_drift_refuses(tmp_path):
-    with pytest.raises(e.ExtensionStagingError, match="for 50863 drifted"):
+    with pytest.raises(e.ExtensionStagingError, match="for 50862 drifted"):
         e.terrain_survey_facts(
             _clone_survey(
                 tmp_path,
-                lambda result: result["phase"]["observations"]["50863"].__setitem__("value", 9),
+                lambda result: result["phase"]["observations"]["50862"].__setitem__("value", 9),
             )
         )
 
@@ -1988,7 +2003,8 @@ def test_design_pins_carry_the_terrain_survey_evidence():
     assert pins["terrain_survey"]["tiles"]["50352"]["slope"] == 12
     assert (
         "census ground whose live escarpment slopes" in pins["statement"]
-        and "D5-TERRAIN-SURVEY-1" in pins["statement"]
+        and "consumed A0 native survey evidence" in pins["statement"]
+        and "D5-TERRAIN-SURVEY-1" not in pins["statement"]
     )
 
 
@@ -2044,30 +2060,31 @@ def test_route_witness_accepts_ordinary_road_to_road_pairs():
 
 
 def test_route_witness_accepts_the_road_to_station_terminal_pair():
-    """The full 30-tile D5 witness ends in a bay truck-stop tile reached from
+    """The full 31-tile D5 witness ends in a bay truck-stop tile reached from
     its front road; when the world is actually connected the same production
     route path accepts the terminal pair (the pickup head 45748 -> 45747 pair
-    of the 28/29 accepted read is this exact shape in the live world)."""
+    of the accepted D4 read is this exact shape in the live world)."""
     _, readback = _route_readback(SEAL)
     receipt = verify_corridor_route(
         readback, prelaunch_digest=SEAL, expected_pairs=len(WITNESS) - 1, expected_path=WITNESS
     )
     assert receipt["verification"] == "ROUTE_VERIFIED"
-    assert receipt["expected_pairs"] == 29
+    assert receipt["expected_pairs"] == 30
     assert receipt["funds"] == FUNDS
 
 
-def test_route_witness_refuses_the_failed_final_pair_of_the_consumed_attempt():
-    """The recorded shape of the D5-CORRIDOR-EXTENSION-2 failure: 28/29
-    connected with the lateral-truck-stop pair (50864 -> 50863) disconnected.
-    A forged or incomplete terminal record can never turn that into success:
-    the refusal is the connectivity rule, not the terminal metadata."""
+def test_route_witness_refuses_the_failed_spur_pair_of_the_consumed_attempt():
+    """The recorded shape of the consumed D5-CORRIDOR-EXTENSION-2 failure,
+    re-expressed in the v2 witness frame: 28/30 connected with the spur pair
+    (50864 -> 50863) disconnected. A forged or incomplete terminal record can
+    never turn that into success: the refusal is the connectivity rule, not
+    the terminal metadata."""
     request, readback = _route_readback(
         SEAL, connected_pairs=28, first_fail=28, eligible=False
     )
     with pytest.raises(ValueError, match="route connectivity is incomplete"):
         verify_corridor_route(
-            readback, prelaunch_digest=SEAL, expected_pairs=29, expected_path=WITNESS
+            readback, prelaunch_digest=SEAL, expected_pairs=30, expected_path=WITNESS
         )
 
 
@@ -2086,7 +2103,7 @@ def test_route_witness_refuses_mutated_terminal_flags():
         _, readback = _route_readback(SEAL, **overrides)
         with pytest.raises(ValueError, match="route stop/depot structure"):
             verify_corridor_route(
-                readback, prelaunch_digest=SEAL, expected_pairs=29, expected_path=WITNESS
+                readback, prelaunch_digest=SEAL, expected_pairs=30, expected_path=WITNESS
             )
 
 
@@ -2094,7 +2111,7 @@ def test_route_witness_refuses_witness_path_drift():
     _, readback = _route_readback(SEAL)
     with pytest.raises(ValueError, match="correlated route observation"):
         verify_corridor_route(
-            readback, prelaunch_digest=SEAL, expected_pairs=29, expected_path=WITNESS[:-1] + (17,)
+            readback, prelaunch_digest=SEAL, expected_pairs=30, expected_path=WITNESS[:-1] + (17,)
         )
 
 
@@ -2104,7 +2121,7 @@ def test_route_witness_refuses_a_mutating_route_read():
     _, readback = _route_readback(SEAL, cost=1)
     with pytest.raises(ValueError, match="correlated route observation"):
         verify_corridor_route(
-            readback, prelaunch_digest=SEAL, expected_pairs=29, expected_path=WITNESS
+            readback, prelaunch_digest=SEAL, expected_pairs=30, expected_path=WITNESS
         )
 
 
@@ -2114,22 +2131,168 @@ def test_station_gate_refuses_forged_and_drifting_terminal_records():
     stop not linked to its pinned front are each refused before any route
     success can be recorded."""
     schedule = e.extension_schedule()
-    request = e._extension_request("station", "station-02", SEAL, 0, MAX_COST, schedule[2])
+    request = e._extension_request("station", "station-03", SEAL, 0, MAX_COST, schedule[3])
     merged = rb(
-        request, status="BUILT", eligible=True, cost=OP_COSTS[2], funds=FUNDS,
+        request, status="BUILT", eligible=True, cost=OP_COSTS[3], funds=FUNDS,
         **site_fields(built=True, sid=0),
     )
     with pytest.raises(ValueError, match="station-merge defect"):
-        e._station_gate(merged, "station-02")
+        e._station_gate(merged, "station-03")
     drive_through = rb(
-        request, status="BUILT", eligible=True, cost=OP_COSTS[2], funds=FUNDS,
+        request, status="BUILT", eligible=True, cost=OP_COSTS[3], funds=FUNDS,
         **dict(site_fields(built=True), drive_through=True),
     )
     with pytest.raises(ValueError, match="drive-through stop refused"):
-        e._station_gate(drive_through, "station-02")
+        e._station_gate(drive_through, "station-03")
     unlinked = rb(
-        request, status="BUILT", eligible=True, cost=OP_COSTS[2], funds=FUNDS,
+        request, status="BUILT", eligible=True, cost=OP_COSTS[3], funds=FUNDS,
         **dict(site_fields(built=True), linked=False),
     )
     with pytest.raises(ValueError, match="not linked to its front"):
-        e._station_gate(unlinked, "station-02")
+        e._station_gate(unlinked, "station-03")
+
+
+# --- v2 schedule of record, version scoping and terminal pair semantics --------
+
+REPO = Path(__file__).resolve().parents[1]
+
+
+def test_extension_schedule_v1_rederives_the_consumed_candidate_design():
+    """The consumed D5-CORRIDOR-EXTENSION-2 record binds a v1 three-op
+    schedule; the historical derivation re-derives it from the same pinned
+    branch arithmetic (never hand-retold), so the version-scoped replay keeps
+    re-binding the consumed record's plan digest. Fresh staging always
+    carries the v2 schedule instead."""
+    v1 = e.extension_schedule_v1()
+    assert [entry["kind"] for entry in v1] == ["full", "road", "station"]
+    assert v1[:2] == [entry for entry in PINNED_SCHEDULE if entry["kind"] in ("full", "road")]
+    assert v1[-1] == dict(
+        kind="station", index=2, tile=50863, front=50864, stop_role="delivery"
+    )
+    # The v1 stop sat at the road corner the v2 design turned into the spur
+    # end, fronting the branch run end.
+    assert (v1[-1]["tile"], v1[-1]["front"]) == (e.PINNED_WITNESS[29], e.PINNED_WITNESS[28])
+    plan = dict(
+        schedule=v1,
+        schedule_version=1,
+        station=e.extension_plan_policy()["station"],
+        acceptance_recheck=dict(statement=e.ACCEPTANCE_RECHECK_STATEMENT),
+        funds_initial=e.FUNDS_PIN,
+        world={},
+        route={},
+    )
+    assert e._require_extension_policy(plan) == plan
+
+
+def test_staged_extension_schedule_version_selector():
+    """A plan record's schedule_version selects its derivation: fresh v2
+    records bind the current spur-and-bay-stop schedule, consumed v1 records
+    the historical three-op one, anything else is refused."""
+    assert e._staged_extension_schedule({"schedule_version": 2}) == e.extension_schedule()
+    assert e._staged_extension_schedule({"schedule_version": 1}) == e.extension_schedule_v1()
+    with pytest.raises(ValueError, match="unknown extension schedule version"):
+        e._staged_extension_schedule({"schedule_version": 3})
+    with pytest.raises(ValueError, match="unknown extension schedule version"):
+        e._staged_extension_schedule({})
+
+
+def _minimal_version_policy(version: int) -> dict:
+    """One synthetic policy record carrying just the required extension keys."""
+    return dict(
+        schedule_version=version,
+        station=dict(
+            statement=e.extension_plan_policy()["station"]["statement"],
+            existing_sids=[0, 1],
+        ),
+        acceptance_recheck=dict(statement=e.ACCEPTANCE_RECHECK_STATEMENT),
+        funds_initial=e.FUNDS_PIN,
+        world={},
+        route={},
+    )
+
+
+def test_extension_attempt_identity_is_version_scoped(monkeypatch):
+    """The attempt identity of record is version-scoped: a v1 plan record
+    binds the consumed D5-CORRIDOR-EXTENSION-2 identity exactly, a v2 record
+    the fresh D5-CORRIDOR-EXTENSION-3 identity; any cross-version pairing is
+    a drifted lineage, never a best-effort match. (The binding helpers are
+    synthetic seams here — the prerequisite/world facts are the D4
+    candidate-5 binding proven by the other tests.)"""
+    monkeypatch.setattr(
+        e, "extension_prerequisite_binding", lambda *a, **k: dict(save_sha256="s" * 64)
+    )
+    monkeypatch.setattr(e, "verify_staged_source_save", lambda *a, **k: None)
+    monkeypatch.setattr(e, "retained_welcome", lambda: {"revision": "15.3"})
+    monkeypatch.setattr(d4, "source_save_path", lambda world: Path("synthetic-source.sav"))
+    welcome = {"revision": "15.3"}
+    base = dict(
+        schema=e.D5_EXTENSION_PRELAUNCH_SCHEMA,
+        kind=e.KIND,
+        milestone=e.MILESTONE_EXTENSION,
+        world=dict(
+            save_sha256=e.PINNED_PREREQUISITE_AFTER_SAVE,
+            expected_welcome=welcome,
+            retained_directory="synthetic",
+            source_save="source.sav",
+        ),
+        prerequisite=dict(directory="synthetic", after_save_sha256="s" * 64),
+    )
+    for version, attempt in (
+        (1, "D5-CORRIDOR-EXTENSION-2"),
+        (2, "D5-CORRIDOR-EXTENSION-3"),
+    ):
+        metadata = dict(base)
+        metadata["attempt"] = attempt
+        metadata["plan_policy"] = _minimal_version_policy(version)
+        binding = e.verify_extension_attempt_identity(metadata)
+        assert binding["save_sha256"] == "s" * 64
+    for version, wrong in ((1, "D5-CORRIDOR-EXTENSION-3"), (2, "D5-CORRIDOR-EXTENSION-2")):
+        metadata = dict(base)
+        metadata["attempt"] = wrong
+        metadata["plan_policy"] = _minimal_version_policy(version)
+        with pytest.raises(ValueError, match="attempt identity drifted"):
+            e.verify_extension_attempt_identity(metadata)
+
+
+def test_terminal_witness_pair_semantics_of_record():
+    """The 31-tile witness tail is the v2 design of record: witness pairs
+    25..27 walk the branch run, pair 28 is the spur piece 50864 -> 50863 (a
+    v1-failed plain road piece, now full-build), and pair 29 is the bay stop
+    50863 -> 50862 — the stop's own linkage, provable only by the terminal
+    route-witness pair (there is no road-bits getter in the 15.3 GameScript
+    API), which is exactly why the terminal station facts gate the route
+    read."""
+    assert len(e.PINNED_WITNESS) == len(WITNESS) == 31
+    assert e.extension_witness()[-3:] == (50864, 50863, 50862)
+    assert e.extension_witness()[25:29] == (50096, 50352, 50608, 50864)
+    schedule = e.extension_schedule()
+    assert schedule[2] == dict(
+        kind="spur", index=2, start=50864, end=50863, run_len=2, tiles=[50864, 50863]
+    )
+    assert schedule[3] == dict(
+        kind="station", index=3, tile=50862, front=50863, stop_role="delivery"
+    )
+    # The spur admission clause of record sits on the run end's company road
+    # and the stop-facing roadless corner; the built receipt carries
+    # pairs_ok == 1 and covered == 2 (both end bits on the spur's own span).
+    assert e.PINNED_WITNESS.index(50864) == 28
+
+
+def test_consumed_candidate_2_replay_stays_preserved_history():
+    """The consumed v1 candidate-2 record relives read-only under the v2
+    code: the version selector re-derives its three-op v1 plan from the
+    pinned arithmetic, and the verdict stays the preserved-failure verdict.
+    The record itself is never re-staged, re-signed, launched or edited."""
+    consumed = REPO / "artifacts/experiments/d5-corridor-extension-native-candidate-2"
+    if not consumed.is_dir():  # pragma: no cover - the retained fixture is in-repo
+        pytest.skip("the consumed candidate-2 record is not present")
+    metadata = json.loads((consumed / "PRELAUNCH.json").read_text())
+    plan = metadata["plan_policy"]
+    schedule = e._staged_extension_schedule(plan)
+    assert [entry["kind"] for entry in schedule] == ["full", "road", "station"]
+    from app.simulation.openttd.proof.corridor_construction_native import plan_digest_of
+
+    assert plan["plan_digest"] == plan_digest_of(schedule)
+    verdict = e.verify_extension_attempt(consumed)
+    assert verdict["verification"] == "ATTEMPT_FAILED_EVIDENCE_PRESERVED"
+    assert verdict["result_status"] == "FAILED"

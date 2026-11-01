@@ -1,4 +1,4 @@
-"""D5-CORRIDOR-EXTENSION-1 native staging pipeline (offline preparation only).
+"""D5 corridor-extension native staging pipeline (offline preparation only).
 
 The terrain-aware D5 corridor-extension recovery design extends the built D4
 corridor with a south branch OUTSIDE the corner influence the D3 terraforming
@@ -1045,7 +1045,7 @@ def prepare_extension_candidate(
                 "stay untouched"
             ),
             plan_policy=policy,
-            expected_readback=d4.expected_readback_policy(),
+            expected_readback=expected_readback_policy(),
             design_pins=extension_staging_pins(),
             bootstrap_command=f"start_ai {STAGED_AI_DIRECTORY}",
             execution_command=[
@@ -1111,6 +1111,27 @@ def prepare_extension_candidate(
         return prepared
     finally:
         reservation.close()
+
+
+def expected_readback_policy() -> dict:
+    """The extension's observable readback story (v2 of record).
+
+    The D4 corridor prose is kept, extended by the v2 `spur` admission
+    shape: a company-road start corner into company-invalid roadless end
+    ground with the pair unlinked. This prose is embedded (frozen) into the
+    fresh candidate's PRELAUNCH bytes, so it must state the whole staged
+    admission surface before staging.
+    """
+    policy = dict(d4.expected_readback_policy())
+    policy["before"] = (
+        "per op: inspect returns READY with the op's own admission "
+        "pre-state (roadless unowned run, or company-road join endpoints "
+        "with no link, or a company-road start corner into "
+        "company-invalid roadless ground with the pair unlinked for the "
+        "dedicated spur, or unplanned footprint fronting the company "
+        "road) and a positive tested quote within the ceiling"
+    )
+    return policy
 
 
 def extension_preflight(prepared: PreparedProof) -> dict:
@@ -1699,6 +1720,17 @@ def verify_extension_attempt(directory: Path) -> dict:
     if plan["schedule"] != schedule or plan["plan_digest"] != plan_digest_of(schedule):
         raise ValueError("the staged extension schedule drifted from the compiled derivation")
     verify_extension_attempt_identity(metadata)
+    # Fail closed on a consumed record missing any replay input: the verdict
+    # is an incomplete-evidence refusal, never an unstructured crash.
+    required = (
+        "result.json",
+        "runtime-identity.json",
+        "session-before.sav",
+        "CLAIM.json",
+    )
+    missing = [name for name in required if not (directory / name).is_file()]
+    if missing:
+        raise ValueError(f"the retained replay evidence is incomplete: {missing}")
     result = json.loads((directory / "result.json").read_text())
     runtime = json.loads((directory / "runtime-identity.json").read_text())
     if runtime["encrypted"] is not True or runtime["welcome"]["revision"] != "15.3":

@@ -1188,7 +1188,7 @@ def test_spur_exchange_group_verifies():
     receipt = verify_corridor(intent, evidence["before"], built, evidence["independent"])
     assert receipt["kind"] == "spur" and receipt["operation"] == "ROAD_SPUR"
     assert json.dumps(receipt["pins"]) == json.dumps(
-        dict(start=50864, end=50863, tile=None, front=None, tiles=None)
+        dict(start=50864, end=50863, tile=None, front=None, tiles=2)
     )
 
 

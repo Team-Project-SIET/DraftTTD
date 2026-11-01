@@ -817,3 +817,118 @@ remain unproven and are not covered by the survey result.
 A documentation-only handoff is complete when links and evidence references are
 valid, implementation bytes remain unchanged, the final diff is reviewed and fresh
 checks are reported separately from inherited validation. No commit/push is needed.
+
+### 2026-11-01 — D5 A1 v2 offline design carried through implementation (offline, no staging)
+
+The A1 design of record (postmortem §3; phase-a §14.1) is carried through
+source, GameScript and tests offline. Four-op v2 schedule: op-0 `full`
+`ROAD_FULL 50096 → 50864` (branch run 4 tiles), op-1 `road`
+`50095 ↔ 50096` (the wall join), op-2 dedicated **`spur`** kind — its own
+admission clause, never a broadening of `full`/`road` —
+`GSRoad.BuildRoadFull(50864, 50863)` (company-road start corner into
+company-invalid roadless ground, `covered==1/pairs_ok==0` pre,
+`covered==2/pairs_ok==1` post), op-3 bay truck stop at tile **50862**
+fronting **50863** (`STATION_NEW`, non-drive-through). Witness of record:
+31 tiles / 30 pairs ending `… 50864, 50863, 50862`; the 50862-facing road
+bit of 50863 is provable only by the terminal route-witness pair (no
+road-bits getter in the 15.3 GameScript API), so the terminal station
+facts gate the route read. `EXTENSION_SCHEDULE_VERSION = 2`, attempt
+`D5-CORRIDOR-EXTENSION-3`; the consumed v1 candidate-2 stays preserved
+forever and replays read-only (`ATTEMPT_FAILED_EVIDENCE_PRESERVED`
+verified live) against `extension_schedule_v1()` re-derivation (digest
+match True). v2 plan digest of record:
+`aa88bc99fb80056423b4d1fdc40994abf66aff3afffeb51c710e163ba5447535`.
+Budgets: 13 planned exchanges (4 × 3 + route read) in an 18-request cap;
+funds arithmetic `492149 − (454+71+143+307) = 491174`. Survey rebinds to
+the consumed A0 candidate-3 evidence (plan `82246eb6…`, seal `6743fc3c…`,
+tiles += 50862 flat/buildable/roadless, acceptance `{50351: 0, 50862: 8}`).
+
+Files of record: `app/simulation/openttd/corridor_construction.py`
+(shared protocol-4 `spur` contract + `verify_corridor_route` pairwise
+adjacency rule), `app/simulation/openttd/proof/corridor_extension_native.py`
+(v2 pipeline, version selector, version-scoped attempt identity,
+extension-local `expected_readback_policy()` with the spur admission
+prose, replay inventory guard), `app/simulation/openttd/d5_extension_package/main.nut`
+(4 stages, spur RunCommand/Eligible/PostHolds/Step, dispatcher + `q.op`
+whitelist — a missing spur whitelist was found by tests and closed),
+`tests/test_corridor_extension.py` (33 PASS) and
+`tests/test_corridor_extension_native.py` (79 PASS, incl. v1
+re-derivation, version selector, version-scoped identity, terminal
+witness-pair semantics, consumed candidate-2 read-only replay). All five
+focused suites green in one run (exit 0, 240 tests). Independent
+fresh-context review: no blockers or majors; applied minors recorded
+(route adjacency validator, replay inventory guard, expected-readback
+prose, docstring/comment wording, append-only v2-correction note in the
+2026-10-28 handoff design doc). Route wire sizing offline: 636 ≤ 640
+bound (thin but bound, not assumed). Nothing staged, signed, authorized,
+launched or claimed; no commit. Risks/UNKNOWN stance unchanged: wheel
+reachability, road-bit directions, pathfinding and the spur's native
+quote stay UNKNOWN until native admission. Next: fresh never-consumed
+candidate staging (`d5-corridor-extension-native-candidate-3`), PRELAUNCH
++ independent review, Gate C Option-1 signing, separate explicit launch
+approval — each its own operator-approved step. Record: phase-a §14;
+evidence index E41.
+
+### 2026-11-01 — D5-CORRIDOR-EXTENSION-3 fresh A1 candidate-3 staged (offline, operator-approved)
+
+The operator authorized staging ONE fresh never-consumed extension
+candidate at
+`artifacts/experiments/d5-corridor-extension-native-candidate-3/`:
+signing, authorization, claim and launch explicitly out of scope. Target
+verified absent; production CLI `prepare`
+(`prepare_extension_candidate` + `extension_preflight`, pinned D4
+candidate-5 prerequisite) returned **PRELAUNCH PASS**, then standalone
+read-only `preflight` returned **PREFLIGHT PASS**; standalone `verify`
+returns the expected structured `AUTHORIZATION_UNVERIFIED`/`CLAIM_ABSENT`.
+
+Staged identity of record: attempt `D5-CORRIDOR-EXTENSION-3` (the
+consumed v1 attempt name `D5-CORRIDOR-EXTENSION-2` appears zero times in
+the staged bytes); seal
+`404d42d9fa1e113542e74655858f6bc669407d611057eec0c036612ddfa6acd8`
+(`PRELAUNCH.sha256` == recomputed sha256 of `PRELAUNCH.json`);
+authorization payload digest
+`c511dd38a068c1cef5539d3cc422819ef76d73842c42e4d1601b4199debdf94f`
+(independently recomputed offline from the staged canonical bytes);
+schedule `EXTENSION_SCHEDULE_VERSION == 2` — op-0 `full` 50096→50864,
+op-1 `road` 50095↔50096, op-2 `spur` 50864→50863, op-3 station 50862
+fronting 50863 — with digest
+`aa88bc99fb80056423b4d1fdc40994abf66aff3afffeb51c710e163ba5447535`
+(staged == derived); budgets {1 launch, 1 connection, 0 retries/
+reconnects, 18-request cap, 13 planned, 512/640 wire bounds, per-op
+ceiling 2000, expected funds 492149}; witness 31 tiles / 30 pairs ending
+`… 50864, 50863, 50862`; design pins
+`d5-corridor-extension-design-pins-v2` (spur_start 50864, spur_end
+50863, branch_stop 50862, branch_front 50863); world bound to the pinned
+D4 candidate-5 after-save
+`a81ac83677732f9951f5acb3a119395020e49b2317adb3419edf6bc626cef261`
+(after.sav); A0 survey rebind to the consumed
+`d5-corridor-extension-3-survey-native-candidate-3` (plan digest
+`82246eb6…ef8d9` and seal `6743fc3c…898df8`, each appearing exactly once
+in the staged bytes); v2 expected-readback prose with the spur admission
+clause embedded; frozen closure 3,490 entries pinning the v2 GameScript
+`RoadFreightProof/main.nut` (`78e5476f…da46a`, byte-identical to the
+live source) and `corridor_extension_native.py` (`afdaa970…382a9`).
+
+Inventory: `PRELAUNCH.json`, `PRELAUNCH.sha256`,
+`graphics-identity.json`, `isolated/` pre-launch skeleton with all
+runtime directories empty. No `AUTHORIZATION.json`, no `CLAIM.json`, no
+`LAUNCH-CONSUMED.json`, no journal, no saves, no launch artifacts exist.
+Consumed evidence untouched: extension candidate-2 manifest re-verifies 0
+mismatches (48 entries), survey candidate-3 listing complete and
+unchanged (Oct 31 mtimes). Independent fresh-context review:
+**READY-FOR-GATE-C** — zero blockers, zero majors, zero minors; three
+historical documentation notes only (postmortem §1 digest/seal wording,
+missing literal E-row for the consumed v1 directory, artifacts/ gitignored
+untracked), none touching the staged bytes.
+
+**Nothing was signed, authorized, claimed, consumed, launched or
+committed by this entry; no commit landed.** D5 stays ATTEMPTED, NOT
+DELIVERED: freight delivery unproven (`D5-FREIGHT-1` failed-of-record
+retained), M8 optimizer route selection not demonstrated, wheel
+reachability / road-bit directions / pathfinding / the spur native quote
+stay UNKNOWN. Stopped at the Gate C signing approval: Option-1 signing
+over seal
+`404d42d9fa1e113542e74655858f6bc669407d611057eec0c036612ddfa6acd8` /
+payload
+`c511dd38a068c1cef5539d3cc422819ef76d73842c42e4d1601b4199debdf94f` and
+the separate explicit launch approval remain ungranted operator gates. Record: phase-a §15; evidence index E42.

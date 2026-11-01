@@ -60,7 +60,7 @@ acceptance; FAILED is an immutable consumed outcome; UNKNOWN means missing facts
 | Tile Classification V2 capture | NATIVE VERIFIED capture completed 2026-10-18 (90/90 pages, 450/450 tiles, schema 2, staged AI + GameScript startup, zero script deaths, 0 mutations, cleanup PASS); SOURCE_SAVE_FUSION verdict **REJECTED** — 83 projected-flag disagreements, nothing fused; the 19 historically UNKNOWN tiles were observed CLEAR in the fresh census and stay UNKNOWN in the retained assessment; P08 remains `INCOMPLETE_TILE_CLASSIFICATION`. E16. |
 | D4 corridor construction | Native road + station construction PROVEN for the reviewed v3 scope (candidate-5, `RECEIPT_VERIFIED`, authoritative after-save `a81ac836…ef261`; £492,149 funds pin). E35. |
 | D5 corridor freight | ATTEMPTED, NOT DELIVERED: `D5-FREIGHT-1` consumed with the native delivery-stop cargo-1 acceptance 0 finding of record; no freight delivery, no OPEX/profit fact. M8 optimizer route-selection NOT demonstrated (no competing executable route). E36. |
-| D5 corridor extension | A0 SURVEY COMPLETE — VERIFIED NATIVE (E40): candidate-3 `D5CE3-SURVEY-3` launched once under all operator gates, claim consumed, replay `SURVEY_COMPLETION_VERIFIED`, cleanup certified; stop tile `50862` observed 8/8 cargo-1 acceptance (control 0/8). Corridor construction (A1), freight delivery and M8 route-selection proof remain separate future attempts; the stale never-consumed candidate-2 is preserved untouched. E37, E38, E39, E40, phase-a record §10–§13. |
+| D5 corridor extension | A0 SURVEY COMPLETE — VERIFIED NATIVE (E40); **A1 OFFLINE IMPLEMENTATION COMPLETE (E41, phase-a §14)**: v2 four-op design of record (full 50096→50864, road 50095↔50096, dedicated `spur` 50864→50863, bay stop 50862 front 50863), 31-tile/30-pair witness, attempt identity `D5-CORRIDOR-EXTENSION-3`, plan digest `aa88bc99…5447535`; all five focused suites green (240 tests) and the consumed v1 candidate-2 still replays read-only (`ATTEMPT_FAILED_EVIDENCE_PRESERVED`), byte-untouched. **Nothing staged, signed, authorized, launched or claimed for A1**; the next gates are fresh candidate staging, PRELAUNCH + independent review, Gate C signing and a separate launch approval. Freight delivery and M8 route-selection proof remain separate future attempts; wheel reachability, road-bit directions and pathfinding stay UNKNOWN. E37, E38, E39, E40, E41, phase-a record §10–§14. |
 | Seed 17 smoke | FAILED under old capture-area gate; no service construction/delivery; P05 NOT_RUN. E4. |
 | Larger random capture | Controlled/offline correction, no new native run: 512 fully observed tiles per rectangle; fixed demo stays 256; road path stays 47. E5. |
 | Fourth vehicle / matched experiments | Native intervention and matched A/B outcome not established by reload-only Q3. Retain as future scoped work. |
@@ -200,9 +200,18 @@ at 8/8 cargo-1 acceptance (control `50351` 0/8). The candidate is consumed
 history: never re-run, re-signed or re-claimed; candidate-2 (stale,
 never-consumed) stays preserved untouched. The next step is **A1
 (corridor spur + bay-truck-stop construction, phase-a §1 solver work)**, a
-separate native attempt: it needs a scoped design update, a fresh never
--consumed candidate (new identity, fresh staging), independent review, its
-own Gate C signature and a separate explicit launch approval. Freight
+separate native attempt: its **v2 design is now carried offline (2026-11-01,
+phase-a §14, E41)** — the postmortem §3 four-op schedule (dedicated `spur`
+road op 50864→50863 then the bay stop 50862 fronting 50863 with
+`STATION_NEW`) is implemented in the shared protocol-4 contract, the
+extension staging pipeline (`EXTENSION_SCHEDULE_VERSION = 2`, attempt
+`D5-CORRIDOR-EXTENSION-3`) and the GameScript handler, validated by the
+five focused suites (240 tests) plus a read-only replay of the consumed v1
+candidate-2 that still returns `ATTEMPT_FAILED_EVIDENCE_PRESERVED`. What
+remains for A1 is exactly the gated sequence: a fresh never-consumed
+candidate staging (`d5-corridor-extension-native-candidate-3`), PRELAUNCH
+plus independent review, Gate C Option-1 signing and a separate explicit
+launch approval. Freight
 delivery and M8 route-selection proof remain separate, unsatisfied D5
 requirements and are never covered by the A0 survey. CONTEXT.md is not
 edited here: its bytes stay pinned by the E26 authority record.
