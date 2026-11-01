@@ -166,30 +166,28 @@ class D5FreightProof extends GSController {
         return -1
     }
 
-    /* -- protocol 6: the read-only acceptance survey (D5-ACCEPT-SURVEY-1) ---- */
+    /* -- protocol 6: the read-only acceptance survey (D5-ACCEPT-SURVEY-2) ---- */
     /* Additive over the freight schedule: pure observation of the native
      * truck-stop coverage radius, tile-level cargo-1 acceptance over the
-     * pinned control + candidate tiles, and the pickup-side production
-     * control. No stop is built or assumed buildable at any tile; a
-     * measured acceptance value is catchment evidence only. */
+     * pinned control tile and the A1 bay stop, and the pickup-side
+     * production control. No stop is built or assumed buildable at any
+     * tile; a measured acceptance value is catchment evidence only and
+     * never a route, road-bit or vehicle-reachability claim. */
     survey_planned = [
         ["radius-00", "radius", "READY"],
         ["accept-00", "accept", "READY"],
         ["accept-01", "accept", "READY"],
-        ["accept-02", "accept", "READY"],
-        ["accept-03", "accept", "READY"],
-        ["accept-04", "accept", "READY"],
-        ["accept-05", "accept", "READY"],
         ["prod-00", "prod", "READY"]
     ]
     survey_stage = 0
     survey_halted = false
-    /* Survey pins: the consumed attempt's delivery stop (control, expected
-     * zero by the finding of record) and the five retained pre-construction
-     * census candidate tiles. These are hypothesis locations, never proven
-     * buildable stops and never a proven freight route. */
+    /* Census pins: the control-of-record delivery stop (expected zero by
+     * the finding of record, re-measured) and the A1 bay truck stop 50862
+     * (front 50863) that D5-CORRIDOR-EXTENSION-3 built and station-
+     * registered. The 50862 pin is a live station tile of the A1 close-out
+     * world, not a hypothesis location and not a proven vehicle path. */
     ACCEPT_CONTROL = 50351
-    ACCEPT_CANDIDATES = [50607, 50863, 51119, 51375, 50605]
+    ACCEPT_CANDIDATES = [50862]
 
     function SurveyOpAllowed(op) {
         return op == "radius" || op == "accept" || op == "prod"

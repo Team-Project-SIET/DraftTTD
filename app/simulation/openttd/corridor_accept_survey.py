@@ -4,10 +4,12 @@ Milestone D5-ACCEPT-SURVEY-1: after the consumed ``D5-FREIGHT-1`` attempt
 recorded the finding of record — delivery stop 50351 (front 50095) has zero
 cargo-1 native acceptance because the only coal-accepting tile of industry 1
 (tile 51373, 173,200) lies outside the stop's effective catchment — the next
-authority-gated step is a strictly read-only acceptance survey over the
+authority-gated step was a strictly read-only acceptance survey over the
 authoritative D4 candidate-5 after-save. This module is the protocol-6 wire
-contract for that survey: typed requests, fail-closed response parsing, a
-pinned observation schedule, and a fail-closed survey verifier that
+contract for that survey: typed requests, fail-closed response parsing,
+version-scoped pinned observation schedules (v1: the consumed eight-exchange
+survey; v2: the post-A1 four-exchange census on the consumed A1
+candidate-3 after-save), and a fail-closed survey verifier that
 distinguishes a measured zero from a missing, malformed, stale, out-of-range
 or inconclusive observation.
 
@@ -91,6 +93,21 @@ SURVEY_CONTROL_TILE = SURVEY_DELIVERY_TILE
 SURVEY_CANDIDATE_TILES: tuple[int, ...] = (50607, 50863, 51119, 51375, 50605)
 SURVEY_OBSERVATION_TILES: tuple[int, ...] = (SURVEY_CONTROL_TILE,) + SURVEY_CANDIDATE_TILES
 
+# --- post-A1 versioning (the EXTENSION_SCHEDULE_VERSION / EXTENSION_ATTEMPTS
+# precedent, E41): the consumed v1 record (D5-ACCEPT-SURVEY-1, candidate-1)
+# is permanent history and is never re-staged; fresh staging carries version
+# 2 only, the post-A1 census on the consumed A1 candidate-3 after-save.
+# The version selector lives here, where the plan contract and its pins
+# live; the native pipeline versions its attempt/schema identities with it.
+SURVEY_SCHEDULE_VERSION = 2
+FUNDS_AT_A1_CLOSE = 490257
+# The A1 feasibility tile of record: the native bay truck stop 50862 (front
+# 50863) that the consumed D5-CORRIDOR-EXTENSION-3 attempt built and
+# station-registered (station_receipt sid 2, DISTINCT_NEW_STATION). Its
+# retro-census acceptance is the A0 retained census observation (8/8), not
+# a pathfinding or vehicle-reachability claim of any kind.
+SURVEY_A1_STOP_TILE = 50862
+
 SURVEY_OPS = ("radius", "accept", "prod")
 
 SurveyOp = Literal["radius", "accept", "prod"]
@@ -150,6 +167,44 @@ if (
 ):
     raise RuntimeError("acceptance-survey exchange schedule drifted from the pinned observations")
 
+# The pinned observation schedule of D5-ACCEPT-SURVEY-2 (post-A1 census):
+# radius first, then the control-of-record zero at 50351, then the A1
+# feasibility observation at 50862, then the pickup production control.
+# Same exchange-id naming family as v1; the version-scoped id set is its
+# own derivation, never a relabel of the consumed eight-exchange record.
+SURVEY_OBSERVATION_TILES_V2: tuple[int, ...] = (SURVEY_CONTROL_TILE, SURVEY_A1_STOP_TILE)
+_SURVEY_SEQUENCE_V2: tuple[tuple[str, SurveyOp], ...] = (
+    ("radius-00", "radius"),
+    ("accept-00", "accept"),
+    ("accept-01", "accept"),
+    ("prod-00", "prod"),
+)
+SURVEY_EXCHANGE_IDS_V2: tuple[str, ...] = tuple(i for i, _ in _SURVEY_SEQUENCE_V2)
+PLANNED_SURVEY_EXCHANGES_V2 = len(_SURVEY_SEQUENCE_V2)
+_SURVEY_OP_BY_ID_V2: dict[str, SurveyOp] = dict(_SURVEY_SEQUENCE_V2)
+_OBSERVATION_TILE_BY_EXCHANGE_V2: dict[str, int] = {
+    "accept-00": SURVEY_CONTROL_TILE,
+    "accept-01": SURVEY_A1_STOP_TILE,
+}
+# Request-level tile gates are plan-independent: a request validates its
+# tile against the union of both versions' observation sets here, then the
+# plan-bound verifier below (v1 replay or v2 census) refines it exactly.
+SURVEY_PINNED_TILES: tuple[int, ...] = tuple(
+    sorted(set(SURVEY_OBSERVATION_TILES) | set(SURVEY_OBSERVATION_TILES_V2))
+)
+
+if (
+    len(SURVEY_EXCHANGE_IDS_V2) != PLANNED_SURVEY_EXCHANGES_V2
+    or len(set(SURVEY_EXCHANGE_IDS_V2)) != PLANNED_SURVEY_EXCHANGES_V2
+    or set(_SURVEY_OP_BY_ID_V2.values()) != set(SURVEY_OPS)
+    or _OBSERVATION_TILE_BY_EXCHANGE_V2 != {"accept-00": 50351, "accept-01": 50862}
+    or SURVEY_OBSERVATION_TILES_V2 != (50351, 50862)
+    or SURVEY_OBSERVATION_TILES_V2[0] != SURVEY_OBSERVATION_TILES[0]
+    or set(SURVEY_EXCHANGE_IDS_V2) - set(SURVEY_EXCHANGE_IDS)
+):
+    raise RuntimeError("acceptance-survey v2 schedule drifted from the pinned observations")
+
+# per-version plan lookup tables (plan contract versioning lives here):
 
 class AcceptSurveyPlan(Contract):
     """The pinned identities and ordered observations of one survey attempt.
@@ -162,7 +217,7 @@ class AcceptSurveyPlan(Contract):
     must bind.
     """
 
-    schema_version: Literal[1] = 1
+    schema_version: Literal[1, 2] = 1
     company: CompanyID
     cargo: Annotated[StrictInt, Field(ge=0, le=63)]
     pickup: TileID
@@ -196,19 +251,32 @@ class AcceptSurveyPlan(Contract):
             raise ValueError("delivery pins drifted from the D4 corridor stops")
         if (self.depot, self.depot_front) != (SURVEY_DEPOT_TILE, SURVEY_DEPOT_FRONT_TILE):
             raise ValueError("depot pins drifted from the D4 corridor depot")
-        if (
-            self.pickup_industry != SURVEY_PICKUP_INDUSTRY
-            or self.pickup_industry != SURVEY_PICKUP_INDUSTRY
-        ):
+        if self.pickup_industry != SURVEY_PICKUP_INDUSTRY:
             raise ValueError("the pickup control observes industry 0 only")
-        if self.expected_funds != FUNDS_AT_D4_CLOSE:
-            raise ValueError("the plan binds the candidate-5 close-out funds exactly")
-        if len(self.observations) != len(SURVEY_OBSERVATION_TILES) or tuple(
-            self.observations
-        ) != SURVEY_OBSERVATION_TILES:
-            raise ValueError("observations drifted from the pinned control-first tile list")
-        if self.schedule != SURVEY_EXCHANGE_IDS:
-            raise ValueError("schedule drifted from the planned eight survey exchanges")
+        if self.schema_version == 1:
+            observations = SURVEY_OBSERVATION_TILES
+            schedule = SURVEY_EXCHANGE_IDS
+            funds_pin = FUNDS_AT_D4_CLOSE
+            funds_message = "the plan binds the candidate-5 close-out funds exactly"
+            observations_message = "observations drifted from the pinned control-first tile list"
+            schedule_message = "schedule drifted from the planned eight survey exchanges"
+        elif self.schema_version == 2:
+            observations = SURVEY_OBSERVATION_TILES_V2
+            schedule = SURVEY_EXCHANGE_IDS_V2
+            funds_pin = FUNDS_AT_A1_CLOSE
+            funds_message = "the v2 plan binds the A1 close-out funds exactly"
+            observations_message = (
+                "v2 observations drifted from the pinned control-then-A1-stop tile list"
+            )
+            schedule_message = "v2 schedule drifted from the planned four census exchanges"
+        else:  # pragma: no cover - the literal exhausts
+            raise ValueError("an unknown acceptance-survey plan version")
+        if self.expected_funds != funds_pin:
+            raise ValueError(funds_message)
+        if len(self.observations) != len(observations) or tuple(self.observations) != observations:
+            raise ValueError(observations_message)
+        if self.schedule != schedule:
+            raise ValueError(schedule_message)
         return self
 
 
@@ -228,6 +296,48 @@ def survey_plan() -> AcceptSurveyPlan:
         observations=SURVEY_OBSERVATION_TILES,
         schedule=SURVEY_EXCHANGE_IDS,
     )
+
+
+def survey_plan_v2() -> AcceptSurveyPlan:
+    """The pinned D5-ACCEPT-SURVEY-2 plan derived from the module's own v2 pins.
+
+    The identical corridor identity pins as v1 (the stops and depot of the
+    consumed D4 lineage are all still live in the A1 close-out world); the
+    version difference is the funds pin (the A1 close-out level), the two
+    observation tiles (control 50351, A1 stop 50862) and the four-exchange
+    census schedule.
+    """
+    return AcceptSurveyPlan(
+        schema_version=2,
+        company=SURVEY_COMPANY,
+        cargo=SURVEY_CARGO_ID,
+        pickup=SURVEY_PICKUP_TILE,
+        pickup_front=SURVEY_PICKUP_FRONT_TILE,
+        delivery=SURVEY_DELIVERY_TILE,
+        delivery_front=SURVEY_DELIVERY_FRONT_TILE,
+        depot=SURVEY_DEPOT_TILE,
+        depot_front=SURVEY_DEPOT_FRONT_TILE,
+        pickup_industry=SURVEY_PICKUP_INDUSTRY,
+        expected_funds=FUNDS_AT_A1_CLOSE,
+        observations=SURVEY_OBSERVATION_TILES_V2,
+        schedule=SURVEY_EXCHANGE_IDS_V2,
+    )
+
+
+def staged_survey_plan(policy: dict) -> AcceptSurveyPlan:
+    """The version-scoped plan a staged plan-policy record binds its digest to.
+
+    Versioning follows the extension replay precedent: fresh v2 records bind
+    the current post-A1 census plan; consumed v1 records bind the historical
+    eight-exchange plan exactly (never a best-effort guess). Any other
+    versioning is a refused plan record.
+    """
+    version = policy.get("schedule_version", 0)
+    if version == SURVEY_SCHEDULE_VERSION:
+        return survey_plan_v2()
+    if version == 1:
+        return survey_plan()
+    raise ValueError(f"plan record names an unknown acceptance-survey version: {version}")
 
 
 class SurveyRequest(Contract):
@@ -256,7 +366,7 @@ class SurveyRequest(Contract):
         if self.op == "accept":
             if self.tile is None:
                 raise ValueError("accept requests carry exactly one pinned observation tile")
-            if self.tile not in SURVEY_OBSERVATION_TILES:
+            if self.tile not in SURVEY_PINNED_TILES:
                 raise ValueError("accept requests may only query the pinned survey tiles")
         elif self.tile is not None:
             raise ValueError("only the accept op carries a tile")
@@ -396,12 +506,16 @@ def verify_request_against_survey_plan(
     ):
         raise ValueError("request pins drifted from the planned corridor")
     if request.op == "accept":
+        plan_ids = plan.schedule
         exchange_index = (
-            SURVEY_EXCHANGE_IDS.index(request.request_id)
-            if request.request_id in SURVEY_EXCHANGE_IDS
-            else -1
+            plan_ids.index(request.request_id) if request.request_id in plan_ids else -1
         )
-        expected = _OBSERVATION_TILE_BY_EXCHANGE.get(request.request_id)
+        observation_by_exchange = (
+            _OBSERVATION_TILE_BY_EXCHANGE_V2
+            if plan.schema_version == 2
+            else _OBSERVATION_TILE_BY_EXCHANGE
+        )
+        expected = observation_by_exchange.get(request.request_id)
         if (
             exchange_index < 1
             or expected is None
@@ -432,14 +546,17 @@ def _survey_read_step(
     seal: str,
 ) -> dict:
     """Verify one ordered survey exchange against the accumulated state."""
-    expected = SURVEY_EXCHANGE_IDS[state["index"]]
+    plan_ids = plan.schedule
+    expected = plan_ids[state["index"]]
     if request.request_id != expected or readback.request_id != expected:
         raise ValueError(f"survey exchange out of order: expected {expected}")
     verify_request_against_survey_plan(request, plan=plan, seal=seal)
     if readback.status != "READY":
         raise ValueError(f"survey exchange {expected} ended {readback.status}")
     if readback.funds != plan.expected_funds:
-        raise ValueError("survey funds must equal the D4 close-out level exactly")
+        if plan.schema_version == 1:
+            raise ValueError("survey funds must equal the D4 close-out level exactly")
+        raise ValueError("survey funds must equal the A1 close-out level exactly")
     if readback.cost != 0:
         raise ValueError("survey exchanges must observe at zero cost")
     # Paused and unpinned worlds are refused inside the handler; a correlated
@@ -544,11 +661,12 @@ def survey_phase_outcome(
                 world_state="HALTED_BEFORE_MUTATION",
             )
             continue
-    complete = failed is None and len(exchanges) == PLANNED_SURVEY_EXCHANGES
+    complete = failed is None and len(exchanges) == len(plan.schedule)
+    plan_ids = plan.schedule
     pending = (
-        list(SURVEY_EXCHANGE_IDS[len(exchanges):])
+        list(plan_ids[len(exchanges):])
         if failed is None
-        else list(SURVEY_EXCHANGE_IDS[SURVEY_EXCHANGE_IDS.index(failed["label"]) + 1:])
+        else list(plan_ids[plan_ids.index(failed["label"]) + 1:])
     )
     observations = state["observations"]
     return dict(

@@ -60,7 +60,7 @@ acceptance; FAILED is an immutable consumed outcome; UNKNOWN means missing facts
 | Tile Classification V2 capture | NATIVE VERIFIED capture completed 2026-10-18 (90/90 pages, 450/450 tiles, schema 2, staged AI + GameScript startup, zero script deaths, 0 mutations, cleanup PASS); SOURCE_SAVE_FUSION verdict **REJECTED** — 83 projected-flag disagreements, nothing fused; the 19 historically UNKNOWN tiles were observed CLEAR in the fresh census and stay UNKNOWN in the retained assessment; P08 remains `INCOMPLETE_TILE_CLASSIFICATION`. E16. |
 | D4 corridor construction | Native road + station construction PROVEN for the reviewed v3 scope (candidate-5, `RECEIPT_VERIFIED`, authoritative after-save `a81ac836…ef261`; £492,149 funds pin). E35. |
 | D5 corridor freight | ATTEMPTED, NOT DELIVERED: `D5-FREIGHT-1` consumed with the native delivery-stop cargo-1 acceptance 0 finding of record; no freight delivery, no OPEX/profit fact. M8 optimizer route-selection NOT demonstrated (no competing executable route). E36. |
-| D5 corridor extension | A0 SURVEY COMPLETE — VERIFIED NATIVE (E40); **A1 OFFLINE IMPLEMENTATION COMPLETE (E41, phase-a §14)**: v2 four-op design of record (full 50096→50864, road 50095↔50096, dedicated `spur` 50864→50863, bay stop 50862 front 50863), 31-tile/30-pair witness, attempt identity `D5-CORRIDOR-EXTENSION-3`, plan digest `aa88bc99…5447535`; all five focused suites green (240 tests) and the consumed v1 candidate-2 still replays read-only (`ATTEMPT_FAILED_EVIDENCE_PRESERVED`), byte-untouched. **Nothing staged, signed, authorized, launched or claimed for A1**; the next gates are fresh candidate staging, PRELAUNCH + independent review, Gate C signing and a separate launch approval. Freight delivery and M8 route-selection proof remain separate future attempts; wheel reachability, road-bit directions and pathfinding stay UNKNOWN. E37, E38, E39, E40, E41, phase-a record §10–§14. |
+| D5 corridor extension | A0 SURVEY COMPLETE — VERIFIED NATIVE (E40); A1 NATIVE COMPLETE, VERIFIED (`D5-CORRIDOR-EXTENSION-3` consumed, `EXTENSION_COMPLETION_VERIFIED`, after-save `3748e00c…5420bd`, funds £490,257; E42–E44, phase-a §15–§17). **POST-A1 CENSUS OFFLINE IMPLEMENTATION COMPLETE (E46, design §8)**: protocol-6 retargeted to `D5-ACCEPT-SURVEY-2` — version selector `SURVEY_SCHEDULE_VERSION = 2` + versioned plan contract in the wire module (v1 plan digest `2d2e47b2…02e7` byte-preserved, consumed candidate-1 still replays `SURVEY_COMPLETION_VERIFIED` through the production verifier), native versioning on the extension precedent (attempt map, schema map, prerequisite pins with v2 = consumed A1 candidate-3 end-to-end re-verified), 4-exchange census (radius-00, accept-00 control 50351 = 0, accept-01 stop 50862, prod-00), B1 GameScript re-bake (4 rows, `ACCEPT_CANDIDATES [50862]`, no handler-logic change), suites green (65 + four-suite 148/1-skip + freight 42 + A1 240-baseline). **CENSUS FRESH CANDIDATE STAGED, READY-FOR-GATE-C (E47, design §9)**: `d5-accept-survey-native-candidate-2/` staged offline via production `prepare` → `PRELAUNCH PASS`, read-only `preflight` → `PREFLIGHT PASS`, `verify` → `AUTHORIZATION_UNVERIFIED`/`CLAIM_ABSENT` (exit 1); seal `237a4f84…37daa4`, v2 plan digest `67fce856…80be2`, schedule digest `1222db02…389d`, authorization payload digest `b1f3e209…00bd`, world = A1 after-save `3748e00c…5420bd` (staged source.sav verified), hypotheses {50351: 0, 50862: 8}, funds 490,257 proven from A1 route receipts, frozen closure 3,491 entries, no authorization/claim/journal anywhere; independent fresh-context prerequisite inspection `PREREQUISITE VERIFIED` and staged-byte review `READY-FOR-GATE-C` (0 blockers/majors/minors). **Nothing signed, claimed, authorized, launched or executed for the census**; remaining gates: Gate C Option-1 signing over `237a4f84…37daa4`/`b1f3e209…00bd`, then the separate launch approval, then the census report — each its own operator gate. Freight delivery and M8 route-selection proof remain separate future attempts; wheel reachability, road-bit directions and pathfinding stay UNKNOWN (census proves acceptance only, never traversal). E37–E47, phase-a record §10–§17, [design doc](docs/d5-post-a1-acceptance-survey-design.md) §1–§9. |
 | Seed 17 smoke | FAILED under old capture-area gate; no service construction/delivery; P05 NOT_RUN. E4. |
 | Larger random capture | Controlled/offline correction, no new native run: 512 fully observed tiles per rectangle; fixed demo stays 256; road path stays 47. E5. |
 | Fourth vehicle / matched experiments | Native intervention and matched A/B outcome not established by reload-only Q3. Retain as future scoped work. |
@@ -231,7 +231,22 @@ cleanup all-true, manifest 0 mismatches, claim consumed once. The
 remaining D5 A1 gate is the cargo-1 acceptance census on this
 attempt's after-save (a separate read-only survey session, required
 before any freight order or vehicle purchase); freight delivery and
-M8 route selection remain unproven and are never covered by A1. Freight
+M8 route selection remain unproven and are never covered by A1. The
+census is now designed offline (2026-11-01,
+[docs/d5-post-a1-acceptance-survey-design.md](docs/d5-post-a1-acceptance-survey-design.md),
+E45): a versioned `D5-ACCEPT-SURVEY-2` retarget of the protocol-6
+survey pipeline bound to the consumed A1 candidate-3 after-save
+`3748e00c…5420bd`, 4-exchange census (radius 3 first, control 50351
+= 0, stop 50862 = 8/8, prod 104), zero mutation, replay
+`SURVEY_COMPLETION_VERIFIED`; independent review applied (v2
+GameScript pin-table re-bake required; plan contract versioned).
+**The implementation of that design is complete offline (2026-11-01,
+E46, design §8), and the fresh never-consumed census candidate
+`d5-accept-survey-native-candidate-2/` is STAGED, READY-FOR-GATE-C
+(2026-11-01, E47, design §9): seal `237a4f84…37daa4`, payloads
+re-verified, no signing, no claim, no launch.**
+Signing and launch each still need their own operator approval;
+freight delivery and M8 stay unproven. Freight
 delivery and M8 route-selection proof remain separate, unsatisfied D5
 requirements and are never covered by the A0 survey. CONTEXT.md is not
 edited here: its bytes stay pinned by the E26 authority record.

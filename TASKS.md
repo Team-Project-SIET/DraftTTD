@@ -1004,3 +1004,120 @@ started. D5 stays ATTEMPTED, NOT DELIVERED: freight delivery
 (`D5-FREIGHT-1` FAILED-of-record) and M8 route selection remain
 unproven. A1 construction is COMPLETE (verified native) within its v2
 scope. Nothing committed. Record: phase-a §17; evidence index E44.
+
+### 2026-11-01 — D5 post-A1 acceptance census designed (offline, independent review applied)
+
+Offline only (fresh-context inspection + review subagents; no code,
+no staging, no signing, no claim, no launch, no AdminPort): the
+cargo-1 acceptance census for the consumed A1 world was designed —
+[docs/d5-post-a1-acceptance-survey-design.md](docs/d5-post-a1-acceptance-survey-design.md).
+Instrument: versioned retarget of the protocol-6 `D5-ACCEPT-SURVEY`
+pipeline to attempt `D5-ACCEPT-SURVEY-2` (`SURVEY_SCHEDULE_VERSION 2`,
+`EXTENSION_SCHEDULE_VERSION` precedent), prerequisite = consumed A1
+candidate-3 (attempt `D5-CORRIDOR-EXTENSION-3`, after-save
+`3748e00c…5420bd`, replay `EXTENSION_COMPLETION_VERIFIED`). 4-exchange
+census: radius-00 (tile null), accept-00 control 50351 = 0
+(positive-control anomaly halts, never relabeled), accept-01 stop
+50862 = 8/8, prod-00 = 104; `max_cost = 0`, zero mutation expected;
+cleanup certified; replay must return `SURVEY_COMPLETION_VERIFIED`.
+Implementation plan (§5): version selector + v2 schedule/plan literal
+in `corridor_accept_survey_native.py`, plan contract versioned
+(`schema_version` 2, funds pin 490,257, tile set, drift assertion),
+v2 GameScript re-bake limited to pin-table data guards +
+`survey_planned` rows (B1: 50862 is not pinned in the v1 Nut table
+and the 8-row stage matcher would halt a 4-exchange census), pin/
+schedule wire↔Nut binding test, consumed `D5-ACCEPT-SURVEY-1` +
+A1 candidate-3 byte-frozen. Vehicle reachability, road-bit directions
+and pathfinding stay open (census proves acceptance only, not
+traversal). No candidate created, nothing consumed, nothing committed.
+Next gates: implementation review, then fresh never-consumed staging
+approval (`d5-accept-survey-native-candidate-2`), then Gate C signing,
+then a separate launch approval — each its own record. Record: design
+doc §7; evidence index E45.
+
+### 2026-11-01 — D5-ACCEPT-SURVEY-2 implemented offline (independent review applied)
+
+Offline only (no staging, no signing, no claim, no launch, no
+AdminPort, nothing written under `artifacts/`): the §5 implementation
+plan is complete. `app/simulation/openttd/corridor_accept_survey.py`
+carries the version selector (`SURVEY_SCHEDULE_VERSION = 2`, in the
+wire module per the latest decision, superseding the design doc §7
+M3 proof-module wording) and the versioned plan contract
+(`schema_version` 2, funds pin 490,257, tiles 50351/50862, four-row
+schedule, v1+v2 drift assertions, branched `coherent()` with the v1
+pins and messages byte-exact, `survey_plan_v2()`,
+`staged_survey_plan()`). The v1 plan digest is preserved:
+`2d2e47b2…02e7` equals the consumed candidate-1 pinned
+`plan_model_digest`. `corridor_accept_survey_native.py` carries the
+native versioning on the extension precedent: attempt map
+(`D5-ACCEPT-SURVEY-1` history / `D5-ACCEPT-SURVEY-2` current), schema
+map, per-version prerequisite pins (v2 = consumed A1 candidate-3,
+after-save `3748e00c…5420bd`, end-to-end re-verified through seal,
+consumed claim, receipt binding, `EXTENSION_COMPLETION_VERIFIED`
+replay and welcome identity), version-scoped schedules (the consumed
+8-row v1 record reproduced exactly; the fresh 4-row v2 census),
+policy/budgets/hypotheses/census re-bound fail-closed from the A0
+acceptance facts, and version-aware preflight/replay identity/replay
+verification. `main.nut` re-baked exactly to B1's scope: 4-row
+`survey_planned`, `ACCEPT_CANDIDATES [50862]`, comments; no
+handler-logic change. Tests rewritten for v2 with a v1
+replay-compatibility block: 30 + 35 PASS; consumed v1 candidate-1
+replays `SURVEY_COMPLETION_VERIFIED` through the production verifier;
+wire↔Nut pin-binding test; drift tests tamper only tmp copies.
+Evidence runs all exit 0: two suites 65 tests; four-suite (incl.
+terrain-survey pairs) 148 passed + 1 skipped; protocol-5 freight
+suite 42 passed; A1 five-suite 240-test baseline. All consumed
+precedent records byte-verified through their own seals/claims after
+the edit session. Independent fresh-context review (design doc §8):
+READY; 3 minors + 1 nit applied (v1 byte-exact strings restored with
+the v2-facing renames recorded; symmetric version-isolation tests
+added A1-refuses-v1; fail-closed census-state gates; implicit v1
+default argument removed). Vehicle reachability, road-bit directions
+and pathfinding stay open (census proves acceptance only, not
+traversal). Nothing committed. Next gates (each its own operator
+record): §6 item-3 fresh never-consumed staging approval
+(`d5-accept-survey-native-candidate-2`), fact recording, Gate C
+signing, separate launch approval, census report. Record: design doc
+§8; evidence index E46.
+
+### 2026-11-01 — D5-ACCEPT-SURVEY-2 fresh candidate staged (offline, READY-FOR-GATE-C)
+
+One operator approval, this gate only. Production CLI `prepare` on a
+fresh never-consumed directory
+`artifacts/experiments/d5-accept-survey-native-candidate-2/` →
+`PRELAUNCH PASS` (exit 0); standalone read-only `preflight` →
+`PREFLIGHT PASS` (exit 0); standalone `verify` →
+`AUTHORIZATION_UNVERIFIED`/`CLAIM_ABSENT` (exit 1, correct
+pre-signing state). No signing, no claim, no launch, no AdminPort,
+no OpenTTD execution, no retry, no directory reuse. Fresh-context
+prerequisite inspection: `PREREQUISITE VERIFIED` — A1 candidate-3
+seal `404d42d9…6acd8` intact, claim consumed, after-save
+`3748e00c…5420bd` verified, receipt binding + acceptance-recheck
+statement verbatim, funds 490,257 proven from the A1 route receipts
+(lives in `receipt.json`/`result.json` `route.funds`, not the A1
+PRELAUNCH.json), A0 census {50351: 0, 50862: 8}, GameScript census
+pin table confirmed (4 rows, control 50351, candidate 50862, zero
+v1 ids). Staged facts: seal `237a4f84…37daa4`; attempt
+`D5-ACCEPT-SURVEY-2`, schema `d5-accept-survey-prelaunch-v2`;
+v1 consumed name zero occurrences in staged text files; v2 plan
+model digest `67fce856…80be2` == `survey_plan_v2().digest`;
+schedule digest `1222db02…389d` (staged == derivation); budgets
+1/1/32-cap/4-planned, 512/640 bytes, funds 490,257, `max_cost 0`;
+hypotheses `RETAINED_CENSUS_REBOUND` {50351: 0, 50862: 8} from the
+consumed A0 facts; staged `main.nut` byte-identical to the shipped
+package; staged `source.sav` == A1 after-save; welcome equality
+with the A1 record; frozen closure 3,491 entries (14 sampled
+recomputes, 0 mismatches) pinning wire module `abe668f0…1eb2`,
+native module `4f28e9ee…7d41`, GameScript `0337fb36…97ae` and the
+after-save; authorization payload digest `b1f3e209…00bd` recomputed
+independently; no authorization/claim/launch-consumed/journal file
+anywhere in the tree. Independent fresh-context staged-byte review:
+`READY-FOR-GATE-C`, 0 blockers/majors/minors, 2 recorded NITs
+(`plan_digest_of` hashes the list-of-dict form; staged
+`info.nut` is the by-design save-restore identity via
+`staged_composition()`, preflight-verified, not drift). All
+consumed precedent records byte-untouched, seals re-verified before
+and after. Nothing committed. Stop: Gate C Option-1 signing over
+`237a4f84…37daa4`/`b1f3e209…00bd` and the separate launch approval
+are ungranted operator gates. Record: design doc §9; evidence index
+E47.

@@ -1,4 +1,4 @@
-"""D5-ACCEPT-SURVEY-1 native staging pipeline (offline preparation only).
+"""D5-ACCEPT-SURVEY-2 native staging pipeline (offline preparation only).
 
 The consumed ``D5-FREIGHT-1`` attempt closed with the zero-native-acceptance
 finding of record and the survey wire contract
@@ -7,9 +7,12 @@ GameScript handler already review-verified. The previous gap stated in
 ``docs/d5-acceptance-survey-1-preparation.md`` §6 is closed here: the
 staging/claim machinery in ``corridor_freight_native`` is plan-bound to the
 D5 freight ``FreightPlan``, so the survey gets its own narrow pipeline bound
-explicitly to ``AcceptSurveyPlan`` and the fixed eight-exchange schedule,
-reusing the proven shared ceremony by import rather than copy (the same
-pattern ``corridor_freight_native`` uses for the D4 machinery). This is not a
+explicitly to ``AcceptSurveyPlan`` and its version-scoped schedule (v1: the
+consumed eight-exchange survey candidate-1, permanent history; v2: the
+current four-exchange post-A1 census attempt ``D5-ACCEPT-SURVEY-2`` bound to
+the consumed A1 candidate-3 after-save), reusing the proven shared ceremony
+by import rather than copy (the same pattern ``corridor_freight_native`` uses
+for the D4 machinery). This is not a
 generic abstraction layer: survey staging, preflight, sealing, execution and
 replay keep the freight pipeline untouched and cannot accept a
 ``FreightPlan``, and the freight pipeline still cannot accept an
@@ -39,21 +42,27 @@ from typing import Any
 from app.simulation.openttd.admin_crypto import AuthorizedKey
 from app.simulation.openttd.admin_protocol import AdminFrameDecoder, encode_admin_quit
 from app.simulation.openttd.corridor_accept_survey import (
+    FUNDS_AT_A1_CLOSE,
     FUNDS_AT_D4_CLOSE,
     MAX_SURVEY_REQUEST_BYTES,
     MAX_SURVEY_RESPONSE_BYTES,
     PLANNED_SURVEY_EXCHANGES,
+    PLANNED_SURVEY_EXCHANGES_V2,
     SURVEY_CARGO_ID,
     SURVEY_CONTROL_TILE,
     SURVEY_EXCHANGE_IDS,
+    SURVEY_EXCHANGE_IDS_V2,
     SURVEY_OPS,
     SURVEY_PICKUP_TILE,
     SURVEY_REQUEST_BUDGET,
+    SURVEY_SCHEDULE_VERSION,
     AcceptSurveyPlan,
     SurveyReadback,
     SurveyRequest,
+    staged_survey_plan,
     survey_phase_outcome,
     survey_plan,
+    survey_plan_v2,
     verify_request_against_survey_plan,
 )
 from app.simulation.openttd.gamescript_transport import (
@@ -64,6 +73,7 @@ from app.simulation.openttd.gamescript_transport import (
     encode_gamescript,
     gamescript_subscription,
 )
+from app.simulation.openttd.proof import corridor_extension_native as extension_native
 from app.simulation.openttd.proof import corridor_freight_native as freight_native
 from app.simulation.openttd.proof.classification_capture import script_log_health_findings
 from app.simulation.openttd.proof.corridor_construction_native import (
@@ -120,18 +130,45 @@ SURVEY_CLOSURE_ROOT = "app.simulation.openttd.proof.corridor_accept_survey_nativ
 
 KIND = "accept-survey"
 MILESTONE_SURVEY = "D5-ACCEPT-SURVEY"
-SURVEY_ATTEMPT = "D5-ACCEPT-SURVEY-1"
-D5_SURVEY_PRELAUNCH_SCHEMA = "d5-accept-survey-prelaunch-v1"
+# Attempt identity per schedule version (the EXTENSION_ATTEMPTS precedent):
+# the consumed v1 record (``D5-ACCEPT-SURVEY-1``, candidate-1) is history and
+# is never reused; fresh v2 staging carries the next attempt of the lineage.
+SURVEY_ATTEMPTS = {
+    1: "D5-ACCEPT-SURVEY-1",
+    2: "D5-ACCEPT-SURVEY-2",
+}
+SURVEY_ATTEMPT = SURVEY_ATTEMPTS[SURVEY_SCHEDULE_VERSION]
+SURVEY_PRELAUNCH_SCHEMAS = {
+    1: "d5-accept-survey-prelaunch-v1",
+    2: "d5-accept-survey-prelaunch-v2",
+}
+D5_SURVEY_PRELAUNCH_SCHEMA = SURVEY_PRELAUNCH_SCHEMAS[SURVEY_SCHEDULE_VERSION]
 # The survey candidate keeps the shared native consumed-launch marker family.
 D5_SURVEY_LAUNCH_CONSUMED_SCHEMA = freight_native.D5_FREIGHT_LAUNCH_CONSUMED_SCHEMA
 # The prerequisite lineage record is the same shared schema the freight
-# candidate binds (the same pinned D4 candidate-5 after-save world).
+# candidate binds.
 D5_SURVEY_PREREQUISITE_SCHEMA = freight_native.D5_FREIGHT_PREREQUISITE_SCHEMA
-PINNED_PREREQUISITE = freight_native.PINNED_PREREQUISITE
-PINNED_PREREQUISITE_AFTER_SAVE = freight_native.PINNED_PREREQUISITE_AFTER_SAVE
+# Prerequisite lineage per schedule version: v1 binds the pinned D4
+# candidate-5 after-save; v2 binds the consumed A1 extension attempt
+# (``D5-CORRIDOR-EXTENSION-3``, candidate-3) whose retained after-save is
+# the census world of record. Pins are absolute: the binding and staging
+# guards compare a ``.resolve()``ed prerequisite against them, so a
+# relative constant can never equal its own resolved prerequisite and
+# would refuse every staging unconditionally.
+PINNED_PREREQUISITES = {
+    1: freight_native.PINNED_PREREQUISITE,
+    2: (PROJECT / "artifacts/experiments/d5-corridor-extension-native-candidate-3").resolve(),
+}
+PINNED_PREREQUISITE_AFTER_SAVES = {
+    1: freight_native.PINNED_PREREQUISITE_AFTER_SAVE,
+    2: "3748e00ce57bcb076466f50cac3776c202b4fd130d6c6071935e9d43e45420bd",
+}
+PINNED_PREREQUISITE = PINNED_PREREQUISITES[SURVEY_SCHEDULE_VERSION]
+PINNED_PREREQUISITE_AFTER_SAVE = PINNED_PREREQUISITE_AFTER_SAVES[SURVEY_SCHEDULE_VERSION]
+A1_PREREQUISITE_ATTEMPT = "D5-CORRIDOR-EXTENSION-3"
+A1_PREREQUISITE_MILESTONE = "D5-CORRIDOR-EXTENSION"
 FREIGHT_READY_MARKER = "D5_READY"
 
-SURVEY_SCHEDULE_VERSION = 1
 SURVEY_EXCHANGE_MARGIN_SECONDS = freight_native.FREIGHT_EXCHANGE_MARGIN_SECONDS
 
 
@@ -143,23 +180,31 @@ class SurveyStagingError(freight_native.FreightStagingError):
 
 
 def _require_survey_plan(plan) -> AcceptSurveyPlan:
-    """Refuse anything that is not the one pinned AcceptSurveyPlan.
+    """Refuse anything that is not one pinned AcceptSurveyPlan.
 
     A ``FreightPlan`` shares several field names with ``AcceptSurveyPlan``;
     every survey entry point guards here so a freight plan can never be
-    staged, sealed, executed or replayed as a survey.
+    staged, sealed, executed or replayed as a survey, and so a v2 census plan
+    can never stand in for the consumed v1 plan (or vice versa): each version
+    must equal its own pinned derivation exactly.
     """
     if not isinstance(plan, AcceptSurveyPlan):
         raise SurveyStagingError("the survey pipeline accepts an AcceptSurveyPlan only")
-    if plan.digest != survey_plan().digest:
+    if plan.schema_version == 1:
+        pinned = survey_plan()
+    elif plan.schema_version == SURVEY_SCHEDULE_VERSION:
+        pinned = survey_plan_v2()
+    else:  # pragma: no cover - the wire literal exhausts
+        raise SurveyStagingError("the survey plan carries an unknown schema version")
+    if plan.digest != pinned.digest:
         raise SurveyStagingError("the survey plan drifted from the pinned observations")
     return plan
 
 
-# --- The pinned survey schedule ---------------------------------------------
+# --- The pinned survey schedule (version-scoped derivations) -----------------
 
 
-def survey_schedule() -> list[dict]:
+def survey_schedule_v1() -> list[dict]:
     """The fixed eight read-only survey exchanges as staged plan rows.
 
     Order refuses drift (`radius` first, control accept, five candidate
@@ -167,6 +212,12 @@ def survey_schedule() -> list[dict]:
     row carries its own observation tile where the schedule has one. No
     mutation-capable op can enter a survey schedule: a foreign op is a
     staging error, never a rejection at run time that is benignly retried.
+
+    This is the historical derivation of the consumed ``D5-ACCEPT-SURVEY-1``
+    (schedule v1): it stays reproducible so :func:`verify_survey_attempt`
+    keeps re-deriving the consumed candidate-1 binding byte-for-byte; fresh
+    staging never carries it (``survey_plan_policy`` pins
+    ``schedule_version``).
     """
     schedule = [dict(exchange="radius-00", op="radius")]
     for exchange in SURVEY_EXCHANGE_IDS[1:7]:
@@ -185,17 +236,133 @@ def survey_schedule() -> list[dict]:
     return schedule
 
 
-def _survey_exchange_ids(schedule: list[dict]) -> set[str]:
-    ids = {row["exchange"] for row in schedule}
-    if ids != set(SURVEY_EXCHANGE_IDS):
+def survey_schedule_v2() -> list[dict]:
+    """The fixed four read-only post-A1 census exchanges as staged plan rows.
+
+    The census schedule of record: the native truck-stop coverage radius is
+    measured first and hard-ordered before any acceptance observation, the
+    control-of-record zero at 50351 is observed before the A1 stop, and the
+    pickup production control closes the attempt. Rows carry their own
+    observation tile where the schedule has one; a foreign op is a staging
+    error, never a retriable run-time rejection.
+    """
+    schedule = [dict(exchange="radius-00", op="radius")]
+    for exchange in SURVEY_EXCHANGE_IDS_V2[1:-1]:
+        tile = (
+            SURVEY_CONTROL_TILE
+            if exchange == "accept-00"
+            else survey_plan_v2().observations[SURVEY_EXCHANGE_IDS_V2.index(exchange) - 1]
+        )
+        schedule.append(dict(exchange=exchange, op="accept", observation_tile=tile))
+    schedule.append(dict(exchange="prod-00", op="prod"))
+    ids = [row["exchange"] for row in schedule]
+    if ids != list(SURVEY_EXCHANGE_IDS_V2) or len(schedule) != PLANNED_SURVEY_EXCHANGES_V2:
         raise SurveyStagingError("the staged survey schedule drifted from the wire contract")
-    return ids
+    if any(row["op"] not in SURVEY_OPS for row in schedule):
+        raise SurveyStagingError("a survey schedule row carries a non-observation op")
+    return schedule
+
+
+def survey_schedule(version: int | None = None) -> list[dict]:
+    """The staged plan rows of one schedule version (current by default)."""
+    version = SURVEY_SCHEDULE_VERSION if version is None else version
+    if version == 1:
+        return survey_schedule_v1()
+    if version == SURVEY_SCHEDULE_VERSION:
+        return survey_schedule_v2()
+    raise SurveyStagingError(f"plan record names an unknown acceptance-survey version: {version}")
+
+
+def staged_survey_schedule(policy: dict) -> list[dict]:
+    """The staged schedule one plan-policy record binds its digest to.
+
+    Versioning follows the extension replay precedent: fresh v2 records bind
+    the current post-A1 census derivation; consumed v1 records bind the
+    historical eight-exchange derivation exactly (never a best-effort guess).
+    """
+    version = policy.get("schedule_version", 0)
+    if version in (1, SURVEY_SCHEDULE_VERSION):
+        return survey_schedule(version)
+    raise ValueError(
+        f"plan record names an unknown acceptance-survey schedule version: {version}"
+    )
+
+
+def _survey_exchange_ids(schedule: list[dict], ids: tuple[str, ...]) -> set[str]:
+    """The planned exchange-id set of exactly one version's schedule."""
+    planned = set(ids)
+    if {row["exchange"] for row in schedule} != planned:
+        raise SurveyStagingError("the staged survey schedule drifted from the wire contract")
+    return planned
 
 
 # --- Hypotheses (retained census), never facts -------------------------------
 
 
-def census_hypotheses() -> dict:
+def census_hypotheses(version: int | None = None) -> dict:
+    """The version-scoped census hypotheses of one survey schedule version.
+
+    Version 1 re-binds the retained pre-construction demo census over the
+    six pinned v1 observation tiles; version 2 re-binds the retained A0
+    native-survey acceptance observations of record (the same Seed-17
+    corridor world) over the two pinned v2 observation tiles. Values are
+    hypotheses only: a native measurement differing from one is a recorded
+    survey finding, never normalized or refused.
+    """
+    version = SURVEY_SCHEDULE_VERSION if version is None else version
+    if version == 1:
+        return census_hypotheses_v1()
+    if version != SURVEY_SCHEDULE_VERSION:
+        raise SurveyStagingError(
+            f"plan record names an unknown acceptance-survey version: {version}"
+        )
+    return census_hypotheses_v2()
+
+
+def census_hypotheses_v2() -> dict:
+    """The retained A0 acceptance observations re-bound as v2 hypotheses.
+
+    The consumed A0 native survey receipts are the acceptance facts of
+    record on the same Seed-17 corridor world: control 50351 measured 0/8
+    and the future A1 bay stop 50862 measured 8/8 before any construction.
+    Absent retained evidence refuses staging for the census tiles —
+    hypotheses are never invented. The acceptance census itself proves
+    industry catchment only; it proves nothing about vehicle traversal.
+    """
+    facts = extension_native.terrain_survey_facts()
+    source = Path(__file__)
+    rows = []
+    plan = survey_plan_v2()
+    for index, tile in enumerate(plan.observations):
+        entry = facts["acceptance"].get(str(tile))
+        if entry is None:
+            raise SurveyStagingError(
+                f"the retained A0 acceptance census lacks an observation row for tile {tile}"
+            )
+        rows.append(
+            dict(
+                observation_index=index,
+                tile=int(tile),
+                hypothesis_acceptance_eighths=int(entry),
+                kind="HYPOTHESIS",
+            )
+        )
+    return dict(
+        state="RETAINED_CENSUS_REBOUND",
+        hypotheses=rows,
+        source=str(facts["directory"]),
+        statement=(
+            "post-A1 acceptance census values are the retained A0 "
+            "native-survey observations of record re-bound as hypotheses "
+            "only; a native measurement differing from a hypothesis is a "
+            "recorded survey finding, never normalized or refused"
+        ),
+        borrowed_schema=facts["schema"],
+        derivation=str(source.name),
+    )
+
+
+def census_hypotheses_v1() -> dict:
     """The retained pre-construction census acceptances, as hypotheses only.
 
     Re-parsed offline from the same retained demo network facts the survey
@@ -281,18 +448,40 @@ def compare_census_findings(observations: dict, hypotheses: dict) -> list[dict]:
 
 
 # --- The survey plan policy, budgets and readback story ----------------------
+#
+# Version-scoped: fresh staging derives the current (v2) policy; the v1
+# derivation stays reproducible for the consumed candidate-1 replay.
 
 
-def survey_plan_policy() -> dict:
+def survey_plan_policy(version: int | None = None) -> dict:
     """The authorized read-only plan policy for the staged survey candidate."""
-    plan = _require_survey_plan(survey_plan())
-    schedule = survey_schedule()
+    version = SURVEY_SCHEDULE_VERSION if version is None else version
+    plan = _require_survey_plan(survey_plan() if version == 1 else survey_plan_v2())
+    schedule = survey_schedule(version)
     plan_digest = plan_digest_of(schedule)
-    if schedule[0]["exchange"] != SURVEY_EXCHANGE_IDS[0] or schedule[0]["op"] != "radius":
+    if schedule[0]["exchange"] != plan.schedule[0] or schedule[0]["op"] != "radius":
         raise SurveyStagingError("the survey schedule must begin with the radius observation")
+    control_tile = SURVEY_CONTROL_TILE
+    funds_pin = FUNDS_AT_D4_CLOSE if version == 1 else FUNDS_AT_A1_CLOSE
+    observation_kind = "A1_STOP" if version == SURVEY_SCHEDULE_VERSION else "CANDIDATE"
+    if version == 1:
+        world_statement = (
+            "the staged survey world is the D4 candidate-5 close-out: "
+            "both stops must read company truck stops with their pinned "
+            "fronts, the depot joined to its pinned front; the survey "
+            "only queries the pinned observation tiles"
+        )
+    else:
+        world_statement = (
+            "the staged survey world is the consumed A1 extension close-out: "
+            "the corridor stops must read company truck stops with their "
+            "pinned fronts, the depot joined to its pinned front; the "
+            "census only queries the pinned observation tiles (50351 the "
+            "control, 50862 the A1 bay stop)"
+        )
     return dict(
         company=plan.company,
-        target_tile=int(SURVEY_CONTROL_TILE),
+        target_tile=int(control_tile),
         max_cost=0,
         command="none",
         command_statement=(
@@ -313,12 +502,15 @@ def survey_plan_policy() -> dict:
         schedule=schedule,
         plan_digest=plan_digest,
         plan_model_digest=plan.digest,
-        schedule_version=SURVEY_SCHEDULE_VERSION,
+        schedule_version=SURVEY_SCHEDULE_VERSION if version is None else version,
         observations=[
-            dict(tile=int(tile), kind="CONTROL" if tile == SURVEY_CONTROL_TILE else "CANDIDATE")
+            dict(
+                tile=int(tile),
+                kind="CONTROL" if tile == control_tile else observation_kind,
+            )
             for tile in plan.observations
         ],
-        hypotheses=census_hypotheses(),
+        hypotheses=census_hypotheses(version),
         world=dict(
             pickup=int(SURVEY_PICKUP_TILE),
             pickup_front=int(plan.pickup_front),
@@ -329,16 +521,11 @@ def survey_plan_policy() -> dict:
             company=plan.company,
             cargo=plan.cargo,
             pickup_industry=int(plan.pickup_industry),
-            control_tile=int(SURVEY_CONTROL_TILE),
+            control_tile=int(control_tile),
             observation_tiles=[int(tile) for tile in plan.observations],
-            expected_funds=FUNDS_AT_D4_CLOSE,
+            expected_funds=funds_pin,
             request_budget=SURVEY_REQUEST_BUDGET,
-            statement=(
-                "the staged survey world is the D4 candidate-5 close-out: "
-                "both stops must read company truck stops with their pinned "
-                "fronts, the depot joined to its pinned front; the survey "
-                "only queries the pinned observation tiles"
-            ),
+            statement=world_statement,
         ),
         read_only=dict(
             schema="d5-accept-survey-readonly-v1",
@@ -354,13 +541,14 @@ def survey_plan_policy() -> dict:
     )
 
 
-def survey_budgets() -> dict:
+def survey_budgets(version: int | None = None) -> dict:
     """The staged budget table for the survey candidate (no cost budget)."""
+    version = SURVEY_SCHEDULE_VERSION if version is None else version
     return dict(
         launches=1,
         connection_attempts=1,
         requests=SURVEY_REQUEST_BUDGET,
-        planned_exchanges=PLANNED_SURVEY_EXCHANGES,
+        planned_exchanges=survey_plan_policy_version_exchange_count(version),
         gsadmin_bytes=MAX_SURVEY_REQUEST_BYTES,
         response_bytes=MAX_SURVEY_RESPONSE_BYTES,
         retries=0,
@@ -369,11 +557,36 @@ def survey_budgets() -> dict:
         request_seconds=10,
         total_seconds=300,
         max_cost=0,
-        expected_funds=FUNDS_AT_D4_CLOSE,
+        expected_funds=FUNDS_AT_D4_CLOSE if version == 1 else FUNDS_AT_A1_CLOSE,
     )
 
 
-def survey_expected_readback_policy() -> dict:
+def survey_plan_policy_version_exchange_count(version: int) -> int:
+    if version == 1:
+        return PLANNED_SURVEY_EXCHANGES
+    if version == SURVEY_SCHEDULE_VERSION:
+        return PLANNED_SURVEY_EXCHANGES_V2
+    raise SurveyStagingError(
+        f"plan record names an unknown acceptance-survey version: {version}"
+    )
+
+
+def survey_expected_readback_policy(version: int | None = None) -> dict:
+    version = SURVEY_SCHEDULE_VERSION if version is None else version
+    if version == 1:
+        completion = (
+            "SURVEY_COMPLETE only after all eight exchanges verify in "
+            "execution order with certified cleanup; a refused, missing, "
+            "malformed, out-of-range, stale or inconclusive observation "
+            "leaves the survey incomplete forever"
+        )
+    else:
+        completion = (
+            "SURVEY_COMPLETE only after all four census exchanges verify in "
+            "execution order with certified cleanup; a refused, missing, "
+            "malformed, out-of-range, stale or inconclusive observation "
+            "leaves the census incomplete forever"
+        )
     return dict(
         radius=(
             "the radius exchange returns READY with the native truck-stop "
@@ -390,20 +603,40 @@ def survey_expected_readback_policy() -> dict:
             "the prod exchange returns READY with the pickup industry's "
             "last-month production of cargo 1 (the production control)"
         ),
-        receipt=(
-            "SURVEY_COMPLETE only after all eight exchanges verify in "
-            "execution order with certified cleanup; a refused, missing, "
-            "malformed, out-of-range, stale or inconclusive observation "
-            "leaves the survey incomplete forever"
-        ),
+        receipt=completion,
     )
 
 
-def survey_attempt_name() -> str:
-    return SURVEY_ATTEMPT
+def survey_attempt_name(version: int | None = None) -> str:
+    version = SURVEY_SCHEDULE_VERSION if version is None else version
+    if version in SURVEY_ATTEMPTS:
+        return SURVEY_ATTEMPTS[version]
+    raise SurveyStagingError(f"plan record names an unknown acceptance-survey version: {version}")
 
 
-def survey_prerequisite_binding(prerequisite: Path = PINNED_PREREQUISITE) -> dict:
+def survey_prerequisite_binding(
+    prerequisite: Path | None = None, *, version: int = SURVEY_SCHEDULE_VERSION
+) -> dict:
+    """The fail-closed prerequisite binding of one schedule version.
+
+    v1 re-binds the pinned D4 candidate-5 after-save through the freight
+    binding (byte-for-byte the same verification as before, survey-scoped);
+    v2 re-binds the consumed A1 extension attempt of record through its own
+    replay-verified record. Each version refuses every other lineage; the
+    bindings are never interchangeable.
+    """
+    if version == 1:
+        return survey_prerequisite_binding_v1(
+            PINNED_PREREQUISITES[1] if prerequisite is None else prerequisite
+        )
+    if version == SURVEY_SCHEDULE_VERSION:
+        return survey_prerequisite_binding_v2(
+            PINNED_PREREQUISITES[2] if prerequisite is None else prerequisite
+        )
+    raise SurveyStagingError(f"plan record names an unknown acceptance-survey version: {version}")
+
+
+def survey_prerequisite_binding_v1(prerequisite: Path) -> dict:
     """Re-bind the pinned D4 candidate-5 prerequisite, survey-scoped.
 
     Reuse: the freight prerequisite binding is byte-for-byte the same
@@ -413,6 +646,9 @@ def survey_prerequisite_binding(prerequisite: Path = PINNED_PREREQUISITE) -> dic
     through its own plan. Re-importing it here guarantees the survey source
     world is exactly the authoritative D4 close-out and nothing else.
     """
+    prerequisite = Path(prerequisite).resolve()
+    if prerequisite != PINNED_PREREQUISITES[1]:
+        raise SurveyStagingError("the survey source world requires the pinned D4 prerequisite")
     binding = freight_native.prerequisite_binding(prerequisite)
     # A survey re-check the freight binding does not itself return: the
     # prerequisite replay must still be a verified receipt (it re-derives the
@@ -451,20 +687,133 @@ def survey_prerequisite_binding(prerequisite: Path = PINNED_PREREQUISITE) -> dic
     )
 
 
+def survey_prerequisite_binding_v2(prerequisite: Path) -> dict:
+    """Bind the consumed A1 extension attempt of record, census-scoped.
+
+    The census prerequisite must be the pinned, consumed, fully
+    replay-verified A1 attempt: its prelaunch seal integrity, its consumed
+    one-shot claim, its retained ``after.sav`` at the pinned authoritative
+    digest, its receipt binding the save, its acceptance-recheck requirement,
+    its full extension replay verdict (:func:`verify_extension_attempt`) and
+    the retained world welcome — every gate of the D4 binding discipline,
+    over the A1 lineage. A wired-off, unconsumed or drifted directory is
+    refused before any world is staged.
+    """
+    prerequisite = Path(prerequisite).resolve()
+    if prerequisite != PINNED_PREREQUISITES[2]:
+        raise SurveyStagingError("the survey source world requires the pinned A1 prerequisite")
+    metadata = read_prelaunch(prerequisite)
+    if (
+        metadata.get("schema") != extension_native.D5_EXTENSION_PRELAUNCH_SCHEMA
+        or metadata.get("attempt") != A1_PREREQUISITE_ATTEMPT
+        or metadata.get("milestone") != A1_PREREQUISITE_MILESTONE
+        or metadata.get("kind") != extension_native.KIND
+    ):
+        raise SurveyStagingError(
+            "the survey prerequisite is not the pinned A1 extension lineage"
+        )
+    if sha256(prerequisite / "PRELAUNCH.json") != (
+        prerequisite / "PRELAUNCH.sha256"
+    ).read_text().strip():
+        raise SurveyStagingError("the prerequisite prelaunch seal mismatch")
+    seal = sha256(prerequisite / "PRELAUNCH.json")
+    claims_path = prerequisite / "CLAIM.json"
+    if not claims_path.is_file():
+        raise SurveyStagingError("the A1 prerequisite claim is absent; it was never consumed")
+    claims = json.loads(claims_path.read_text())
+    if claims.get("consumed") is not True or claims.get("prelaunch_digest") != seal:
+        raise SurveyStagingError("the A1 prerequisite claim is not its own consumed one-shot")
+    after_save = PINNED_PREREQUISITE_AFTER_SAVES[2]
+    if sha256(prerequisite / "after.sav") != after_save:
+        raise SurveyStagingError("the A1 prerequisite after-save drifted from its pinned digest")
+    receipt_path = prerequisite / "receipt.json"
+    if not receipt_path.is_file():
+        raise SurveyStagingError("the A1 prerequisite receipt is absent")
+    receipt = json.loads(receipt_path.read_text())
+    if receipt.get("after_save_sha256") != after_save:
+        raise SurveyStagingError(
+            "the A1 prerequisite receipt does not bind the pinned after-save"
+        )
+    if receipt.get("acceptance_recheck") != extension_native.ACCEPTANCE_RECHECK_STATEMENT:
+        raise SurveyStagingError(
+            "the A1 prerequisite acceptance-recheck requirement drifted"
+        )
+    verdict = extension_native.verify_extension_attempt(prerequisite)
+    if verdict.get("verification") != "EXTENSION_COMPLETION_VERIFIED":
+        raise SurveyStagingError(
+            "the A1 prerequisite replay is not a verified extension completion"
+        )
+    welcome = metadata["world"]["expected_welcome"]
+    runtime_identity = prerequisite / "runtime-identity.json"
+    if not runtime_identity.is_file():
+        raise SurveyStagingError("the A1 prerequisite retained runtime identity is absent")
+    retained = json.loads(runtime_identity.read_text()).get("welcome")
+    if not isinstance(retained, dict) or any(
+        welcome.get(field) != retained.get(field) for field in welcome
+    ):
+        raise SurveyStagingError(
+            "the A1 prerequisite welcome is not its own retained runtime identity"
+        )
+    if welcome != retained_welcome():
+        raise SurveyStagingError(
+            "the prerequisite welcome is not the retained world identity"
+        )
+    return dict(
+        schema=D5_SURVEY_PREREQUISITE_SCHEMA,
+        role="PREREQUISITE_ATTEMPT",
+        retained_directory=str(prerequisite),
+        save="after.sav",
+        save_sha256=after_save,
+        qualified_save_sha256=metadata["world"].get("qualified_save_sha256"),
+        prelaunch_digest=seal,
+        attempt=A1_PREREQUISITE_ATTEMPT,
+        milestone=A1_PREREQUISITE_MILESTONE,
+        expected_welcome=welcome,
+        verification=(
+            "full replay verification of the consumed A1 extension attempt "
+            "receipt (EXTENSION_COMPLETION_VERIFIED) plus the pinned "
+            "authoritative after-save digest"
+        ),
+        provenance=dict(
+            schema=extension_native.D5_EXTENSION_PRELAUNCH_SCHEMA,
+            attempt=A1_PREREQUISITE_ATTEMPT,
+            milestone=A1_PREREQUISITE_MILESTONE,
+            prelaunch_sha256=seal,
+            after_save_sha256=after_save,
+            replay="EXTENSION_COMPLETION_VERIFIED",
+            acceptance_recheck=(
+                "the A1 receipt binds this census: the acceptance recheck "
+                "happens in a separate read-only survey session on this "
+                "attempt's after-save, before any freight order or vehicle "
+                "purchase"
+            ),
+        ),
+    )
+
+
 # --- Survey candidate staging ------------------------------------------------
 
 
 def prepare_survey_candidate(
-    directory: Path, *, prerequisite: Path = PINNED_PREREQUISITE
+    directory: Path, *, prerequisite: Path | None = None
 ) -> PreparedProof:
-    """Stage the fresh save-load composition; no process or connection."""
-    _require_survey_plan(survey_plan())
-    prerequisite = Path(prerequisite).resolve()
-    if prerequisite != PINNED_PREREQUISITE:
-        raise SurveyStagingError("the survey source world requires the pinned D4 prerequisite")
-    schedule = survey_schedule()
-    policy = survey_plan_policy()
-    if len(schedule) != PLANNED_SURVEY_EXCHANGES:
+    """Stage the fresh save-load composition; no process or connection.
+
+    Current-version staging only: the fresh candidate is always the census
+    attempt of record (v2) bound to the pinned A1 prerequisite. The consumed
+    v1 lineage is history that replay re-derives byte-for-byte, never a
+    restagable composition.
+    """
+    version = SURVEY_SCHEDULE_VERSION
+    plan = _require_survey_plan(survey_plan_v2())
+    prerequisite = Path(
+        PINNED_PREREQUISITES[version] if prerequisite is None else prerequisite
+    ).resolve()
+    if prerequisite != PINNED_PREREQUISITES[version]:
+        raise SurveyStagingError("the survey source world requires the pinned A1 prerequisite")
+    schedule = survey_schedule(version)
+    policy = survey_plan_policy(version)
+    if len(schedule) != len(plan.schedule):
         raise SurveyStagingError("the scheduled survey exchanges drifted")
     if policy["schedule_version"] != SURVEY_SCHEDULE_VERSION:
         raise SurveyStagingError("the staged survey schedule derivation drifted")
@@ -617,10 +966,11 @@ def prepare_survey_candidate(
                 source=int(SURVEY_CONTROL_TILE),
                 manifest_verified=True,
                 statement=(
-                    "the survey binds the authoritative D4 candidate-5 "
-                    "after-save and the pinned OpenTTD 15.3 binary; the "
-                    "pinned observation schedule is the contract module's "
-                    "own guarded derivation"
+                    "the census binds the authoritative A1 extension "
+                    "after-save (3748e00ce57bcb076466f50cac3776c202b4fd130d6c"
+                    "6071935e9d43e45420bd) and the pinned OpenTTD 15.3 "
+                    "binary; the pinned census schedule is the contract "
+                    "module's own guarded derivation"
                 ),
             ),
             environment=freight_native.launch_environment(prepared),
@@ -656,14 +1006,23 @@ def prepare_survey_candidate(
 
 
 def survey_preflight(prepared: PreparedProof) -> dict:
-    """Offline launch-boundary rehearsal: re-derive every binding, trust nothing."""
+    """Offline launch-boundary rehearsal: re-derive every binding, trust nothing.
+
+    Fresh candidates always carry the current schedule version; the staged
+    plan policy names it and every derivation below is version-scoped, so a
+    record claiming a foreign version pairing is refused here.
+    """
     directory = prepared.directory
     if sha256(directory / "PRELAUNCH.json") != (directory / "PRELAUNCH.sha256").read_text().strip():
         raise ValueError("the survey prelaunch seal mismatch")
     metadata = read_prelaunch(directory)
     if (directory / "CLAIM.json").exists():
         raise ValueError("the one native attempt already consumed")
-    if metadata.get("schema") != D5_SURVEY_PRELAUNCH_SCHEMA:
+    policy_early = metadata.get("plan_policy") or {}
+    version = policy_early.get("schedule_version", 0)
+    if version != SURVEY_SCHEDULE_VERSION:
+        raise ValueError("the staged survey schedule version is not the current version")
+    if metadata.get("schema") != SURVEY_PRELAUNCH_SCHEMAS[version]:
         raise ValueError("the staged prelaunch record is not the D5 survey lineage")
     if metadata.get("kind") != KIND or metadata.get("milestone") != MILESTONE_SURVEY:
         raise ValueError("the staged survey lineage drifted")
@@ -671,16 +1030,14 @@ def survey_preflight(prepared: PreparedProof) -> dict:
     freight_native.require_frozen_d2_closure(metadata["frozen"], SURVEY_CLOSURE_ROOT)
     freight_native.require_frozen_d2_dependencies(metadata["frozen"], SURVEY_CLOSURE_ROOT)
     policy = metadata["plan_policy"]
-    if metadata["attempt"] != survey_attempt_name():
+    if metadata["attempt"] != survey_attempt_name(version):
         raise ValueError("the staged attempt identity drifted from its own scope")
-    _require_survey_plan(survey_plan())
-    schedule = survey_schedule()
+    plan = _require_survey_plan(staged_survey_plan(policy))
+    schedule = staged_survey_schedule(policy)
     if policy["schedule"] != schedule or policy["plan_digest"] != plan_digest_of(schedule):
         raise ValueError("the staged survey schedule drifted from the compiled derivation")
-    if policy["plan_model_digest"] != survey_plan().digest:
+    if policy["plan_model_digest"] != plan.digest:
         raise ValueError("the staged survey plan digest drifted from the pinned plan")
-    if policy["schedule_version"] != SURVEY_SCHEDULE_VERSION:
-        raise ValueError("the staged survey schedule version drifted")
     for row in schedule:
         if row["op"] not in SURVEY_OPS:
             raise ValueError("a scheduled survey row carries a mutation-capable or foreign op")
@@ -689,7 +1046,6 @@ def survey_preflight(prepared: PreparedProof) -> dict:
     if policy["read_only"]["permitted_ops"] != list(SURVEY_OPS):
         raise ValueError("the staged survey's read-only op set drifted")
     world_pins = policy["world"]
-    plan = survey_plan()
     expected_world = dict(
         pickup=int(SURVEY_PICKUP_TILE),
         pickup_front=int(plan.pickup_front),
@@ -702,8 +1058,8 @@ def survey_preflight(prepared: PreparedProof) -> dict:
         pickup_industry=int(plan.pickup_industry),
         control_tile=int(SURVEY_CONTROL_TILE),
         observation_tiles=[int(tile) for tile in plan.observations],
-        expected_funds=FUNDS_AT_D4_CLOSE,
-        request_budget=SURVEY_REQUEST_BUDGET,
+        expected_funds=plan.expected_funds,
+        request_budget=plan.request_budget,
     )
     for name, expected in expected_world.items():
         if world_pins.get(name) != expected:
@@ -711,18 +1067,24 @@ def survey_preflight(prepared: PreparedProof) -> dict:
     if policy["target_tile"] != int(SURVEY_CONTROL_TILE):
         raise ValueError("the staged survey control tile drifted")
     staged_hypotheses = policy["hypotheses"]
-    if staged_hypotheses.get("state") == "RETAINED_CENSUS_REBOUND":
-        for row in staged_hypotheses["hypotheses"]:
-            if row["kind"] != "HYPOTHESIS":
-                raise ValueError("a census row stopped being a hypothesis")
-            expected_row = census_hypotheses()["hypotheses"][row["observation_index"]]
-            if row != expected_row:
-                raise ValueError("the staged census hypothesis row drifted from the retained bytes")
-    if metadata.get("budgets") != survey_budgets():
+    expected_state = census_hypotheses(version).get("state")
+    if staged_hypotheses.get("state") != expected_state:
+        raise ValueError(
+            f"the staged census hypothesis state is not its own derivation ({expected_state})"
+        )
+    for row in staged_hypotheses["hypotheses"]:
+        if row.get("kind") != "HYPOTHESIS":
+            raise ValueError("a census row stopped being a hypothesis")
+        expected_row = census_hypotheses(version)["hypotheses"][row["observation_index"]]
+        if row != expected_row:
+            raise ValueError("the staged census hypothesis row drifted from the retained bytes")
+    if metadata.get("budgets") != survey_budgets(version):
         raise ValueError("the staged survey budget pins drifted")
     if metadata["public_key"] != prepared.public_key or metadata["binary_sha256"] != BINARY_SHA256:
         raise ValueError("the staged identity pins drifted")
-    binding = survey_prerequisite_binding(Path(metadata["prerequisite"]["directory"]))
+    binding = survey_prerequisite_binding(
+        Path(metadata["prerequisite"]["directory"]), version=version
+    )
     required = ("attempt", "milestone", "directory", "prelaunch_sha256", "after_save_sha256")
     if {name: metadata["prerequisite"][name] for name in required} != dict(
         attempt=binding["attempt"],
@@ -739,10 +1101,10 @@ def survey_preflight(prepared: PreparedProof) -> dict:
         stored_world.get("retained_directory") != binding["retained_directory"]
         or stored_world.get("source_save") != binding["save"]
         or stored_world.get("save_sha256") != binding["save_sha256"]
-        or stored_world.get("save_sha256") != PINNED_PREREQUISITE_AFTER_SAVE
+        or stored_world.get("save_sha256") != PINNED_PREREQUISITE_AFTER_SAVES[version]
     ):
         raise ValueError("the staged world is not the pinned prerequisite after-save")
-    if metadata["world"]["expected_welcome"] != retained_welcome():
+    if metadata["world"]["expected_welcome"] != binding["expected_welcome"]:
         raise ValueError("the retained world identity requirements drifted")
     verify_staged_source_save(
         {"save_sha256": metadata["world"]["save_sha256"]},
@@ -832,7 +1194,7 @@ def event_loop_deadline(seconds: float) -> float:
 def _survey_exchange_request(entry: dict, seal: str, plan: AcceptSurveyPlan) -> SurveyRequest:
     """Build one fixed survey request: pins, zero cost, its tile if an accept."""
     tile = (
-        plan.observations[SURVEY_EXCHANGE_IDS.index(entry["exchange"]) - 1]
+        plan.observations[plan.schedule.index(entry["exchange"]) - 1]
         if entry["op"] == "accept"
         else None
     )
@@ -926,8 +1288,8 @@ def apply_survey_cleanup_outcome(result: dict, *, complete: bool) -> None:
 async def execute_survey_attempt(prepared: PreparedProof, backend) -> dict:
     """Execute the authorized one-attempt survey phase (never offline).
 
-    One launch, one connection, the fixed eight read-only exchanges in the
-    pinned order, every exchange verified against the accumulated survey
+    One launch, one connection, the staged schedule's read-only exchanges in
+    the pinned order, every exchange verified against the accumulated survey
     state by the production ``survey_phase_outcome``; the first verification
     failure halts the phase prefix-preservingly, and cleanup is certified
     before any completion verdict can stand.
@@ -952,7 +1314,7 @@ async def execute_survey_attempt(prepared: PreparedProof, backend) -> dict:
     )
     backend.preflight(prepared)
     schedule: list[dict] = metadata["plan_policy"]["schedule"]
-    plan = _require_survey_plan(survey_plan())
+    plan = _require_survey_plan(staged_survey_plan(metadata["plan_policy"]))
     result: dict[str, Any] = dict(
         preflight="PASS",
         native_launches=0,
@@ -1045,7 +1407,7 @@ async def execute_survey_attempt(prepared: PreparedProof, backend) -> dict:
             phase = survey_phase_outcome(exchanges, prelaunch_digest=seal, plan=plan)
             result["phase"] = phase
             if phase["verification"] == "SURVEY_COMPLETE":
-                if len(exchanges) != PLANNED_SURVEY_EXCHANGES:
+                if len(exchanges) != len(plan.schedule):
                     raise ValueError(
                         "the survey completion evidence drifted from the staged schedule"
                     )
@@ -1172,22 +1534,35 @@ def _parse_survey_frames(directory: Path):
 def verify_survey_attempt_identity(metadata: dict, *, plan: AcceptSurveyPlan) -> dict:
     """Re-bind one retained survey attempt to its pinned prerequisite and plan.
 
-    Replay never trusts the staged record's own declarations: the pinned
-    prerequisite is re-verified, the source-save digest, welcome, schedule,
-    plan digests, read-only scope and census hypotheses are all re-derived.
+    Replay never trusts the staged record's own declarations: the version
+    pairing (attempt/schema/prerequisite/world) is re-derived version-scoped,
+    the pinned prerequisite is re-verified, the source-save digest, welcome,
+    schedule, plan digests, read-only scope and census hypotheses are all
+    re-derived. A v1 record binds the consumed D4 lineage exactly and a v2
+    record the consumed A1 lineage exactly; any crossed pairing refuses.
     """
-    if metadata.get("attempt") != survey_attempt_name():
+    schedule_version = (metadata.get("plan_policy") or {}).get("schedule_version")
+    if schedule_version not in (1, SURVEY_SCHEDULE_VERSION):
+        raise ValueError(
+            f"the retained plan record names an unknown acceptance-survey version: "
+            f"{schedule_version}"
+        )
+    if metadata.get("attempt") != SURVEY_ATTEMPTS.get(schedule_version):
         raise ValueError("the retained attempt identity drifted from the staged scope")
     if (
-        metadata.get("schema") != D5_SURVEY_PRELAUNCH_SCHEMA
+        metadata.get("schema") != SURVEY_PRELAUNCH_SCHEMAS[schedule_version]
         or metadata.get("kind") != KIND
         or metadata.get("milestone") != MILESTONE_SURVEY
     ):
         raise ValueError("the retained attempt is not the D5 survey lineage")
+    if plan.schema_version != schedule_version:
+        raise ValueError("the retained plan version drifted from the staged schedule")
     staged_prerequisite = metadata.get("prerequisite")
     if not isinstance(staged_prerequisite, dict):
         raise ValueError("the retained attempt lacks its prerequisite binding")
-    binding = survey_prerequisite_binding(Path(staged_prerequisite.get("directory", "")))
+    binding = survey_prerequisite_binding(
+        Path(staged_prerequisite.get("directory", "")), version=schedule_version
+    )
     expected_prerequisite = dict(
         schema=D5_SURVEY_PREREQUISITE_SCHEMA,
         attempt=binding["attempt"],
@@ -1198,7 +1573,10 @@ def verify_survey_attempt_identity(metadata: dict, *, plan: AcceptSurveyPlan) ->
         verification=binding["verification"],
     )
     if staged_prerequisite != expected_prerequisite:
-        raise ValueError("the retained prerequisite binding drifted from the pinned D4 attempt")
+        lineage = "D4" if schedule_version == 1 else "A1"
+        raise ValueError(
+            f"the retained prerequisite binding drifted from the pinned {lineage} attempt"
+        )
     stored_world = metadata.get("world")
     if not isinstance(stored_world, dict):
         raise ValueError("the retained attempt lacks its world binding")
@@ -1211,10 +1589,12 @@ def verify_survey_attempt_identity(metadata: dict, *, plan: AcceptSurveyPlan) ->
     for name, expected in expected_world_binding.items():
         if stored_world.get(name) != expected:
             raise ValueError(f"the retained world {name} drifted from the pinned prerequisite")
-    if stored_world.get("save_sha256") != PINNED_PREREQUISITE_AFTER_SAVE:
+    if stored_world.get("save_sha256") != PINNED_PREREQUISITE_AFTER_SAVES[schedule_version]:
         raise ValueError("the retained world is not the pinned prerequisite after-save")
     expected_welcome = stored_world.get("expected_welcome")
-    if expected_welcome != binding["expected_welcome"] or expected_welcome != retained_welcome():
+    if schedule_version == 1 and expected_welcome != retained_welcome():
+        raise ValueError("the retained world welcome drifted from the pinned identity")
+    if expected_welcome != binding["expected_welcome"]:
         raise ValueError("the retained world welcome drifted from the pinned identity")
     verify_staged_source_save(
         {"save_sha256": binding["save_sha256"]},
@@ -1227,12 +1607,14 @@ def verify_survey_attempt_identity(metadata: dict, *, plan: AcceptSurveyPlan) ->
     policy = metadata.get("plan_policy")
     if not isinstance(policy, dict):
         raise ValueError("the retained attempt lacks its plan policy")
-    schedule = survey_schedule()
+    schedule = staged_survey_schedule(policy)
     if policy.get("schedule") != schedule or policy.get("plan_digest") != plan_digest_of(schedule):
         raise ValueError("the retained survey schedule drifted from the compiled derivation")
     if policy.get("plan_model_digest") != plan.digest:
         raise ValueError("the retained plan digest drifted from the pinned survey plan")
-    if metadata.get("budgets") != survey_budgets():
+    if policy.get("schedule_version") != schedule_version:
+        raise ValueError("the retained schedule version drifted")
+    if metadata.get("budgets") != survey_budgets(schedule_version):
         raise ValueError("the retained budget contract drifted")
     if policy.get("max_cost") != 0:
         raise ValueError("the retained budget floated off the zero-cost contract")
@@ -1253,8 +1635,8 @@ def verify_survey_attempt_identity(metadata: dict, *, plan: AcceptSurveyPlan) ->
         pickup_industry=int(plan.pickup_industry),
         control_tile=int(SURVEY_CONTROL_TILE),
         observation_tiles=[int(tile) for tile in plan.observations],
-        expected_funds=FUNDS_AT_D4_CLOSE,
-        request_budget=SURVEY_REQUEST_BUDGET,
+        expected_funds=plan.expected_funds,
+        request_budget=plan.request_budget,
     )
     for name, expected in expected_pins.items():
         if world_pins.get(name) != expected:
@@ -1266,8 +1648,12 @@ def verify_survey_attempt_identity(metadata: dict, *, plan: AcceptSurveyPlan) ->
     ):
         raise ValueError("the retained survey plan pins drifted")
     staged_hypotheses = policy.get("hypotheses")
-    if not isinstance(staged_hypotheses, dict) or "state" not in staged_hypotheses:
-        raise ValueError("the retained plan policy lacks its census hypothesis record")
+    expected_state = census_hypotheses(schedule_version).get("state")
+    if not isinstance(staged_hypotheses, dict) or staged_hypotheses.get("state") != expected_state:
+        raise ValueError(
+            f"the retained census hypothesis record drifted from its version derivation "
+            f"({expected_state})"
+        )
     return binding
 
 
@@ -1275,13 +1661,16 @@ def verify_survey_attempt(directory: Path) -> dict:
     """Replay the retained protocol-6 phase; never trust a success label.
 
     The replay re-derives every retained fact independently — operator
-    authorization evidence, the staged survey schedule, the captured session
-    frames, every per-exchange request/response pair — then re-verifies the
-    whole eight-exchange schedule with the production
+    authorization evidence, the version-scoped staged survey schedule, the
+    captured session frames, every per-exchange request/response pair — then
+    re-verifies the whole schedule with the production
     :func:`app.simulation.openttd.corridor_accept_survey.survey_phase_outcome`
     and the certified-cleanup gate. A forced or invented ``SURVEY_COMPLETE``
     label alone can never verify; a refused, missing, malformed, out-of-range
-    or stale exchange always leaves the verdict incomplete.
+    or stale exchange always leaves the verdict incomplete. Consumed v1
+    replay (candidate-1) and fresh v2 evidence both verify through the same
+    production path, each against its own version-scoped derivation and
+    never against the other's.
     """
     directory = directory.resolve()
     metadata = read_prelaunch(directory)
@@ -1314,13 +1703,13 @@ def verify_survey_attempt(directory: Path) -> dict:
     }
     if present_names != manifest_names:
         raise ValueError("the artifact manifest is not exhaustive")
-    if metadata.get("schema") != D5_SURVEY_PRELAUNCH_SCHEMA:
+    if metadata.get("schema") not in set(SURVEY_PRELAUNCH_SCHEMAS.values()):
         return dict(
             verification="AUTHORIZATION_UNVERIFIED",
             authorization_state="UNKNOWN_PRELAUNCH_SCHEMA",
             statement=(
                 "the prelaunch record is not the launch-capable "
-                f"{D5_SURVEY_PRELAUNCH_SCHEMA} lineage; no verified "
+                f"{sorted(SURVEY_PRELAUNCH_SCHEMAS.values())} lineage; no verified "
                 "completion is possible"
             ),
         )
@@ -1335,13 +1724,13 @@ def verify_survey_attempt(directory: Path) -> dict:
             ),
         )
     policy_replay = metadata["plan_policy"]
-    schedule = policy_replay["schedule"]
-    if schedule != survey_schedule() or policy_replay["plan_digest"] != plan_digest_of(
-        survey_schedule()
+    schedule = staged_survey_schedule(policy_replay)
+    plan = _require_survey_plan(staged_survey_plan(policy_replay))
+    if policy_replay["schedule"] != schedule or policy_replay["plan_digest"] != plan_digest_of(
+        schedule
     ):
         raise ValueError("the staged survey schedule drifted from the compiled derivation")
-    _survey_exchange_ids(schedule)
-    plan = _require_survey_plan(survey_plan())
+    schedule_ids = _survey_exchange_ids(schedule, plan.schedule)
     verify_survey_attempt_identity(metadata, plan=plan)
     result = json.loads((directory / "result.json").read_text())
     runtime = json.loads((directory / "runtime-identity.json").read_text())
@@ -1377,7 +1766,7 @@ def verify_survey_attempt(directory: Path) -> dict:
         q.to_bytes() for q in file_queries
     ):
         raise ValueError("the outbound frame payloads do not match request file payloads")
-    unknown = {q.request_id for q in file_queries} - _survey_exchange_ids(schedule)
+    unknown = {q.request_id for q in file_queries} - schedule_ids
     if unknown:
         raise ValueError(f"the request identity is outside the staged schedule: {sorted(unknown)}")
     seen_ids: set[str] = set()
@@ -1463,11 +1852,11 @@ def verify_survey_attempt(directory: Path) -> dict:
             metadata["budgets"]["connection_attempts"],
         ):
             raise ValueError("the verified completion contradicts its launch seal")
-        if len(result.get("exchanges", [])) != PLANNED_SURVEY_EXCHANGES or not cleanup_complete:
+        if len(result.get("exchanges", [])) != len(plan.schedule) or not cleanup_complete:
             raise ValueError("the verified completion's cleanup or exchange inventory incomplete")
         if result.get("state_changed", False) is not False:
             raise ValueError("the survey claimed a world change it cannot make")
-        if len(outbound_requests) != PLANNED_SURVEY_EXCHANGES:
+        if len(outbound_requests) != len(plan.schedule):
             raise ValueError("the verified completion's request inventory drifted")
         if phase["radius"] is None or phase["production"] is None or not phase["observations"]:
             raise ValueError("the verified completion lacks its own re-derived observations")
@@ -1570,7 +1959,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("command", choices=("prepare", "preflight", "run", "verify"))
     parser.add_argument("directory", type=Path)
-    parser.add_argument("--prerequisite", type=Path, default=PINNED_PREREQUISITE)
+    parser.add_argument("--prerequisite", type=Path, default=PINNED_PREREQUISITES[2])
     args = parser.parse_args()
     directory = args.directory.resolve()
     if args.command == "prepare":

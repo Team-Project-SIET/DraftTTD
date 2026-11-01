@@ -1,20 +1,27 @@
-"""Controlled offline tests for the D5-ACCEPT-SURVEY-1 native staging pipeline.
+"""Controlled offline tests for the D5-ACCEPT-SURVEY-2 native staging pipeline.
 
 The pipeline under test is
 ``app/simulation/openttd/proof/corridor_accept_survey_native.py``, staged as a
-fresh candidate from the pinned D4 candidate-5 prerequisite. Everything here
-is strictly offline: no OpenTTD launch, no AdminPort connection, no claim, no
+fresh candidate from the pinned consumed A1 prerequisite
+(``d5-corridor-extension-native-candidate-3``). Everything here is strictly
+offline: no OpenTTD launch, no AdminPort connection, no claim, no
 authorization artifact, and no mutation of any retained attempt record or
-authoritative save. Replay behavior is exercised with real production
-verdict paths (claim-absent, tampered seals, synthetic retained evidence
-without operator authorization), so every refusal is the real fail-closed
-outcome, never a mock of the verifier.
+authoritative save. Replay behavior is exercised with real production verdict
+paths (claim-absent, tampered seals, synthetic retained evidence without
+operator authorization), so every refusal is the real fail-closed outcome,
+never a mock of the verifier. The consumed v1 record (``D5-ACCEPT-SURVEY-1``,
+candidate-1) is replay-relevant history: a dedicated test replays its
+retained bytes through the production verifier so a v2 edit can never
+silently break the consumed record's replay, plus pin-pairing refusals that
+keep the two versions' identities from ever crossing in either direction.
 """
 
 from __future__ import annotations
 
 import asyncio
 import json
+import re
+import shutil
 from pathlib import Path
 
 import pytest
@@ -22,10 +29,13 @@ import pytest
 import app.simulation.openttd.proof.corridor_accept_survey_native as survey_native
 import app.simulation.openttd.proof.corridor_freight_native as d5
 from app.simulation.openttd.corridor_accept_survey import (
-    PLANNED_SURVEY_EXCHANGES,
-    SURVEY_OBSERVATION_TILES,
+    FUNDS_AT_A1_CLOSE,
+    SURVEY_OBSERVATION_TILES_V2,
+    SurveyReadback,
     SurveyRequest,
+    staged_survey_plan,
     survey_plan,
+    survey_plan_v2,
 )
 from app.simulation.openttd.corridor_freight import FreightRequest
 from app.simulation.openttd.proof.corridor_freight_native import FreightStagingError
@@ -40,6 +50,9 @@ from app.simulation.openttd.proof.terrain_clearing import (
 )
 from tests.test_corridor_accept_survey import SEAL as SURVEY_SEAL
 from tests.test_corridor_freight import PRELAUNCH as FREIGHT_SEAL
+
+V2_EXCHANGES = ("radius-00", "accept-00", "accept-01", "prod-00")
+V2_ACCEPT_TILES = {"accept-00": 50351, "accept-01": 50862}
 
 
 def survey_request(exchange: str, tile: int | None) -> SurveyRequest:
@@ -77,9 +90,9 @@ def survey_reply_bytes(
     *,
     status: str = "READY",
     radius: int = 8,
-    accept: int | None = 0,
+    accept: int | None = None,
     prod: int | None = None,
-    funds: int = 492149,
+    funds: int = FUNDS_AT_A1_CLOSE,
 ) -> bytes:
     body: dict = {
         "protocol": 6,
@@ -123,9 +136,10 @@ def metadata_of(prepared) -> dict:
 # --- the plan-bound pipeline and the cross-session guards --------------------
 
 
-def test_survey_pipeline_accepts_an_acceptsurveyplan_only():
-    plan = survey_plan()
+def test_survey_pipeline_accepts_a_v2_acceptsurveyplan_only():
+    plan = survey_plan_v2()
     assert survey_native._require_survey_plan(plan).digest == plan.digest
+    assert survey_native._require_survey_plan(survey_plan()).digest == survey_plan().digest
     with pytest.raises(survey_native.SurveyStagingError, match="AcceptSurveyPlan"):
         survey_native._require_survey_plan(d5.freight_plan())
     with pytest.raises(survey_native.SurveyStagingError, match="AcceptSurveyPlan"):
@@ -152,25 +166,33 @@ def test_freight_and_survey_requests_cannot_cross_the_sessions():
         freight.validate_outbound(survey_frame)
 
 
-def test_survey_schedule_is_the_pinned_read_only_eight():
+def test_survey_schedule_is_the_pinned_read_only_census():
     schedule = survey_native.survey_schedule()
-    assert [row["exchange"] for row in schedule] == [
-        "radius-00",
-        "accept-00",
-        "accept-01",
-        "accept-02",
-        "accept-03",
-        "accept-04",
-        "accept-05",
-        "prod-00",
-    ]
+    assert [row["exchange"] for row in schedule] == list(V2_EXCHANGES)
     assert all(row["op"] in ("radius", "accept", "prod") for row in schedule)
-    assert [row.get("observation_tile") for row in schedule[1:7]] == list(SURVEY_OBSERVATION_TILES)
+    assert [row["observation_tile"] for row in schedule[1:3]] == [50351, 50862]
+    assert survey_native.SURVEY_ATTEMPT == "D5-ACCEPT-SURVEY-2"
+    assert survey_native.survey_attempt_name(1) == "D5-ACCEPT-SURVEY-1"
     for foreign in ("site", "purchase", "order", "start", "load-watch"):
         with pytest.raises(Exception):
             survey_native.survey_exchange_timeout_seconds(
                 budget_table=survey_native.survey_budgets(), op=foreign
             )
+
+
+def test_v1_schedule_derivation_matches_the_consumed_candidate1_record():
+    """The consumed candidate-1 prelaunch binds an eight-exchange schedule;
+    the v1 derivation reproduces it exactly (never hand-retold)."""
+    retained = json.loads(
+        Path("artifacts/experiments/d5-accept-survey-native-candidate-1/PRELAUNCH.json").read_text()
+    )
+    staged_schedule = retained["plan_policy"]["schedule"]
+    assert survey_native.survey_schedule_v1() == staged_schedule
+    assert survey_native.staged_survey_schedule(
+        dict(schedule_version=1)
+    ) == staged_schedule
+    with pytest.raises(ValueError, match="unknown acceptance-survey schedule version"):
+        survey_native.staged_survey_schedule(dict(schedule_version=3))
 
 
 # --- staging correctness ------------------------------------------------------
@@ -179,34 +201,115 @@ def test_survey_schedule_is_the_pinned_read_only_eight():
 def test_staged_candidate_binds_the_survey_lineage(staged):
     metadata = metadata_of(staged)
     assert metadata["schema"] == survey_native.D5_SURVEY_PRELAUNCH_SCHEMA
-    assert metadata["attempt"] == survey_native.SURVEY_ATTEMPT
+    assert metadata["schema"] == "d5-accept-survey-prelaunch-v2"
+    assert metadata["attempt"] == survey_native.SURVEY_ATTEMPT == "D5-ACCEPT-SURVEY-2"
     assert metadata["milestone"] == survey_native.MILESTONE_SURVEY
     assert metadata["kind"] == survey_native.KIND
     assert metadata["budgets"]["max_cost"] == 0
-    assert metadata["budgets"]["planned_exchanges"] == PLANNED_SURVEY_EXCHANGES
+    assert metadata["budgets"]["planned_exchanges"] == 4
+    assert metadata["budgets"]["expected_funds"] == FUNDS_AT_A1_CLOSE == 490257
     assert metadata["plan_policy"]["max_cost"] == 0
-    assert metadata["plan_policy"]["plan_model_digest"] == survey_plan().digest
-    assert metadata["prerequisite"]["after_save_sha256"] == d5.PINNED_PREREQUISITE_AFTER_SAVE
-    assert metadata["world"]["save_sha256"] == d5.PINNED_PREREQUISITE_AFTER_SAVE
+    assert metadata["plan_policy"]["plan_model_digest"] == survey_plan_v2().digest
+    assert metadata["plan_policy"]["schedule_version"] == 2
+    assert metadata["plan_policy"]["world"]["expected_funds"] == 490257
+    assert metadata["plan_policy"]["world"]["observation_tiles"] == [50351, 50862]
+    assert (
+        metadata["prerequisite"]["after_save_sha256"]
+        == survey_native.PINNED_PREREQUISITE_AFTER_SAVE
+        == "3748e00ce57bcb076466f50cac3776c202b4fd130d6c6071935e9d43e45420bd"
+    )
+    assert metadata["prerequisite"]["attempt"] == "D5-CORRIDOR-EXTENSION-3"
+    assert metadata["world"]["save_sha256"] == survey_native.PINNED_PREREQUISITE_AFTER_SAVE
     read_only = metadata["plan_policy"]["read_only"]
     assert read_only["permitted_ops"] == ["radius", "accept", "prod"]
     assert read_only["max_cost"] == 0 and read_only["funds_readback_required"] is True
 
 
-def test_survey_prerequisite_binding_must_be_the_pinned_candidate5(staged):
+def test_consumed_v1_attempt_name_is_absent_from_every_staged_byte(staged):
+    """Lineage discipline (the E42 identity rule): the consumed attempt name
+    appears zero times in the fresh candidate's staged bytes."""
+    for path in sorted(staged.directory.rglob("*")):
+        if not path.is_file():
+            continue
+        blob = path.read_bytes()
+        try:
+            text = blob.decode()
+        except UnicodeDecodeError:
+            text = ""
+        assert "D5-ACCEPT-SURVEY-1" not in text, path
+
+
+def test_survey_prerequisite_binding_must_be_the_pinned_a1_attempt():
     binding = survey_native.survey_prerequisite_binding()
-    assert binding["attempt"] == "D4-CORRIDOR-5"
-    assert binding["save_sha256"] == d5.PINNED_PREREQUISITE_AFTER_SAVE
-    other = Path("artifacts/experiments/d4-corridor-native-candidate-4")
-    if other.is_dir():
-        with pytest.raises(FreightStagingError, match="not the pinned"):
-            survey_native.survey_prerequisite_binding(other)
+    assert binding["attempt"] == "D5-CORRIDOR-EXTENSION-3"
+    assert binding["milestone"] == "D5-CORRIDOR-EXTENSION"
+    assert binding["save"] == "after.sav"
+    assert (
+        binding["save_sha256"]
+        == "3748e00ce57bcb076466f50cac3776c202b4fd130d6c6071935e9d43e45420bd"
+    )
+    # Version isolation in both directions.
+    with pytest.raises(FreightStagingError, match="requires the pinned A1 prerequisite"):
+        survey_native.survey_prerequisite_binding(
+            Path("artifacts/experiments/d4-corridor-native-candidate-4")
+        )
+    with pytest.raises(FreightStagingError, match="requires the pinned A1 prerequisite"):
+        survey_native.survey_prerequisite_binding(
+            survey_native.PINNED_PREREQUISITES[1]  # the D4 prerequisite lineage
+        )
 
 
-def test_staged_source_save_is_the_authoritative_after_save(staged):
+def test_v2_binding_refuses_drifted_or_unconsumed_copies(tmp_path, monkeypatch):
+    """Directory-gate refusals run against byte copies: the pinned A1 record
+    itself is frozen evidence and is never modified here. The path pin
+    itself refuses any copy first; monkeypatching the pin lets the real
+    seal/claim/save gates exercise over a copy's bytes."""
+    source = survey_native.PINNED_PREREQUISITES[2]
+    # A copy is refused before anything else: the prerequisite must be the
+    # pinned directory exactly.
+    copy = tmp_path / "a1-copy"
+    shutil.copytree(source, copy)
+    with pytest.raises(
+        survey_native.SurveyStagingError, match="requires the pinned A1 prerequisite"
+    ):
+        survey_native.survey_prerequisite_binding_v2(copy)
+    # With the pin temporarily on the copy, the byte gates still hold.
+    monkeypatch.setitem(survey_native.PINNED_PREREQUISITES, 2, copy)
+    drifted = survey_native.survey_prerequisite_binding_v2(copy)
+    assert drifted["attempt"] == "D5-CORRIDOR-EXTENSION-3"
+    # A drifted after.sav bin refuses.
+    (copy / "after.sav").write_bytes(b"\x00tampered")
+    with pytest.raises(
+        survey_native.SurveyStagingError, match="after-save drifted"
+    ):
+        survey_native.survey_prerequisite_binding_v2(copy)
+    monkeypatch.undo()
+    # An unconsumed copy refuses.
+    copy2 = tmp_path / "a1-unconsumed"
+    shutil.copytree(source, copy2)
+    monkeypatch.setitem(survey_native.PINNED_PREREQUISITES, 2, copy2)
+    (copy2 / "CLAIM.json").unlink()
+    with pytest.raises(survey_native.SurveyStagingError, match="claim is absent"):
+        survey_native.survey_prerequisite_binding_v2(copy2)
+    monkeypatch.undo()
+    # An unauthorized claimed copy (toggle consumed off) refuses.
+    copy3 = tmp_path / "a1-unclaimed"
+    shutil.copytree(source, copy3)
+    monkeypatch.setitem(survey_native.PINNED_PREREQUISITES, 2, copy3)
+    claims = json.loads((copy3 / "CLAIM.json").read_text())
+    claims["consumed"] = False
+    (copy3 / "CLAIM.json").write_text(json.dumps(claims))
+    with pytest.raises(
+        survey_native.SurveyStagingError, match="not its own consumed one-shot"
+    ):
+        survey_native.survey_prerequisite_binding_v2(copy3)
+
+
+def test_staged_source_save_is_the_authoritative_a1_after_save(staged):
     metadata = metadata_of(staged)
     staged_save = Path(metadata["workspace"]) / "source.sav"
-    assert sha256(staged_save) == d5.PINNED_PREREQUISITE_AFTER_SAVE
+    assert sha256(staged_save) == survey_native.PINNED_PREREQUISITE_AFTER_SAVE
+    assert metadata["world"]["source_save"] == "after.sav"
 
 
 def test_authorization_payload_rebuilds_and_no_claim_exists(staged):
@@ -249,6 +352,24 @@ def test_survey_preflight_refuses_seal_tampering(staged):
         (target / "PRELAUNCH.sha256").write_text(restamp)
 
 
+def test_survey_preflight_refuses_a_foreign_version_pairing(staged):
+    target = staged.directory
+    original = (target / "PRELAUNCH.json").read_bytes()
+    seal_text = (target / "PRELAUNCH.sha256").read_text()
+    metadata = json.loads(original)
+    # The consumed v1 attempt identity forced onto a fresh v2 record: the
+    # version-scoped pairing must refuse before anything else re-derives.
+    metadata["attempt"] = "D5-ACCEPT-SURVEY-1"
+    (target / "PRELAUNCH.json").write_text(json.dumps(metadata, sort_keys=True, indent=2) + "\n")
+    (target / "PRELAUNCH.sha256").write_text(sha256(target / "PRELAUNCH.json") + "\n")
+    try:
+        with pytest.raises(ValueError, match="attempt identity drifted"):
+            survey_native.survey_preflight(staged)
+    finally:
+        (target / "PRELAUNCH.json").write_bytes(original)
+        (target / "PRELAUNCH.sha256").write_text(seal_text)
+
+
 def test_survey_schedule_and_plan_drift_refuse_preflight(staged):
     target = staged.directory
     original = (target / "PRELAUNCH.json").read_bytes()
@@ -271,26 +392,35 @@ def test_hypotheses_stay_hypotheses_and_control_is_first(staged):
     assert hypotheses["state"] == "RETAINED_CENSUS_REBOUND"
     rows = hypotheses["hypotheses"]
     assert rows[0]["tile"] == 50351 and rows[0]["hypothesis_acceptance_eighths"] == 0
+    assert rows[1]["tile"] == 50862 and rows[1]["hypothesis_acceptance_eighths"] == 8
     assert all(row["kind"] == "HYPOTHESIS" for row in rows)
-    assert [row["tile"] for row in rows] == list(SURVEY_OBSERVATION_TILES)
+    assert [row["tile"] for row in rows] == list(SURVEY_OBSERVATION_TILES_V2)
+
+
+def test_v1_census_hypotheses_are_unchanged_for_the_consumed_replay():
+    v1 = survey_native.census_hypotheses(1)
+    rows = v1["hypotheses"]
+    assert rows[0]["tile"] == 50351 and rows[0]["hypothesis_acceptance_eighths"] == 0
+    assert [row["tile"] for row in rows] == [50351, 50607, 50863, 51119, 51375, 50605]
+    assert survey_native.census_hypotheses(1) == v1
 
 
 def test_census_findings_record_real_measured_divergence():
     hypotheses = survey_native.census_hypotheses()
-    observations = {
-        tile: dict(value=0, request_id=f"accept-{index:02d}")
-        for index, tile in enumerate(SURVEY_OBSERVATION_TILES)
+    matching = {
+        tile: dict(value=row["hypothesis_acceptance_eighths"], request_id="x")
+        for row in hypotheses["hypotheses"]
+        for tile in (row["tile"],)
     }
-    findings = survey_native.compare_census_findings(observations, hypotheses)
-    assert sorted(f["tile"] for f in findings) == sorted([50607, 50863, 51119, 51375, 50605])
+    assert survey_native.compare_census_findings(matching, hypotheses) == []
+    all_zero = {
+        tile: dict(value=0, request_id=f"accept-{index:02d}")
+        for index, tile in enumerate(SURVEY_OBSERVATION_TILES_V2)
+    }
+    findings = survey_native.compare_census_findings(all_zero, hypotheses)
+    assert [f["tile"] for f in findings] == [50862]
     assert findings[0]["statement"].startswith("the native value differs")
     assert survey_native.compare_census_findings({}, {"state": "CENSUS_ABSENT"}) == []
-    complete = {
-        tile: dict(value=h["hypothesis_acceptance_eighths"], request_id="x")
-        for h in hypotheses["hypotheses"]
-        for tile in (h["tile"],)
-    }
-    assert survey_native.compare_census_findings(complete, hypotheses) == []
 
 
 # --- the exchange helper and survey frame replay parsing ---------------------
@@ -320,25 +450,21 @@ def _admin_frame(payload: bytes) -> bytes:
 
 
 def test_survey_exchange_persists_request_and_response_pair(tmp_path):
-    request = survey_request("accept-01", 50607)
+    request = survey_request("accept-01", 50862)
     reply = _admin_frame(survey_reply_bytes(request, accept=8) + b"\0")
     readback = asyncio.run(survey_native.survey_exchange(_FakeSession(reply), request, tmp_path))
-    assert (readback.status, readback.accept, readback.tile) == ("READY", 8, 50607)
+    assert (readback.status, readback.accept, readback.tile) == ("READY", 8, 50862)
     assert (tmp_path / "accept-01-request.json").read_bytes() == request.to_bytes()
     assert (tmp_path / "accept-01-response.json").read_bytes() == (
         survey_reply_bytes(request, accept=8)
     )
     # The retained pair re-parses through the wire contract.
-    from app.simulation.openttd.corridor_accept_survey import SurveyReadback
-
     parsed = SurveyReadback.parse_for(request, (tmp_path / "accept-01-response.json").read_bytes())
     assert parsed.digest == readback.digest
 
 
 def test_survey_exchange_refuses_malformed_truncated_and_stale_replies(tmp_path):
-    from app.simulation.openttd.corridor_accept_survey import SurveyReadback
-
-    request = survey_request("accept-02", 50863)
+    request = survey_request("accept-01", 50862)
 
     class Broken:
         async def send(self, frame):
@@ -350,7 +476,7 @@ def test_survey_exchange_refuses_malformed_truncated_and_stale_replies(tmp_path)
     with pytest.raises(ConnectionError):
         asyncio.run(survey_native.survey_exchange(Broken(), request, tmp_path))
     stale = _admin_frame(survey_reply_bytes(request, accept=8) + b"\0")
-    stale_request = survey_request("accept-03", 51119)
+    stale_request = survey_request("prod-00", None)
     with pytest.raises(ValueError):
         asyncio.run(survey_native.survey_exchange(_FakeSession(stale), stale_request, tmp_path))
     # A truncated body can never parse as a measured observation.
@@ -376,7 +502,7 @@ def test_survey_response_bounds_are_exactly_512(tmp_path):
             "delivery": 50351,
             "depot": 45487,
             "status": "READY",
-            "funds": 492149,
+            "funds": FUNDS_AT_A1_CLOSE,
             "cost": 0,
             "radius": 8,
             "pad": "x" * 700,
@@ -451,17 +577,8 @@ def claimed(tmp_path, staged):
             dict(
                 verified=True,
                 status="NATIVE_SURVEY_COMPLETE",
-                exchanges=[
-                    "radius-00",
-                    "accept-00",
-                    "accept-01",
-                    "accept-02",
-                    "accept-03",
-                    "accept-04",
-                    "accept-05",
-                    "prod-00",
-                ],
-                requests=8,
+                exchanges=list(V2_EXCHANGES),
+                requests=4,
                 native_launches=1,
                 connections=1,
                 command_accepted=True,
@@ -549,6 +666,59 @@ def test_replay_refuses_an_unknown_prelaunch_schema(tmp_path, staged):
     assert verdict["authorization_state"] == "UNKNOWN_PRELAUNCH_SCHEMA"
 
 
+# --- version-scoped identity: the pairings can never cross -------------------
+
+
+def test_identity_pairs_the_v2_record_with_the_v2_only(staged):
+    metadata = metadata_of(staged)
+    plan = staged_survey_plan(metadata["plan_policy"])
+    assert survey_native.verify_survey_attempt_identity(metadata, plan=plan)
+    for tampered_name, tampered_value in (
+        ("attempt", "D5-ACCEPT-SURVEY-1"),
+        ("schema", "d5-accept-survey-prelaunch-v1"),
+    ):
+        crossed = json.loads(json.dumps(metadata))
+        crossed[tampered_name] = tampered_value
+        with pytest.raises(ValueError, match="identity drifted|not the D5 survey lineage"):
+            survey_native.verify_survey_attempt_identity(crossed, plan=plan)
+
+
+def test_identity_refuses_a_crossed_plan_model(staged):
+    metadata = metadata_of(staged)
+    with pytest.raises(ValueError, match="plan version drifted"):
+        survey_native.verify_survey_attempt_identity(metadata, plan=survey_plan())
+
+
+def test_v1_bindings_refuse_the_a1_lineage_and_v2_identities():
+    """The other isolation direction: the v1 derivation refuses the A1
+    prerequisite, and a v1-shaped record carrying v2 identity fields (the
+    consumed candidate-1 record's bytes, read-only, tampered in memory) is
+    refused before any binding re-verification."""
+    import copy
+
+    with pytest.raises(
+        survey_native.SurveyStagingError, match="requires the pinned D4 prerequisite"
+    ):
+        survey_native.survey_prerequisite_binding(
+            survey_native.PINNED_PREREQUISITES[2], version=1
+        )
+    retained = json.loads(
+        Path(
+            "artifacts/experiments/d5-accept-survey-native-candidate-1/PRELAUNCH.json"
+        ).read_text()
+    )
+    for tampered_name, tampered_value in (
+        ("attempt", "D5-ACCEPT-SURVEY-2"),
+        ("schema", survey_native.SURVEY_PRELAUNCH_SCHEMAS[2]),
+    ):
+        crossed = copy.deepcopy(retained)
+        crossed[tampered_name] = tampered_value
+        with pytest.raises(ValueError, match="identity drifted|not the D5 survey lineage"):
+            survey_native.verify_survey_attempt_identity(
+                crossed, plan=survey_plan()
+            )
+
+
 # --- exit-status discipline ---------------------------------------------------
 
 
@@ -603,32 +773,28 @@ def test_survey_exit_status_zero_only_for_the_verified_completion():
     )
 
 
-# --- Consumed-frame replay: synthetic packed survey attempt fixture ----------
+# --- Consumed-frame replay: synthetic packed census attempt fixture ----------
 #
 # Explicitly synthetic: it stages a real candidate (prerequisite = the pinned
-# D4 candidate-5) and fabricates only the missing post-launch artifacts —
-# eight correlated protocol-6 frames, the runtime welcome, cleanup
-# certification and the flat retained receipt exactly as the execution
-# writes it. No native process, AdminPort session, claim, signature or
-# authorization is created. Because no authorized survey run exists under
-# the tests, the operator-authorization gate is the one seam monkeypatched;
-# every prerequisite, identity, digest, phase, frame and cleanup fact is
-# otherwise verified by the production replay path.
+# consumed A1 candidate-3) and fabricates only the missing post-launch
+# artifacts — four correlated protocol-6 census frames, the runtime welcome,
+# cleanup certification and the flat retained receipt exactly as the
+# execution writes it. No native process, AdminPort session, claim,
+# signature or authorization is created. Because no authorized survey run
+# exists under the tests, the operator-authorization gate is the one seam
+# monkeypatched; every prerequisite, identity, digest, phase, frame and
+# cleanup fact is otherwise verified by the production replay path.
 
 SURVEY_EXCHANGES_EFFECTS = {
     "radius-00": dict(status="READY", radius=3),
     "accept-00": dict(status="READY", radius=3, accept=0),
     "accept-01": dict(status="READY", radius=3, accept=8),
-    "accept-02": dict(status="READY", radius=3, accept=8),
-    "accept-03": dict(status="READY", radius=3, accept=8),
-    "accept-04": dict(status="READY", radius=3, accept=8),
-    "accept-05": dict(status="READY", radius=3, accept=8),
     "prod-00": dict(status="READY", prod=104),
 }
 
 
 def _consumed_survey_exchanges(seal: str, schedule):
-    plan = survey_native.survey_plan()
+    plan = survey_native.survey_plan_v2()
     exchanges = []
     for entry in schedule:
         request = survey_native._survey_exchange_request(entry, seal, plan)
@@ -725,7 +891,7 @@ def consumed_survey_attempt(tmp_path_factory):
                 preflight="PASS",
                 native_launches=1,
                 connections=1,
-                requests=8,
+                requests=4,
                 exchanges=[request.request_id for request, _ in exchanges],
                 last_status="READY",
                 command_accepted=True,
@@ -746,7 +912,7 @@ def consumed_survey_attempt(tmp_path_factory):
     prepared.spec.workspace.close()
 
 
-def test_replay_verifies_a_fully_consumed_survey_frame_sequence(
+def test_replay_verifies_a_fully_consumed_census_frame_sequence(
     consumed_survey_attempt, monkeypatch
 ):
     directory, exchanges, _, _ = consumed_survey_attempt
@@ -756,12 +922,11 @@ def test_replay_verifies_a_fully_consumed_survey_frame_sequence(
     assert verdict["receipt"]["phase"]["verification"] == "SURVEY_COMPLETE"
     assert verdict["receipt"]["phase"]["radius"] == 3
     assert verdict["receipt"]["phase"]["production"] == 104
+    assert verdict["receipt"]["phase"]["funds"] == FUNDS_AT_A1_CLOSE
     assert verdict["receipt"]["phase"]["observations"]["50351"]["value"] == 0
-    assert all(
-        verdict["receipt"]["phase"]["observations"][str(tile)]["value"] == 8
-        for tile in (50607, 50863, 51119, 51375, 50605)
-    )
-    assert len(verdict["receipt"]["phase"]["observations"]) == 6
+    assert verdict["receipt"]["phase"]["observations"]["50862"]["value"] == 8
+    assert len(verdict["receipt"]["phase"]["observations"]) == 2
+    assert len(exchanges) == 4
     assert survey_native.survey_verdict_exit_status(verdict) == 0
 
 
@@ -789,3 +954,60 @@ def test_replay_fails_closed_on_tampered_retained_census_findings(
     (directory / "artifact-manifest.sha256").write_text(d5.manifest(directory))
     with pytest.raises(ValueError, match="census findings replay mismatch"):
         survey_native.verify_survey_attempt(directory)
+    (directory / "receipt.json").write_text(json.dumps(before, sort_keys=True, indent=2) + "\n")
+    (directory / "artifact-manifest.sha256").write_text(d5.manifest(directory))
+
+
+# --- the consumed v1 record replays untouched through the production path ----
+
+
+def test_consumed_v1_candidate_1_replay_still_verifies():
+    """The consumed ``D5-ACCEPT-SURVEY-1`` candidate-1 record's replay of
+    record (E42) must keep returning ``SURVEY_COMPLETION_VERIFIED`` through
+    the production verifier after the v2 retarget; its retained bytes are
+    never modified here."""
+    directory = Path("artifacts/experiments/d5-accept-survey-native-candidate-1").resolve()
+    if not (directory / "PRELAUNCH.json").is_file():  # pragma: no cover - fresh clone
+        pytest.skip("the consumed v1 candidate-1 record is absent from this checkout")
+    verdict = survey_native.verify_survey_attempt(directory)
+    assert verdict["verification"] == "SURVEY_COMPLETION_VERIFIED"
+    assert verdict["receipt"]["phase"]["verification"] == "SURVEY_COMPLETE"
+    assert verdict["receipt"]["phase"]["funds"] == 492149
+    assert sorted(verdict["receipt"]["phase"]["observations"]) == [
+        "50351",
+        "50605",
+        "50607",
+        "50863",
+        "51119",
+        "51375",
+    ]
+
+
+# --- the wire-to-Nut pin binding: Python schedule pins can never drift -------
+
+
+def test_nut_pin_table_binds_to_the_v2_python_schedule():
+    """The staged GameScript's `survey_planned` rows and its pin table are
+    read from the shipped package bytes and must equal the wire contract's
+    v2 schedule exactly: ids/ops in order, control tile, and the single A1
+    candidate tile."""
+    text = Path(survey_native.FREIGHT_PACKAGE / "main.nut").read_text()
+    planned_match = re.search(r"survey_planned = \[(.*?)\n    \]", text, re.DOTALL)
+    assert planned_match, "the shipped package lost its survey_planned table"
+    rows = re.findall(r'\["([a-z0-9-]+)",\s*"([a-z]+)",\s*"[A-Z]+"\]', planned_match.group(1))
+    assert [exchange for exchange, _op in rows] == list(V2_EXCHANGES)
+    with_op = set(rows)
+    assert with_op == {
+        ("radius-00", "radius"),
+        ("accept-00", "accept"),
+        ("accept-01", "accept"),
+        ("prod-00", "prod"),
+    }
+    control = re.search(r"ACCEPT_CONTROL = (\d+)", text)
+    candidates = re.search(r"ACCEPT_CANDIDATES = \[([\d,\s]*)\]", text)
+    assert control and int(control.group(1)) == 50351
+    assert candidates and [int(t) for t in candidates.group(1).split(",")] == [50862]
+    native_schedule = survey_native.survey_schedule_v2()
+    for row in native_schedule:
+        if row["op"] == "accept":
+            assert row["observation_tile"] in {50351, 50862}
