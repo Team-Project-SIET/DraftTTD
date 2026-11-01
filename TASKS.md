@@ -1187,3 +1187,30 @@ disposed, zero cleanup errors; manifest 24 entries 0 mismatches;
 frames/requests/responses/identities/logs retained. No freight
 delivery, no reachability, no traversal, no YAPF, no M8 claims. No
 commit. Record: design doc §11; evidence index E49.
+
+### 2026-11-01 — D5 Freight Delivery v2 design review COMPLETE (offline, three fresh-context reviewers; E50)
+
+Explicit operator request (full key-file refresh chosen; `OpenTTD-Knowledge/`
+left untouched). Baseline verified first: branch `miles/fright-delivery`,
+HEAD `fee7459`, working tree clean; no git mutations, no launch, no
+AdminPort, no candidate, no claim, no signing at any point before, during or
+after this documentation step. Three fresh-context read-only reviewer
+agents (engine/world, protocol/budget, accounting/proof) cross-reviewed
+against primary sources. Verdict: **`DESIGN READY WITH CONDITIONS`**. One
+BLOCKER (no offline engine-ID provenance authority on disk; legacy engine-123
+enumeration is a different world) plus MAJORs: 31-tile witness vs 24-cap
+route shape, A1-world pins stale (funds 490,257, bay 50862/sid 2, delivery
+industry UNKNOWN), `OF_FULL_LOAD`/full-load pins, single-cycle-only
+schedule/verifier, funds ledger enforcing only purchase with running-cost
+attribution needing an operator decision, no per-attempt 60-day authority.
+Code-verified arithmetic: fixed 10 + per-cycle 3 + tail 2 within cap 32 →
+max **6 cycles** (5 with per-cycle finance read, ~4 wall-saturated); plan the
+count at staging. Quote-first purchase feasible as built; quote==realized
+native precedent is legacy-lane only. Zero-file-write review constraints
+were followed exactly; the four cross-references plus the review record are
+the only files this step created (new record +
+EVIDENCE_INDEX/AI_HANDOFF/TASKS/README pointers, no historical bytes edited).
+No implementation authorized; the next phase needs separate explicit
+operator authorization. Record:
+[docs/d5-freight-delivery-v2-design-review-2026-11-01.md](docs/d5-freight-delivery-v2-design-review-2026-11-01.md);
+evidence index E50.

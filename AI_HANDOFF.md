@@ -257,6 +257,28 @@ delivery and M8 route-selection proof remain separate, unsatisfied D5
 requirements and are never covered by the A0 survey. CONTEXT.md is not
 edited here: its bytes stay pinned by the E26 authority record.
 
+Next for D5 (per the 2026-11-01 record, E50): the D5 Freight Delivery v2
+design was reviewed offline under three fresh-context read-only workstreams
+(engine/world, protocol/budget, accounting/proof) with cross-review; verdict
+**`DESIGN READY WITH CONDITIONS`** — the locked D1–D8 decisions are internally
+consistent, but implementation must not start until (a) engine-ID provenance
+is resolved (no offline engine-list authority exists in the repository;
+`OpenTTD-Knowledge/` has none and stays untouched) and (b) the operator
+approves the funds taxonomy (running-cost category under the
+halt-on-unexplained-drift rule). Implementation requirements land as a
+versioned v2 protocol/package: 29-tile vehicle-legal route + 31-tile witness
+rebinding, A1-world pins (funds 490,257, bay 50862/sid 2, delivery industry
+observed natively), no-`OF_FULL_LOAD` departure gate `0 < load ≤ capacity`,
+cycle-looped schedule/verifier with per-cycle monitor snapshots, pinned-engine
+admission with default-cargo-1 gate, per-attempt 60-day authority, budget
+pre-checks, typed zero-cycle status. Request arithmetic of record: v1-style
+schedule = fixed 10 + per-cycle 3 + tail 2 inside cap 32 → at most **6** cycles code-verified (5 with a per-cycle finance read, ~4 wall-saturated); the
+planned cycle count is derived at staging. Zero completed cycles remains a
+valid but unsuccessful outcome. Record:
+[docs/d5-freight-delivery-v2-design-review-2026-11-01.md](docs/d5-freight-delivery-v2-design-review-2026-11-01.md).
+Freight delivery and M8 route selection remain unproven; nothing above
+authorizes a launch, staging, signing or claim.
+
 ## Shared language for continuation
 
 **Canonical constructed fleet**: The common paused state containing the three

@@ -99,6 +99,8 @@ Historical runtime evidence is optional for a **new `--demo` run**.
 | Multiple candidate services, shared-constrained P05 selection and network P07 estimates | Attempt 12: two native P05-selected services delivered in one world; paid shared-asset reuse remains unproven |
 | Evidence-aware P07 performance analytics (bottlenecks, advisories, comparisons) | Offline implementation verified 2026-10-18 on retained Attempt 19/fixed-demo evidence; see [the analytics record](docs/p07-performance-analytics-extension.md); no native relabeling of FAILED terminals |
 | Tile classification census capture (schema-2 AdminPort) | Native 2026-10-18: 90/90 pages, 450/450 tiles with AI/GameScript startup and cleanup PASS; correspondence verdict REJECTED (83 disagreements), nothing fused — see [the completion record](docs/p08-classification-v2-native-capture-completion.md) |
+| Seed-17 D-chain corridor, construction + extension + acceptance census | Native: corridor/stops/depot PROVEN (E35), A1 extension VERIFIED (E44, after-save `3748e00c…5420bd`, funds £490,257), census `SURVEY_COMPLETION_VERIFIED` (E49: control 50351 = 0/8, bay 50862 = 8/8, prod 104); freight delivery not yet proven on the corridor |
+| D5 Freight Delivery v2 design review (offline, 2026-11-01) | Three fresh-context read-only reviewers + cross-review; verdict `DESIGN READY WITH CONDITIONS` — engine-ID provenance and funds-taxonomy decisions gate implementation; see [the review record](docs/d5-freight-delivery-v2-design-review-2026-11-01.md) |
 | Arbitrary maps, rail delivery, concurrent native vehicles, closed-loop optimization | Outside the demonstrated native MVP |
 
 The standalone `--demo` result uses native OD selection. `--demo --planner` instead
