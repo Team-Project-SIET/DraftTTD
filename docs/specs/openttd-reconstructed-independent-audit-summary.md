@@ -15,32 +15,32 @@ carried those 23 cases forward; it did not freshly rerun every listed mutation.
 
 ## Conversation-preserved cases
 
-| Case | Reported challenge | Reported result | Reported rejection boundary or positive outcome |
-| --- | --- | --- | --- |
-| 1 | Coordinated attempt identity | PASS | lineage mismatch |
-| 2 | Invalid coordinated owner | PASS | lineage mismatch |
-| 3 | Trust and operation allowance | PASS | lineage mismatch |
-| 4 | Coordinated retry policy | PASS | lineage mismatch |
-| 5 | Cross-attempt authorization | PASS | lineage mismatch |
-| 6 | CONTROLLED-to-REAL separation | PASS | REAL authentication mismatch |
-| 7 | Invocation claim digest | PASS | lineage mismatch |
-| 8 | Ownership plus source inventory | PASS | immutable ownership mismatch |
-| 9 | Protected path made disposable | PASS | immutable ownership mismatch |
-| 10 | Invalid ownership classification | PASS | immutable ownership mismatch |
-| 11 | Canonical identity substitution | PASS | sealed-index mismatch |
-| 12 | Materialization relationship | PASS | materialization provenance mismatch |
-| 13 | Retained object substitution | PASS | canonical-content mismatch |
-| 14 | Historical root substitution | PASS | immutable historical commitment rejects unauthorized modification |
-| 15 | Canonical symlink alias | PASS | canonical-content validation |
-| 16 | Unexpected canonical artifact | PASS | exact canonical inventory |
-| 17 | Snapshot byte mismatch | PASS | log-scope validation |
-| 18 | Final-log digest mismatch | PASS | log-scope validation |
-| 19 | Offset and length substitution | PASS | log-scope validation |
-| 20 | Unrelated request log | PASS | log correlation |
-| 21 | Duplicate lifecycle marker | PASS | log lifecycle validation |
-| 22 | False cleanup result gate | PASS | result-gate consistency |
-| 23 | Live endpoint contradicting closure | PASS | endpoint observation validation |
-| 24 | Append-only shutdown log | PASS | valid offline acceptance |
+| Case | Reported challenge                  | Reported result | Reported rejection boundary or positive outcome                   |
+| ---- | ----------------------------------- | --------------- | ----------------------------------------------------------------- |
+| 1    | Coordinated attempt identity        | PASS            | lineage mismatch                                                  |
+| 2    | Invalid coordinated owner           | PASS            | lineage mismatch                                                  |
+| 3    | Trust and operation allowance       | PASS            | lineage mismatch                                                  |
+| 4    | Coordinated retry policy            | PASS            | lineage mismatch                                                  |
+| 5    | Cross-attempt authorization         | PASS            | lineage mismatch                                                  |
+| 6    | CONTROLLED-to-REAL separation       | PASS            | REAL authentication mismatch                                      |
+| 7    | Invocation claim digest             | PASS            | lineage mismatch                                                  |
+| 8    | Ownership plus source inventory     | PASS            | immutable ownership mismatch                                      |
+| 9    | Protected path made disposable      | PASS            | immutable ownership mismatch                                      |
+| 10   | Invalid ownership classification    | PASS            | immutable ownership mismatch                                      |
+| 11   | Canonical identity substitution     | PASS            | sealed-index mismatch                                             |
+| 12   | Materialization relationship        | PASS            | materialization provenance mismatch                               |
+| 13   | Retained object substitution        | PASS            | canonical-content mismatch                                        |
+| 14   | Historical root substitution        | PASS            | immutable historical commitment rejects unauthorized modification |
+| 15   | Canonical symlink alias             | PASS            | canonical-content validation                                      |
+| 16   | Unexpected canonical artifact       | PASS            | exact canonical inventory                                         |
+| 17   | Snapshot byte mismatch              | PASS            | log-scope validation                                              |
+| 18   | Final-log digest mismatch           | PASS            | log-scope validation                                              |
+| 19   | Offset and length substitution      | PASS            | log-scope validation                                              |
+| 20   | Unrelated request log               | PASS            | log correlation                                                   |
+| 21   | Duplicate lifecycle marker          | PASS            | log lifecycle validation                                          |
+| 22   | False cleanup result gate           | PASS            | result-gate consistency                                           |
+| 23   | Live endpoint contradicting closure | PASS            | endpoint observation validation                                   |
+| 24   | Append-only shutdown log            | PASS            | valid offline acceptance                                          |
 
 ## Final historical-root adjudication
 

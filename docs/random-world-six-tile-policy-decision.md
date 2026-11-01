@@ -113,7 +113,7 @@ drawn from the live code (`app/simulation/openttd/v2_semantic_reconciliation.py`
    immutable** census instants (verified per page single-instant; window
    712224–712226) and the **sealed, immutable** retained window (712285–712291).
    No future native observation can change either record's instants, so a fresh
-   re-observation could at best *confirm* that the six deltas are genuine
+   re-observation could at best _confirm_ that the six deltas are genuine
    timeline effects (already mechanically explained against OpenTTD 15.3
    `tree_cmd.cpp`, with 0 genuine contradictions). The open question — which
    instant's state P08 planning treats as authoritative — is a policy

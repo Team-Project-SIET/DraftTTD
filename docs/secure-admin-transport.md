@@ -22,14 +22,14 @@ No reconnect, retry, method fallback, or insecure downgrade occurs.
 `GameScriptSession` accepts supplied controlled streams but cannot open TCP;
 its `connect` directs callers to the secure entry point.
 
-| Packet | ID | Body |
-| --- | --- | --- |
-| ADMIN_JOIN_SECURE | 9 | NUL-terminated name, version, uint16 LE supported-method mask 4 |
-| SERVER_AUTH_REQUEST | 128 | uint8 method 2, server public key 32 bytes, exchange nonce 24 bytes |
-| ADMIN_AUTH_RESPONSE | 10 | client public key 32 bytes, MAC 16 bytes, encrypted random message 8 bytes |
-| SERVER_ENABLE_ENCRYPTION | 129 | stream nonce 24 bytes |
-| SERVER_PROTOCOL | 103 | Encrypted; existing parser, required Admin protocol version 3 |
-| SERVER_WELCOME | 104 | Encrypted; existing Welcome parser |
+| Packet                   | ID  | Body                                                                       |
+| ------------------------ | --- | -------------------------------------------------------------------------- |
+| ADMIN_JOIN_SECURE        | 9   | NUL-terminated name, version, uint16 LE supported-method mask 4            |
+| SERVER_AUTH_REQUEST      | 128 | uint8 method 2, server public key 32 bytes, exchange nonce 24 bytes        |
+| ADMIN_AUTH_RESPONSE      | 10  | client public key 32 bytes, MAC 16 bytes, encrypted random message 8 bytes |
+| SERVER_ENABLE_ENCRYPTION | 129 | stream nonce 24 bytes                                                      |
+| SERVER_PROTOCOL          | 103 | Encrypted; existing parser, required Admin protocol version 3              |
+| SERVER_WELCOME           | 104 | Encrypted; existing Welcome parser                                         |
 
 Client name/version limits are 24/32 UTF-8 bytes excluding their NUL terminators.
 Encryption becomes active only after the correctly ordered, validated enable

@@ -1,12 +1,14 @@
 ---
+
 title: "Planning and Execution Boundary"
 type: architecture
 status: current
 updated: 2026-10-22
 tags:
-  - openttd
-  - architecture
-  - planning
+- openttd
+- architecture
+- planning
+
 ---
 
 # Planning and Execution Boundary
@@ -40,7 +42,7 @@ executor code — this note only indexes its binding rules.
 
 - P08 adapts admitted observations into **bounded road candidates**: flat-land routing,
   2..47 road tiles per candidate path, explicit budgets; bounded terrain-aware
-  reachability oracle before selection; bounded terrain-modification *planning* contracts
+  reachability oracle before selection; bounded terrain-modification _planning_ contracts
   (E9, E10).
 - P08 does not clear, mine, bridge, or improvise: unsupported geometry is reported via
   typed feasibility diagnoses (`NO_CONNECTED_CORRIDOR`, `TERRAIN_MODIFICATION_REQUIRED`,

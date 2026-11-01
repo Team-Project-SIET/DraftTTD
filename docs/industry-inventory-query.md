@@ -10,9 +10,9 @@ live Admin endpoint, or send a real application request.
 
 The unchanged protocol remains `industry_page` / `industry_page_result`, protocol
 1. Requests carry request_id, after_id, and limit. Responses carry compact
-id/type/tile/x/y records, next_after_id, and has_more. Protocol maximum is five
-records; application payload bound is 512 bytes; native GSAdmin.Send ceiling is
-1450 bytes. The default inventory page size is three. No throughput tuning is added.
+   id/type/tile/x/y records, next_after_id, and has_more. Protocol maximum is five
+   records; application payload bound is 512 bytes; native GSAdmin.Send ceiling is
+   1450 bytes. The default inventory page size is three. No throughput tuning is added.
 
 `IndustryInventorySession(session_id, world, page_size=3, budget=..., timeout=5)`
 is a single-use Python session. Its async `collect(transport, gamescript_evidence)`
@@ -38,12 +38,12 @@ its page budget is now capped at 32, with the same record/byte/operation ceiling
 
 ## Finite budgets
 
-| Hard default/maximum | Value | Reason |
-| --- | ---: | --- |
-| Accepted industries | 32 | Current P08 v1 industry profile in preparation/domain.py and its design spec |
-| Pages | 32 | At minimum page size one, a stable 32-record world needs at most 32 pages |
-| Cumulative response bytes | 16,384 | 32 pages × unchanged 512-byte application ceiling |
-| Admin frame operations | 256 | 32 × 8; initial subscription/query normally costs 7, later pages 4, with bounded headroom for unrelated packets |
+| Hard default/maximum      |  Value | Reason                                                                                                          |
+| ------------------------- | -----: | --------------------------------------------------------------------------------------------------------------- |
+| Accepted industries       |     32 | Current P08 v1 industry profile in preparation/domain.py and its design spec                                    |
+| Pages                     |     32 | At minimum page size one, a stable 32-record world needs at most 32 pages                                       |
+| Cumulative response bytes | 16,384 | 32 pages × unchanged 512-byte application ceiling                                                               |
+| Admin frame operations    |    256 | 32 × 8; initial subscription/query normally costs 7, later pages 4, with bounded headroom for unrelated packets |
 
 `IndustryInventoryBudget` can tighten each cap; it cannot raise these hard limits
 or accept zero, negative, boolean or fractional bounds. At default page size three,

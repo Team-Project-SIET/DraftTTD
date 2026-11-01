@@ -28,7 +28,12 @@ A transport receipt does not imply capability verification.
 Production canonical request, 98 bytes:
 
 ```json
-{"industry_id":0,"protocol":1,"request_id":"openttd15-industry-cargo-001","type":"industry_cargo"}
+{
+	"industry_id": 0,
+	"protocol": 1,
+	"request_id": "openttd15-industry-cargo-001",
+	"type": "industry_cargo"
+}
 ```
 
 SHA-256: `64e228cdf2a3a9b696de1d959ae34b46721518192ca3f5af67e051ecded43e63`.

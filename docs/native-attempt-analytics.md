@@ -18,20 +18,20 @@ retained attempt evidence stayed byte-identical throughout.
 
 Verified against the committed baseline plus the retained records:
 
-| Capability | Existing implementation | Reused here |
-|---|---|---|
-| Single-run planned/actual evaluation | `app/experiments/freight_evaluation.py` | No (different artifact family) |
-| Cohort summaries + SVG/HTML/CSV | `app/experiments/freight_analytics.py` (`summarize`, `render_html`, `analyze`, `_bars`) | `_bars` reused |
-| Continuous five-year reporting | `app/experiments/freight_continuous_analytics.py` | No |
-| Fixed-demo terminal snapshot + report comparison | `app/demo_operations.py` | No |
-| Bottlenecks/advisories/comparisons over P07 reports | `app/experiments/performance_insights.py` | Contract/report style reused |
-| Content-addressed freight run history | `app/experiments/freight_history.py` | No |
-| Corridor phase verification contracts | `app/simulation/openttd/corridor_construction.py` (`corridor_phase_outcome`) | Unchanged, not imported |
+| Capability                                          | Existing implementation                                                                 | Reused here                    |
+| --------------------------------------------------- | --------------------------------------------------------------------------------------- | ------------------------------ |
+| Single-run planned/actual evaluation                | `app/experiments/freight_evaluation.py`                                                 | No (different artifact family) |
+| Cohort summaries + SVG/HTML/CSV                     | `app/experiments/freight_analytics.py` (`summarize`, `render_html`, `analyze`, `_bars`) | `_bars` reused                 |
+| Continuous five-year reporting                      | `app/experiments/freight_continuous_analytics.py`                                       | No                             |
+| Fixed-demo terminal snapshot + report comparison    | `app/demo_operations.py`                                                                | No                             |
+| Bottlenecks/advisories/comparisons over P07 reports | `app/experiments/performance_insights.py`                                               | Contract/report style reused   |
+| Content-addressed freight run history               | `app/experiments/freight_history.py`                                                    | No                             |
+| Corridor phase verification contracts               | `app/simulation/openttd/corridor_construction.py` (`corridor_phase_outcome`)            | Unchanged, not imported        |
 
 ## 2. The concrete gap
 
 The requirements-evidence matrix lists D2/D3/D4 native attempts separately,
-each with only narrative status; nothing aggregates *run-level* facts above a
+each with only narrative status; nothing aggregates _run-level_ facts above a
 single attempt. In particular:
 
 1. No structured planned-vs-executed execution metrics per attempt (ops,
@@ -55,7 +55,7 @@ single attempt. In particular:
     observation codes:
     - `SCHEDULE_REVISED` — plan schedule revision between attempts.
     - `DESCRIPTIVE_EVIDENCE_PREFIX_SEQUENCE` — receipt-backed executed-op
-      fraction of *each attempt's own planned ops*; each fraction compares an
+      fraction of _each attempt's own planned ops_; each fraction compares an
       attempt with its own plan. Direction words (`non-decreasing` /
       `non-increasing` / `mixed`) are descriptive only and the statement
       explicitly refuses causal claims; the statement also says records whose
@@ -85,7 +85,7 @@ single attempt. In particular:
 - `verified_outcomes` counts only records whose own `verified` flag is true;
   partial/failed records count separately and never enter the verified count,
   matching "exclude unverified or failed attempts from success metrics".
-- The receipt-backed evidence-prefix fraction is explicitly *not* a success
+- The receipt-backed evidence-prefix fraction is explicitly _not_ a success
   metric: it is coverage of executed effort against an attempt's own plan.
 - UNKNOWN stays UNKNOWN: a dispatched op with a refused response keeps cost
   UNKNOWN (`_FAILURE_NOTE`); no OPEX, profit, ROI or runtime results are
@@ -97,11 +97,11 @@ single attempt. In particular:
 
 ## 5. Evidence used (retained, read-only)
 
-| Source | Use |
-|---|---|
+| Source                                                                                                                      | Use                                                                                                                                                                                                                         |
+| --------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `artifacts/experiments/d4-corridor-native-candidate-{1,3,4}/` (E21/E28/E31/E32 records; result/PRELAUNCH/cleanup read only) | D4 lineage: planned ops 6/8/7, receipt-backed ops 1/3/6, prefixes 0.1667→0.375→0.8571, op-cost totals £785/£3,334/£4,004, request utilization 0.16/0.3226/0.6786, halts `op-01`/`op-03`/`op-06`, cleanup PASS/NOT_PASS/PASS |
-| `artifacts/experiments/d3-terraform-native-candidate-1/` | Verified complete attempt: 16/16 receipts, prefix 1.0, £3,382, PHASE_COMPLETE |
-| `artifacts/experiments/d3-clearing-native-candidate-{1,2}/`, `d2-clearing-native-candidate-3/` | Clearing per-command costs £30/£45/£15 and funds; unrelated source worlds guarded |
+| `artifacts/experiments/d3-terraform-native-candidate-1/`                                                                    | Verified complete attempt: 16/16 receipts, prefix 1.0, £3,382, PHASE_COMPLETE                                                                                                                                               |
+| `artifacts/experiments/d3-clearing-native-candidate-{1,2}/`, `d2-clearing-native-candidate-3/`                              | Clearing per-command costs £30/£45/£15 and funds; unrelated source worlds guarded                                                                                                                                           |
 
 Copies of these directories were made into the worktree for tests (verified
 byte-identical; the originals were never modified). The main checkout's

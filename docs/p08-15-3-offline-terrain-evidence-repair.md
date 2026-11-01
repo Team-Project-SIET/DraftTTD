@@ -26,21 +26,21 @@ Both byte scopes are valid, but unequal. Neither defect is native execution fail
 
 All paths below are relative to the historical temporary candidate root.
 
-| File | Ownership and lifetime |
-| --- | --- |
-| `CANDIDATE.json` | Non-secret immutable review record; exact bytes needed for candidate/seal provenance |
-| `bridge/info.nut` | Non-secret immutable package input; duplicate of generated runtime copy |
-| `bridge/main.nut` | Non-secret immutable composed handler; exact package bytes required |
-| `config-template.cfg` | Deterministic non-secret recipe template; retained independently of runtime edits |
-| `historical-integrity.json` | Non-secret immutable history inventory; duplicated by retained seal member |
-| `materialization-inputs/.runtime-owned` | Deterministic public workspace marker template; runtime copy disposable |
-| `materialization-inputs/openttd.cfg` | Deterministic public config plus selected endpoints; runtime copy disposable |
-| `materialization-inputs/private.cfg` | Audited public-only bind/public-key config despite its filename; runtime copy disposable |
-| `materialization-inputs/secrets.cfg` | Credential-capable config, but this mode permits only the exact empty-password placeholder; runtime copy disposable |
-| `path-ownership.json` | Non-secret immutable candidate ownership graph; differs from seal ownership graph |
-| `request.json` | Non-secret exact request; duplicated by retained seal member |
-| `runtime-materializations.json` | Non-secret origin/copy digest ledger; duplicated by retained seal member |
-| `source.json` | Non-secret deterministic world recipe; also represented in seal metadata |
+| File                                    | Ownership and lifetime                                                                                              |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `CANDIDATE.json`                        | Non-secret immutable review record; exact bytes needed for candidate/seal provenance                                |
+| `bridge/info.nut`                       | Non-secret immutable package input; duplicate of generated runtime copy                                             |
+| `bridge/main.nut`                       | Non-secret immutable composed handler; exact package bytes required                                                 |
+| `config-template.cfg`                   | Deterministic non-secret recipe template; retained independently of runtime edits                                   |
+| `historical-integrity.json`             | Non-secret immutable history inventory; duplicated by retained seal member                                          |
+| `materialization-inputs/.runtime-owned` | Deterministic public workspace marker template; runtime copy disposable                                             |
+| `materialization-inputs/openttd.cfg`    | Deterministic public config plus selected endpoints; runtime copy disposable                                        |
+| `materialization-inputs/private.cfg`    | Audited public-only bind/public-key config despite its filename; runtime copy disposable                            |
+| `materialization-inputs/secrets.cfg`    | Credential-capable config, but this mode permits only the exact empty-password placeholder; runtime copy disposable |
+| `path-ownership.json`                   | Non-secret immutable candidate ownership graph; differs from seal ownership graph                                   |
+| `request.json`                          | Non-secret exact request; duplicated by retained seal member                                                        |
+| `runtime-materializations.json`         | Non-secret origin/copy digest ledger; duplicated by retained seal member                                            |
+| `source.json`                           | Non-secret deterministic world recipe; also represented in seal metadata                                            |
 
 The private `.admin-secret` key was never a canonical frozen input. It remains a
 runtime credential and must be deleted. A filename containing “private” or “secrets”
@@ -333,16 +333,16 @@ for the mutated gate before the repair.
 
 Successful execution's mandatory result-gate relationships are:
 
-| Gate | Meaning and supporting evidence | Acceptance contract |
-| --- | --- | --- |
-| schema_valid | Parsed response and receipt | Must match verify_page boolean |
-| coverage_valid | Exact requested five-tile coverage/cursor | Must match verify_page boolean |
-| native_read_evidence | Response-correlated GameScript markers | Must match verify_page boolean |
-| post_yield_liveness | Completed native marker sequence | Must match verify_page boolean |
-| response_sha256 | Exact retained response bytes and receipt | Must match verified digest string |
-| evidence_sha256 | Explicit verified execution-log snapshot | Must match verified digest string |
-| cleanup | Raw/normalized cleanup, lifecycle and endpoint closure | Must be true after those validators and required disposal checks pass |
-| post_run_integrity | Retained source/ownership/historical commitments and canonical cleanup attestation | Must be true with existing evidence checks retained |
+| Gate                 | Meaning and supporting evidence                                                    | Acceptance contract                                                   |
+| -------------------- | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| schema_valid         | Parsed response and receipt                                                        | Must match verify_page boolean                                        |
+| coverage_valid       | Exact requested five-tile coverage/cursor                                          | Must match verify_page boolean                                        |
+| native_read_evidence | Response-correlated GameScript markers                                             | Must match verify_page boolean                                        |
+| post_yield_liveness  | Completed native marker sequence                                                   | Must match verify_page boolean                                        |
+| response_sha256      | Exact retained response bytes and receipt                                          | Must match verified digest string                                     |
+| evidence_sha256      | Explicit verified execution-log snapshot                                           | Must match verified digest string                                     |
+| cleanup              | Raw/normalized cleanup, lifecycle and endpoint closure                             | Must be true after those validators and required disposal checks pass |
+| post_run_integrity   | Retained source/ownership/historical commitments and canonical cleanup attestation | Must be true with existing evidence checks retained                   |
 
 The writer obtains the first six entries from verify_page, then records cleanup and
 post-run gates only after their respective lifecycle checks. Failed attempts may

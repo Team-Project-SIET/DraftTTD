@@ -26,11 +26,11 @@ individual vehicles, train consists, or construction versus operating costs.
 
 Provide two explicitly selected execution modes under the experiment application:
 
-* **Batch:** retain the existing OpenTTDLab runner, accelerated null-driver execution,
+- **Batch:** retain the existing OpenTTDLab runner, accelerated null-driver execution,
   fixed seeds, pinned configuration, final parsing, persistence and multi-seed
   comparison behavior. No Admin endpoint, observer, telemetry queue or live timeout
   is added to a batch execution.
-* **Live-observed:** an application-owned LiveSimulationRunner prepares a pinned
+- **Live-observed:** an application-owned LiveSimulationRunner prepares a pinned
   runtime and directly supervises one dedicated OpenTTD process. A read-only
   AdminObserver emits typed observations concurrently. TelemetryProcessor validates
   and annotates them; TelemetryRepository persists them. At completion, the public
@@ -85,15 +85,15 @@ one attempted execution; SimulationResult is the typed final save interpretation
 SimulationRun is the persisted final result. Do not repurpose SimulationRun as a
 process/session row or create it with invented final dates at startup.
 
-| Boundary | Owns | Must not own |
-|---|---|---|
-| ExperimentService | Create the run before launch, select mode, coordinate terminal persistence and application outcome | Sockets, packet layouts, process signaling |
-| Existing OpenTTDLabRunner | Unchanged batch execution and its existing adapter behavior | Live observation or live port allocation |
-| LiveSimulationRunner | Process group, prepared runtime, ports, readiness, temporary config/secrets, deadlines, cancellation, save/quit, joining owned tasks and resources | SQL statements or interpretation of economic measures |
-| AdminObserver | Authenticated read-only connection, framing, version checks, subscriptions/polls, decoded observations and connection health | Process launch, shutdown, pause, save, RCON, database writes, run outcome decisions |
-| TelemetryProcessor | Typed validation, source/period annotations, ordering, date context, gap diagnostics, bounded handoff to storage | Cross-source economic aggregation, process control, generated missing measurements |
-| TelemetryRepository | Transactional observation batches, idempotent retry, ordered reads, telemetry summary state | Network reconnection or simulation lifecycle |
-| FinalResultProcessor | Parse completed save with public Lab parser, normalize its result, validate provenance, write final artifact | Running OpenTTD, reading live state, replacing save metrics with Admin metrics |
+| Boundary                  | Owns                                                                                                                                               | Must not own                                                                        |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| ExperimentService         | Create the run before launch, select mode, coordinate terminal persistence and application outcome                                                 | Sockets, packet layouts, process signaling                                          |
+| Existing OpenTTDLabRunner | Unchanged batch execution and its existing adapter behavior                                                                                        | Live observation or live port allocation                                            |
+| LiveSimulationRunner      | Process group, prepared runtime, ports, readiness, temporary config/secrets, deadlines, cancellation, save/quit, joining owned tasks and resources | SQL statements or interpretation of economic measures                               |
+| AdminObserver             | Authenticated read-only connection, framing, version checks, subscriptions/polls, decoded observations and connection health                       | Process launch, shutdown, pause, save, RCON, database writes, run outcome decisions |
+| TelemetryProcessor        | Typed validation, source/period annotations, ordering, date context, gap diagnostics, bounded handoff to storage                                   | Cross-source economic aggregation, process control, generated missing measurements  |
+| TelemetryRepository       | Transactional observation batches, idempotent retry, ordered reads, telemetry summary state                                                        | Network reconnection or simulation lifecycle                                        |
+| FinalResultProcessor      | Parse completed save with public Lab parser, normalize its result, validate provenance, write final artifact                                       | Running OpenTTD, reading live state, replacing save metrics with Admin metrics      |
 
 Keep SimulationRunner's synchronous run contract returning SimulationResult on
 successful final processing. Configure live-specific execution options and its
@@ -219,13 +219,13 @@ observations with unknown date rather than assigning the previous connection's
 date. Store wall-clock reception time separately. No synthetic per-packet tick
 or generation timestamp is claimed.
 
-| Observation type | Minimum payload and meaning |
-|---|---|
-| GameDateObservation | Reported game_day; no company ID |
-| CompanyInfoObservation | Company wire ID, name, manager, colour, password-protected flag, inauguration year, is_ai; optional known bankruptcy/share fields may be decoded but are not required business metrics |
-| CompanyEconomyObservation | cash_balance_gbp, loan_balance_gbp, admin_year_to_date_net_income_gbp, current_quarter_delivered_cargo_capped, two completed-quarter history entries |
-| CompanyStatsObservation | Primary-vehicle counts and station-facility counts for train, lorry, bus, plane, ship; each is a separate integer category |
-| TelemetryDiagnostic | Finite code, severity, connection epoch, UTC start/end or event time, last known day and bounded sanitized context; used for gap, unsupported data, reset or persistence diagnostics |
+| Observation type          | Minimum payload and meaning                                                                                                                                                            |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GameDateObservation       | Reported game_day; no company ID                                                                                                                                                       |
+| CompanyInfoObservation    | Company wire ID, name, manager, colour, password-protected flag, inauguration year, is_ai; optional known bankruptcy/share fields may be decoded but are not required business metrics |
+| CompanyEconomyObservation | cash_balance_gbp, loan_balance_gbp, admin_year_to_date_net_income_gbp, current_quarter_delivered_cargo_capped, two completed-quarter history entries                                   |
+| CompanyStatsObservation   | Primary-vehicle counts and station-facility counts for train, lorry, bus, plane, ship; each is a separate integer category                                                             |
+| TelemetryDiagnostic       | Finite code, severity, connection epoch, UTC start/end or event time, last known day and bounded sanitized context; used for gap, unsupported data, reset or persistence diagnostics   |
 
 Each historical economy entry contains history_offset (1 or 2),
 company_value_gbp, performance_score, and delivered_cargo_capped. Preserve offsets
@@ -246,18 +246,18 @@ No new company master table or speculative durable company identity is needed.
 
 Economic meanings are fixed as follows:
 
-| Name/source | Period or measurement kind | Permitted interpretation |
-|---|---|---|
-| Admin cash_balance_gbp and loan_balance_gbp | Current stock/balance at emission | Balance, not income or accumulated profit |
-| Admin admin_year_to_date_net_income_gbp | Current calendar-year-to-date, negative sum of yearly expense categories | Includes construction/vehicle purchases and other categories; not gross transport revenue or pure operating profit |
-| Admin current_quarter_delivered_cargo_capped | Current calendar-quarter-to-date; saturating uint16 | Cargo units delivered in that period; not rate, lifetime total or per-route volume |
-| Admin history company_value_gbp | Value at a completed-quarter snapshot | Company valuation; not period income |
-| Admin history performance_score | Completed-quarter performance score | Score, not currency or utilization percentage |
-| Admin history delivered_cargo_capped | Completed-quarter total, potentially saturated | Period quantity; do not sum repeated snapshots |
-| Savegame company_money/company_loan | Current balances at final save | Preserve existing final metric names and GBP units |
-| Savegame current_period_income/current_period_expenses | Current calendar-quarter-to-date in the pinned 13.4 economy model | Separate signed source fields; preserve signs and names, do not substitute Admin yearly net values |
-| Savegame current_period_cargo_delivered | Sum of the save's current-quarter cargo categories | Preserve existing value and unit; its range need not match Admin uint16 saturation |
-| Future cumulative metric | Since a specified reset/epoch, if a future source actually supplies it | New explicitly named/source-qualified measure with reset semantics; never fabricated by summing present snapshots |
+| Name/source                                            | Period or measurement kind                                               | Permitted interpretation                                                                                           |
+| ------------------------------------------------------ | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| Admin cash_balance_gbp and loan_balance_gbp            | Current stock/balance at emission                                        | Balance, not income or accumulated profit                                                                          |
+| Admin admin_year_to_date_net_income_gbp                | Current calendar-year-to-date, negative sum of yearly expense categories | Includes construction/vehicle purchases and other categories; not gross transport revenue or pure operating profit |
+| Admin current_quarter_delivered_cargo_capped           | Current calendar-quarter-to-date; saturating uint16                      | Cargo units delivered in that period; not rate, lifetime total or per-route volume                                 |
+| Admin history company_value_gbp                        | Value at a completed-quarter snapshot                                    | Company valuation; not period income                                                                               |
+| Admin history performance_score                        | Completed-quarter performance score                                      | Score, not currency or utilization percentage                                                                      |
+| Admin history delivered_cargo_capped                   | Completed-quarter total, potentially saturated                           | Period quantity; do not sum repeated snapshots                                                                     |
+| Savegame company_money/company_loan                    | Current balances at final save                                           | Preserve existing final metric names and GBP units                                                                 |
+| Savegame current_period_income/current_period_expenses | Current calendar-quarter-to-date in the pinned 13.4 economy model        | Separate signed source fields; preserve signs and names, do not substitute Admin yearly net values                 |
+| Savegame current_period_cargo_delivered                | Sum of the save's current-quarter cargo categories                       | Preserve existing value and unit; its range need not match Admin uint16 saturation                                 |
+| Future cumulative metric                               | Since a specified reset/epoch, if a future source actually supplies it   | New explicitly named/source-qualified measure with reset semantics; never fabricated by summing present snapshots  |
 
 Publish source, measurement kind, period and sign conventions as typed metric
 metadata/registry shared by output and analysis. Existing final metric identifiers
@@ -330,24 +330,24 @@ incomplete, failed). complete means no known gap/drop in the negotiated observat
 coverage interval, all required types received, and all accepted observations
 flushed; it does not promise every tick or every game event was observed.
 
-| Condition | Required behavior | Recorded result / CLI |
-|---|---|---|
-| Startup or bind/asset failure | Stop/reap anything started; close leases, sockets and secrets; never connect to an unrelated server or silently restart the experiment | Experiment failed/startup_failure, no SimulationRun; telemetry failed; exit 1 |
-| Authentication failure | No password retries; runner terminates its own process; observer only reports rejection and closes its socket | Failed/authentication_failure; no canonical final result; exit 1 |
-| Unsupported protocol/identity or malformed known packet | Fail explicitly; runner stops; preserve sanitized diagnostics; safely ignore unknown packet types and appended fields | Failed/protocol_failure; exit 1 |
-| Observer connection loss while running | Observer reports loss and attempts bounded reconnect only under runner policy; new epoch, clear date context, reauthenticate/resubscribe/poll; do not pause/restart the world just to hide a gap | Recovered run may finish succeeded but telemetry incomplete and exit 3; exhausted budget fails/observer_lost and runner stops, exit 1 |
-| DB failure before launch | Do not start the process | No run if initial commit never happened; exit 1 |
-| Transient telemetry DB failure | Retry the identical batch idempotently with bounded backoff for at most 10 seconds; keep bounded queue and health reporting responsive | If all samples persist and no gap/drop occurred, completeness need not degrade |
-| DB failure beyond budget, permanent DB validation error or full queue | Notify runner immediately; runner performs failure shutdown and retains final/partial save where possible; no unlimited spooling or silent dropping | Failed/persistence_failure, telemetry failed; exit 1; local manifest if DB remains unreachable |
-| Normal target reached | Runner saves, quits, reaps; observer never initiates process shutdown; parse and commit final result | Succeeded; telemetry complete gives exit 0, incomplete gives exit 3 |
-| Missing required observation kinds by completion | Final result may still be valid, but do not claim full live recording | Succeeded with telemetry incomplete/missing_required_types; exit 3 |
-| Timeout | Runner attempts bounded partial save, then graceful/forced cleanup; do not relabel as successful completion | Failed/timeout, exit 124 |
-| User cancellation/SIGINT | Runner stops; best-effort partial save within shutdown budget, flush what can be flushed, cleanup and record cancellation | Failed/cancelled, exit 130 |
-| SIGTERM to supervisor | Same controlled cleanup, distinct signal metadata | Failed/cancelled, exit 143 |
-| ServerShutdown/EOF before runner-requested normal stop | Never assume EOF means success; terminate/reap residual owned children and retain diagnostic saves | Failed/unexpected_shutdown, exit 1 |
-| ServerShutdown/EOF after runner requested quit | Expected transport termination, but still require process exit and valid final save | Normal finalization, not success by packet alone |
-| Final save or parse failure | Preserve available artifacts and raw telemetry; do not populate normal final metric rows from live data | Failed/finalization_failure; no SimulationRun; exit 1 |
-| Final DB commit fails | Keep completed final artifact and atomic local manifest; do not falsely report persisted success or rerun simulation | exit 1, outcome persistence_failed locally; DB can remain running until recovery |
+| Condition                                                             | Required behavior                                                                                                                                                                                | Recorded result / CLI                                                                                                                 |
+| --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Startup or bind/asset failure                                         | Stop/reap anything started; close leases, sockets and secrets; never connect to an unrelated server or silently restart the experiment                                                           | Experiment failed/startup_failure, no SimulationRun; telemetry failed; exit 1                                                         |
+| Authentication failure                                                | No password retries; runner terminates its own process; observer only reports rejection and closes its socket                                                                                    | Failed/authentication_failure; no canonical final result; exit 1                                                                      |
+| Unsupported protocol/identity or malformed known packet               | Fail explicitly; runner stops; preserve sanitized diagnostics; safely ignore unknown packet types and appended fields                                                                            | Failed/protocol_failure; exit 1                                                                                                       |
+| Observer connection loss while running                                | Observer reports loss and attempts bounded reconnect only under runner policy; new epoch, clear date context, reauthenticate/resubscribe/poll; do not pause/restart the world just to hide a gap | Recovered run may finish succeeded but telemetry incomplete and exit 3; exhausted budget fails/observer_lost and runner stops, exit 1 |
+| DB failure before launch                                              | Do not start the process                                                                                                                                                                         | No run if initial commit never happened; exit 1                                                                                       |
+| Transient telemetry DB failure                                        | Retry the identical batch idempotently with bounded backoff for at most 10 seconds; keep bounded queue and health reporting responsive                                                           | If all samples persist and no gap/drop occurred, completeness need not degrade                                                        |
+| DB failure beyond budget, permanent DB validation error or full queue | Notify runner immediately; runner performs failure shutdown and retains final/partial save where possible; no unlimited spooling or silent dropping                                              | Failed/persistence_failure, telemetry failed; exit 1; local manifest if DB remains unreachable                                        |
+| Normal target reached                                                 | Runner saves, quits, reaps; observer never initiates process shutdown; parse and commit final result                                                                                             | Succeeded; telemetry complete gives exit 0, incomplete gives exit 3                                                                   |
+| Missing required observation kinds by completion                      | Final result may still be valid, but do not claim full live recording                                                                                                                            | Succeeded with telemetry incomplete/missing_required_types; exit 3                                                                    |
+| Timeout                                                               | Runner attempts bounded partial save, then graceful/forced cleanup; do not relabel as successful completion                                                                                      | Failed/timeout, exit 124                                                                                                              |
+| User cancellation/SIGINT                                              | Runner stops; best-effort partial save within shutdown budget, flush what can be flushed, cleanup and record cancellation                                                                        | Failed/cancelled, exit 130                                                                                                            |
+| SIGTERM to supervisor                                                 | Same controlled cleanup, distinct signal metadata                                                                                                                                                | Failed/cancelled, exit 143                                                                                                            |
+| ServerShutdown/EOF before runner-requested normal stop                | Never assume EOF means success; terminate/reap residual owned children and retain diagnostic saves                                                                                               | Failed/unexpected_shutdown, exit 1                                                                                                    |
+| ServerShutdown/EOF after runner requested quit                        | Expected transport termination, but still require process exit and valid final save                                                                                                              | Normal finalization, not success by packet alone                                                                                      |
+| Final save or parse failure                                           | Preserve available artifacts and raw telemetry; do not populate normal final metric rows from live data                                                                                          | Failed/finalization_failure; no SimulationRun; exit 1                                                                                 |
+| Final DB commit fails                                                 | Keep completed final artifact and atomic local manifest; do not falsely report persisted success or rerun simulation                                                                             | exit 1, outcome persistence_failed locally; DB can remain running until recovery                                                      |
 
 Unrecovered fatal live failures have no canonical SimulationRun, matching existing
 failed-run behavior. Partial or even technically parseable failure saves remain

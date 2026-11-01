@@ -1,12 +1,14 @@
 ---
+
 title: "External References"
 type: reference
 status: current
 updated: 2026-10-22
 tags:
-  - openttd
-  - reference
-  - external
+- openttd
+- reference
+- external
+
 ---
 
 # External References

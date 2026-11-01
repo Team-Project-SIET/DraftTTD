@@ -50,7 +50,13 @@ valid transport receipt, but never passes the proof.
 Exact canonical production bytes (no trailing newline):
 
 ```json
-{"after_id":null,"limit":3,"protocol":1,"request_id":"openttd15-industry-page-001","type":"industry_page"}
+{
+	"after_id": null,
+	"limit": 3,
+	"protocol": 1,
+	"request_id": "openttd15-industry-page-001",
+	"type": "industry_page"
+}
 ```
 
 Size: **106 bytes**. SHA-256:

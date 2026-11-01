@@ -31,18 +31,18 @@ That modification was pre-existing and is on the excluded list. No file under `a
 
 ## 2. SHA-256 of the ten reviewed Commit A paths
 
-| Path | SHA-256 |
-|---|---|
-| `app/simulation/openttd/corridor_freight.py` | `22b01902a87a3780f9e4c00e7dc30cb12f31913d511df3f96e03759727e27880` |
-| `app/simulation/openttd/corridor_route_optimizer.py` | `637b51191d1771f40438571938db93b2c84722009a194d22f44d5a25ee4d59e0` |
+| Path                                                      | SHA-256                                                            |
+| --------------------------------------------------------- | ------------------------------------------------------------------ |
+| `app/simulation/openttd/corridor_freight.py`              | `22b01902a87a3780f9e4c00e7dc30cb12f31913d511df3f96e03759727e27880` |
+| `app/simulation/openttd/corridor_route_optimizer.py`      | `637b51191d1771f40438571938db93b2c84722009a194d22f44d5a25ee4d59e0` |
 | `app/simulation/openttd/proof/corridor_freight_native.py` | `65a4c1c78dba8d4213642e7fcb72a7681e6e60d40de312697e628f9fbfb037b9` |
-| `app/simulation/openttd/d5_freight_package/info.nut` | `f9c58f0e1bfa91d847ae56a0206bca170986d462aa7b616c9c69de459a9bde26` |
-| `app/simulation/openttd/d5_freight_package/main.nut` | `0b3f7e82b67f213fbc4cca81a894453a871bb8b44c9820417b63755c4716d605` |
-| `tests/test_corridor_freight.py` | `209ea7d230110c504eaeee4f18ced7b3066794cf9857d397862aba6886d229e9` |
-| `tests/test_corridor_freight_native.py` | `680dcc0e892d4061370717955617ad71d75e5fcbb61897e493625cecfcd28571` |
-| `tests/test_corridor_route_optimizer.py` | `b74c4a9578c9038ff891a805a3cbc91da6e05b7a0ac34f491393ce957ea1144d` |
-| `docs/d5-corridor-freight-design.md` | `d9757ec66f89a101a895b5cf31e4483c56451bfe9cf6c9a30f2865d24b5038e1` |
-| `docs/d5-corridor-freight-preparation.md` | `f0a4eaae0a6a040b64260e064ee1831facf805a573a6ec4988903c8bc2ea7729` |
+| `app/simulation/openttd/d5_freight_package/info.nut`      | `f9c58f0e1bfa91d847ae56a0206bca170986d462aa7b616c9c69de459a9bde26` |
+| `app/simulation/openttd/d5_freight_package/main.nut`      | `0b3f7e82b67f213fbc4cca81a894453a871bb8b44c9820417b63755c4716d605` |
+| `tests/test_corridor_freight.py`                          | `209ea7d230110c504eaeee4f18ced7b3066794cf9857d397862aba6886d229e9` |
+| `tests/test_corridor_freight_native.py`                   | `680dcc0e892d4061370717955617ad71d75e5fcbb61897e493625cecfcd28571` |
+| `tests/test_corridor_route_optimizer.py`                  | `b74c4a9578c9038ff891a805a3cbc91da6e05b7a0ac34f491393ce957ea1144d` |
+| `docs/d5-corridor-freight-design.md`                      | `d9757ec66f89a101a895b5cf31e4483c56451bfe9cf6c9a30f2865d24b5038e1` |
+| `docs/d5-corridor-freight-preparation.md`                 | `f0a4eaae0a6a040b64260e064ee1831facf805a573a6ec4988903c8bc2ea7729` |
 
 ## 3. Scope and method
 
@@ -54,19 +54,19 @@ A fresh-context review subagent performed a separate read-only pass over the sam
 
 All test runs used `PYTHONDONTWRITEBYTECODE=1` and `-p no:cacheprovider`.
 
-| Check | Command scope | Actual result | Exit |
-|---|---|---|---|
-| D5 controlled VM | `tests/test_corridor_freight.py` | 32 passed in 16.28 s | 0 |
-| D5 staging/preflight | `tests/test_corridor_freight_native.py` | 29 passed in 169.23 s | 0 |
-| D5 optimizer | `tests/test_corridor_route_optimizer.py` | 13 passed in 15.80 s | 0 |
-| D5 suite combined | the three files above | 74 passed | 0 |
-| D4/transport regression | `tests/test_corridor_construction_native.py` | 33 passed in 75.30 s | 0 |
-| D4/transport regression | `tests/test_gamescript_transport.py` | 38 passed in 0.63 s | 0 |
-| Regression suite combined | the two regression files | 71 passed | 0 |
-| Ruff lint | the six Python reviewed/implementation files | All checks passed | 0 |
-| Ruff format check | same six files | 6 files already formatted | 0 |
-| `git diff --check` | whole tree | clean | 0 |
-| TASKS mirror | `cmp TASKS.md OpenTTD-Knowledge/99-Source-Documents/TASKS.md` | byte-identical | 0 |
+| Check                     | Command scope                                                 | Actual result             | Exit |
+| ------------------------- | ------------------------------------------------------------- | ------------------------- | ---- |
+| D5 controlled VM          | `tests/test_corridor_freight.py`                              | 32 passed in 16.28 s      | 0    |
+| D5 staging/preflight      | `tests/test_corridor_freight_native.py`                       | 29 passed in 169.23 s     | 0    |
+| D5 optimizer              | `tests/test_corridor_route_optimizer.py`                      | 13 passed in 15.80 s      | 0    |
+| D5 suite combined         | the three files above                                         | 74 passed                 | 0    |
+| D4/transport regression   | `tests/test_corridor_construction_native.py`                  | 33 passed in 75.30 s      | 0    |
+| D4/transport regression   | `tests/test_gamescript_transport.py`                          | 38 passed in 0.63 s       | 0    |
+| Regression suite combined | the two regression files                                      | 71 passed                 | 0    |
+| Ruff lint                 | the six Python reviewed/implementation files                  | All checks passed         | 0    |
+| Ruff format check         | same six files                                                | 6 files already formatted | 0    |
+| `git diff --check`        | whole tree                                                    | clean                     | 0    |
+| TASKS mirror              | `cmp TASKS.md OpenTTD-Knowledge/99-Source-Documents/TASKS.md` | byte-identical            | 0    |
 
 No auto-fix, formatter write, or bytecode/cache write was used.
 
@@ -314,45 +314,45 @@ The replay fixtures are explicitly labelled synthetic. They copy a freshly stage
 
 All test runs used `PYTHONDONTWRITEBYTECODE=1` and `-p no:cacheprovider`.
 
-| Check | Actual result | Exit |
-|---|---|---|
-| D5 combined: `tests/test_corridor_freight.py`, `tests/test_corridor_freight_native.py`, `tests/test_corridor_route_optimizer.py` | 98 passed in 187.74 s | 0 |
-| D4/transport regression: `tests/test_corridor_construction_native.py`, `tests/test_gamescript_transport.py` | 71 passed in 76.20 s | 0 |
-| Ruff lint (two modified files) | All checks passed | 0 |
-| Ruff format check (two modified files) | 2 files already formatted | 0 |
-| `git diff --check` | clean | 0 |
+| Check                                                                                                                            | Actual result             | Exit |
+| -------------------------------------------------------------------------------------------------------------------------------- | ------------------------- | ---- |
+| D5 combined: `tests/test_corridor_freight.py`, `tests/test_corridor_freight_native.py`, `tests/test_corridor_route_optimizer.py` | 98 passed in 187.74 s     | 0    |
+| D4/transport regression: `tests/test_corridor_construction_native.py`, `tests/test_gamescript_transport.py`                      | 71 passed in 76.20 s      | 0    |
+| Ruff lint (two modified files)                                                                                                   | All checks passed         | 0    |
+| Ruff format check (two modified files)                                                                                           | 2 files already formatted | 0    |
+| `git diff --check`                                                                                                               | clean                     | 0    |
 
 The historical 74/71 counts are superseded by 98/71. The increase is entirely new tests; no existing D5 test was removed or skipped. No auto-fix or formatter write was used.
 
 ### 12.5 Finding status after remediation
 
-| Finding | Status | Basis |
-|---|---|---|
-| C1 cleanup success leak | **Resolved** | Final cleanup transition denies `verified`, `FAILED_CLEANUP` cannot coexist with success, `exit_status` needs all three conditions; tests cover success-then-cleanup-failure, already-failed cleanup, repeated transition, and CLI exit. |
-| H1 verify CLI always exits 0 | **Resolved** | `verify` exits 0 only for `RECEIPT_VERIFIED`; CLI tests cover success, `AUTHORIZATION_UNVERIFIED`, exceptions, and malformed input. |
-| H2 fixed 10 s exchange timeout | **Resolved** | Watch exchanges get 60 s + 5 s margin, non-watch stay at 10 s, every exchange is clamped to the remaining 900 s attempt budget; deterministic tests cover inside-budget, over-budget, exhaustion, cancellation, stale, duplicate, and partial reads. |
-| H3 incomplete replay binding | **Resolved** | Replay re-runs the pinned D4 prerequisite replay, pins source-save and after-save digests, full welcome, plan/route/optimizer/scenario/execution digests, and receipt identity; negative tests cover each mismatch. |
-| M1 preflight world-save equality | **Resolved** | Preflight now equates the staged world binding with the independently derived prerequisite binding; negative test added. |
-| M7 replay success path untested | **Resolved** | Real `verify_freight_attempt` returns `RECEIPT_VERIFIED` over a complete consumed fifteen-exchange fixture, with missing/duplicate/out-of-order/altered negative variants. |
-| M2 nonzero-fleet refusal shape | **Unresolved** | No GameScript or contract change was made. |
-| M3 finish toggle without state check | **Unresolved** | No GameScript or verifier change was made. |
-| M4 post-mutation refusal labelled `HALTED_BEFORE_MUTATION` | **Unresolved** | No mutation-aware label change was made. |
-| M5 waiting delta not enforced | **Unresolved** | It is still recorded but not enforced. |
-| M6 transit sampled, not tile-continuous | **Unresolved** | Sampling semantics are unchanged. |
-| M8 single-witness optimizer round-trip | **Unresolved limitation** | Staging still passes exactly the one D4 witness candidate. |
-| M9 company range-check only in GameScript | **Unresolved** | No company pin was added natively. |
-| L1 schema-1 witness geometry | **Unresolved** | Latent; production uses schema 2. |
-| L2 package `info.nut` identity | **Unresolved** | Documentation-only issue, not touched. |
-| L3 1450-byte send ceiling not enforced | **Unresolved** | The effective 640-byte application bound remains. |
-| L4 manifest not required exhaustive | **Unresolved** | Unchanged. |
-| L5 no live duplicate draining | **Partially addressed** | Multiple GameScript frames in one receive are now refused; a duplicate arriving in a later frame is still rejected only by the next correlation check. |
-| L6 `INVALID_COMPANY` untested | **Unresolved** | Unchanged. |
-| L7 native refusal byte bound | **Unresolved** | Unchanged. |
-| L8 malformed orphan response files skipped | **Unresolved** | Unchanged. |
-| I1 HEAD discrepancy | **Resolved as a state discrepancy** | HEAD and origin both match `1e6d6c1`; no reviewed byte changed. |
-| I2 status text lags commits | **Unresolved** | `TASKS.md` was not modified by this task. |
-| I3 native behavior unproven | **Remains true** | No native process or AdminPort session occurred. |
-| I4 D5 additive over D4 | **Remains true** | No D4 file was modified. |
+| Finding                                                    | Status                              | Basis                                                                                                                                                                                                                                                |
+| ---------------------------------------------------------- | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| C1 cleanup success leak                                    | **Resolved**                        | Final cleanup transition denies `verified`, `FAILED_CLEANUP` cannot coexist with success, `exit_status` needs all three conditions; tests cover success-then-cleanup-failure, already-failed cleanup, repeated transition, and CLI exit.             |
+| H1 verify CLI always exits 0                               | **Resolved**                        | `verify` exits 0 only for `RECEIPT_VERIFIED`; CLI tests cover success, `AUTHORIZATION_UNVERIFIED`, exceptions, and malformed input.                                                                                                                  |
+| H2 fixed 10 s exchange timeout                             | **Resolved**                        | Watch exchanges get 60 s + 5 s margin, non-watch stay at 10 s, every exchange is clamped to the remaining 900 s attempt budget; deterministic tests cover inside-budget, over-budget, exhaustion, cancellation, stale, duplicate, and partial reads. |
+| H3 incomplete replay binding                               | **Resolved**                        | Replay re-runs the pinned D4 prerequisite replay, pins source-save and after-save digests, full welcome, plan/route/optimizer/scenario/execution digests, and receipt identity; negative tests cover each mismatch.                                  |
+| M1 preflight world-save equality                           | **Resolved**                        | Preflight now equates the staged world binding with the independently derived prerequisite binding; negative test added.                                                                                                                             |
+| M7 replay success path untested                            | **Resolved**                        | Real `verify_freight_attempt` returns `RECEIPT_VERIFIED` over a complete consumed fifteen-exchange fixture, with missing/duplicate/out-of-order/altered negative variants.                                                                           |
+| M2 nonzero-fleet refusal shape                             | **Unresolved**                      | No GameScript or contract change was made.                                                                                                                                                                                                           |
+| M3 finish toggle without state check                       | **Unresolved**                      | No GameScript or verifier change was made.                                                                                                                                                                                                           |
+| M4 post-mutation refusal labelled `HALTED_BEFORE_MUTATION` | **Unresolved**                      | No mutation-aware label change was made.                                                                                                                                                                                                             |
+| M5 waiting delta not enforced                              | **Unresolved**                      | It is still recorded but not enforced.                                                                                                                                                                                                               |
+| M6 transit sampled, not tile-continuous                    | **Unresolved**                      | Sampling semantics are unchanged.                                                                                                                                                                                                                    |
+| M8 single-witness optimizer round-trip                     | **Unresolved limitation**           | Staging still passes exactly the one D4 witness candidate.                                                                                                                                                                                           |
+| M9 company range-check only in GameScript                  | **Unresolved**                      | No company pin was added natively.                                                                                                                                                                                                                   |
+| L1 schema-1 witness geometry                               | **Unresolved**                      | Latent; production uses schema 2.                                                                                                                                                                                                                    |
+| L2 package `info.nut` identity                             | **Unresolved**                      | Documentation-only issue, not touched.                                                                                                                                                                                                               |
+| L3 1450-byte send ceiling not enforced                     | **Unresolved**                      | The effective 640-byte application bound remains.                                                                                                                                                                                                    |
+| L4 manifest not required exhaustive                        | **Unresolved**                      | Unchanged.                                                                                                                                                                                                                                           |
+| L5 no live duplicate draining                              | **Partially addressed**             | Multiple GameScript frames in one receive are now refused; a duplicate arriving in a later frame is still rejected only by the next correlation check.                                                                                               |
+| L6 `INVALID_COMPANY` untested                              | **Unresolved**                      | Unchanged.                                                                                                                                                                                                                                           |
+| L7 native refusal byte bound                               | **Unresolved**                      | Unchanged.                                                                                                                                                                                                                                           |
+| L8 malformed orphan response files skipped                 | **Unresolved**                      | Unchanged.                                                                                                                                                                                                                                           |
+| I1 HEAD discrepancy                                        | **Resolved as a state discrepancy** | HEAD and origin both match `1e6d6c1`; no reviewed byte changed.                                                                                                                                                                                      |
+| I2 status text lags commits                                | **Unresolved**                      | `TASKS.md` was not modified by this task.                                                                                                                                                                                                            |
+| I3 native behavior unproven                                | **Remains true**                    | No native process or AdminPort session occurred.                                                                                                                                                                                                     |
+| I4 D5 additive over D4                                     | **Remains true**                    | No D4 file was modified.                                                                                                                                                                                                                             |
 
 Two Low findings raised by the independent-session reviewer during this re-review were also resolved and retested: the `FAILED_CLEANUP` replay arm now returns failed evidence instead of an unreachable/misleading "halted attempt cleanup incomplete" error, and replay cleanup completeness now also rejects `cleanup_error`/`verification_error`.
 
@@ -396,7 +396,7 @@ This addendum records the second offline remediation and its re-review. Sections
 
 **M2 — nonzero-fleet site refusal keeps the typed refusal shape.**
 
-`main.nut` `SiteOp` now issues the zero-fleet gate in the admission `else if` chain (`obs.fleet != 0` → `INVALID_SITE`) *before* any observation field (`paused`, `truck0`,`sid0`, `truck1`, `sid1`, `depot_ok`, `owner`, `pairs_ok`, `pair_total`, `accept`, `prod`, `wait`, `vehicles`) attaches; the post-attach fleet check is deleted. A nonzero-fleet readback therefore parses as a valid `INVALID_SITE` refusal instead of dying as "refusal readback carries an unclaimed observation set".
+`main.nut` `SiteOp` now issues the zero-fleet gate in the admission `else if` chain (`obs.fleet != 0` → `INVALID_SITE`) _before_ any observation field (`paused`, `truck0`,`sid0`, `truck1`, `sid1`, `depot_ok`, `owner`, `pairs_ok`, `pair_total`, `accept`, `prod`, `wait`, `vehicles`) attaches; the post-attach fleet check is deleted. A nonzero-fleet readback therefore parses as a valid `INVALID_SITE` refusal instead of dying as "refusal readback carries an unclaimed observation set".
 
 **M3 — `finish` is state-aware and proves the stop.**
 
@@ -422,7 +422,7 @@ This addendum records the second offline remediation and its re-review. Sections
 
 - M2: `test_nonzero_fleet_refuses_site_as_a_typed_refusal` — a seeded second vehicle makes `site-00` answer a parseable fieldless `INVALID_SITE`, halting `HALTED_BEFORE_MUTATION`.
 - M3: `test_finish_proves_the_stopped_state_and_only_a_real_toggle` (happy stop proof; tampered `speed: 5` and `stop_issued: False` readbacks each refuse), `test_already_stopped_vehicle_is_never_toggled_and_honestly_halted` (`stop_issued: false` → world `UNCERTAIN_AFTER_FAILED_COMMAND`).
-- M4: `test_post_build_purchase_refusal_is_not_labelled_before_mutation` (quote 20, realized cost 22 → `COST_CHANGED` *after* a real build, world `UNCERTAIN_AFTER_FAILED_COMMAND`), `test_pre_build_purchase_refusal_stays_labelled_before_mutation` (`STALE_ADMISSION` with zero vehicles → `HALTED_BEFORE_MUTATION`), `test_conservative_start_refusal_label` (conservative post-mutation labelling).
+- M4: `test_post_build_purchase_refusal_is_not_labelled_before_mutation` (quote 20, realized cost 22 → `COST_CHANGED` _after_ a real build, world `UNCERTAIN_AFTER_FAILED_COMMAND`), `test_pre_build_purchase_refusal_stays_labelled_before_mutation` (`STALE_ADMISSION` with zero vehicles → `HALTED_BEFORE_MUTATION`), `test_conservative_start_refusal_label` (conservative post-mutation labelling).
 - M5: `test_loaded_receipt_records_the_waiting_delta_corroboration` (delta recorded, note present, delta 0 does not fail).
 - M6: `test_transit_forward_progress_still_reaches_delivery` (skipping samples still verifies), `test_transit_sampled_direction_monotonicity_refuses_a_backward_drive`.
 - M9: `test_native_handler_refuses_a_resolvable_foreign_company` (a resolvable second company answers `INVALID_COMPANY` and the schedule's `halted` flag is set).
@@ -433,13 +433,13 @@ The stub world gained a per-tick `::mover` hook (test-only, `tests/test_corridor
 
 All runs with `PYTHONDONTWRITEBYTECODE=1` and `-p no:cacheprovider`:
 
-| Check | Actual result | Exit |
-|---|---|---|
-| D5 combined (freight, native, optimizer) | 108 passed | 0 |
-| D4/transport regression (construction, transport) | 71 passed | 0 |
-| Ruff lint (the two modified Python files) | All checks passed | 0 |
-| Ruff format check (same two files) | 2 files already formatted | 0 |
-| `git diff --check` | clean | 0 |
+| Check                                             | Actual result             | Exit |
+| ------------------------------------------------- | ------------------------- | ---- |
+| D5 combined (freight, native, optimizer)          | 108 passed                | 0    |
+| D4/transport regression (construction, transport) | 71 passed                 | 0    |
+| Ruff lint (the two modified Python files)         | All checks passed         | 0    |
+| Ruff format check (same two files)                | 2 files already formatted | 0    |
+| `git diff --check`                                | clean                     | 0    |
 
 Counts rose from 98 controlled-suite tests (of which 32 in the controlled file) to 108 total because of the ten new regression tests; no pre-existing test was removed, skipped, or re-targeted, and no formatter wrote files (format-only fixes were applied by hand).
 
@@ -447,19 +447,19 @@ Counts rose from 98 controlled-suite tests (of which 32 in the controlled file) 
 
 Review method: self-review of the changed bytes plus the passing D5/regression suites; **not an independent review session** (none was available in this task). Findings re-checked by inspection of the current implementation and failure paths, not by test outcomes alone.
 
-| Finding | Status | Basis |
-|---|---|---|
-| C1 | RESOLVED (unchanged) | `apply_cleanup_outcome`/`deny_verification`/`exit_status` bytes re-verified; native tests pass. |
-| H1 / H2 / H3 / M1 / M7 | RESOLVED (unchanged) | `verdict_exit_status`, `exchange_timeout_seconds`+clamp, `verify_attempt_identity` re-binding, preflight equality, consumed-frame replay all re-verified; corresponding tests pass. |
-| M2 | **RESOLVED** | Fleet refusal precedes field attachment; typed refusal tested. |
-| M3 | **RESOLVED offline** | State-aware toggle plus verifier stop proof; native timing of the toggle (whether `GetState` reads `STOPPED`/`IN_DEPOT` with speed 0 at the exchange boundary in OpenTTD 15.3) is **UNKNOWN**; the verifier's strict refusal on any non-stopped proof makes a wrong native reading fail-closed, never falsely successful. The already-stopped-before-finish case halts honestly. |
-| M4 | **RESOLVED** | Conservative per-op post-mutation sets and the new labelling; purchase pre/post-build and start negative cases tested. The `order`/`finish` post-mutation `READBACK_MISMATCH` arms are covered by inspection only (the controlled stub cannot make the handler fail its readback after a successful mutation); the sets are conservative so untested arms cannot over-claim a clean world. |
-| M5 | **RESOLVED (documented)** | The delta is recorded, required present, and its non-enforcement is explained in the receipt itself; the load gate needs no unprovable arrival bound. |
-| M6 | **PARTIALLY RESOLVED** | Within-window sampled-direction monotonicity is now enforced and tested; the true tile-by-tile continuity remains unproven by sampling, and the design §1 D5-M4 wording still overstates the evidence. Narrowing that wording needs a separately authorized design-document edit; left outstanding. |
-| M8 | UNRESOLVED limitation | Unchanged (single-witness optimizer round-trip). |
-| M9 | **RESOLVED** | Native `FREIGHT_COMPANY` pin; foreign resolvable company refused and halts. |
-| L1–L8, I2 | UNRESOLVED | Not in this task's scope; unchanged. |
-| I3 | Remains true | No native process, AdminPort, candidate, claim, signature, or authorization occurred. |
+| Finding                | Status                    | Basis                                                                                                                                                                                                                                                                                                                                                                                      |
+| ---------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| C1                     | RESOLVED (unchanged)      | `apply_cleanup_outcome`/`deny_verification`/`exit_status` bytes re-verified; native tests pass.                                                                                                                                                                                                                                                                                            |
+| H1 / H2 / H3 / M1 / M7 | RESOLVED (unchanged)      | `verdict_exit_status`, `exchange_timeout_seconds`+clamp, `verify_attempt_identity` re-binding, preflight equality, consumed-frame replay all re-verified; corresponding tests pass.                                                                                                                                                                                                        |
+| M2                     | **RESOLVED**              | Fleet refusal precedes field attachment; typed refusal tested.                                                                                                                                                                                                                                                                                                                             |
+| M3                     | **RESOLVED offline**      | State-aware toggle plus verifier stop proof; native timing of the toggle (whether `GetState` reads `STOPPED`/`IN_DEPOT` with speed 0 at the exchange boundary in OpenTTD 15.3) is **UNKNOWN**; the verifier's strict refusal on any non-stopped proof makes a wrong native reading fail-closed, never falsely successful. The already-stopped-before-finish case halts honestly.           |
+| M4                     | **RESOLVED**              | Conservative per-op post-mutation sets and the new labelling; purchase pre/post-build and start negative cases tested. The `order`/`finish` post-mutation `READBACK_MISMATCH` arms are covered by inspection only (the controlled stub cannot make the handler fail its readback after a successful mutation); the sets are conservative so untested arms cannot over-claim a clean world. |
+| M5                     | **RESOLVED (documented)** | The delta is recorded, required present, and its non-enforcement is explained in the receipt itself; the load gate needs no unprovable arrival bound.                                                                                                                                                                                                                                      |
+| M6                     | **PARTIALLY RESOLVED**    | Within-window sampled-direction monotonicity is now enforced and tested; the true tile-by-tile continuity remains unproven by sampling, and the design §1 D5-M4 wording still overstates the evidence. Narrowing that wording needs a separately authorized design-document edit; left outstanding.                                                                                        |
+| M8                     | UNRESOLVED limitation     | Unchanged (single-witness optimizer round-trip).                                                                                                                                                                                                                                                                                                                                           |
+| M9                     | **RESOLVED**              | Native `FREIGHT_COMPANY` pin; foreign resolvable company refused and halts.                                                                                                                                                                                                                                                                                                                |
+| L1–L8, I2              | UNRESOLVED                | Not in this task's scope; unchanged.                                                                                                                                                                                                                                                                                                                                                       |
+| I3                     | Remains true              | No native process, AdminPort, candidate, claim, signature, or authorization occurred.                                                                                                                                                                                                                                                                                                      |
 
 False-positive re-check: no new failure path can produce `RECEIPT_VERIFIED`, a wrong accounting figure, or an invalid state transition. The finish verifier is stricter (a stopped-proof-less `PHASE_STOPPED` now fails), the fleet and company refusals widen fail-closed behavior, the transit monotonic gate can only refuse, and the waiting note adds no gate to exploit.
 
@@ -507,16 +507,16 @@ Supplying a second candidate would assert tile feasibility that no retained evid
 
 ### 14.4 L1–L8 triage
 
-| Finding | Disposition | Rationale |
-|---|---|---|
-| L1 schema-1 witness geometry | **Defer (documented limitation)** | Latent only: production D5 plans are schema 2, and a schema-1 plan still pins the exact stop/depot constants, the 24-tile length and distinct endpoints. No false-positive path exists in the staged lineage. Does not block T8. |
-| L2 package `info.nut` identity | **Defer (documentation nuance)** | The staged identity is the retained frozen-source `NetworkFreightProof` composition, enforced by preflight/replay identity checks; the unused package `info.nut` cannot affect a staged attempt. Reader-confusion only. Does not block T8. |
-| L3 1450-byte ceiling not enforced | **Defer** | The 640-byte application bound is strictly tighter and is enforced on both the live encode/decode path and the replay parse path, so the named engine ceiling cannot be reached. Does not block T8. |
-| L4 manifest not exhaustive | **RESOLVED this task** | Evidence-integrity gap: a rewritten manifest omitting a retained file escaped hash checking. `verify_freight_attempt` now requires the manifest's name set to equal the directory's regular-file set excluding the manifest itself (`corridor_freight_native.py:1712-1726`). Regression test `test_replay_refuses_a_manifest_that_omits_a_retained_file` fails with the fix reverted and passes with it applied (both verified). Subdirectories such as `isolated/` are excluded by `is_file()`, matching `harness.manifest()` generation, so legitimate retained attempts still replay. |
-| L5 live duplicate draining | **Defer (partially addressed in round 1)** | Multiple GameScript frames in one receive are refused; a duplicate arriving in a later frame fails closed at the next correlation check, and replay independently enforces response uniqueness. Worst case is an honest halt, never false success. Does not block T8. |
-| L6 `INVALID_COMPANY` untested | **RESOLVED (by round 2)** | `tests/test_corridor_freight.py:1378` `test_native_handler_refuses_a_resolvable_foreign_company` exercises the M9 native pin and asserts the typed `INVALID_COMPANY` refusal plus the schedule halt. The finding's own precondition ("especially after M9 is addressed") is met. |
-| L7 native refusal byte bound | **Defer** | An oversized native refusal fails closed as a Python-side decode error at the 640-byte bound; the failure mode is an honest protocol error, not false success. Enforcing the bound inside Squirrel would add native risk for no integrity gain. Does not block T8. |
-| L8 malformed orphan responses skipped | **RESOLVED this task** | Evidence-integrity gap: an unparsable `*-response.json` was silently skipped during replay. The parse loop now raises `ValueError` naming the file (`corridor_freight_native.py:1804-1809`). Regression test `test_replay_refuses_a_malformed_orphan_response_file` fails with the fix reverted and passes with it applied (both verified). All fifteen legitimate response files parse as `FreightReadback`, so the consumed-frame success fixture is unaffected. |
+| Finding                               | Disposition                                | Rationale                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| ------------------------------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| L1 schema-1 witness geometry          | **Defer (documented limitation)**          | Latent only: production D5 plans are schema 2, and a schema-1 plan still pins the exact stop/depot constants, the 24-tile length and distinct endpoints. No false-positive path exists in the staged lineage. Does not block T8.                                                                                                                                                                                                                                                                                                                                                         |
+| L2 package `info.nut` identity        | **Defer (documentation nuance)**           | The staged identity is the retained frozen-source `NetworkFreightProof` composition, enforced by preflight/replay identity checks; the unused package `info.nut` cannot affect a staged attempt. Reader-confusion only. Does not block T8.                                                                                                                                                                                                                                                                                                                                               |
+| L3 1450-byte ceiling not enforced     | **Defer**                                  | The 640-byte application bound is strictly tighter and is enforced on both the live encode/decode path and the replay parse path, so the named engine ceiling cannot be reached. Does not block T8.                                                                                                                                                                                                                                                                                                                                                                                      |
+| L4 manifest not exhaustive            | **RESOLVED this task**                     | Evidence-integrity gap: a rewritten manifest omitting a retained file escaped hash checking. `verify_freight_attempt` now requires the manifest's name set to equal the directory's regular-file set excluding the manifest itself (`corridor_freight_native.py:1712-1726`). Regression test `test_replay_refuses_a_manifest_that_omits_a_retained_file` fails with the fix reverted and passes with it applied (both verified). Subdirectories such as `isolated/` are excluded by `is_file()`, matching `harness.manifest()` generation, so legitimate retained attempts still replay. |
+| L5 live duplicate draining            | **Defer (partially addressed in round 1)** | Multiple GameScript frames in one receive are refused; a duplicate arriving in a later frame fails closed at the next correlation check, and replay independently enforces response uniqueness. Worst case is an honest halt, never false success. Does not block T8.                                                                                                                                                                                                                                                                                                                    |
+| L6 `INVALID_COMPANY` untested         | **RESOLVED (by round 2)**                  | `tests/test_corridor_freight.py:1378` `test_native_handler_refuses_a_resolvable_foreign_company` exercises the M9 native pin and asserts the typed `INVALID_COMPANY` refusal plus the schedule halt. The finding's own precondition ("especially after M9 is addressed") is met.                                                                                                                                                                                                                                                                                                         |
+| L7 native refusal byte bound          | **Defer**                                  | An oversized native refusal fails closed as a Python-side decode error at the 640-byte bound; the failure mode is an honest protocol error, not false success. Enforcing the bound inside Squirrel would add native risk for no integrity gain. Does not block T8.                                                                                                                                                                                                                                                                                                                       |
+| L8 malformed orphan responses skipped | **RESOLVED this task**                     | Evidence-integrity gap: an unparsable `*-response.json` was silently skipped during replay. The parse loop now raises `ValueError` naming the file (`corridor_freight_native.py:1804-1809`). Regression test `test_replay_refuses_a_malformed_orphan_response_file` fails with the fix reverted and passes with it applied (both verified). All fifteen legitimate response files parse as `FreightReadback`, so the consumed-frame success fixture is unaffected.                                                                                                                       |
 
 None of the deferred items can cause false-positive verification, incorrect cargo/accounting claims, identity drift, or loss of evidence integrity: each either fails closed or is inert in the staged lineage.
 
@@ -528,15 +528,15 @@ The exact inconsistency: the D5 entry's 2026-10-26 update in `TASKS.md` describe
 
 All runs used `PYTHONDONTWRITEBYTECODE=1` and `-p no:cacheprovider`, after every source and test change:
 
-| Check | Actual result | Exit |
-|---|---|---|
-| D5 combined: `tests/test_corridor_freight.py`, `tests/test_corridor_freight_native.py`, `tests/test_corridor_route_optimizer.py` | 110 passed (72 + 38 progress dots; the prior 108 plus the 2 new tests) | 0 |
-| D4/transport regression: `tests/test_corridor_construction_native.py`, `tests/test_gamescript_transport.py` | 71 passed | 0 |
-| Ruff lint (the two modified Python files) | All checks passed | 0 |
-| Ruff format check (same two files) | 2 files already formatted | 0 |
-| `git diff --check` | clean | 0 |
-| TASKS mirror | `cmp` byte-identical | 0 |
-| Pre-fix regression proof | both new tests fail with the L4/L8 hunks temporarily reverted, and pass after re-applying | 0 |
+| Check                                                                                                                            | Actual result                                                                             | Exit |
+| -------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ---- |
+| D5 combined: `tests/test_corridor_freight.py`, `tests/test_corridor_freight_native.py`, `tests/test_corridor_route_optimizer.py` | 110 passed (72 + 38 progress dots; the prior 108 plus the 2 new tests)                    | 0    |
+| D4/transport regression: `tests/test_corridor_construction_native.py`, `tests/test_gamescript_transport.py`                      | 71 passed                                                                                 | 0    |
+| Ruff lint (the two modified Python files)                                                                                        | All checks passed                                                                         | 0    |
+| Ruff format check (same two files)                                                                                               | 2 files already formatted                                                                 | 0    |
+| `git diff --check`                                                                                                               | clean                                                                                     | 0    |
+| TASKS mirror                                                                                                                     | `cmp` byte-identical                                                                      | 0    |
+| Pre-fix regression proof                                                                                                         | both new tests fail with the L4/L8 hunks temporarily reverted, and pass after re-applying | 0    |
 
 No auto-fix, formatter write, bytecode write, or cache write was used; the one format deviation the check reported (a test signature reflow) was corrected by hand. No pre-existing test was removed, skipped, or re-targeted.
 

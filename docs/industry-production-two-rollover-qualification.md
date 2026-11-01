@@ -29,14 +29,14 @@ Pinned tag-15.3 primary sources are retained with URLs and SHA-256 manifests in
 `qualification_timing_15_3/`. Generated names follow the pinned
 `SquirrelExport.cmake` GameScript export authority.
 
-| C++ Script API | GameScript binding | Input | Native result |
-| --- | --- | --- | --- |
-| ScriptDate::GetCurrentDate | GSDate.GetCurrentDate | none | signed Date economy-day ordinal from TimerGameEconomy |
-| ScriptDate::GetYear | GSDate.GetYear | Date | SQInteger economy year |
-| ScriptDate::GetMonth | GSDate.GetMonth | Date | SQInteger economy month, 1–12 |
-| ScriptDate::GetDayOfMonth | GSDate.GetDayOfMonth | Date | SQInteger day, 1–31 |
-| ScriptDate::GetDate | GSDate.GetDate | year/month/day | native economy Date from YMD conversion |
-| ScriptIndustry::GetConstructionDate | GSIndustry.GetConstructionDate | IndustryID | CALENDAR construction Date; DATE_INVALID for invalid industry |
+| C++ Script API                      | GameScript binding             | Input          | Native result                                                 |
+| ----------------------------------- | ------------------------------ | -------------- | ------------------------------------------------------------- |
+| ScriptDate::GetCurrentDate          | GSDate.GetCurrentDate          | none           | signed Date economy-day ordinal from TimerGameEconomy         |
+| ScriptDate::GetYear                 | GSDate.GetYear                 | Date           | SQInteger economy year                                        |
+| ScriptDate::GetMonth                | GSDate.GetMonth                | Date           | SQInteger economy month, 1–12                                 |
+| ScriptDate::GetDayOfMonth           | GSDate.GetDayOfMonth           | Date           | SQInteger day, 1–31                                           |
+| ScriptDate::GetDate                 | GSDate.GetDate                 | year/month/day | native economy Date from YMD conversion                       |
+| ScriptIndustry::GetConstructionDate | GSIndustry.GetConstructionDate | IndustryID     | CALENDAR construction Date; DATE_INVALID for invalid industry |
 
 `script_date.cpp` uses economy converters. Negative date inputs return
 DATE_INVALID. GetDate rejects invalid month/day ranges and years outside the
@@ -83,10 +83,10 @@ completion PING/PONG machinery. Responses must pass request/type/target,
 strict field/type coherence, receipt, semantic validation and native log
 correlation. New payload maxima are canonical, with a 64-byte request ID:
 
-| Query | Request bytes | Response bytes | Mandatory query frames | Conservative allowance |
-| --- | ---: | ---: | ---: | ---: |
-| economy_clock | 117 | 271 | 4 | 8 |
-| industry_lifetime | 141 | 248 | 4 | 8 |
+| Query             | Request bytes | Response bytes | Mandatory query frames | Conservative allowance |
+| ----------------- | ------------: | -------------: | ---------------------: | ---------------------: |
+| economy_clock     |           117 |            271 |                      4 |                      8 |
+| industry_lifetime |           141 |            248 |                      4 |                      8 |
 
 The four mandatory frames are request, response, completion PING and PONG.
 Other admissible decoded frames consume the same conservative allowance;
@@ -159,15 +159,15 @@ and response latency only reduce that count. Default maximum is 299 shared
 across BOTH waits. Add baseline 1, anchor guards 2 and final guards 2:
 **maximum clock requests = 1+299+2+2 = 304**. The provisional 143 cap is removed.
 
-| Phase | Applications | Response bytes | Conservative query operations |
-| --- | ---: | ---: | ---: |
-| All clock samples | 304 | 304×271 = 82384 | 304×8 = 2432 |
-| Anchor structural | 96 | 49152 | 1024 |
-| Anchor lifetime | 32 | 32×248 = 7936 | 32×8 = 256 |
-| Final structural | 96 | 49152 | 1024 |
-| Final lifetime | 32 | 32×248 = 7936 | 32×8 = 256 |
-| Final production | 512 | 171520 | 4096 |
-| Total | **1072** | **368080** | **9088** |
+| Phase             | Applications |  Response bytes | Conservative query operations |
+| ----------------- | -----------: | --------------: | ----------------------------: |
+| All clock samples |          304 | 304×271 = 82384 |                  304×8 = 2432 |
+| Anchor structural |           96 |           49152 |                          1024 |
+| Anchor lifetime   |           32 |   32×248 = 7936 |                    32×8 = 256 |
+| Final structural  |           96 |           49152 |                          1024 |
+| Final lifetime    |           32 |   32×248 = 7936 |                    32×8 = 256 |
+| Final production  |          512 |          171520 |                          4096 |
+| Total             |     **1072** |      **368080** |                      **9088** |
 
 The inherited shared secure native accounting pays establishment PROTOCOL/
 WELCOME 2, subscription UPDATE_FREQUENCY/PING/PONG 3, and graceful QUIT 1,

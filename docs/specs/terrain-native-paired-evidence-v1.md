@@ -77,13 +77,13 @@ flowchart LR
   R --> V
 ```
 
-| Guarantee | Classification and limit |
-| --- | --- |
-| Pinned artifacts, source bytes, plan and cross-record digest links | Cryptographically verified relative to supplied pins and trusted verifier code |
-| Coverage, ten-field equality, schedule, budgets and record consistency | Semantically verified by retained-byte replay |
-| Attended action, owner identity, native log origin, process/session ownership, timings and disposal | Locally attested with required structural and relational checks |
-| Session confidentiality and integrity while ACTIVE | Established by the live secure implementation; retained public summaries do not independently reproduce discarded traffic keys |
-| Truth of coordinated fabricated local observations, complete memory erasure, atomic world snapshot | Not independently verifiable from retained bytes |
+| Guarantee                                                                                           | Classification and limit                                                                                                       |
+| --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Pinned artifacts, source bytes, plan and cross-record digest links                                  | Cryptographically verified relative to supplied pins and trusted verifier code                                                 |
+| Coverage, ten-field equality, schedule, budgets and record consistency                              | Semantically verified by retained-byte replay                                                                                  |
+| Attended action, owner identity, native log origin, process/session ownership, timings and disposal | Locally attested with required structural and relational checks                                                                |
+| Session confidentiality and integrity while ACTIVE                                                  | Established by the live secure implementation; retained public summaries do not independently reproduce discarded traffic keys |
+| Truth of coordinated fabricated local observations, complete memory erasure, atomic world snapshot  | Not independently verifiable from retained bytes                                                                               |
 
 Current verifier code and declared immutable external authorities remain trusted
 dependencies. Retained source digests identify the executed build, not a mechanism
@@ -100,28 +100,28 @@ Reject duplicate JSON keys, missing/unknown fields, booleans as integers,
 nonfinite values and noncanonical metadata. Application response bytes retain
 their original encoding. Digests cover exact bytes and are lowercase SHA256.
 
-* `attempt` is `{identity,destination,seal_destination}`. Destinations are exact
+- `attempt` is `{identity,destination,seal_destination}`. Destinations are exact
   canonical absolute paths selected during preparation, not ambient cwd identities.
-* `runtime` commits executable origin, bytes digest and version 15.3, graphics
+- `runtime` commits executable origin, bytes digest and version 15.3, graphics
   archive and extracted-file index, GameScript/library inputs and assembled bridge
   digests, argv, public environment and public configuration commitments.
-* `source` commits the reviewed candidate digest, complete original source-freeze
+- `source` commits the reviewed candidate digest, complete original source-freeze
   digest, durable canonical index, ownership, materializations and historical
   protection digests. The reviewed list includes every reachable runtime-critical
   bridge/source asset. Current source count is discovered, not fixed at 188.
-* `context` is the existing `TerrainSweepContext` shape. `source` also commits seed,
+- `context` is the existing `TerrainSweepContext` shape. `source` also commits seed,
   landscape and start date. World fingerprint derives from the declared recipe
   commitment, not terrain rows. Native welcome corroboration is recorded separately.
-* `plan` commits `seal/page-plan.json`. Its two ordered sweeps contain exact existing
+- `plan` commits `seal/page-plan.json`. Its two ordered sweeps contain exact existing
   pagination identities, cursors, tile IDs and request byte lengths/digests.
-* `budgets` contains existing per-sweep and combined budgets, selected frame caps
+- `budgets` contains existing per-sweep and combined budgets, selected frame caps
   and selected handshake/stream byte ceilings. `resources` contains all selected
   deadlines, buffer/queue/memory and storage caps described below.
-* `endpoint_policy` contains the existing closure policy, AF_INET loopback host,
+- `endpoint_policy` contains the existing closure policy, AF_INET loopback host,
   distinct game/Admin ports, client public key and its raw-key SHA256.
-* `artifact_policy` is the exact outer schema/version inventory in this document.
+- `artifact_policy` is the exact outer schema/version inventory in this document.
   `required_gates` is the exact successful result-gate set below.
-* `commitments` is ASCII-path-sorted `{path,byte_length,sha256}` entries for every
+- `commitments` is ASCII-path-sorted `{path,byte_length,sha256}` entries for every
   seal file except PRELAUNCH, SEAL and the seal manifest. It includes each distinct
   canonical object. `external_authorities` identifies exact historical root,
   provenance identity, protected inventory digest and declared identity verifier.
@@ -149,22 +149,22 @@ identity, canonical absolute original provenance path, Count and Digest.
 Arrays retain order; input indexes are identity-sorted with no duplicates.
 These names describe wire types, not new implementation abstractions.
 
-| Object | Exact fields and wire types |
-| --- | --- |
-| attempt | identity: identifier; destination and seal_destination: canonical absolute paths |
-| runtime | executable: Input; version: literal `15.3`; graphics_archive: Input; graphics_files: Input array; bridge_inputs: Input array; bridge_sha256: Digest; argv: Text array; environment: public string-to-string map; public_config: Input array |
-| source | candidate: Input; source_freeze_sha256, canonical_inputs_sha256, ownership_sha256, materializations_sha256, historical_integrity_sha256: Digest; recipe: Recipe; recipe_sha256: Digest |
-| Recipe | map_x and map_y: Positive map-size exponents accepted by existing source validation (for example, 6 means 64 tiles; the exponent itself need not be a power of two); seed and start_date: Count; landscape: supported integer native landscape enum |
-| context | acquisition_id and world_fingerprint, map_width, map_height and region: exact existing TerrainSweepContext wire shape from paired v1 |
-| plan | Commitment with path exactly `seal/page-plan.json` |
-| budgets | per_sweep: exact PaginationBudget field set; combined: exact TwoSweepBudget field set; frames: FrameCaps |
-| FrameCaps | post_auth_frames, pre_auth_frames, post_auth_stream_bytes, pre_auth_stream_bytes: Positive, with the ceilings below |
-| resources | startup_ns, query_ns, marker_ns, acquisition_ns, cleanup_ns, finalization_ns: Positive; raw_reader_bytes, frame_queue_count, frame_queue_bytes, decrypted_queue_count, decrypted_queue_bytes, host_admission_bytes, process_rss_bytes, memory_monitor_interval_ns: Positive; stdout_bytes, stderr_bytes, paired_bytes, outer_bytes, outer_files: Positive; admission_evidence: Commitment array |
-| endpoint_policy | policy: exact `endpoint_cleanup_contract()` object; family: literal AF_INET; host: literal 127.0.0.1; game_port and admin_port: distinct positive integers <=65535; client_public_key: lowercase 64-character hex; client_public_key_sha256: Digest |
-| artifact_policy | schema: literal outer identifier; version: integer 1 |
-| required_gates | exact ordered list of the gate names in the result table, in that table's order |
-| external_authorities | exactly one HistoricalAuthority for the protected historical base |
-| HistoricalAuthority | role: literal `historical`; provenance_base: canonical absolute path; identity: identifier; inventory_sha256: Digest; policy: literal `historical-exact-paths-v1` |
+| Object               | Exact fields and wire types                                                                                                                                                                                                                                                                                                                                                                     |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| attempt              | identity: identifier; destination and seal_destination: canonical absolute paths                                                                                                                                                                                                                                                                                                                |
+| runtime              | executable: Input; version: literal `15.3`; graphics_archive: Input; graphics_files: Input array; bridge_inputs: Input array; bridge_sha256: Digest; argv: Text array; environment: public string-to-string map; public_config: Input array                                                                                                                                                     |
+| source               | candidate: Input; source_freeze_sha256, canonical_inputs_sha256, ownership_sha256, materializations_sha256, historical_integrity_sha256: Digest; recipe: Recipe; recipe_sha256: Digest                                                                                                                                                                                                          |
+| Recipe               | map_x and map_y: Positive map-size exponents accepted by existing source validation (for example, 6 means 64 tiles; the exponent itself need not be a power of two); seed and start_date: Count; landscape: supported integer native landscape enum                                                                                                                                             |
+| context              | acquisition_id and world_fingerprint, map_width, map_height and region: exact existing TerrainSweepContext wire shape from paired v1                                                                                                                                                                                                                                                            |
+| plan                 | Commitment with path exactly `seal/page-plan.json`                                                                                                                                                                                                                                                                                                                                              |
+| budgets              | per_sweep: exact PaginationBudget field set; combined: exact TwoSweepBudget field set; frames: FrameCaps                                                                                                                                                                                                                                                                                        |
+| FrameCaps            | post_auth_frames, pre_auth_frames, post_auth_stream_bytes, pre_auth_stream_bytes: Positive, with the ceilings below                                                                                                                                                                                                                                                                             |
+| resources            | startup_ns, query_ns, marker_ns, acquisition_ns, cleanup_ns, finalization_ns: Positive; raw_reader_bytes, frame_queue_count, frame_queue_bytes, decrypted_queue_count, decrypted_queue_bytes, host_admission_bytes, process_rss_bytes, memory_monitor_interval_ns: Positive; stdout_bytes, stderr_bytes, paired_bytes, outer_bytes, outer_files: Positive; admission_evidence: Commitment array |
+| endpoint_policy      | policy: exact `endpoint_cleanup_contract()` object; family: literal AF_INET; host: literal 127.0.0.1; game_port and admin_port: distinct positive integers <=65535; client_public_key: lowercase 64-character hex; client_public_key_sha256: Digest                                                                                                                                             |
+| artifact_policy      | schema: literal outer identifier; version: integer 1                                                                                                                                                                                                                                                                                                                                            |
+| required_gates       | exact ordered list of the gate names in the result table, in that table's order                                                                                                                                                                                                                                                                                                                 |
+| external_authorities | exactly one HistoricalAuthority for the protected historical base                                                                                                                                                                                                                                                                                                                               |
+| HistoricalAuthority  | role: literal `historical`; provenance_base: canonical absolute path; identity: identifier; inventory_sha256: Digest; policy: literal `historical-exact-paths-v1`                                                                                                                                                                                                                               |
 
 `environment` is a map, not an extensible record. Its exact reviewed key/value map
 is sealed and validated against the sanitized runtime renderer. No key or value
@@ -276,23 +276,23 @@ inventory from the pinned prelaunch policy, exact lifecycle prefix and page plan
 Every finalized post-claim package requires the common files below, even on failure.
 Unreached observations use explicit typed unavailable records, never invented facts.
 
-| Path | Requirement |
-| --- | --- |
-| `seal/PRELAUNCH.json`, `seal/SEAL.sha256`, `seal/artifact-manifest.sha256` | Required exact sealed authority |
-| `seal/source-freeze.json`, `seal/canonical-inputs.json` | Required complete source commitments and provenance index |
-| `seal/path-ownership.json`, `seal/runtime-materializations.json` | Required immutable ownership and safe materialization commitments |
-| `seal/historical-integrity.json`, `seal/page-plan.json` | Required protection/root authority and complete request plan |
-| `seal/canonical/<sha256>` | Exactly the deduplicated objects required by the sealed index, no extra objects |
-| `authorization-consumed.json` | Required for every post-claim package, exact new grant |
-| `launch-claim.json` | Required after completed launch-claim publication |
-| `native-launch-claimed.json` | Required after invocation publication, absent before it |
-| `runtime.json`, `authentication.json` | Required typed observations or explicit unavailable phase records |
-| `frame-accounting.json`, `lifecycle.json`, `execution-log.json` | Required bounded accounting, transitions and captured log scopes |
-| `stdout.log`, `stderr.log` | Required final captured bytes, possibly empty when process never launched |
-| `cleanup.raw.json`, `cleanup.json`, `credential-disposal.json` | Required attempted disposal observations and reconciled summary |
-| `post-run-integrity.json`, `result.json` | Required final checks and outcome, including failed/unavailable checks |
-| `paired/` | Required COMPLETE package for REAL_PASS; phase-conditional incomplete/failed prefix for failures |
-| `completion.json`, `artifact-manifest.sha256` | Required final independently pinned descriptor and deterministic recursive manifest |
+| Path                                                                       | Requirement                                                                                      |
+| -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `seal/PRELAUNCH.json`, `seal/SEAL.sha256`, `seal/artifact-manifest.sha256` | Required exact sealed authority                                                                  |
+| `seal/source-freeze.json`, `seal/canonical-inputs.json`                    | Required complete source commitments and provenance index                                        |
+| `seal/path-ownership.json`, `seal/runtime-materializations.json`           | Required immutable ownership and safe materialization commitments                                |
+| `seal/historical-integrity.json`, `seal/page-plan.json`                    | Required protection/root authority and complete request plan                                     |
+| `seal/canonical/<sha256>`                                                  | Exactly the deduplicated objects required by the sealed index, no extra objects                  |
+| `authorization-consumed.json`                                              | Required for every post-claim package, exact new grant                                           |
+| `launch-claim.json`                                                        | Required after completed launch-claim publication                                                |
+| `native-launch-claimed.json`                                               | Required after invocation publication, absent before it                                          |
+| `runtime.json`, `authentication.json`                                      | Required typed observations or explicit unavailable phase records                                |
+| `frame-accounting.json`, `lifecycle.json`, `execution-log.json`            | Required bounded accounting, transitions and captured log scopes                                 |
+| `stdout.log`, `stderr.log`                                                 | Required final captured bytes, possibly empty when process never launched                        |
+| `cleanup.raw.json`, `cleanup.json`, `credential-disposal.json`             | Required attempted disposal observations and reconciled summary                                  |
+| `post-run-integrity.json`, `result.json`                                   | Required final checks and outcome, including failed/unavailable checks                           |
+| `paired/`                                                                  | Required COMPLETE package for REAL_PASS; phase-conditional incomplete/failed prefix for failures |
+| `completion.json`, `artifact-manifest.sha256`                              | Required final independently pinned descriptor and deterministic recursive manifest              |
 
 `paired/` contains exactly the unchanged v1 inventory. No outer file is placed
 inside it. On failure it is absent only if no page was admitted; otherwise its
@@ -343,13 +343,13 @@ Recorded timestamps are integer nanoseconds on one monotonic clock domain anchor
 to claim acquisition. Pre-consumption states carry time zero; runtime timing starts
 at consumption. They do not authenticate elapsed time to another machine.
 
-| Kind | Required available observations |
-| --- | --- |
-| runtime | owner and child PID/start identities, launch argv/config/bridge/executable commitments, one process instance, namespace/endpoint ownership, launch/exit/reap times |
-| authentication | one session ID, same process/endpoint/public key, X25519_AuthorizedKey method, encrypted true, ACTIVE state, ordered auth-state events, public protocol/welcome, handshake metadata |
-| lifecycle | contiguous event ordinals, valid phases, monotonic times, one launch/connect, exact request IDs and page/sweep admissions, failure and cleanup transitions |
-| credential-disposal | exact disposable materialization identities/commitments, removal observations, workspace disposal and no retained secret bytes |
-| post-run-integrity | sealed input and materialization comparisons captured before disposal, required external history checks, exact missing/changed sets and disposal completion |
+| Kind                | Required available observations                                                                                                                                                     |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| runtime             | owner and child PID/start identities, launch argv/config/bridge/executable commitments, one process instance, namespace/endpoint ownership, launch/exit/reap times                  |
+| authentication      | one session ID, same process/endpoint/public key, X25519_AuthorizedKey method, encrypted true, ACTIVE state, ordered auth-state events, public protocol/welcome, handshake metadata |
+| lifecycle           | contiguous event ordinals, valid phases, monotonic times, one launch/connect, exact request IDs and page/sweep admissions, failure and cleanup transitions                          |
+| credential-disposal | exact disposable materialization identities/commitments, removal observations, workspace disposal and no retained secret bytes                                                      |
+| post-run-integrity  | sealed input and materialization comparisons captured before disposal, required external history checks, exact missing/changed sets and disposal completion                         |
 
 ### Strict available observation shapes
 
@@ -360,35 +360,35 @@ phases. Unavailable observation records use the exact three-field alternative
 above and cannot establish a successful gate. Per-record metadata remains bounded
 by the resource contract; these field sets do not grant unlimited strings or arrays.
 
-| Kind or nested record | Exact additional fields |
-| --- | --- |
-| runtime | owner: ProcessIdentity; child: ProcessIdentity or null; launch_argv_sha256, configuration_sha256, bridge_sha256, executable_sha256: Digest; process_instances: Count; network_namespace: identifier; endpoints: EndpointIdentity; launched_ns, exited_ns, reaped_ns: Count or null |
-| ProcessIdentity | pid: Positive; start: decimal start-ticks string |
-| EndpointIdentity | family: AF_INET; host: 127.0.0.1; game_port and admin_port: positive distinct port integers |
-| authentication | session_id: identifier; process: ProcessIdentity; endpoints: EndpointIdentity; public_key: 64-character public hex; public_key_sha256: Digest; method: X25519_AuthorizedKey or null; encrypted: boolean; state: existing AuthState name; states: AuthEvent array; protocol: ProtocolFacts or null; welcome: WelcomeFacts or null; handshake: HandshakeFrame array |
-| AuthEvent | ordinal: Positive; state: existing AuthState name; time_ns: Count |
-| ProtocolFacts | version: integer; frequencies: array of exactly {update_type: Count, frequency: Count}, sorted by update_type, no duplicate type |
-| WelcomeFacts | revision: Text; dedicated: boolean; width,height: Positive; seed,landscape,start_date: Count |
-| HandshakeFrame | ordinal: Positive; direction: inbound or outbound; packet_type: Count; encoded_byte_length: Positive; encoded_sha256: Digest; state: existing AuthState name |
-| lifecycle | events: LifecycleEvent array; failure: Failure or null; cleanup_errors: Error array |
-| LifecycleEvent | ordinal: Positive; phase: named state from the lifecycle or REJECTED/FAILED_CLEANED/CLEANUP_FAILED; event: named transition action or request_sent/response_received/page_admitted; time_ns: Count; session_id: identifier or null; sweep,page: Positive or null; request_id: protocol ID or null |
-| frame-accounting | frames: Frame array; page_deltas: PageDelta array; totals: FrameTotals; rejected: RejectedFrame or null; pending: PendingExchange or null |
-| Frame | ordinal: Positive; direction: inbound or outbound; phase: handshake/establishment/setup/sweep1/sweep2/cleanup; session_id: identifier; request_id: protocol ID or null; packet_type: Count; plaintext_byte_length,encoded_byte_length: Positive; plaintext_sha256: Digest or null; encoded_sha256: Digest |
-| PageDelta | sweep,page: Positive; request_id: protocol ID; first_frame,last_frame: Positive; admitted: boolean; request_bytes,response_bytes,query_operations: Count; request_sha256: Digest; response_sha256: Digest or null |
-| FrameTotals | establishment,setup,sweep1,sweep2,cleanup,handshake: Count; query_operations,post_auth_frames,pre_auth_frames,request_bytes,response_bytes,inbound_stream_bytes,outbound_stream_bytes: Count |
-| RejectedFrame | direction and phase as Frame; packet_type: Count or null; captured_byte_length: Count; sha256: Digest; reason: failure code |
-| PendingExchange | sweep,page: Positive; request_id: protocol ID; request: exactly {byte_length: Count,sha256: Digest}; response: same shape or null; delivery: SENT/UNKNOWN; admitted: literal false |
-| credential-disposal | materializations: Disposal array; workspace_disposed: boolean; retained_secret_count: Count |
-| Disposal | identity: identifier; commitment_sha256: Digest; removed: boolean; observed_ns: Count |
-| post-run-integrity | before_disposal: IntegrityCheck array; history: exactly {identity: identifier,inventory_sha256: Digest,validated_paths: Count,missing: Text array,changed: Text array}; workspace_disposed: boolean |
-| IntegrityCheck | identity: identifier; phase: final_pre_popen or post_run; expected_sha256: Digest; observed_sha256: Digest or null; checked_ns: Count; outcome: MATCH/MISSING/CHANGED |
-| cleanup.raw | cleanup: RawCleanup; completed_ns: Count |
-| RawCleanup | pid: Positive or null; graceful_attempted: boolean; quit_command: literal quit; returncode: integer or null; reaped: boolean; remaining_processes: ProcessIdentity array; events: Text array; cleanup_error: Error array; admin_frame_accounting: FrameTotals |
-| Error | stage: named lifecycle/finalization stage; type: bounded public exception-type identifier |
-| cleanup | cleanup: same RawCleanup; endpoints: exactly {sockets_closed: boolean,endpoint_verification: EndpointVerification or null}; completed_ns: Count |
-| EndpointVerification | exact existing verify_retained_endpoints accepted shape and strict socket-row fields, sealed ports substituted as metadata |
-| result | status: REAL_PASS or REAL_FAIL; terminal_phase: named lifecycle/finalization state; failure: Failure or null; gates: exact boolean gate map below |
-| Failure | code: safe ASCII identifier <=64 characters; phase: named lifecycle/finalization state; message: public UTF-8 <=1024 characters; cause_type: bounded public exception-type identifier or null |
+| Kind or nested record | Exact additional fields                                                                                                                                                                                                                                                                                                                                           |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| runtime               | owner: ProcessIdentity; child: ProcessIdentity or null; launch_argv_sha256, configuration_sha256, bridge_sha256, executable_sha256: Digest; process_instances: Count; network_namespace: identifier; endpoints: EndpointIdentity; launched_ns, exited_ns, reaped_ns: Count or null                                                                                |
+| ProcessIdentity       | pid: Positive; start: decimal start-ticks string                                                                                                                                                                                                                                                                                                                  |
+| EndpointIdentity      | family: AF_INET; host: 127.0.0.1; game_port and admin_port: positive distinct port integers                                                                                                                                                                                                                                                                       |
+| authentication        | session_id: identifier; process: ProcessIdentity; endpoints: EndpointIdentity; public_key: 64-character public hex; public_key_sha256: Digest; method: X25519_AuthorizedKey or null; encrypted: boolean; state: existing AuthState name; states: AuthEvent array; protocol: ProtocolFacts or null; welcome: WelcomeFacts or null; handshake: HandshakeFrame array |
+| AuthEvent             | ordinal: Positive; state: existing AuthState name; time_ns: Count                                                                                                                                                                                                                                                                                                 |
+| ProtocolFacts         | version: integer; frequencies: array of exactly {update_type: Count, frequency: Count}, sorted by update_type, no duplicate type                                                                                                                                                                                                                                  |
+| WelcomeFacts          | revision: Text; dedicated: boolean; width,height: Positive; seed,landscape,start_date: Count                                                                                                                                                                                                                                                                      |
+| HandshakeFrame        | ordinal: Positive; direction: inbound or outbound; packet_type: Count; encoded_byte_length: Positive; encoded_sha256: Digest; state: existing AuthState name                                                                                                                                                                                                      |
+| lifecycle             | events: LifecycleEvent array; failure: Failure or null; cleanup_errors: Error array                                                                                                                                                                                                                                                                               |
+| LifecycleEvent        | ordinal: Positive; phase: named state from the lifecycle or REJECTED/FAILED_CLEANED/CLEANUP_FAILED; event: named transition action or request_sent/response_received/page_admitted; time_ns: Count; session_id: identifier or null; sweep,page: Positive or null; request_id: protocol ID or null                                                                 |
+| frame-accounting      | frames: Frame array; page_deltas: PageDelta array; totals: FrameTotals; rejected: RejectedFrame or null; pending: PendingExchange or null                                                                                                                                                                                                                         |
+| Frame                 | ordinal: Positive; direction: inbound or outbound; phase: handshake/establishment/setup/sweep1/sweep2/cleanup; session_id: identifier; request_id: protocol ID or null; packet_type: Count; plaintext_byte_length,encoded_byte_length: Positive; plaintext_sha256: Digest or null; encoded_sha256: Digest                                                         |
+| PageDelta             | sweep,page: Positive; request_id: protocol ID; first_frame,last_frame: Positive; admitted: boolean; request_bytes,response_bytes,query_operations: Count; request_sha256: Digest; response_sha256: Digest or null                                                                                                                                                 |
+| FrameTotals           | establishment,setup,sweep1,sweep2,cleanup,handshake: Count; query_operations,post_auth_frames,pre_auth_frames,request_bytes,response_bytes,inbound_stream_bytes,outbound_stream_bytes: Count                                                                                                                                                                      |
+| RejectedFrame         | direction and phase as Frame; packet_type: Count or null; captured_byte_length: Count; sha256: Digest; reason: failure code                                                                                                                                                                                                                                       |
+| PendingExchange       | sweep,page: Positive; request_id: protocol ID; request: exactly {byte_length: Count,sha256: Digest}; response: same shape or null; delivery: SENT/UNKNOWN; admitted: literal false                                                                                                                                                                                |
+| credential-disposal   | materializations: Disposal array; workspace_disposed: boolean; retained_secret_count: Count                                                                                                                                                                                                                                                                       |
+| Disposal              | identity: identifier; commitment_sha256: Digest; removed: boolean; observed_ns: Count                                                                                                                                                                                                                                                                             |
+| post-run-integrity    | before_disposal: IntegrityCheck array; history: exactly {identity: identifier,inventory_sha256: Digest,validated_paths: Count,missing: Text array,changed: Text array}; workspace_disposed: boolean                                                                                                                                                               |
+| IntegrityCheck        | identity: identifier; phase: final_pre_popen or post_run; expected_sha256: Digest; observed_sha256: Digest or null; checked_ns: Count; outcome: MATCH/MISSING/CHANGED                                                                                                                                                                                             |
+| cleanup.raw           | cleanup: RawCleanup; completed_ns: Count                                                                                                                                                                                                                                                                                                                          |
+| RawCleanup            | pid: Positive or null; graceful_attempted: boolean; quit_command: literal quit; returncode: integer or null; reaped: boolean; remaining_processes: ProcessIdentity array; events: Text array; cleanup_error: Error array; admin_frame_accounting: FrameTotals                                                                                                     |
+| Error                 | stage: named lifecycle/finalization stage; type: bounded public exception-type identifier                                                                                                                                                                                                                                                                         |
+| cleanup               | cleanup: same RawCleanup; endpoints: exactly {sockets_closed: boolean,endpoint_verification: EndpointVerification or null}; completed_ns: Count                                                                                                                                                                                                                   |
+| EndpointVerification  | exact existing verify_retained_endpoints accepted shape and strict socket-row fields, sealed ports substituted as metadata                                                                                                                                                                                                                                        |
+| result                | status: REAL_PASS or REAL_FAIL; terminal_phase: named lifecycle/finalization state; failure: Failure or null; gates: exact boolean gate map below                                                                                                                                                                                                                 |
+| Failure               | code: safe ASCII identifier <=64 characters; phase: named lifecycle/finalization state; message: public UTF-8 <=1024 characters; cause_type: bounded public exception-type identifier or null                                                                                                                                                                     |
 
 Authentication `available:true` means the observer retained session observations,
 not that authentication succeeded. A failed pre-ACTIVE session retains its bounded
@@ -566,12 +566,12 @@ attestation; the digest does not authenticate an operator.
 
 Derive expected checks, ordered by phase then identity, as follows:
 
-| Identity domain | final_pre_popen bytes | post_run bytes | Expected digest authority |
-| --- | --- | --- | --- |
-| canonical-input | Exact original input at its sealed origin | Exact retained canonical object | Verified canonical index entry |
-| seal-artifact | Every committed noncanonical seal artifact | Same retained seal artifact | Pinned prelaunch commitment entry |
-| owned-path | Every public runtime materialization | None | Sealed materialization row |
-| owned-path (credential) | Public commitment derived from privately read key | None | Pinned public credential commitment above |
+| Identity domain         | final_pre_popen bytes                             | post_run bytes                  | Expected digest authority                 |
+| ----------------------- | ------------------------------------------------- | ------------------------------- | ----------------------------------------- |
+| canonical-input         | Exact original input at its sealed origin         | Exact retained canonical object | Verified canonical index entry            |
+| seal-artifact           | Every committed noncanonical seal artifact        | Same retained seal artifact     | Pinned prelaunch commitment entry         |
+| owned-path              | Every public runtime materialization              | None                            | Sealed materialization row                |
+| owned-path (credential) | Public commitment derived from privately read key | None                            | Pinned public credential commitment above |
 
 Canonical objects use canonical-input checks, avoiding duplicate seal-artifact
 checks. PRELAUNCH, SEAL and manifest self/exclusion rules remain unchanged: their
@@ -700,23 +700,36 @@ configurations, native evidence, approved paths or operator grants.
 The exact canonical argv bytes below have no trailing LF:
 
 ```json
-{"argv":["/controlled/openttd","-D127.0.0.1:3979","-c","/controlled/runtime/openttd.cfg","-x","-X","-g","-G","42","-dscript=4,grf=1,net=3"]}
+{
+	"argv": [
+		"/controlled/openttd",
+		"-D127.0.0.1:3979",
+		"-c",
+		"/controlled/runtime/openttd.cfg",
+		"-x",
+		"-X",
+		"-g",
+		"-G",
+		"42",
+		"-dscript=4,grf=1,net=3"
+	]
+}
 ```
 
 SHA256 is `fd101e0eeb98e6b8b0eea7aceee4735a664873763da2ca115a40a4b247d88c5d`.
 The raw configuration bytes `b"[network]\nserver_admin_port = 3980\n"` have SHA256
 `c98242c1900c4b2c013c3745d7db8ccb65bce6f12c4a8698b59c70cdac4ab1d3`.
 
-| Challenge | Required outcome and authority |
-| --- | --- |
-| Exact argv model and retained raw configuration bytes | Reconstruct the illustrated digests; full acceptance still requires every other gate |
-| Swap arguments, change executable/configuration path, add a flag or append LF to encoded argv | Reject runtime commitment mismatch against pinned argv; noncanonical encoded metadata also rejects |
-| Hash an argv array without its one-field model, shell-join arguments or hash all runtime fields | Reject; none is the specified byte input |
-| Non-NFC argument or symlink/traversal path alias | Reject input/path validation before hashing or launch |
-| Change configuration LF to CRLF, add a space or remove its final LF | Reject raw-byte digest mismatch; no semantic-text normalization |
-| Substitute equal configuration bytes under another source identity | Reject pinned identity/provenance/materialization relationship |
-| Change mutable argv/configuration digests and recompute manifests | Reject comparison to independently pinned PRELAUNCH and completion commitments |
-| Remove main config input, its retained object or its copy relationship | Reject missing authoritative configuration evidence; never infer a replacement |
+| Challenge                                                                                       | Required outcome and authority                                                                     |
+| ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Exact argv model and retained raw configuration bytes                                           | Reconstruct the illustrated digests; full acceptance still requires every other gate               |
+| Swap arguments, change executable/configuration path, add a flag or append LF to encoded argv   | Reject runtime commitment mismatch against pinned argv; noncanonical encoded metadata also rejects |
+| Hash an argv array without its one-field model, shell-join arguments or hash all runtime fields | Reject; none is the specified byte input                                                           |
+| Non-NFC argument or symlink/traversal path alias                                                | Reject input/path validation before hashing or launch                                              |
+| Change configuration LF to CRLF, add a space or remove its final LF                             | Reject raw-byte digest mismatch; no semantic-text normalization                                    |
+| Substitute equal configuration bytes under another source identity                              | Reject pinned identity/provenance/materialization relationship                                     |
+| Change mutable argv/configuration digests and recompute manifests                               | Reject comparison to independently pinned PRELAUNCH and completion commitments                     |
+| Remove main config input, its retained object or its copy relationship                          | Reject missing authoritative configuration evidence; never infer a replacement                     |
 
 ## Cleanup and mandatory result gates
 
@@ -744,20 +757,20 @@ with the independently derived outcome. Evidence digests are not boolean gates.
 REAL_FAIL records false for unmet/unavailable gates, never converts missing facts
 to true, and retains the actual failure phase. Diagnostic fields do not authorize success.
 
-| Gate | Independently checked evidence |
-| --- | --- |
-| authorization | Exact operation-qualified Model A public grant, claim and invocation bindings |
-| source_integrity | Prelaunch/canonical/provenance/ownership and final pre-Popen comparison |
-| runtime_identity | Owned process and committed executable, bridge, recipe and endpoint observations |
-| authentication | Exact ACTIVE, method, public key, encrypted session and corroborated welcome |
-| coverage | Two independently complete exact planned sweeps from production replay |
-| equality | All ten corresponding tile fields equal from production replay |
-| accounting | Recomputed byte/page/query totals and native observer frame deltas within selected caps |
-| liveness | Per-page complete native marker sequence and quiescent owned session observations |
-| log_integrity | Exact snapshot ranges, prefix digests, final log hashes and global correlation |
-| cleanup | Established raw/normalized process and endpoint cleanup outcome |
-| credential_disposal | Exact required disposable identities removed and no retained secret content |
-| post_run_integrity | Recorded source/materialization checks and validated bound historical authority |
+| Gate                | Independently checked evidence                                                          |
+| ------------------- | --------------------------------------------------------------------------------------- |
+| authorization       | Exact operation-qualified Model A public grant, claim and invocation bindings           |
+| source_integrity    | Prelaunch/canonical/provenance/ownership and final pre-Popen comparison                 |
+| runtime_identity    | Owned process and committed executable, bridge, recipe and endpoint observations        |
+| authentication      | Exact ACTIVE, method, public key, encrypted session and corroborated welcome            |
+| coverage            | Two independently complete exact planned sweeps from production replay                  |
+| equality            | All ten corresponding tile fields equal from production replay                          |
+| accounting          | Recomputed byte/page/query totals and native observer frame deltas within selected caps |
+| liveness            | Per-page complete native marker sequence and quiescent owned session observations       |
+| log_integrity       | Exact snapshot ranges, prefix digests, final log hashes and global correlation          |
+| cleanup             | Established raw/normalized process and endpoint cleanup outcome                         |
+| credential_disposal | Exact required disposable identities removed and no retained secret content             |
+| post_run_integrity  | Recorded source/materialization checks and validated bound historical authority         |
 
 The verifier derives these predicates once, then compares the recorded gates and
 result status. A false cleanup gate contradicts successful cleanup just as a true
@@ -770,23 +783,23 @@ execution process to wait for a future caller's offline verification.
 Each selected cap is immutable before authorization. Actual consumption is recorded
 and reconciled. The existing planning envelope is not a native capacity measurement.
 
-| Resource | Ceiling/selection | Authority and required proof |
-| --- | --- | --- |
-| Pages | 52/sweep, 104 total, exact Q selected | Existing pagination plan; controlled and later native coverage |
-| Application bytes | 159 request, 508 response/page; 8,268/26,416 per sweep; 16,536/52,832 total | Actual protocol payloads and replay, checked before send/at admission |
-| Query operations | 8/page, 416/sweep, 832 total | Receipts plus independent observer, no double counting |
-| Post-auth frames | Selected at most 6+8Q, at most 838 | Existing TerrainFrameBudget; exact allowed sequence normally uses 6+4Q |
-| Handshake | Exactly four valid frames before ACTIVE | Secure parser order/shape; first rejected frame retained only as diagnostics |
-| Encoded frames/stream | 32,767 bytes/frame; post-auth at most selected_frames*32,767; handshake at most 4*32,767 | Existing frame/cipher limits and conservative byte admission; excludes TCP/IP overhead |
-| Getters/setters | Static successful bound 44N+6P getters/sweep; 88N+12P<=23,152 total; Q<=104 selector setters | Reviewed bridge call paths, not dynamically measured getter counts |
-| Startup/query/log | Startup<=60s, query/barrier<=15s/page, marker<=10s/page | Selected operational caps, no throughput claim |
-| Acquisition/cleanup/finalization | Acquisition<=60+25Q<=2,660s; cleanup<=20s separately reserved; finalization<=15s; total<=2,695s | Monotonic phase-intersected deadlines and controlled expiration/cancellation gates |
-| Captures | 262,144 bytes per stdout/stderr | Existing bounded capture; overflow rejects while cleanup still runs |
-| Paired evidence | 1,048,576 bytes, at most 315 files | Unchanged paired v1 read/storage ceilings |
-| Frame/page metadata | <=512 bytes per admitted frame and per page index; <=262,144 bytes remaining outer metadata | Future writer must fit exact schemas at maximum scope, no silent truncation |
-| Outer package | C+2,317,312 bytes at maximum scope | C is measured exact deduplicated retained canonical bytes; includes paired/log/metadata terms below |
-| Socket/decrypted queues | Explicit selected raw-reader bytes, frame backlog count/bytes, decrypted queue count/bytes | Mandatory controlled overflow gates before native preparation; decoder feed bound alone is insufficient |
-| Host/process memory | Explicit positive selected host admission and process RSS cap with bounded monitoring intervals | Pinned-asset profiling and controlled monitor tests required before preparation; no current native measured value |
+| Resource                         | Ceiling/selection                                                                               | Authority and required proof                                                                                      |
+| -------------------------------- | ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Pages                            | 52/sweep, 104 total, exact Q selected                                                           | Existing pagination plan; controlled and later native coverage                                                    |
+| Application bytes                | 159 request, 508 response/page; 8,268/26,416 per sweep; 16,536/52,832 total                     | Actual protocol payloads and replay, checked before send/at admission                                             |
+| Query operations                 | 8/page, 416/sweep, 832 total                                                                    | Receipts plus independent observer, no double counting                                                            |
+| Post-auth frames                 | Selected at most 6+8Q, at most 838                                                              | Existing TerrainFrameBudget; exact allowed sequence normally uses 6+4Q                                            |
+| Handshake                        | Exactly four valid frames before ACTIVE                                                         | Secure parser order/shape; first rejected frame retained only as diagnostics                                      |
+| Encoded frames/stream            | 32,767 bytes/frame; post-auth at most selected_frames*32,767; handshake at most 4*32,767        | Existing frame/cipher limits and conservative byte admission; excludes TCP/IP overhead                            |
+| Getters/setters                  | Static successful bound 44N+6P getters/sweep; 88N+12P<=23,152 total; Q<=104 selector setters    | Reviewed bridge call paths, not dynamically measured getter counts                                                |
+| Startup/query/log                | Startup<=60s, query/barrier<=15s/page, marker<=10s/page                                         | Selected operational caps, no throughput claim                                                                    |
+| Acquisition/cleanup/finalization | Acquisition<=60+25Q<=2,660s; cleanup<=20s separately reserved; finalization<=15s; total<=2,695s | Monotonic phase-intersected deadlines and controlled expiration/cancellation gates                                |
+| Captures                         | 262,144 bytes per stdout/stderr                                                                 | Existing bounded capture; overflow rejects while cleanup still runs                                               |
+| Paired evidence                  | 1,048,576 bytes, at most 315 files                                                              | Unchanged paired v1 read/storage ceilings                                                                         |
+| Frame/page metadata              | <=512 bytes per admitted frame and per page index; <=262,144 bytes remaining outer metadata     | Future writer must fit exact schemas at maximum scope, no silent truncation                                       |
+| Outer package                    | C+2,317,312 bytes at maximum scope                                                              | C is measured exact deduplicated retained canonical bytes; includes paired/log/metadata terms below               |
+| Socket/decrypted queues          | Explicit selected raw-reader bytes, frame backlog count/bytes, decrypted queue count/bytes      | Mandatory controlled overflow gates before native preparation; decoder feed bound alone is insufficient           |
+| Host/process memory              | Explicit positive selected host admission and process RSS cap with bounded monitoring intervals | Pinned-asset profiling and controlled monitor tests required before preparation; no current native measured value |
 
 The outer envelope is `C + 1,048,576 + 524,288 + 838*512 + Q*512 + 262,144`.
 The remaining metadata term includes four public handshake metadata records, the
@@ -860,14 +873,14 @@ retained bytes, caller pins, trusted verifier code and declared external history
 
 ## Terminal classification and failure behavior
 
-| Condition | Classification and permitted result |
-| --- | --- |
-| Preparation lacks validated source, scope, native resource selections or exact authority | PRELAUNCH_BLOCKED, no consumed attempt and no launch |
-| Wrong/declined TTY confirmation | PRELAUNCH_BLOCKED, no grant or claim |
-| All REAL lineage, complete/equal replay, resource/lifecycle, cleanup and integrity gates validate | REAL_PASS within LOCAL_OPERATOR_ATTESTED trust, immutable accepted pair |
+| Condition                                                                                                                                  | Classification and permitted result                                                           |
+| ------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- |
+| Preparation lacks validated source, scope, native resource selections or exact authority                                                   | PRELAUNCH_BLOCKED, no consumed attempt and no launch                                          |
+| Wrong/declined TTY confirmation                                                                                                            | PRELAUNCH_BLOCKED, no grant or claim                                                          |
+| All REAL lineage, complete/equal replay, resource/lifecycle, cleanup and integrity gates validate                                          | REAL_PASS within LOCAL_OPERATOR_ATTESTED trust, immutable accepted pair                       |
 | Consumed execution reaches a recorded authentication, stale response, partial sweep, deadline, disconnect, crash, drift or cleanup failure | REAL_FAIL when the bounded finalized failure package is internally valid, no accepted terrain |
-| Missing/corrupted records, invalid pins, ambiguous authority, contradictory gates or unverifiable cleanup after a crash | AUDIT_BLOCKED, no success certification; recorded native outcome is preserved separately |
-| Historical supported native page with 13 unavailable canonical inputs | Existing supported REAL_PASS and complete offline AUDIT_BLOCKED, unchanged |
+| Missing/corrupted records, invalid pins, ambiguous authority, contradictory gates or unverifiable cleanup after a crash                    | AUDIT_BLOCKED, no success certification; recorded native outcome is preserved separately      |
+| Historical supported native page with 13 unavailable canonical inputs                                                                      | Existing supported REAL_PASS and complete offline AUDIT_BLOCKED, unchanged                    |
 
 Every post-claim failure enters CLEANING. Cleanup ends in FAILED_CLEANED or
 CLEANUP_FAILED; finalized outcome remains REAL_FAIL. Cleanup bypass, unknown delivery
@@ -891,28 +904,28 @@ an isolated test authority may pin a newly constructed invalid fixture; that is 
 a historical reseal or genuine operator authorization. Unrelated early failures are
 INCONCLUSIVE rather than evidence that a deeper targeted predicate was tested.
 
-| Invariant/challenge | Authority and expected validation seam |
-| --- | --- |
-| Missing/wrong completion or prelaunch pin; coordinated package/manifest replacement | Independent commitment check rejects |
-| Single-page grant; CONTROLLED lineage relabeled REAL; unsupported version | Strict operation/version/trust dispatch rejects |
-| Wrong attempt/owner/destination/allowance/retry; changed claim and invocation together | Exact sealed lineage and consumed-record digest checks reject; report local-attestation forgery limits |
-| Extra file/nested object/secret; missing mandatory artifact; symlink/hardlink/traversal | Derived authoritative inventory, regular-type and safe-read checks reject |
-| Ownership/source/index changed together; wrong bridge origin; changed materialization | Immutable commitments and semantic provenance checks reject |
-| Unauthorized historical-root change | Immutable history binding rejects before resolver; separately test authorized resolver path/identity/integrity properties |
-| Missing/modified protected history; undeclared external root | Explicit authority/protection validator rejects, no search fallback |
-| Wrong public key/method/encryption/status/welcome/process/session; repeated auth | REAL identity/authentication/lifecycle checks reject |
-| Missing/duplicate/stale/foreign/out-of-order page; changed world/context or any terrain field | Sealed scheduling, exact transport correlation and real two-sweep replay reject |
-| False receipt, byte totals, frame deltas, exceeded page/sweep/aggregate budget | Exchange validation plus independently observed accounting reconciliation rejects |
-| Flood while awaiting log; backlog/queue cap; every deadline or interruption | Pre-growth admission and terminal cleanup, no retry or partial success |
-| Prefix mutation, offset/length/hash mismatch, unrelated or duplicate marker/log | Multi-page log-scope and global correlation checks reject |
-| Valid append-only disconnect/shutdown after committed snapshot | Exact unchanged prefix plus correct final hash accepts |
-| Raw/normalized contradiction; both summaries forged against endpoint evidence | Shared cleanup predicate and endpoint consistency reject |
-| TIME_WAIT4/6 and permitted wildcard, empty final rows | Established endpoint contract accepts; live LISTEN/ESTABLISHED/CLOSE_WAIT/UDP reject |
-| False/missing/wrong-type result gate despite valid independent evidence | Derived mandatory-gate comparison rejects |
-| Cross-attempt grant/page/log/cleanup substitution | Pins plus attempt/session/page correlation reject |
-| Failed cleanup and false gate with COMPLETE pair | Valid failure evidence only, never REAL_PASS |
-| Permitted original cleanup and fresh cwd/interpreter | Full native offline verification using retained bytes and declared external authority |
-| Existing baseline and historical single page | Existing behavior, all 26 digests and historical artifact identities unchanged |
+| Invariant/challenge                                                                           | Authority and expected validation seam                                                                                    |
+| --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Missing/wrong completion or prelaunch pin; coordinated package/manifest replacement           | Independent commitment check rejects                                                                                      |
+| Single-page grant; CONTROLLED lineage relabeled REAL; unsupported version                     | Strict operation/version/trust dispatch rejects                                                                           |
+| Wrong attempt/owner/destination/allowance/retry; changed claim and invocation together        | Exact sealed lineage and consumed-record digest checks reject; report local-attestation forgery limits                    |
+| Extra file/nested object/secret; missing mandatory artifact; symlink/hardlink/traversal       | Derived authoritative inventory, regular-type and safe-read checks reject                                                 |
+| Ownership/source/index changed together; wrong bridge origin; changed materialization         | Immutable commitments and semantic provenance checks reject                                                               |
+| Unauthorized historical-root change                                                           | Immutable history binding rejects before resolver; separately test authorized resolver path/identity/integrity properties |
+| Missing/modified protected history; undeclared external root                                  | Explicit authority/protection validator rejects, no search fallback                                                       |
+| Wrong public key/method/encryption/status/welcome/process/session; repeated auth              | REAL identity/authentication/lifecycle checks reject                                                                      |
+| Missing/duplicate/stale/foreign/out-of-order page; changed world/context or any terrain field | Sealed scheduling, exact transport correlation and real two-sweep replay reject                                           |
+| False receipt, byte totals, frame deltas, exceeded page/sweep/aggregate budget                | Exchange validation plus independently observed accounting reconciliation rejects                                         |
+| Flood while awaiting log; backlog/queue cap; every deadline or interruption                   | Pre-growth admission and terminal cleanup, no retry or partial success                                                    |
+| Prefix mutation, offset/length/hash mismatch, unrelated or duplicate marker/log               | Multi-page log-scope and global correlation checks reject                                                                 |
+| Valid append-only disconnect/shutdown after committed snapshot                                | Exact unchanged prefix plus correct final hash accepts                                                                    |
+| Raw/normalized contradiction; both summaries forged against endpoint evidence                 | Shared cleanup predicate and endpoint consistency reject                                                                  |
+| TIME_WAIT4/6 and permitted wildcard, empty final rows                                         | Established endpoint contract accepts; live LISTEN/ESTABLISHED/CLOSE_WAIT/UDP reject                                      |
+| False/missing/wrong-type result gate despite valid independent evidence                       | Derived mandatory-gate comparison rejects                                                                                 |
+| Cross-attempt grant/page/log/cleanup substitution                                             | Pins plus attempt/session/page correlation reject                                                                         |
+| Failed cleanup and false gate with COMPLETE pair                                              | Valid failure evidence only, never REAL_PASS                                                                              |
+| Permitted original cleanup and fresh cwd/interpreter                                          | Full native offline verification using retained bytes and declared external authority                                     |
+| Existing baseline and historical single page                                                  | Existing behavior, all 26 digests and historical artifact identities unchanged                                            |
 
 ## Minimal implementation sequence and future preflight
 

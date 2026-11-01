@@ -129,7 +129,7 @@ Existing `production_pairs`, structural constructors, production constructor,
 are the validation authorities. Reuse them rather than create relaxed validators.
 No `force`, `unsafe`, `allow_unqualified`, partial-success, or silent record dropping.
 
-For retained *real* evidence, the trusted issuer/loader must additionally validate
+For retained _real_ evidence, the trusted issuer/loader must additionally validate
 final proof acceptance, cleanup and immutable evidence identity. Native qualification
 alone is not overall acceptance, as Attempts 2 and 3 demonstrated. WPO should not
 read files or execute proofs itself. A controlled typed fixture is not a real-proof
@@ -174,14 +174,14 @@ not invalidate the observation, manufacture supply, or omit zero records from it
 
 Keep all existing identities:
 
-| Identity | Meaning | WPO relationship |
-|---|---|---|
-| Structural digest | Canonical observed inventory/capabilities/catalog plus stable runtime/map/config/bridge identities | Authoritative final planning structure |
-| Production digest | Canonical production records, structural source, qualification/window semantics | Authoritative dynamic supply |
-| Context process/connection/world | Continuous same-run ownership and provenance | Mandatory admission, not recreated hashes |
-| Manifest `source_digest` | Current P08's actual prepared-save digest, checked by save staging | Separate downstream source contract |
-| `world_manifest_hash` / `world_fingerprint` | Full prepared manifest semantic identity | Preserve downstream P02/P03/P05/P06/P07 bindings |
-| Scenario hash | Complete supplied planner inputs | Remains P05 input identity |
+| Identity                                    | Meaning                                                                                            | WPO relationship                                 |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| Structural digest                           | Canonical observed inventory/capabilities/catalog plus stable runtime/map/config/bridge identities | Authoritative final planning structure           |
+| Production digest                           | Canonical production records, structural source, qualification/window semantics                    | Authoritative dynamic supply                     |
+| Context process/connection/world            | Continuous same-run ownership and provenance                                                       | Mandatory admission, not recreated hashes        |
+| Manifest `source_digest`                    | Current P08's actual prepared-save digest, checked by save staging                                 | Separate downstream source contract              |
+| `world_manifest_hash` / `world_fingerprint` | Full prepared manifest semantic identity                                                           | Preserve downstream P02/P03/P05/P06/P07 bindings |
+| Scenario hash                               | Complete supplied planner inputs                                                                   | Remains P05 input identity                       |
 
 A WPO composition digest is useful and proposed. Exact version-1 semantic payload:
 
@@ -215,30 +215,30 @@ All preparation files below are **pre-existing untracked local work**, not curre
 15.3 authority. Classification describes reuse prospects, not an instruction to
 modify or delete them. Mixed files have their reusable and superseded roles noted.
 
-| Component/file | Current role | Classification / 13.4-specific? | Problem | Future action |
-|---|---|---|---|---|
-| `preparation/__init__.py` | Package marker | REUSABLE PURE PYTHON; no | No observation interface | Retain package boundary if adopted |
-| `preparation/domain.py` | Frozen request, profile, extraction, provenance/bundle DTOs | REUSABLE WITH CHANGES; profile 13.4-SPECIFIC | Raw production and extraction/save policy mixed; no qualification witness | Keep strict bounds; split planner facts from native extraction and obsolete supply fields |
-| `preparation/canonical.py` | Canonical request/snapshot/report/bundle hashing | REUSABLE WITH CHANGES; schemas indirectly 13.4 | Old snapshot identity; report sorting role-only | Preserve canonical discipline; version new input identities |
-| `preparation/candidates.py` | Select one positive OD; station catchment/depot candidates | REUSABLE WITH CHANGES; profile-dependent | Supply uses unqualified last-month value; accepting flag is not demand | Keep geometry algorithms; replace supply source through future adapter |
-| `preparation/corridor.py` | Bounded deterministic flat-road Dijkstra | REUSABLE PURE PYTHON; no inherent version | Needs verified tiles/fronts/depot; narrow policy | Retain algorithm and explicit limits after input adaptation |
-| `preparation/costs.py` | Exact fixed-point cost scaling and bounds | REUSABLE PURE PYTHON; no | Native price provenance remains external | Retain numeric validation |
-| `preparation/failures.py` | Typed bounded failures, no accepted partial output | REUSABLE PURE PYTHON; no | Needs observation/missing-fact failures | Extend deliberately in future adapter task |
-| `preparation/projection.py` | Validate extraction; fleet/candidate/manifest/scenario construction | REUSABLE WITH CHANGES; hard 13.4 gate | Snapshot source, speed conversion, save/profile and raw supply coupled | Retain assembly checks; redesign input seam, do not silently change pins |
-| `preparation/safety.py` | Validate every selectable combination via controlled P05/P06 witnesses | REUSABLE WITH CHANGES; engine/profile dependent | Imports execution-payload validation; not WPO domain | Keep outside observation boundary; revalidate 15.3 assumptions |
-| `preparation/probe.py` | Parse sequential bounded console frames/checksum | 13.4-SPECIFIC in present contract; parser patterns reusable | Console extraction duplicates proven inputs; checksum not qualification | Do not use as new supply authority |
-| `probe_package/info.nut` | GS API 13 package metadata | 13.4-SPECIFIC | Not 15.3 observation bridge | Preserve historical local work |
-| `probe_package/main.nut` | Paused single-player industry/cargo/terrain/engine/cost probe | 13.4-SPECIFIC; extraction parts DUPLICATED BY 15.3 OBSERVATION PIPELINE | Independently reads raw production; incompatible paused/single-player/company assumptions | Replace independent structure/supply collection; design missing-fact source separately |
-| `preparation/lifecycle.py` | Injected runtime start, staged save/probe, cleanup and immutable publication | REUSABLE WITH CHANGES; historical extraction path OBSOLETE for new adapter | New pure adapter must not start another extraction runtime | Reuse publication/ownership patterns only where needed |
-| `tests/fixtures/p08_api_13_4.json` | Tagged header declarations, arities and hashes | 13.4-SPECIFIC | Historical fixture does not establish 15.3 APIs | Preserve; separate future 15.3 authority |
-| `tests/fixtures/p08_query_api.nut` | Fake API, company, paused world and synthetic production | 13.4-SPECIFIC | Controlled values cannot be planning supply authority | Preserve old regression fixture |
-| `tests/test_planning_preparation.py` | Projection/candidate/determinism/P05/P06 controlled tests | REUSABLE WITH CHANGES | 13.4 fixtures, positive raw supply and conversion assumptions | Retain pure regressions; add qualified-source cases later |
-| `tests/test_preparation_lifecycle.py` | Fake runtime cleanup, save identity and publication | REUSABLE WITH CHANGES | Synthetic saves and injected runtime, no native proof | Retain ownership/publication tests separately |
-| `tests/test_preparation_probe.py` | Controlled Squirrel execution, parser and API-arity checks | 13.4-SPECIFIC | Fake APIs and static fixture cannot prove native 15.3 behavior | Preserve historical controlled tests |
-| `docs/specs/p08-world-preparation-design.md` | Historical road-first preparation design | 13.4-SPECIFIC; old readiness direction OBSOLETE for new path | Old raw benchmark/probe authority | Preserve; this audit states replacement direction |
-| `README.md`, `docs/specs/planning-executor-boundary.md`, `docs/srs.md` | Pre-existing modified P08 references/status | UNKNOWN / NEEDS DECISION for current P08 adoption | Local documentation is not accepted 15.3 integration | Preserve all current edits; update only in a later scoped task |
-| Core planning `domain.py`, `canonical.py`, `validation.py`, `optimizer.py` | Accepted supplied-candidate P05 boundary | AUTHORITATIVE CURRENT | Requires facts beyond structural/production observations | Leave unchanged |
-| Native structural/production/qualification models and accepted proof | Current 15.3 observation authority | AUTHORITATIVE CURRENT | Not a terrain/fleet/prepared-save extractor | Consume by composition |
+| Component/file                                                             | Current role                                                                 | Classification / 13.4-specific?                                            | Problem                                                                                   | Future action                                                                             |
+| -------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `preparation/__init__.py`                                                  | Package marker                                                               | REUSABLE PURE PYTHON; no                                                   | No observation interface                                                                  | Retain package boundary if adopted                                                        |
+| `preparation/domain.py`                                                    | Frozen request, profile, extraction, provenance/bundle DTOs                  | REUSABLE WITH CHANGES; profile 13.4-SPECIFIC                               | Raw production and extraction/save policy mixed; no qualification witness                 | Keep strict bounds; split planner facts from native extraction and obsolete supply fields |
+| `preparation/canonical.py`                                                 | Canonical request/snapshot/report/bundle hashing                             | REUSABLE WITH CHANGES; schemas indirectly 13.4                             | Old snapshot identity; report sorting role-only                                           | Preserve canonical discipline; version new input identities                               |
+| `preparation/candidates.py`                                                | Select one positive OD; station catchment/depot candidates                   | REUSABLE WITH CHANGES; profile-dependent                                   | Supply uses unqualified last-month value; accepting flag is not demand                    | Keep geometry algorithms; replace supply source through future adapter                    |
+| `preparation/corridor.py`                                                  | Bounded deterministic flat-road Dijkstra                                     | REUSABLE PURE PYTHON; no inherent version                                  | Needs verified tiles/fronts/depot; narrow policy                                          | Retain algorithm and explicit limits after input adaptation                               |
+| `preparation/costs.py`                                                     | Exact fixed-point cost scaling and bounds                                    | REUSABLE PURE PYTHON; no                                                   | Native price provenance remains external                                                  | Retain numeric validation                                                                 |
+| `preparation/failures.py`                                                  | Typed bounded failures, no accepted partial output                           | REUSABLE PURE PYTHON; no                                                   | Needs observation/missing-fact failures                                                   | Extend deliberately in future adapter task                                                |
+| `preparation/projection.py`                                                | Validate extraction; fleet/candidate/manifest/scenario construction          | REUSABLE WITH CHANGES; hard 13.4 gate                                      | Snapshot source, speed conversion, save/profile and raw supply coupled                    | Retain assembly checks; redesign input seam, do not silently change pins                  |
+| `preparation/safety.py`                                                    | Validate every selectable combination via controlled P05/P06 witnesses       | REUSABLE WITH CHANGES; engine/profile dependent                            | Imports execution-payload validation; not WPO domain                                      | Keep outside observation boundary; revalidate 15.3 assumptions                            |
+| `preparation/probe.py`                                                     | Parse sequential bounded console frames/checksum                             | 13.4-SPECIFIC in present contract; parser patterns reusable                | Console extraction duplicates proven inputs; checksum not qualification                   | Do not use as new supply authority                                                        |
+| `probe_package/info.nut`                                                   | GS API 13 package metadata                                                   | 13.4-SPECIFIC                                                              | Not 15.3 observation bridge                                                               | Preserve historical local work                                                            |
+| `probe_package/main.nut`                                                   | Paused single-player industry/cargo/terrain/engine/cost probe                | 13.4-SPECIFIC; extraction parts DUPLICATED BY 15.3 OBSERVATION PIPELINE    | Independently reads raw production; incompatible paused/single-player/company assumptions | Replace independent structure/supply collection; design missing-fact source separately    |
+| `preparation/lifecycle.py`                                                 | Injected runtime start, staged save/probe, cleanup and immutable publication | REUSABLE WITH CHANGES; historical extraction path OBSOLETE for new adapter | New pure adapter must not start another extraction runtime                                | Reuse publication/ownership patterns only where needed                                    |
+| `tests/fixtures/p08_api_13_4.json`                                         | Tagged header declarations, arities and hashes                               | 13.4-SPECIFIC                                                              | Historical fixture does not establish 15.3 APIs                                           | Preserve; separate future 15.3 authority                                                  |
+| `tests/fixtures/p08_query_api.nut`                                         | Fake API, company, paused world and synthetic production                     | 13.4-SPECIFIC                                                              | Controlled values cannot be planning supply authority                                     | Preserve old regression fixture                                                           |
+| `tests/test_planning_preparation.py`                                       | Projection/candidate/determinism/P05/P06 controlled tests                    | REUSABLE WITH CHANGES                                                      | 13.4 fixtures, positive raw supply and conversion assumptions                             | Retain pure regressions; add qualified-source cases later                                 |
+| `tests/test_preparation_lifecycle.py`                                      | Fake runtime cleanup, save identity and publication                          | REUSABLE WITH CHANGES                                                      | Synthetic saves and injected runtime, no native proof                                     | Retain ownership/publication tests separately                                             |
+| `tests/test_preparation_probe.py`                                          | Controlled Squirrel execution, parser and API-arity checks                   | 13.4-SPECIFIC                                                              | Fake APIs and static fixture cannot prove native 15.3 behavior                            | Preserve historical controlled tests                                                      |
+| `docs/specs/p08-world-preparation-design.md`                               | Historical road-first preparation design                                     | 13.4-SPECIFIC; old readiness direction OBSOLETE for new path               | Old raw benchmark/probe authority                                                         | Preserve; this audit states replacement direction                                         |
+| `README.md`, `docs/specs/planning-executor-boundary.md`, `docs/srs.md`     | Pre-existing modified P08 references/status                                  | UNKNOWN / NEEDS DECISION for current P08 adoption                          | Local documentation is not accepted 15.3 integration                                      | Preserve all current edits; update only in a later scoped task                            |
+| Core planning `domain.py`, `canonical.py`, `validation.py`, `optimizer.py` | Accepted supplied-candidate P05 boundary                                     | AUTHORITATIVE CURRENT                                                      | Requires facts beyond structural/production observations                                  | Leave unchanged                                                                           |
+| Native structural/production/qualification models and accepted proof       | Current 15.3 observation authority                                           | AUTHORITATIVE CURRENT                                                      | Not a terrain/fleet/prepared-save extractor                                               | Consume by composition                                                                    |
 
 No complete local file is declared disposable. OBSOLETE means the old extraction
 path or current-readiness claim is unsuitable for the new path, not historical
@@ -326,7 +326,7 @@ failure; it must not treat hex as an already-compatible planner label.
 
 Current facilities mostly reference request/scenario policy hashes; engines
 reference snapshot/native engine IDs; report links origin/destination industry IDs.
-This cannot fully answer which *qualified* industry/cargo relationship caused each
+This cannot fully answer which _qualified_ industry/cargo relationship caused each
 candidate. Future sidecar provenance should bind WPO digest, qualified month,
 structural/production digests, native pair and relevant lifetime identity, with
 compact SourceReference links on candidates. Do not copy whole observations into
@@ -359,20 +359,20 @@ accepted prepared-save/terrain/fleet preparation contract. Do not synthesize one
 
 ## 10. P08 → P05 field mapping and gaps
 
-| P05 field or requirement | Current P08 source | Available from WPO | Still required |
-|---|---|---|---|
-| Runtime/content pins, dimensions/seed | Snapshot/profile/descriptor | Runtime/map/config/bridge provenance; dimensions | Base-set identity and seed binding suitable for planner manifest |
-| Origin/destination industry locations | Extracted industry anchor/footprint | Numeric ID/type/tile/x/y and capabilities | Footprints; accepting-only lifetime where required |
-| Cargo type/compatibility | Extracted labels/freight | Catalog ID, hex label, freight/classes/town effect | Explicit lossless planner-label mapping; engine compatibility |
-| Positive demand quantity | Raw last-month benchmark | Exact qualified historical production, including zero | Named horizon/unit/demand projection policy; no positive-OD failure |
-| Start date/horizon/deadline | Preparation date/request | Qualified economy month and M2 capture | Calendar planning start and horizon policy; do not convert economy date blindly |
-| Station/depot sites and buildable tiles | Full tile/catchment extraction | Not supplied | Terrain, occupancy, footprints, catchment/settings and facility constraints |
-| Corridors | Python Dijkstra over extracted terrain | Not supplied | Validated geometry and route policy |
-| Fleet options | Native company-scoped engine probe | Not supplied | Engine availability/refit/articulation/capacity/prices/cost/speed/road class and company context |
-| Infrastructure costs/economics | Native build costs + explicit assumptions | Not supplied | Versioned cost facts and policy; production is not revenue |
-| World manifest/fingerprint | Prepared save and generated sites | Component/composition digests only | Coherent prepared-source identity, candidate output and current manifest hashing |
-| Source references and bindings | Request/probe/snapshot/report provenance | Native pair, digests, qualified month, relevant lifetime | Adapter/facts/policy sidecar identity and save/runtime correspondence |
-| Planning constraints | Road-only bounded request policy | No optimizer decisions | Supplied budget/modes/horizon and allowed preparation profile |
+| P05 field or requirement                | Current P08 source                        | Available from WPO                                       | Still required                                                                                   |
+| --------------------------------------- | ----------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Runtime/content pins, dimensions/seed   | Snapshot/profile/descriptor               | Runtime/map/config/bridge provenance; dimensions         | Base-set identity and seed binding suitable for planner manifest                                 |
+| Origin/destination industry locations   | Extracted industry anchor/footprint       | Numeric ID/type/tile/x/y and capabilities                | Footprints; accepting-only lifetime where required                                               |
+| Cargo type/compatibility                | Extracted labels/freight                  | Catalog ID, hex label, freight/classes/town effect       | Explicit lossless planner-label mapping; engine compatibility                                    |
+| Positive demand quantity                | Raw last-month benchmark                  | Exact qualified historical production, including zero    | Named horizon/unit/demand projection policy; no positive-OD failure                              |
+| Start date/horizon/deadline             | Preparation date/request                  | Qualified economy month and M2 capture                   | Calendar planning start and horizon policy; do not convert economy date blindly                  |
+| Station/depot sites and buildable tiles | Full tile/catchment extraction            | Not supplied                                             | Terrain, occupancy, footprints, catchment/settings and facility constraints                      |
+| Corridors                               | Python Dijkstra over extracted terrain    | Not supplied                                             | Validated geometry and route policy                                                              |
+| Fleet options                           | Native company-scoped engine probe        | Not supplied                                             | Engine availability/refit/articulation/capacity/prices/cost/speed/road class and company context |
+| Infrastructure costs/economics          | Native build costs + explicit assumptions | Not supplied                                             | Versioned cost facts and policy; production is not revenue                                       |
+| World manifest/fingerprint              | Prepared save and generated sites         | Component/composition digests only                       | Coherent prepared-source identity, candidate output and current manifest hashing                 |
+| Source references and bindings          | Request/probe/snapshot/report provenance  | Native pair, digests, qualified month, relevant lifetime | Adapter/facts/policy sidecar identity and save/runtime correspondence                            |
+| Planning constraints                    | Road-only bounded request policy          | No optimizer decisions                                   | Supplied budget/modes/horizon and allowed preparation profile                                    |
 
 P05 expects a strictly immutable supplied `PlanningScenario`, nonempty locations,
 positive demands, compatible fleet options and infrastructure candidates, matching
@@ -515,64 +515,64 @@ planning-fact and prepared-source identity contracts are missing.**
 
 Paths below were found by the P08/preparation search; the API JSON fixture and core planning contracts are additionally audited above. Native documents retain their historical claim boundaries; a preparation status from an earlier checkpoint is not promoted to current integration authority.
 
-| File | Classification | Reason |
-|---|---|---|
-| `README.md` | UNKNOWN / NEEDS DECISION | Pre-existing modified local P08 references; preserved and not adopted as 15.3 authority. |
-| `app/simulation/openttd/cargo_catalog.py` | AUTHORITATIVE CURRENT | Committed bounded observation/proof implementation; P08 reference is a scope/limit, not adapter implementation. |
-| `app/simulation/openttd/industry_capability.py` | AUTHORITATIVE CURRENT | Committed bounded observation/proof implementation; P08 reference is a scope/limit, not adapter implementation. |
-| `app/simulation/openttd/industry_enrichment.py` | AUTHORITATIVE CURRENT | Committed bounded observation/proof implementation; P08 reference is a scope/limit, not adapter implementation. |
-| `app/simulation/openttd/industry_inventory.py` | AUTHORITATIVE CURRENT | Committed bounded observation/proof implementation; P08 reference is a scope/limit, not adapter implementation. |
-| `app/simulation/openttd/industry_query.py` | AUTHORITATIVE CURRENT | Committed bounded observation/proof implementation; P08 reference is a scope/limit, not adapter implementation. |
-| `app/simulation/openttd/production_session.py` | AUTHORITATIVE CURRENT | Committed bounded observation/proof implementation; P08 reference is a scope/limit, not adapter implementation. |
-| `app/simulation/openttd/proof/cargo_page_contract.py` | AUTHORITATIVE CURRENT | Committed bounded observation/proof implementation; P08 reference is a scope/limit, not adapter implementation. |
-| `app/simulation/openttd/proof/catalog_contract.py` | AUTHORITATIVE CURRENT | Committed bounded observation/proof implementation; P08 reference is a scope/limit, not adapter implementation. |
-| `app/simulation/openttd/proof/enrichment_attempt.py` | AUTHORITATIVE CURRENT | Committed bounded observation/proof implementation; P08 reference is a scope/limit, not adapter implementation. |
-| `app/simulation/openttd/proof/enrichment_contract.py` | AUTHORITATIVE CURRENT | Committed bounded observation/proof implementation; P08 reference is a scope/limit, not adapter implementation. |
-| `app/simulation/openttd/proof/production_attempt.py` | AUTHORITATIVE CURRENT | Committed bounded observation/proof implementation; P08 reference is a scope/limit, not adapter implementation. |
-| `app/simulation/openttd/proof/production_contract.py` | AUTHORITATIVE CURRENT | Committed bounded observation/proof implementation; P08 reference is a scope/limit, not adapter implementation. |
-| `app/simulation/openttd/proof/qualification_contract.py` | AUTHORITATIVE CURRENT | Committed bounded observation/proof implementation; P08 reference is a scope/limit, not adapter implementation. |
-| `app/simulation/openttd/proof/raw_production_attempt.py` | AUTHORITATIVE CURRENT | Committed bounded observation/proof implementation; P08 reference is a scope/limit, not adapter implementation. |
-| `app/simulation/openttd/proof/raw_production_contract.py` | AUTHORITATIVE CURRENT | Committed bounded observation/proof implementation; P08 reference is a scope/limit, not adapter implementation. |
-| `app/simulation/openttd/proof/structural_contract.py` | AUTHORITATIVE CURRENT | Committed bounded observation/proof implementation; P08 reference is a scope/limit, not adapter implementation. |
-| `docs/admin-gamescript-bridge.md` | AUTHORITATIVE CURRENT (scoped contract/history) | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims. |
-| `docs/cargo-catalog-query.md` | AUTHORITATIVE CURRENT (scoped contract/history) | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims. |
-| `docs/cargo-catalog-real-proof-preparation.md` | AUTHORITATIVE CURRENT (scoped contract/history) | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims. |
-| `docs/cargo-page-real-proof-preparation.md` | AUTHORITATIVE CURRENT (scoped contract/history) | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims. |
-| `docs/complete-raw-industry-production-proof-preparation.md` | AUTHORITATIVE CURRENT (scoped contract/history) | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims. |
-| `docs/complete-raw-industry-production.md` | AUTHORITATIVE CURRENT (scoped contract/history) | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims. |
-| `docs/complete-raw-production-economy-window-authority.md` | AUTHORITATIVE CURRENT (scoped contract/history) | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims. |
-| `docs/industry-capability-enrichment-real-proof-preparation.md` | AUTHORITATIVE CURRENT (scoped contract/history) | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims. |
-| `docs/industry-cargo-capability-query.md` | AUTHORITATIVE CURRENT (scoped contract/history) | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims. |
-| `docs/industry-cargo-real-proof-preparation.md` | AUTHORITATIVE CURRENT (scoped contract/history) | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims. |
-| `docs/industry-inventory-query.md` | AUTHORITATIVE CURRENT (scoped contract/history) | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims. |
-| `docs/industry-inventory-real-proof-preparation.md` | AUTHORITATIVE CURRENT (scoped contract/history) | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims. |
-| `docs/industry-page-query.md` | AUTHORITATIVE CURRENT (scoped contract/history) | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims. |
-| `docs/industry-page-real-proof-preparation.md` | AUTHORITATIVE CURRENT (scoped contract/history) | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims. |
-| `docs/industry-production-cleanup-ownership-reconciliation.md` | AUTHORITATIVE CURRENT (scoped contract/history) | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims. |
-| `docs/industry-production-dynamic-supply-design.md` | AUTHORITATIVE CURRENT (scoped contract/history) | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims. |
-| `docs/industry-production-query.md` | AUTHORITATIVE CURRENT (scoped contract/history) | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims. |
-| `docs/industry-production-real-proof-preparation.md` | AUTHORITATIVE CURRENT (scoped contract/history) | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims. |
-| `docs/industry-production-two-rollover-qualification.md` | AUTHORITATIVE CURRENT (scoped contract/history) | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims. |
-| `docs/openttd-15.3-real-ack-attempt2-preparation.md` | AUTHORITATIVE CURRENT (scoped contract/history) | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims. |
-| `docs/openttd-15.3-real-ack-proof.md` | AUTHORITATIVE CURRENT (scoped contract/history) | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims. |
-| `docs/openttd-15.3-world-info.md` | AUTHORITATIVE CURRENT (scoped contract/history) | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims. |
-| `docs/specs/planning-executor-boundary.md` | UNKNOWN / NEEDS DECISION | Pre-existing modified local P08 references; preserved and not adopted as 15.3 authority. |
-| `docs/srs.md` | UNKNOWN / NEEDS DECISION | Pre-existing modified local P08 references; preserved and not adopted as 15.3 authority. |
-| `docs/structural-world-observation.md` | AUTHORITATIVE CURRENT (scoped contract/history) | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims. |
-| `docs/structural-world-production-proof.md` | AUTHORITATIVE CURRENT (scoped contract/history) | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims. |
-| `docs/two-rollover-qualification-attempt1-diagnosis.md` | AUTHORITATIVE CURRENT (scoped contract/history) | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims. |
-| `docs/two-rollover-qualification-attempt3-readiness.md` | AUTHORITATIVE CURRENT (scoped contract/history) | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims. |
-| `docs/two-rollover-qualification-lineage-repair.md` | AUTHORITATIVE CURRENT (scoped contract/history) | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims. |
-| `docs/two-rollover-qualification-proof-preparation.md` | AUTHORITATIVE CURRENT (scoped contract/history) | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims. |
-| `tests/fixtures/structural_world_checkpoint/controlled/final-report.md` | AUTHORITATIVE CURRENT (historical identity only) | Pinned structural checkpoint evidence; preserve its exact identity and historical P08 exclusion. |
-| `tests/fixtures/structural_world_checkpoint/frame-audit/final-report.md` | AUTHORITATIVE CURRENT (historical identity only) | Pinned structural checkpoint evidence; preserve its exact identity and historical P08 exclusion. |
-| `tests/fixtures/structural_world_checkpoint/freeze/structural-contract.json` | AUTHORITATIVE CURRENT (historical identity only) | Pinned structural checkpoint evidence; preserve its exact identity and historical P08 exclusion. |
-| `tests/fixtures/structural_world_checkpoint/postrun/final-report.md` | AUTHORITATIVE CURRENT (historical identity only) | Pinned structural checkpoint evidence; preserve its exact identity and historical P08 exclusion. |
-| `tests/fixtures/structural_world_checkpoint/preparation-verification/final-report.md` | AUTHORITATIVE CURRENT (historical identity only) | Pinned structural checkpoint evidence; preserve its exact identity and historical P08 exclusion. |
-| `tests/fixtures/structural_world_checkpoint/real-proof/structural-contract.json` | AUTHORITATIVE CURRENT (historical identity only) | Pinned structural checkpoint evidence; preserve its exact identity and historical P08 exclusion. |
-| `tests/test_industry_enrichment.py` | AUTHORITATIVE CURRENT | Committed observation/proof regression; checks boundaries or preparation ceilings, not P08 candidate integration. |
-| `tests/test_qualification_preparation.py` | AUTHORITATIVE CURRENT | Committed observation/proof regression; checks boundaries or preparation ceilings, not P08 candidate integration. |
-| `tests/test_raw_production_contract.py` | AUTHORITATIVE CURRENT | Committed observation/proof regression; checks boundaries or preparation ceilings, not P08 candidate integration. |
+| File                                                                                  | Classification                                   | Reason                                                                                                            |
+| ------------------------------------------------------------------------------------- | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| `README.md`                                                                           | UNKNOWN / NEEDS DECISION                         | Pre-existing modified local P08 references; preserved and not adopted as 15.3 authority.                          |
+| `app/simulation/openttd/cargo_catalog.py`                                             | AUTHORITATIVE CURRENT                            | Committed bounded observation/proof implementation; P08 reference is a scope/limit, not adapter implementation.   |
+| `app/simulation/openttd/industry_capability.py`                                       | AUTHORITATIVE CURRENT                            | Committed bounded observation/proof implementation; P08 reference is a scope/limit, not adapter implementation.   |
+| `app/simulation/openttd/industry_enrichment.py`                                       | AUTHORITATIVE CURRENT                            | Committed bounded observation/proof implementation; P08 reference is a scope/limit, not adapter implementation.   |
+| `app/simulation/openttd/industry_inventory.py`                                        | AUTHORITATIVE CURRENT                            | Committed bounded observation/proof implementation; P08 reference is a scope/limit, not adapter implementation.   |
+| `app/simulation/openttd/industry_query.py`                                            | AUTHORITATIVE CURRENT                            | Committed bounded observation/proof implementation; P08 reference is a scope/limit, not adapter implementation.   |
+| `app/simulation/openttd/production_session.py`                                        | AUTHORITATIVE CURRENT                            | Committed bounded observation/proof implementation; P08 reference is a scope/limit, not adapter implementation.   |
+| `app/simulation/openttd/proof/cargo_page_contract.py`                                 | AUTHORITATIVE CURRENT                            | Committed bounded observation/proof implementation; P08 reference is a scope/limit, not adapter implementation.   |
+| `app/simulation/openttd/proof/catalog_contract.py`                                    | AUTHORITATIVE CURRENT                            | Committed bounded observation/proof implementation; P08 reference is a scope/limit, not adapter implementation.   |
+| `app/simulation/openttd/proof/enrichment_attempt.py`                                  | AUTHORITATIVE CURRENT                            | Committed bounded observation/proof implementation; P08 reference is a scope/limit, not adapter implementation.   |
+| `app/simulation/openttd/proof/enrichment_contract.py`                                 | AUTHORITATIVE CURRENT                            | Committed bounded observation/proof implementation; P08 reference is a scope/limit, not adapter implementation.   |
+| `app/simulation/openttd/proof/production_attempt.py`                                  | AUTHORITATIVE CURRENT                            | Committed bounded observation/proof implementation; P08 reference is a scope/limit, not adapter implementation.   |
+| `app/simulation/openttd/proof/production_contract.py`                                 | AUTHORITATIVE CURRENT                            | Committed bounded observation/proof implementation; P08 reference is a scope/limit, not adapter implementation.   |
+| `app/simulation/openttd/proof/qualification_contract.py`                              | AUTHORITATIVE CURRENT                            | Committed bounded observation/proof implementation; P08 reference is a scope/limit, not adapter implementation.   |
+| `app/simulation/openttd/proof/raw_production_attempt.py`                              | AUTHORITATIVE CURRENT                            | Committed bounded observation/proof implementation; P08 reference is a scope/limit, not adapter implementation.   |
+| `app/simulation/openttd/proof/raw_production_contract.py`                             | AUTHORITATIVE CURRENT                            | Committed bounded observation/proof implementation; P08 reference is a scope/limit, not adapter implementation.   |
+| `app/simulation/openttd/proof/structural_contract.py`                                 | AUTHORITATIVE CURRENT                            | Committed bounded observation/proof implementation; P08 reference is a scope/limit, not adapter implementation.   |
+| `docs/admin-gamescript-bridge.md`                                                     | AUTHORITATIVE CURRENT (scoped contract/history)  | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims.        |
+| `docs/cargo-catalog-query.md`                                                         | AUTHORITATIVE CURRENT (scoped contract/history)  | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims.        |
+| `docs/cargo-catalog-real-proof-preparation.md`                                        | AUTHORITATIVE CURRENT (scoped contract/history)  | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims.        |
+| `docs/cargo-page-real-proof-preparation.md`                                           | AUTHORITATIVE CURRENT (scoped contract/history)  | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims.        |
+| `docs/complete-raw-industry-production-proof-preparation.md`                          | AUTHORITATIVE CURRENT (scoped contract/history)  | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims.        |
+| `docs/complete-raw-industry-production.md`                                            | AUTHORITATIVE CURRENT (scoped contract/history)  | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims.        |
+| `docs/complete-raw-production-economy-window-authority.md`                            | AUTHORITATIVE CURRENT (scoped contract/history)  | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims.        |
+| `docs/industry-capability-enrichment-real-proof-preparation.md`                       | AUTHORITATIVE CURRENT (scoped contract/history)  | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims.        |
+| `docs/industry-cargo-capability-query.md`                                             | AUTHORITATIVE CURRENT (scoped contract/history)  | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims.        |
+| `docs/industry-cargo-real-proof-preparation.md`                                       | AUTHORITATIVE CURRENT (scoped contract/history)  | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims.        |
+| `docs/industry-inventory-query.md`                                                    | AUTHORITATIVE CURRENT (scoped contract/history)  | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims.        |
+| `docs/industry-inventory-real-proof-preparation.md`                                   | AUTHORITATIVE CURRENT (scoped contract/history)  | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims.        |
+| `docs/industry-page-query.md`                                                         | AUTHORITATIVE CURRENT (scoped contract/history)  | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims.        |
+| `docs/industry-page-real-proof-preparation.md`                                        | AUTHORITATIVE CURRENT (scoped contract/history)  | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims.        |
+| `docs/industry-production-cleanup-ownership-reconciliation.md`                        | AUTHORITATIVE CURRENT (scoped contract/history)  | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims.        |
+| `docs/industry-production-dynamic-supply-design.md`                                   | AUTHORITATIVE CURRENT (scoped contract/history)  | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims.        |
+| `docs/industry-production-query.md`                                                   | AUTHORITATIVE CURRENT (scoped contract/history)  | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims.        |
+| `docs/industry-production-real-proof-preparation.md`                                  | AUTHORITATIVE CURRENT (scoped contract/history)  | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims.        |
+| `docs/industry-production-two-rollover-qualification.md`                              | AUTHORITATIVE CURRENT (scoped contract/history)  | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims.        |
+| `docs/openttd-15.3-real-ack-attempt2-preparation.md`                                  | AUTHORITATIVE CURRENT (scoped contract/history)  | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims.        |
+| `docs/openttd-15.3-real-ack-proof.md`                                                 | AUTHORITATIVE CURRENT (scoped contract/history)  | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims.        |
+| `docs/openttd-15.3-world-info.md`                                                     | AUTHORITATIVE CURRENT (scoped contract/history)  | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims.        |
+| `docs/specs/planning-executor-boundary.md`                                            | UNKNOWN / NEEDS DECISION                         | Pre-existing modified local P08 references; preserved and not adopted as 15.3 authority.                          |
+| `docs/srs.md`                                                                         | UNKNOWN / NEEDS DECISION                         | Pre-existing modified local P08 references; preserved and not adopted as 15.3 authority.                          |
+| `docs/structural-world-observation.md`                                                | AUTHORITATIVE CURRENT (scoped contract/history)  | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims.        |
+| `docs/structural-world-production-proof.md`                                           | AUTHORITATIVE CURRENT (scoped contract/history)  | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims.        |
+| `docs/two-rollover-qualification-attempt1-diagnosis.md`                               | AUTHORITATIVE CURRENT (scoped contract/history)  | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims.        |
+| `docs/two-rollover-qualification-attempt3-readiness.md`                               | AUTHORITATIVE CURRENT (scoped contract/history)  | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims.        |
+| `docs/two-rollover-qualification-lineage-repair.md`                                   | AUTHORITATIVE CURRENT (scoped contract/history)  | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims.        |
+| `docs/two-rollover-qualification-proof-preparation.md`                                | AUTHORITATIVE CURRENT (scoped contract/history)  | Committed observation or historical preparation design; retain P08 exclusion and date-scoped proof claims.        |
+| `tests/fixtures/structural_world_checkpoint/controlled/final-report.md`               | AUTHORITATIVE CURRENT (historical identity only) | Pinned structural checkpoint evidence; preserve its exact identity and historical P08 exclusion.                  |
+| `tests/fixtures/structural_world_checkpoint/frame-audit/final-report.md`              | AUTHORITATIVE CURRENT (historical identity only) | Pinned structural checkpoint evidence; preserve its exact identity and historical P08 exclusion.                  |
+| `tests/fixtures/structural_world_checkpoint/freeze/structural-contract.json`          | AUTHORITATIVE CURRENT (historical identity only) | Pinned structural checkpoint evidence; preserve its exact identity and historical P08 exclusion.                  |
+| `tests/fixtures/structural_world_checkpoint/postrun/final-report.md`                  | AUTHORITATIVE CURRENT (historical identity only) | Pinned structural checkpoint evidence; preserve its exact identity and historical P08 exclusion.                  |
+| `tests/fixtures/structural_world_checkpoint/preparation-verification/final-report.md` | AUTHORITATIVE CURRENT (historical identity only) | Pinned structural checkpoint evidence; preserve its exact identity and historical P08 exclusion.                  |
+| `tests/fixtures/structural_world_checkpoint/real-proof/structural-contract.json`      | AUTHORITATIVE CURRENT (historical identity only) | Pinned structural checkpoint evidence; preserve its exact identity and historical P08 exclusion.                  |
+| `tests/test_industry_enrichment.py`                                                   | AUTHORITATIVE CURRENT                            | Committed observation/proof regression; checks boundaries or preparation ceilings, not P08 candidate integration. |
+| `tests/test_qualification_preparation.py`                                             | AUTHORITATIVE CURRENT                            | Committed observation/proof regression; checks boundaries or preparation ceilings, not P08 candidate integration. |
+| `tests/test_raw_production_contract.py`                                               | AUTHORITATIVE CURRENT                            | Committed observation/proof regression; checks boundaries or preparation ceilings, not P08 candidate integration. |
 
 Import audit found actual dependency paths:
 
@@ -596,14 +596,14 @@ Import audit found actual dependency paths:
 
 Ordinary-suite groups (counts are disjoint for the files listed here):
 
-| Group | Passed | Skipped | Failed |
-|---|---:|---:|---:|
-| P08 preparation/probe/lifecycle | 78 | 0 | 0 |
-| Planning domain/P02/P03 | 97 | 1 | 0 |
-| P05 optimizer | 37 | 0 | 0 |
-| P06/P07 | 56 | 0 | 0 |
-| Structural observation | 117 | 0 | 0 |
-| Production/raw coverage/proof | 266 | 0 | 0 |
-| Qualification/clock/lifetime/accounting | 224 | 1 | 0 |
+| Group                                   | Passed | Skipped | Failed |
+| --------------------------------------- | -----: | ------: | -----: |
+| P08 preparation/probe/lifecycle         |     78 |       0 |      0 |
+| Planning domain/P02/P03                 |     97 |       1 |      0 |
+| P05 optimizer                           |     37 |       0 |      0 |
+| P06/P07                                 |     56 |       0 |      0 |
+| Structural observation                  |    117 |       0 |      0 |
+| Production/raw coverage/proof           |    266 |       0 |      0 |
+| Qualification/clock/lifetime/accounting |    224 |       1 |      0 |
 
 Controlled bridge/transport/Admin, import boundaries and remaining P03–P08 regression coverage also passed in the ordinary suite. Native and isolated PostgreSQL opt-in tests remain skipped; this is not new native integration evidence. Verification logs and the complete before/after inventory are local under `/tmp/world-planning-observation-audit/`.

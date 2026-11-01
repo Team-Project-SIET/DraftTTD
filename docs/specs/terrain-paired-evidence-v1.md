@@ -46,17 +46,17 @@ planning projection or a second row-normalization algorithm.
 
 `package.json` has exactly these fields:
 
-| Field | Required value or structure |
-| --- | --- |
-| schema | `terrain-paired-evidence-v1` |
-| version | integer 1 |
-| mode | `CONTROLLED` |
-| status | `COMPLETE`, `INCOMPLETE` or `FAILED` |
-| context | acquisition_id, world_fingerprint, map_width, map_height, region |
-| budgets | per_sweep and combined objects below |
-| sweeps | ordered array of exactly two sweep records |
-| artifacts | ordered array of exact retained artifact commitments |
-| failure | null for COMPLETE; otherwise {code, message} with nonempty bounded strings |
+| Field     | Required value or structure                                                |
+| --------- | -------------------------------------------------------------------------- |
+| schema    | `terrain-paired-evidence-v1`                                               |
+| version   | integer 1                                                                  |
+| mode      | `CONTROLLED`                                                               |
+| status    | `COMPLETE`, `INCOMPLETE` or `FAILED`                                       |
+| context   | acquisition_id, world_fingerprint, map_width, map_height, region           |
+| budgets   | per_sweep and combined objects below                                       |
+| sweeps    | ordered array of exactly two sweep records                                 |
+| artifacts | ordered array of exact retained artifact commitments                       |
+| failure   | null for COMPLETE; otherwise {code, message} with nonempty bounded strings |
 
 `context.region` is exactly `{x,y,width,height}`, validated as existing `Region`.
 Other context fields construct `TerrainSweepContext`; the longest request identifier
@@ -82,15 +82,15 @@ status and both ordered sweep indexes. No self-referential digest is needed.
 
 For a complete package with `P=ceil(N/5)`:
 
-| Path | Presence and content |
-| --- | --- |
-| package.json | Required canonical descriptor |
-| summary.json | Required canonical derived results |
-| artifact-manifest.sha256 | Required deterministic consistency manifest |
-| pages/s1/p001/request.json … pages/s1/pPPP/request.json | Exact protocol request bytes |
-| pages/s1/p001/response.json … pages/s1/pPPP/response.json | Exact protocol response bytes |
-| pages/s1/p001/exchange.json … pages/s1/pPPP/exchange.json | Receipt, observed context and exchange accounting |
-| pages/s2/p001/{request,response,exchange}.json … pages/s2/pPPP/{request,response,exchange}.json | Independent second-sweep evidence |
+| Path                                                                                            | Presence and content                              |
+| ----------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| package.json                                                                                    | Required canonical descriptor                     |
+| summary.json                                                                                    | Required canonical derived results                |
+| artifact-manifest.sha256                                                                        | Required deterministic consistency manifest       |
+| pages/s1/p001/request.json … pages/s1/pPPP/request.json                                         | Exact protocol request bytes                      |
+| pages/s1/p001/response.json … pages/s1/pPPP/response.json                                       | Exact protocol response bytes                     |
+| pages/s1/p001/exchange.json … pages/s1/pPPP/exchange.json                                       | Receipt, observed context and exchange accounting |
+| pages/s2/p001/{request,response,exchange}.json … pages/s2/pPPP/{request,response,exchange}.json | Independent second-sweep evidence                 |
 
 There are no optional artifacts in v1. Expected directories are only `pages`,
 `pages/s1`, `pages/s2` and the required `pPPP` directories; reject unexpected empty
@@ -188,14 +188,14 @@ process ownership or credential-disposal claims are imported from baseline-1.
 
 ## Budgets
 
-| Configured ceiling | Per sweep | Combined |
-| --- | ---: | ---: |
-| Pages | 52 | 104 |
-| Request bytes/page | 159 | 159 unchanged |
-| Response bytes/page | 508 | 508 unchanged |
-| Request bytes | 8,268 | 16,536 |
-| Response bytes | 26,416 | 52,832 |
-| Recorded query operations | 416 | 832 |
+| Configured ceiling        | Per sweep |      Combined |
+| ------------------------- | --------: | ------------: |
+| Pages                     |        52 |           104 |
+| Request bytes/page        |       159 | 159 unchanged |
+| Response bytes/page       |       508 | 508 unchanged |
+| Request bytes             |     8,268 |        16,536 |
+| Response bytes            |    26,416 |        52,832 |
+| Recorded query operations |       416 |           832 |
 
 Per-sweep keys exactly match `PaginationBudget`: max_pages, page_request_bytes,
 page_response_bytes, max_request_bytes, max_response_bytes, max_operations.
@@ -240,19 +240,19 @@ its existing `verify()` before finalizing evidence.
 
 Functions below are proposed except the explicitly existing validators.
 
-| Mandatory invariant | Authority/evidence | Verification seam | Regressions |
-| --- | --- | --- | --- |
-| External byte commitment | Caller-pinned descriptor SHA256 | verify_paired_package commitment gate | Wrong/missing digest, coordinated replacement |
-| Exact version/CONTROLLED scope | Committed descriptor | Strict version dispatch | Unknown version, REAL mode |
-| Context and two identities | Descriptor + observed_context + requests | TerrainSweepContext and TerrainTwoSweep.accept | Context, sweep, cross-package substitution |
-| Exact nested inventory | Generated page plan + commitments + filesystem | Package inventory validator | Missing/extra/type/symlink/traversal |
-| Byte/receipt integrity | Artifact SHA256 + retained payloads | Package hash gate, TileFactsExchange.validate | Mutation, malformed receipt |
-| Independent coverage | Requests, rows, cursors, terminal flags | TerrainPagination.accept/finish via replay | Missing/duplicate/order/overlap/partial final |
-| Budgets/accounting | Committed budgets + actual payloads/counters | Pagination and TerrainTwoSweep | Per-page/per-sweep/combined caps, false totals |
-| Full terrain equality | Both complete response row sequences | TerrainTwoSweep.complete_sweep | Each field drift with valid protocol data |
-| Immutable semantic identity | Replayed context/row digest | Derived summary comparison | False summary/dataset identity |
-| Cleanup independence | Self-contained data artifacts | Fresh-process full verifier | Delete permitted fixture originals, change cwd |
-| Baseline compatibility | Separate dispatch and unchanged baseline bytes | Existing baseline verifier/tests | Single-page regression and 26 digest check |
+| Mandatory invariant            | Authority/evidence                             | Verification seam                              | Regressions                                    |
+| ------------------------------ | ---------------------------------------------- | ---------------------------------------------- | ---------------------------------------------- |
+| External byte commitment       | Caller-pinned descriptor SHA256                | verify_paired_package commitment gate          | Wrong/missing digest, coordinated replacement  |
+| Exact version/CONTROLLED scope | Committed descriptor                           | Strict version dispatch                        | Unknown version, REAL mode                     |
+| Context and two identities     | Descriptor + observed_context + requests       | TerrainSweepContext and TerrainTwoSweep.accept | Context, sweep, cross-package substitution     |
+| Exact nested inventory         | Generated page plan + commitments + filesystem | Package inventory validator                    | Missing/extra/type/symlink/traversal           |
+| Byte/receipt integrity         | Artifact SHA256 + retained payloads            | Package hash gate, TileFactsExchange.validate  | Mutation, malformed receipt                    |
+| Independent coverage           | Requests, rows, cursors, terminal flags        | TerrainPagination.accept/finish via replay     | Missing/duplicate/order/overlap/partial final  |
+| Budgets/accounting             | Committed budgets + actual payloads/counters   | Pagination and TerrainTwoSweep                 | Per-page/per-sweep/combined caps, false totals |
+| Full terrain equality          | Both complete response row sequences           | TerrainTwoSweep.complete_sweep                 | Each field drift with valid protocol data      |
+| Immutable semantic identity    | Replayed context/row digest                    | Derived summary comparison                     | False summary/dataset identity                 |
+| Cleanup independence           | Self-contained data artifacts                  | Fresh-process full verifier                    | Delete permitted fixture originals, change cwd |
+| Baseline compatibility         | Separate dispatch and unchanged baseline bytes | Existing baseline verifier/tests               | Single-page regression and 26 digest check     |
 
 ## Behavior test matrix
 
@@ -262,27 +262,27 @@ a newly generated descriptor for that invalid test fixture, so integrity checks
 pass and semantic replay is tested. This is a test authority, not forged historical
 or genuine operator authorization. Keep unchanged authority for substitution attacks.
 
-| Case | Expected boundary and result |
-| --- | --- |
-| Complete 1/5/6/255/256-tile pair | Full replay accepts CONTROLLED only |
-| Missing/wrong external commitment | Commitment gate rejects |
-| Substitute artifact, regenerate mutable manifest | Byte commitment rejects |
-| Change descriptor too, unchanged trusted digest | Descriptor commitment rejects |
-| Missing/extra file or empty directory | Exact inventory rejects |
-| Symlink, traversal, directory/file substitution | Path/type validation rejects |
-| Cross-sweep/cross-package page substitution | Commitment rejects; newly committed inconsistent fixture rejects identity/replay |
-| Changed world/region context | Existing sweep/protocol identity validation rejects |
-| Missing/duplicate/out-of-order page | Plan/index or real pagination rejects exact coverage violation |
-| Valid-schema changed terrain field in sweep two | Real equality validation rejects drift |
-| Invalid receipt/digest/sequence/counter | Exchange validation rejects |
-| False stored byte/page/operation totals | Replayed summary comparison rejects |
-| Invalid selected budgets or per-page/sweep/aggregate overflow | Budget construction or admission rejects |
-| Changed retained bytes with unchanged receipt and refreshed artifact commitments | Existing receipt validation rejects |
-| Valid partial final page | Exact complete coverage accepts |
-| INCOMPLETE/FAILED status | Success-status gate rejects, no dataset |
-| Delete permitted temporary fixture originals; new cwd/process | Explicit pinned digest + retained package accepts |
-| Unsupported schema/version, REAL classification | Strict dispatch rejects, no fallback |
-| Existing single-page package | Existing verifier behavior and baseline digests unchanged |
+| Case                                                                             | Expected boundary and result                                                     |
+| -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Complete 1/5/6/255/256-tile pair                                                 | Full replay accepts CONTROLLED only                                              |
+| Missing/wrong external commitment                                                | Commitment gate rejects                                                          |
+| Substitute artifact, regenerate mutable manifest                                 | Byte commitment rejects                                                          |
+| Change descriptor too, unchanged trusted digest                                  | Descriptor commitment rejects                                                    |
+| Missing/extra file or empty directory                                            | Exact inventory rejects                                                          |
+| Symlink, traversal, directory/file substitution                                  | Path/type validation rejects                                                     |
+| Cross-sweep/cross-package page substitution                                      | Commitment rejects; newly committed inconsistent fixture rejects identity/replay |
+| Changed world/region context                                                     | Existing sweep/protocol identity validation rejects                              |
+| Missing/duplicate/out-of-order page                                              | Plan/index or real pagination rejects exact coverage violation                   |
+| Valid-schema changed terrain field in sweep two                                  | Real equality validation rejects drift                                           |
+| Invalid receipt/digest/sequence/counter                                          | Exchange validation rejects                                                      |
+| False stored byte/page/operation totals                                          | Replayed summary comparison rejects                                              |
+| Invalid selected budgets or per-page/sweep/aggregate overflow                    | Budget construction or admission rejects                                         |
+| Changed retained bytes with unchanged receipt and refreshed artifact commitments | Existing receipt validation rejects                                              |
+| Valid partial final page                                                         | Exact complete coverage accepts                                                  |
+| INCOMPLETE/FAILED status                                                         | Success-status gate rejects, no dataset                                          |
+| Delete permitted temporary fixture originals; new cwd/process                    | Explicit pinned digest + retained package accepts                                |
+| Unsupported schema/version, REAL classification                                  | Strict dispatch rejects, no fallback                                             |
+| Existing single-page package                                                     | Existing verifier behavior and baseline digests unchanged                        |
 
 ## Implementation sequence
 

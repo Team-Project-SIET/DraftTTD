@@ -508,42 +508,42 @@ Canonical creation/reload Q3 are historical PROVEN milestones, not pending tasks
     signature or authorization exists, and T8 staging plus Gate C remain
     separate explicit gates.
 
-   **Update (2026-10-27, native — E36):** T8 staging and the Gate C
-   signing-and-single-attempt authorization were granted and consumed for a
-   fixed-corridor POC. Candidate `D5-FREIGHT-1` staged fresh from the
-   reviewed bytes: `PRELAUNCH PASS` + fresh read-only `PREFLIGHT PASS`, seal
-   `c8bdc65f…d0f7c9`, authorization payload `fdb1325f…3f75c7` (2,410 bytes,
-   rebuild-verified), source world bound to candidate-5 after-save
-   `a81ac836…ef261`, 3,486-entry frozen closure, 15 planned exchanges /
-   request cap 32. Signing followed the documented Option-1 checklist
-   (seed captured never displayed, signature verified under the pinned
-   anchor before writing; record `f99e8233…7fde`, operator identity
-   `sha256-ed25519-public-key:cbb63ff5…40c614`) — including two signing-
-   debug substeps in which nothing was ever written before signature
-   verification. The one attempt ran once: 1 launch (15.3 dedicated,
-   pid 15053), 1 encrypted connection, welcome identity matched, staged
-   composition started (`D5_READY`). The native `site-00` readback
-   (`site-00-response.json`) is READY with all pinned corridor facts
-   correct — funds £492,149 exactly, `pairs_ok 23`/23, production 104,
-   owner 0, vehicles 0 — but the delivery-stop cargo-1 acceptance read
-   **0** (< the required 1/8), so the pinned admission refused before any
-   mutation: no order, no engine, no purchase, cost £0, funds unchanged,
-   `state_changed false`, phase `PARTIAL_EXECUTION_EVIDENCE`, terminal
-   `PHASE_HALTED_PREFIX_PRESERVED`, `verified: false`, exit 1, cleanup
-   certified, manifest 16/16 OK. Read-only replay returns
-   `PHASE_HALTED_EVIDENCE_PRESERVED` on the same first refusal. **This is
+**Update (2026-10-27, native — E36):** T8 staging and the Gate C
+signing-and-single-attempt authorization were granted and consumed for a
+fixed-corridor POC. Candidate `D5-FREIGHT-1` staged fresh from the
+reviewed bytes: `PRELAUNCH PASS` + fresh read-only `PREFLIGHT PASS`, seal
+`c8bdc65f…d0f7c9`, authorization payload `fdb1325f…3f75c7` (2,410 bytes,
+rebuild-verified), source world bound to candidate-5 after-save
+`a81ac836…ef261`, 3,486-entry frozen closure, 15 planned exchanges /
+request cap 32. Signing followed the documented Option-1 checklist
+(seed captured never displayed, signature verified under the pinned
+anchor before writing; record `f99e8233…7fde`, operator identity
+`sha256-ed25519-public-key:cbb63ff5…40c614`) — including two signing-
+debug substeps in which nothing was ever written before signature
+verification. The one attempt ran once: 1 launch (15.3 dedicated,
+pid 15053), 1 encrypted connection, welcome identity matched, staged
+composition started (`D5_READY`). The native `site-00` readback
+(`site-00-response.json`) is READY with all pinned corridor facts
+correct — funds £492,149 exactly, `pairs_ok 23`/23, production 104,
+owner 0, vehicles 0 — but the delivery-stop cargo-1 acceptance read
+**0** (< the required 1/8), so the pinned admission refused before any
+mutation: no order, no engine, no purchase, cost £0, funds unchanged,
+`state_changed false`, phase `PARTIAL_EXECUTION_EVIDENCE`, terminal
+`PHASE_HALTED_PREFIX_PRESERVED`, `verified: false`, exit 1, cleanup
+certified, manifest 16/16 OK. Read-only replay returns
+`PHASE_HALTED_EVIDENCE_PRESERVED` on the same first refusal. **This is
    the D5 design's anticipated finding of record: the pinned delivery stop
    `50351` (front `50095`) has zero native cargo-1 acceptance on the fixed
    corridor. D5 is ATTEMPTED, NOT DELIVERED; no freight delivery, no
    optimizer-route claim (M8 unchanged), no OPEX/profit/ROI fact, and the
    consumed identity is closed forever.** A future POC attempt requires a
-   fresh reviewed candidate whose delivery-stop acceptance fact is newly
-   derived natively first (different stop placement or a separately
-   reviewed design change), plus fresh staging, review and explicit
-   operator authorization. Prior candidate-5 (90/90) and candidate-4 (80/80) manifest verification
-   re-verified byte-unchanged after the attempt; analytics over
-   the attempt ran twice byte-identical. Record:
-   `docs/handoff/2026-10-27/d5-corridor-freight-native-candidate-1-outcome.md`.
+fresh reviewed candidate whose delivery-stop acceptance fact is newly
+derived natively first (different stop placement or a separately
+reviewed design change), plus fresh staging, review and explicit
+operator authorization. Prior candidate-5 (90/90) and candidate-4 (80/80) manifest verification
+re-verified byte-unchanged after the attempt; analytics over
+the attempt ran twice byte-identical. Record:
+`docs/handoff/2026-10-27/d5-corridor-freight-native-candidate-1-outcome.md`.
 
 11. **D5 follow-up — `D5-ACCEPT-SURVEY-1` read-only native acceptance survey
     prepared offline (2026-10-27; uncommitted).** After E36's zero-acceptance
@@ -865,9 +865,9 @@ launched or claimed; no commit. Risks/UNKNOWN stance unchanged: wheel
 reachability, road-bit directions, pathfinding and the spur's native
 quote stay UNKNOWN until native admission. Next: fresh never-consumed
 candidate staging (`d5-corridor-extension-native-candidate-3`), PRELAUNCH
-+ independent review, Gate C Option-1 signing, separate explicit launch
-approval — each its own operator-approved step. Record: phase-a §14;
-evidence index E41.
+- independent review, Gate C Option-1 signing, separate explicit launch
+  approval — each its own operator-approved step. Record: phase-a §14;
+  evidence index E41.
 
 ### 2026-11-01 — D5-CORRIDOR-EXTENSION-3 fresh A1 candidate-3 staged (offline, operator-approved)
 
@@ -1214,3 +1214,37 @@ No implementation authorized; the next phase needs separate explicit
 operator authorization. Record:
 [docs/d5-freight-delivery-v2-design-review-2026-11-01.md](docs/d5-freight-delivery-v2-design-review-2026-11-01.md);
 evidence index E50.
+
+### 2026-11-01 — D5 Freight Delivery v2 offline implementation complete (E51)
+
+Explicit operator authorization covered offline source implementation and
+offline testing only. Additive over the frozen v1 protocol-5 bytes, which were
+never modified: wire contract `app/simulation/openttd/corridor_freight_v2.py`
+(protocol 8; 768/1400/1450; schedule version 2; 30 exchanges = fixed 10 +
+6 cycles×3 + tail 2 fixed by the E50 §4 arithmetic; strict per-op echo
+subsets; provisional census engine pin 123 verified natively fail-closed per
+Option B; quote-first purchase ≤ £5,000; 60-day per-attempt authority with a
+10-day cycle lease; `OF_FULL_LOAD` never issued; partial departure gate
+`0 < load ≤ capacity`; monitor latch, typed `ZERO_DEPARTED`, funds ledger
+with a 0-residual equation and duration echoes),
+`app/simulation/openttd/d5_freight_v2_package/main.nut` (save-restore-bounded
+v2 handler + `NetworkFreightProof` bridge), and
+`app/simulation/openttd/proof/corridor_freight_v2_native.py` (pinned A1
+candidate-3 prerequisite binding re-verified end-to-end; witness-derivation
+route provenance, distinct route/witness digests; preflight refusal gates;
+ACTIVE-only protocol-8 secure session; production site request exactly
+640 B; exchange timing from phase windows with clamps; per-request wire
+trust anchor; one-launch executor; replay arms `RECEIPT_VERIFIED` / `PHASE_HALTED_EVIDENCE_PRESERVED` /
+`UNRESOLVED_ATTEMPT_EVIDENCE_PRESERVED` / `ATTEMPT_FAILED_EVIDENCE_PRESERVED`).
+Offline validation in one session: `tests/test_corridor_freight_v2.py` 48
+passed and `tests/test_corridor_freight_v2_native.py` 67 passed (both exit 0,
+all dots), the v2 VM suite stayed 48-green across the runner fix, protocol-8
+site probe re-ran 640 B / vread 409 B, ruff clean and `ty` clean on all v2
+test files (`typings/squirrel.pyi` stub added); one latent runner defect was
+fixed during validation (`prepare_candidate` `pin_provenance.source` bound
+the staged scalar) and the re-seal proof sites were made JSON round-trip
+stable. Nothing staged, signed, authorized, launched, claimed or committed;
+nothing written under `artifacts/`; the root `--version` file untouched.
+Stop point: §10 item-5 gates — staging approval, independent review, Gate C
+signing and a separate explicit launch approval each remain ungranted
+operator gates. Evidence index E51.

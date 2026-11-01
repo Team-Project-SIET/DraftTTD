@@ -23,31 +23,31 @@ direction.
 
 ## 2. Staged candidate
 
-| Fact | Value |
-| --- | --- |
-| Directory | `artifacts/experiments/d4-corridor-native-candidate-3/` (created `exist_ok=False`) |
-| Attempt | `D4-CORRIDOR-3`, milestone `D4-CONSTRUCTION`, kind `corridor` |
-| Prelaunch seal | `8cc8c1f70c1928ccfb6e10b169d442ec1d62f1826790f617b86c78a62dda7d24` |
-| Plan digest | `2a30e95048e89ffa1420e0ae392b79f4d051f447d7a15a3edb896b4bbdcabb3a` (v2, 8 ops) |
-| Authorization payload | sha-256 `e1163d09b3344d020676443eec7a39b0299a2faab6d591dec7a7d0644d01068d` (2,393 canonical bytes) |
-| Source world | D3 `after.sav` `fbebef54dd466e0bea23cc30e11e94ebaf2a3ca07e2e9b7aadd6a6645c37d59e` |
-| Frozen closure | 3,448 entries (includes the new authority-supersession module) |
-| Budgets | 1 launch, 1 connection, 8 road ops, request budget 31 (25 planned), 0 retries/reconnects, per-op ceiling £2,000 |
-| Authorization | `PENDING — requires ONE fresh operator authorization` |
+| Fact                  | Value                                                                                                           |
+| --------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Directory             | `artifacts/experiments/d4-corridor-native-candidate-3/` (created `exist_ok=False`)                              |
+| Attempt               | `D4-CORRIDOR-3`, milestone `D4-CONSTRUCTION`, kind `corridor`                                                   |
+| Prelaunch seal        | `8cc8c1f70c1928ccfb6e10b169d442ec1d62f1826790f617b86c78a62dda7d24`                                              |
+| Plan digest           | `2a30e95048e89ffa1420e0ae392b79f4d051f447d7a15a3edb896b4bbdcabb3a` (v2, 8 ops)                                  |
+| Authorization payload | sha-256 `e1163d09b3344d020676443eec7a39b0299a2faab6d591dec7a7d0644d01068d` (2,393 canonical bytes)              |
+| Source world          | D3 `after.sav` `fbebef54dd466e0bea23cc30e11e94ebaf2a3ca07e2e9b7aadd6a6645c37d59e`                               |
+| Frozen closure        | 3,448 entries (includes the new authority-supersession module)                                                  |
+| Budgets               | 1 launch, 1 connection, 8 road ops, request budget 31 (25 planned), 0 retries/reconnects, per-op ceiling £2,000 |
+| Authorization         | `PENDING — requires ONE fresh operator authorization`                                                           |
 
 The eight-operation schedule, route, per-op ceiling and exchange budget are
 unchanged from E22/E24.
 
 ## 3. Commands and results
 
-| Check | Result |
-| --- | --- |
-| `.venv/bin/python -m pytest -q tests/test_corridor_construction.py tests/test_corridor_construction_native.py` | **55/55 PASS**, 0 skipped |
-| `... corridor_construction_native prepare artifacts/experiments/d4-corridor-native-candidate-3` | exit 0, **PRELAUNCH PASS** |
-| `... corridor_construction_native preflight artifacts/experiments/d4-corridor-native-candidate-3` | exit 0, **PREFLIGHT PASS** |
-| Consumed `D4-CORRIDOR-1` manifest | 28/28 OK |
-| Candidate-2 `PRELAUNCH.json` sha-256 | unchanged `de0e16f7…04f00` |
-| D3 `after.sav` | unchanged `fbebef54…d59e` |
+| Check                                                                                                          | Result                     |
+| -------------------------------------------------------------------------------------------------------------- | -------------------------- |
+| `.venv/bin/python -m pytest -q tests/test_corridor_construction.py tests/test_corridor_construction_native.py` | **55/55 PASS**, 0 skipped  |
+| `... corridor_construction_native prepare artifacts/experiments/d4-corridor-native-candidate-3`                | exit 0, **PRELAUNCH PASS** |
+| `... corridor_construction_native preflight artifacts/experiments/d4-corridor-native-candidate-3`              | exit 0, **PREFLIGHT PASS** |
+| Consumed `D4-CORRIDOR-1` manifest                                                                              | 28/28 OK                   |
+| Candidate-2 `PRELAUNCH.json` sha-256                                                                           | unchanged `de0e16f7…04f00` |
+| D3 `after.sav`                                                                                                 | unchanged `fbebef54…d59e`  |
 
 ## 4. What remains
 

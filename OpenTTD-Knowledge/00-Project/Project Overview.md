@@ -1,11 +1,13 @@
 ---
+
 title: "Project Overview"
 type: project
 status: current
 updated: 2026-10-26
 tags:
-  - openttd
-  - project
+- openttd
+- project
+
 ---
 
 # Project Overview

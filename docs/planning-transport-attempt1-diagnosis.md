@@ -25,18 +25,18 @@ The pinned save's public parser record is `DATE[0].pause_mode = 1` (normal pause
 
 ## Lifecycle stage matrix for attempt 1
 
-| Stage | Status | Evidence and limit |
-| --- | --- | --- |
-| A. AI package discovered | PROVEN | `start_ai P03ThinExecutor` was accepted and a second AI compatibility message followed; the log does not identify the absolute package path. |
-| B. AI selected | PROVEN | Console executed `start_ai P03ThinExecutor`. |
-| C. AI instance created | NOT PROVEN | API compatibility logging can precede main-script loading and class creation. |
-| D. `Start()` entered | FAILED to reach | The save was paused, no unpause occurred, and 13.4 bypasses `AI::GameLoop()` while paused. |
-| E. Transported plan loaded | NOT PROVEN | No P03 plan marker. |
-| F. Plan decoded | NOT PROVEN | No P03 plan marker. |
-| G. Plan/world validated | NOT PROVEN | No P03 validation marker. |
-| H. Evidence generated | NOT PROVEN | No terminal marker. |
-| I. Evidence emitted | NOT PROVEN | No terminal marker. |
-| J. Python observed evidence | FAILED | The harness timed out and raised `SetupEvidenceError`. |
+| Stage                       | Status          | Evidence and limit                                                                                                                           |
+| --------------------------- | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| A. AI package discovered    | PROVEN          | `start_ai P03ThinExecutor` was accepted and a second AI compatibility message followed; the log does not identify the absolute package path. |
+| B. AI selected              | PROVEN          | Console executed `start_ai P03ThinExecutor`.                                                                                                 |
+| C. AI instance created      | NOT PROVEN      | API compatibility logging can precede main-script loading and class creation.                                                                |
+| D. `Start()` entered        | FAILED to reach | The save was paused, no unpause occurred, and 13.4 bypasses `AI::GameLoop()` while paused.                                                   |
+| E. Transported plan loaded  | NOT PROVEN      | No P03 plan marker.                                                                                                                          |
+| F. Plan decoded             | NOT PROVEN      | No P03 plan marker.                                                                                                                          |
+| G. Plan/world validated     | NOT PROVEN      | No P03 validation marker.                                                                                                                    |
+| H. Evidence generated       | NOT PROVEN      | No terminal marker.                                                                                                                          |
+| I. Evidence emitted         | NOT PROVEN      | No terminal marker.                                                                                                                          |
+| J. Python observed evidence | FAILED          | The harness timed out and raised `SetupEvidenceError`.                                                                                       |
 
 ## Controlled correction and remaining proof
 

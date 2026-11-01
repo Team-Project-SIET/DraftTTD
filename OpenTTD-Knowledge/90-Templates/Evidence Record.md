@@ -1,4 +1,5 @@
 ---
+
 evidence_id: E<NN>
 title: "<Evidence title>"
 type: evidence
@@ -11,7 +12,8 @@ scope: ""
 source_path: ""           <!-- exact repo-relative artifact path, kept immutable -->
 tags:
   - openttd
-  - evidence
+- evidence
+
 ---
 
 # E<NN> — <Evidence title>

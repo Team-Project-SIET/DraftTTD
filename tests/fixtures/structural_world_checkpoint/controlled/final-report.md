@@ -17,12 +17,12 @@ Retries: 0. Reconnects: 0. Resume: prohibited; single-use after success or failu
 
 ## Combined bounds
 
-| Phase | Requests/pages | Records | Response bytes | Admin query operations |
-|---|---:|---:|---:|---:|
-| Inventory | 32 | 32 industries | 16384 | 256 |
-| Capability | 32 | 32 industries | 16384 | 256 |
-| Catalog | 32 | 64 cargoes | 16384 | 512 |
-| Combined | **96** | Separate ceilings | **49152** | **1024** |
+| Phase      | Requests/pages |           Records | Response bytes | Admin query operations |
+| ---------- | -------------: | ----------------: | -------------: | ---------------------: |
+| Inventory  |             32 |     32 industries |          16384 |                    256 |
+| Capability |             32 |     32 industries |          16384 |                    256 |
+| Catalog    |             32 |        64 cargoes |          16384 |                    512 |
+| Combined   |         **96** | Separate ceilings |      **49152** |               **1024** |
 
 Derivation: 32+32+32 requests; 96×512 response bytes; 256+256+512 existing phase
 operation ceilings. Inventory/catalog page size: 2. Existing generic maxima unchanged.

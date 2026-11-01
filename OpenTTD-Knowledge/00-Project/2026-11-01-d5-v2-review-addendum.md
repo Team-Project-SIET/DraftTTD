@@ -1,13 +1,15 @@
 ---
+
 title: "2026-11-01 D5 v2 Review Addendum"
 type: project
 status: addendum
 updated: 2026-11-01
 tags:
-  - openttd
-  - addendum
-  - d5
-  - evidence
+- openttd
+- addendum
+- d5
+- evidence
+
 ---
 
 # 2026-11-01 D5 v2 Review Addendum
@@ -15,7 +17,7 @@ tags:
 Append-only addendum note, written 2026-11-01 from repository records on
 branch `miles/fright-delivery`, HEAD `fee7459`. No existing file in this
 knowledge tree was edited, moved, deleted or renamed. This file only records
-what the reviewed design means for the *reference material* kept here; it is
+what the reviewed design means for the _reference material_ kept here; it is
 not part of the application and authorizes nothing.
 
 ## What was reviewed
@@ -37,7 +39,7 @@ Full record: [docs/d5-freight-delivery-v2-design-review-2026-11-01.md](../../doc
   (offline, code-backed) that `OpenTTD-Knowledge/` contains **no default
   Temperate engine list and no numeric engine/cargo tables** — the Reference
   section holds API prose and links only
-  (`07-Reference/External References.md`). Implementing a *pinned engine ID*
+  (`07-Reference/External References.md`). Implementing a _pinned engine ID_
   for D6 requires provenance from an authority outside this tree.
 - **The only repository-grounded engine facts are world-bound.** The legacy
   native road-vehicle lifecycle enumerated engine **123**: cargo 1

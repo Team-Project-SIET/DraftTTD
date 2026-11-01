@@ -1,12 +1,14 @@
 ---
+
 title: "Testing Strategy"
 type: engineering
 status: current
 updated: 2026-10-22
 tags:
-  - openttd
-  - engineering
-  - testing
+- openttd
+- engineering
+- testing
+
 ---
 
 # Testing Strategy

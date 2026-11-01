@@ -35,19 +35,19 @@ and the integrity of the retained evidence that remains.
 [`cleanup.json`](../../../artifacts/experiments/d4-corridor-native-candidate-3/cleanup.json)
 now contains:
 
-| Field | Verified value |
-| --- | --- |
-| `events` | `["quit_requested", "reaped"]` |
-| `graceful_attempted` | `true` |
-| `quit_command` | `quit` |
-| `pid` | `99654` |
-| `reaped` | `true` |
-| `returncode` | `0` |
-| `remaining_processes` | `[]` |
-| `cleanup_error` | `[]` |
-| `credential_removed` | `true` |
-| `workspace_disposed` | `true` |
-| `verification_error` | **retained verbatim** — the historical `Live or ambiguous endpoint socket` record naming local port `36515` / remote port `40094` in TCP state `5` |
+| Field                 | Verified value                                                                                                                                     |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `events`              | `["quit_requested", "reaped"]`                                                                                                                     |
+| `graceful_attempted`  | `true`                                                                                                                                             |
+| `quit_command`        | `quit`                                                                                                                                             |
+| `pid`                 | `99654`                                                                                                                                            |
+| `reaped`              | `true`                                                                                                                                             |
+| `returncode`          | `0`                                                                                                                                                |
+| `remaining_processes` | `[]`                                                                                                                                               |
+| `cleanup_error`       | `[]`                                                                                                                                               |
+| `credential_removed`  | `true`                                                                                                                                             |
+| `workspace_disposed`  | `true`                                                                                                                                             |
+| `verification_error`  | **retained verbatim** — the historical `Live or ambiguous endpoint socket` record naming local port `36515` / remote port `40094` in TCP state `5` |
 
 `cleanup.json` still has **no `sockets_closed` field**. The historical
 verification error is preserved exactly; the remediation added only the two
@@ -60,22 +60,22 @@ erased, and read-only replay still refuses with
 
 ## 3. Workspace-disposal and non-secret checks
 
-| Check | Result |
-| --- | --- |
-| Workspace path `isolated/openttd-15.3-aghwu0j0` | **absent** |
-| Candidate-3 `isolated/` directory | present and **empty** |
-| Any `secrets.cfg`, `private.cfg` or `openttd.cfg` under candidate-3 | **none found** |
-| OpenTTD process referencing the workspace | **none found** |
-| Listener on game port `33725` or Admin port `36515` | **none** |
-| `result.json` status / verified | unchanged `FAILED_CLEANUP` / `false` |
-| `result.json` launches / connections / requests | unchanged 1 / 1 / 10 |
-| Built operations | unchanged `op-00`, `op-01`, `op-02` |
-| Halt | unchanged `op-03`, `ValueError: native READY admission with positive tested cost required` |
-| `CLAIM.json` | unchanged, `consumed: true`, `launches_allowed: 1`, `retries: 0` |
-| `AUTHORIZATION.json` | unchanged sha-256 `5484cdc1…3be705e` |
-| Retained `session-before.sav` | unchanged `a3e6b510…69cc5c` |
-| Retained `after-diagnostic.sav` | unchanged `b52d0ecf…9d970b`; still **not** an authoritative save |
-| `after.sav` / `receipt.json` | **absent** |
+| Check                                                               | Result                                                                                     |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Workspace path `isolated/openttd-15.3-aghwu0j0`                     | **absent**                                                                                 |
+| Candidate-3 `isolated/` directory                                   | present and **empty**                                                                      |
+| Any `secrets.cfg`, `private.cfg` or `openttd.cfg` under candidate-3 | **none found**                                                                             |
+| OpenTTD process referencing the workspace                           | **none found**                                                                             |
+| Listener on game port `33725` or Admin port `36515`                 | **none**                                                                                   |
+| `result.json` status / verified                                     | unchanged `FAILED_CLEANUP` / `false`                                                       |
+| `result.json` launches / connections / requests                     | unchanged 1 / 1 / 10                                                                       |
+| Built operations                                                    | unchanged `op-00`, `op-01`, `op-02`                                                        |
+| Halt                                                                | unchanged `op-03`, `ValueError: native READY admission with positive tested cost required` |
+| `CLAIM.json`                                                        | unchanged, `consumed: true`, `launches_allowed: 1`, `retries: 0`                           |
+| `AUTHORIZATION.json`                                                | unchanged sha-256 `5484cdc1…3be705e`                                                       |
+| Retained `session-before.sav`                                       | unchanged `a3e6b510…69cc5c`                                                                |
+| Retained `after-diagnostic.sav`                                     | unchanged `b52d0ecf…9d970b`; still **not** an authoritative save                           |
+| `after.sav` / `receipt.json`                                        | **absent**                                                                                 |
 
 These checks confirm disposition and preservation. They do not certify the
 original cleanup attempt, and they do not make `after-diagnostic.sav`

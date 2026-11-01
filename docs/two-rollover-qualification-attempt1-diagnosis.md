@@ -60,32 +60,32 @@ and VM sources are unchanged. It runs controlled Squirrel, not OpenTTD gameplay.
 
 ## Rejected hypotheses
 
-| Hypothesis | Result / evidence |
-|---|---|
-| Absolute structural deadline inherited from qualification start | Rejected: structural has no absolute phase deadline; it is constructed after M1 guard. |
-| Structural timeout starts at coordinator construction | Rejected: fresh relative asyncio request timeout starts on each query. Virtual waits of 60/120 seconds still collect successfully. |
-| Polling mutates shared transport deadline | Rejected: no shared absolute transport deadline; caller supplies min(5, remaining overall) per call. |
-| Expired/completed structural object reused | Rejected: distinct new anchor and final sessions are constructed at their phase entry. |
-| Request sent, response handling stalled | Request was sent; no response handling began. Tagged-VM repro proves dispatch fails first. |
-| Deadline prevents send | Rejected by SENT ledger and admitted outbound frame. |
-| Prolonged polling starves non-clock commands | No starvation required: even zero prior clock calls reproduce old delegation failure. |
-| Connection alive but command dispatch fails | Proven dispatch incompatibility; 61 completed encrypted clock exchanges support preceding transport health. |
-| Structural response exists but is rejected | No retained frame, payload or GS response marker; deterministic repro emits none. |
-| Another timeout translated to generic phase error | Proven: StructuralWorldSession converts TimeoutError (including TransportTimeout) to that message. |
+| Hypothesis                                                      | Result / evidence                                                                                                                  |
+| --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Absolute structural deadline inherited from qualification start | Rejected: structural has no absolute phase deadline; it is constructed after M1 guard.                                             |
+| Structural timeout starts at coordinator construction           | Rejected: fresh relative asyncio request timeout starts on each query. Virtual waits of 60/120 seconds still collect successfully. |
+| Polling mutates shared transport deadline                       | Rejected: no shared absolute transport deadline; caller supplies min(5, remaining overall) per call.                               |
+| Expired/completed structural object reused                      | Rejected: distinct new anchor and final sessions are constructed at their phase entry.                                             |
+| Request sent, response handling stalled                         | Request was sent; no response handling began. Tagged-VM repro proves dispatch fails first.                                         |
+| Deadline prevents send                                          | Rejected by SENT ledger and admitted outbound frame.                                                                               |
+| Prolonged polling starves non-clock commands                    | No starvation required: even zero prior clock calls reproduce old delegation failure.                                              |
+| Connection alive but command dispatch fails                     | Proven dispatch incompatibility; 61 completed encrypted clock exchanges support preceding transport health.                        |
+| Structural response exists but is rejected                      | No retained frame, payload or GS response marker; deterministic repro emits none.                                                  |
+| Another timeout translated to generic phase error               | Proven: StructuralWorldSession converts TimeoutError (including TransportTimeout) to that message.                                 |
 
 ## Deadline ownership
 
-| Concept | Owner / creation / clock | Scope / consumer |
-|---|---|---|
-| Overall qualification | ProductionQualificationSession.collect entry; monotonic absolute +300; outer asyncio timeout | Entire session including polling, collections, evidence. Never renewed. |
-| Polling | Same overall absolute bound plus finite shared poll count | Both rollover waits, cadence >=1 second; no wall-clock qualification evidence. |
-| Structural collection | New single-use session at anchor/final entry | No separate absolute phase deadline; each query/evidence has relative <=5 and remaining overall bounds. |
-| Lifetime collection | Qualification session loop at its phase | Each new query/evidence bounded independently; same overall deadline. |
-| Production collection | New production session after stability | Same fresh per-query/evidence timeout and overall guard; no old observation relabeling. |
-| Transport request | _read_query entry; asyncio monotonic relative min(5, remaining overall) | Subscription if needed, send, response, completion barrier. No mutation/reuse between commands. |
-| Semantic evidence/liveness | Each bounded callback plus native evidence loop | Fresh <=5-second relative callback and native monotonic +5 loop; outer remaining overall still applies. |
-| Setup | Owned listener +30, bridge setup +10 from entry | Pre-collection setup; separate from qualification's collect-entry deadline. |
-| Cleanup | Shared bounded close/quit/wait/escalation owner | Cleanup after failure remains permitted; it cannot qualify or resume the failed session. |
+| Concept                    | Owner / creation / clock                                                                     | Scope / consumer                                                                                        |
+| -------------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Overall qualification      | ProductionQualificationSession.collect entry; monotonic absolute +300; outer asyncio timeout | Entire session including polling, collections, evidence. Never renewed.                                 |
+| Polling                    | Same overall absolute bound plus finite shared poll count                                    | Both rollover waits, cadence >=1 second; no wall-clock qualification evidence.                          |
+| Structural collection      | New single-use session at anchor/final entry                                                 | No separate absolute phase deadline; each query/evidence has relative <=5 and remaining overall bounds. |
+| Lifetime collection        | Qualification session loop at its phase                                                      | Each new query/evidence bounded independently; same overall deadline.                                   |
+| Production collection      | New production session after stability                                                       | Same fresh per-query/evidence timeout and overall guard; no old observation relabeling.                 |
+| Transport request          | _read_query entry; asyncio monotonic relative min(5, remaining overall)                      | Subscription if needed, send, response, completion barrier. No mutation/reuse between commands.         |
+| Semantic evidence/liveness | Each bounded callback plus native evidence loop                                              | Fresh <=5-second relative callback and native monotonic +5 loop; outer remaining overall still applies. |
+| Setup                      | Owned listener +30, bridge setup +10 from entry                                              | Pre-collection setup; separate from qualification's collect-entry deadline.                             |
+| Cleanup                    | Shared bounded close/quit/wait/escalation owner                                              | Cleanup after failure remains permitted; it cannot qualify or resume the failed session.                |
 
 There is no hidden phase-wide 5-second collection budget. Five seconds bounds an
 individual transaction/evidence callback, not a complete 96-request collection.

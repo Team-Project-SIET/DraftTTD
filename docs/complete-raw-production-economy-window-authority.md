@@ -8,10 +8,10 @@ handler remain unchanged.
 
 ## V1 fields and binding
 
-| Transported field | C++ Script API | Generated GameScript binding | Type / domain | Meaning |
-| --- | --- | --- | --- | --- |
-| economy_date_before | ScriptDate::GetCurrentDate | GSDate.GetCurrentDate | C++ ScriptDate::Date enum; exported Squirrel integer; underlying engine signed int32 day ordinal | Current economy date immediately before reading the three historical metrics |
-| economy_date_after | ScriptDate::GetCurrentDate | GSDate.GetCurrentDate | Same; V1 accepts integers 0 through 2147483647 | Current economy date immediately after those reads |
+| Transported field   | C++ Script API             | Generated GameScript binding | Type / domain                                                                                    | Meaning                                                                      |
+| ------------------- | -------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
+| economy_date_before | ScriptDate::GetCurrentDate | GSDate.GetCurrentDate        | C++ ScriptDate::Date enum; exported Squirrel integer; underlying engine signed int32 day ordinal | Current economy date immediately before reading the three historical metrics |
+| economy_date_after  | ScriptDate::GetCurrentDate | GSDate.GetCurrentDate        | Same; V1 accepts integers 0 through 2147483647                                                   | Current economy date immediately after those reads                           |
 
 [script_date.cpp](https://github.com/OpenTTD/OpenTTD/blob/15.3/src/script/api/script_date.cpp)
 returns `TimerGameEconomy::date.base()` cast to ScriptDate::Date. The

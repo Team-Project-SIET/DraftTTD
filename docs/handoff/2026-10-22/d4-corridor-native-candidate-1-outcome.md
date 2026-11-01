@@ -28,12 +28,12 @@ fresh candidate.
 
 ## 1. What happened — factual record
 
-| Time (observed file mtimes, 2026-10-22) | Event |
-| --- | --- |
-| 10:35 | Candidate staged and prelaunched per the staging handoff (`PRELAUNCH.json`/`PRELAUNCH.sha256`, isolated frozen workspace). |
-| 12:08 | `AUTHORIZATION.json` present in the candidate directory. |
-| 12:09 | Attempt consumed: `CLAIM.json` written (`consumed: true`, zero retries), one launch/one encrypted connection, four exchanges, `PHASE_HALTED_PREFIX_PRESERVED` at `op-01`, cleanup complete. |
-| later (offline) | Two-locus replay-verifier repair + three regression tests; independent offline review `PASS WITH CONCERNS`; read-only post-repair replay reproduces the preserved-halt verdict. |
+| Time (observed file mtimes, 2026-10-22) | Event                                                                                                                                                                                       |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 10:35                                   | Candidate staged and prelaunched per the staging handoff (`PRELAUNCH.json`/`PRELAUNCH.sha256`, isolated frozen workspace).                                                                  |
+| 12:08                                   | `AUTHORIZATION.json` present in the candidate directory.                                                                                                                                    |
+| 12:09                                   | Attempt consumed: `CLAIM.json` written (`consumed: true`, zero retries), one launch/one encrypted connection, four exchanges, `PHASE_HALTED_PREFIX_PRESERVED` at `op-01`, cleanup complete. |
+| later (offline)                         | Two-locus replay-verifier repair + three regression tests; independent offline review `PASS WITH CONCERNS`; read-only post-repair replay reproduces the preserved-halt verdict.             |
 
 Who carried out the launch is not asserted by this document; the retained
 authorization record binds the attempt the same way every consumed D2/D3
@@ -43,20 +43,20 @@ performed only read-only checks, the offline verifier repair, and its tests.
 
 ## 2. The consumed attempt at a glance
 
-| Fact | Value |
-| --- | --- |
-| Candidate directory | `artifacts/experiments/d4-corridor-native-candidate-1/` |
-| Attempt | `D4-CORRIDOR-1` (milestone `D4-CONSTRUCTION`, kind `corridor`) |
-| Prelaunch seal | `0b000d68852aac75504a0c16fb65807051d6f52dfccb6ea99de29a230781a18f` |
-| Plan digest | `3bf3eddffa807cca2bde279425332d5079a025dec3b1dabe7114164822d8a912` |
-| Source world | D3-TERRAFORMING-1 `after.sav`, `fbebef54dd466e0bea23cc30e11e94ebaf2a3ca07e2e9b7aadd6a6645c37d59e` (unchanged) |
-| One-shot claim | consumed, `launches_allowed: 1`, `retries: 0`, authorization sha `ed292a7c4eef0d171ac7f775d0444e5492ba8737e12b5d94cb5cc718653030e2` under the production operator anchor |
-| Session identity | 1 launch / 1 connection, encrypted X25519, revision `15.3`, seed `17`, landscape `0`, 256×256, `start_day 712223` (pid 29669; ports 43823/40993) |
-| Result | `status: "PHASE_HALTED_PREFIX_PRESERVED"`, **`verified: false`**, `returncode: 0`, **4 requests** of 19 planned, 1 launch, 1 connection, 0 retries/reconnects |
-| Requests retained | `inspect-00`, `full-00`, `confirm-00`, `inspect-01` — with their response pairs and the complete session frame stream (`frames.json`) |
-| Halt record | `{"label": "op-01", "error": "ValueError: native READY admission with positive tested cost required"}` |
-| Cleanup | process reaped (returncode 0), sockets closed, credential removed, workspace disposed, endpoints certified (TIME_WAIT kernel rows only); no script-log health findings retained |
-| Receipt record | none — `receipt.json` does not exist; no `PHASE_COMPLETE` was reached and no route read was performed |
+| Fact                | Value                                                                                                                                                                           |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Candidate directory | `artifacts/experiments/d4-corridor-native-candidate-1/`                                                                                                                         |
+| Attempt             | `D4-CORRIDOR-1` (milestone `D4-CONSTRUCTION`, kind `corridor`)                                                                                                                  |
+| Prelaunch seal      | `0b000d68852aac75504a0c16fb65807051d6f52dfccb6ea99de29a230781a18f`                                                                                                              |
+| Plan digest         | `3bf3eddffa807cca2bde279425332d5079a025dec3b1dabe7114164822d8a912`                                                                                                              |
+| Source world        | D3-TERRAFORMING-1 `after.sav`, `fbebef54dd466e0bea23cc30e11e94ebaf2a3ca07e2e9b7aadd6a6645c37d59e` (unchanged)                                                                   |
+| One-shot claim      | consumed, `launches_allowed: 1`, `retries: 0`, authorization sha `ed292a7c4eef0d171ac7f775d0444e5492ba8737e12b5d94cb5cc718653030e2` under the production operator anchor        |
+| Session identity    | 1 launch / 1 connection, encrypted X25519, revision `15.3`, seed `17`, landscape `0`, 256×256, `start_day 712223` (pid 29669; ports 43823/40993)                                |
+| Result              | `status: "PHASE_HALTED_PREFIX_PRESERVED"`, **`verified: false`**, `returncode: 0`, **4 requests** of 19 planned, 1 launch, 1 connection, 0 retries/reconnects                   |
+| Requests retained   | `inspect-00`, `full-00`, `confirm-00`, `inspect-01` — with their response pairs and the complete session frame stream (`frames.json`)                                           |
+| Halt record         | `{"label": "op-01", "error": "ValueError: native READY admission with positive tested cost required"}`                                                                          |
+| Cleanup             | process reaped (returncode 0), sockets closed, credential removed, workspace disposed, endpoints certified (TIME_WAIT kernel rows only); no script-log health findings retained |
+| Receipt record      | none — `receipt.json` does not exist; no `PHASE_COMPLETE` was reached and no route read was performed                                                                           |
 
 Runtime narration (retained `stderr.log`): `D4_READY` and the company AI
 readiness markers, the admin client `D4-CORRIDOR-1` connecting and
@@ -67,12 +67,12 @@ warning (E15), with the scripts alive at every save; nothing died.
 
 ## 3. The executed schedule — verified prefix, refused op, pending ops
 
-| Op | Kind | Pins | State at halt | Evidence |
-| --- | --- | --- | --- | --- |
-| 0 | `full` | start 45747 → end 45743, run length 5 | **EXECUTED AND VERIFIED** — `BUILT` then independent `READ` | the only verified receipt |
-| 1 | `full` | start 45999 → end 50095, run length 17 | **REFUSED AT ADMISSION** — native quote £2,549 > £2,000 per-op ceiling (`inspect-01` returned `COST_LIMIT`) | no native command was issued for `op-01` |
-| 2–5 | `road`, `station`, `station`, `depot` | compiled schedule | **NOT EXECUTED** | no requests, no evidence files |
-| route read | `route` | 24-tile witness | **NEVER SCHEDULED** — the phase did not complete | no `route-00` exchange exists |
+| Op         | Kind                                  | Pins                                   | State at halt                                                                                               | Evidence                                 |
+| ---------- | ------------------------------------- | -------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| 0          | `full`                                | start 45747 → end 45743, run length 5  | **EXECUTED AND VERIFIED** — `BUILT` then independent `READ`                                                 | the only verified receipt                |
+| 1          | `full`                                | start 45999 → end 50095, run length 17 | **REFUSED AT ADMISSION** — native quote £2,549 > £2,000 per-op ceiling (`inspect-01` returned `COST_LIMIT`) | no native command was issued for `op-01` |
+| 2–5        | `road`, `station`, `station`, `depot` | compiled schedule                      | **NOT EXECUTED**                                                                                            | no requests, no evidence files           |
+| route read | `route`                               | 24-tile witness                        | **NEVER SCHEDULED** — the phase did not complete                                                            | no `route-00` exchange exists            |
 
 `op-00` verified prefix, recomputable from the retained exchange documents:
 

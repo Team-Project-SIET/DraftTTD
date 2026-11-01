@@ -7,13 +7,13 @@ Analysis uses original [Attempt 19](../artifacts/runtime/openttd-15.3-first-frei
 Service labels follow P07: S1 route `021fcc0d…`, vehicle 4; S2 `1ca7d46d…`, vehicle 5; S3 `2ad5b0f8…`, vehicle 6. Each has one 20-unit vehicle.
 
 | Economy anniversary interval | S1 cargo | S2 cargo | S3 cargo | Network cargo | Network revenue |
-|---|---:|---:|---:|---:|---:|
-| 1 | 200 | 200 | 180 | 580 | £9,920 |
-| 2 | 200 | 200 | 200 | 600 | £10,259 |
-| 3 | 200 | 200 | 200 | 600 | £10,258 |
-| 4 | 220 | 180 | 200 | 600 | £10,241 |
-| 5 | 200 | 200 | 200 | 600 | £10,257 |
-| Total | 1,020 | 980 | 980 | 2,980 | £50,935 |
+| ---------------------------- | -------: | -------: | -------: | ------------: | --------------: |
+| 1                            |      200 |      200 |      180 |           580 |          £9,920 |
+| 2                            |      200 |      200 |      200 |           600 |         £10,259 |
+| 3                            |      200 |      200 |      200 |           600 |         £10,258 |
+| 4                            |      220 |      180 |      200 |           600 |         £10,241 |
+| 5                            |      200 |      200 |      200 |           600 |         £10,257 |
+| Total                        |    1,020 |      980 |      980 |         2,980 |         £50,935 |
 
 **Revenue per service in every interval is UNKNOWN**: the service revenue field is null. Network income cannot be divided by cargo shares or reconstructed from vehicle profit without inventing attribution. The intervals contain 365/366/366/364/365 observed days, totaling 1,826; anniversary targets do not imply exact sampling on the target day.
 
@@ -23,17 +23,17 @@ The 60 monthly sampled intervals have network cargo 0–60 and revenue £0–£1
 
 ## Bottlenecks: observations and interpretations
 
-| Measure | S1 | S2 | S3 |
-|---|---:|---:|---:|
-| Source waiting cargo at end | 305 | 572 | 574 |
-| Maximum sampled waiting cargo | 612 | 979 | 779 |
-| Samples with waiting cargo > 0 / 1,605 | 1,595 | 1,596 | 1,594 |
-| Samples loaded to capacity / 1,605 | 796 | 800 | 801 |
-| Samples with zero load / 1,605 | 733 | 735 | 725 |
-| Samples with speed zero / 1,605 | 104 | 94 | 102 |
-| Coalesced unloading episodes | 51 | 49 | 49 |
-| Episode-start spacing, economy days | 35–37 | 36–38 | 36–39 |
-| Construction and purchase CAPEX | £9,358 | £9,515 | £9,586 |
+| Measure                                |     S1 |     S2 |     S3 |
+| -------------------------------------- | -----: | -----: | -----: |
+| Source waiting cargo at end            |    305 |    572 |    574 |
+| Maximum sampled waiting cargo          |    612 |    979 |    779 |
+| Samples with waiting cargo > 0 / 1,605 |  1,595 |  1,596 |  1,594 |
+| Samples loaded to capacity / 1,605     |    796 |    800 |    801 |
+| Samples with zero load / 1,605         |    733 |    735 |    725 |
+| Samples with speed zero / 1,605        |    104 |     94 |    102 |
+| Coalesced unloading episodes           |     51 |     49 |     49 |
+| Episode-start spacing, economy days    |  35–37 |  36–38 |  36–39 |
+| Construction and purchase CAPEX        | £9,358 | £9,515 | £9,586 |
 
 An unloading episode groups consecutive snapshots with positive delivered-cargo increments. Every resulting episode delivers 20 units. Individual increments can be 5, 10 or 15 during unloading and must not be counted as separate trips. These are derived observed episodes; the native `completed_delivery_cycles` field remains null. Sampling makes their spacing approximate delivery cadence, not exact journey duration.
 

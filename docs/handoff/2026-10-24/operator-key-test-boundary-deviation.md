@@ -54,14 +54,14 @@ afterwards; no pre-existing files were inspected or altered.
 
 Results:
 
-| # | Check | Result |
-| --- | --- | --- |
-| 1 | Valid synthetic key (fresh `openssl genpkey`): extraction returns 64 lowercase hex chars, captured only into `SEED_HEX`, never printed | PASS (length 64, shape regex OK) |
-| 2 | Invalid-content synthetic PEM: `openssl pkey` fails; `set -o pipefail` preserves nonzero pipeline status (`EXTRACT_STATUS=1`) despite downstream `tail`/`od`/`tr` succeeding | PASS |
-| 2b | Nonexistent synthetic path: refusal triggers | PASS |
-| 3 | Refusal path: `unset SEED_HEX` runs; variable confirmed empty; no seed displayed | PASS |
-| 4 | `pipefail` state restored in both directions: shell started with pipefail set → restored set; shell started without → restored unset | PASS |
-| 5 | No seed printed, passed as a command-line argument, or written to a file (success runs ended with explicit `unset`); a scan of the throwaway test directory found no residual copy. This scan did not cover the entire filesystem, process memory or swap, and makes no claim about them | PASS (scoped to the scanned directory) |
+| #   | Check                                                                                                                                                                                                                                                                                    | Result                                 |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| 1   | Valid synthetic key (fresh `openssl genpkey`): extraction returns 64 lowercase hex chars, captured only into `SEED_HEX`, never printed                                                                                                                                                   | PASS (length 64, shape regex OK)       |
+| 2   | Invalid-content synthetic PEM: `openssl pkey` fails; `set -o pipefail` preserves nonzero pipeline status (`EXTRACT_STATUS=1`) despite downstream `tail`/`od`/`tr` succeeding                                                                                                             | PASS                                   |
+| 2b  | Nonexistent synthetic path: refusal triggers                                                                                                                                                                                                                                             | PASS                                   |
+| 3   | Refusal path: `unset SEED_HEX` runs; variable confirmed empty; no seed displayed                                                                                                                                                                                                         | PASS                                   |
+| 4   | `pipefail` state restored in both directions: shell started with pipefail set → restored set; shell started without → restored unset                                                                                                                                                     | PASS                                   |
+| 5   | No seed printed, passed as a command-line argument, or written to a file (success runs ended with explicit `unset`); a scan of the throwaway test directory found no residual copy. This scan did not cover the entire filesystem, process memory or swap, and makes no claim about them | PASS (scoped to the scanned directory) |
 
 ## 3. Status (unchanged)
 

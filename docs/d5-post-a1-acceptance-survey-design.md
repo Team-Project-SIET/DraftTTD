@@ -52,12 +52,12 @@ It cannot bind the A1 after-save as-is, by design:
 - Preflight (725–744) and replay (1187–1215) additionally demand
   `save_sha256 == PINNED_PREREQUISITE_AFTER_SAVE = a81ac836…ef261`.
 
-The A1 candidate satisfies every *generic* binding requirement —
+The A1 candidate satisfies every _generic_ binding requirement —
 consumed `CLAIM.json` (`prelaunch_digest == seal`), retained
 `after.sav`, receipt `after_save_sha256 == 3748e00c…5420bd`, replay
 verdict `EXTENSION_COMPLETION_VERIFIED`, welcome-identity fact carried
 in its retained `runtime-identity.json` — and fails only the four
-*D4-pinned* identity gates. Therefore the design is a **versioned
+_D4-pinned_ identity gates. Therefore the design is a **versioned
 retarget of the same pipeline**, following the established
 `EXTENSION_SCHEDULE_VERSION = 2` precedent
 (`corridor_extension_native.py` §14, E41):
@@ -70,13 +70,13 @@ retarget of the same pipeline**, following the established
   staged bytes, matching E42's identity rule).
 - Prerequisite of record (v2): the consumed A1 attempt —
 
-  | field | value |
-  | --- | --- |
-  | directory | `artifacts/experiments/d5-corridor-extension-native-candidate-3/` |
-  | attempt | `D5-CORRIDOR-EXTENSION-3` |
-  | milestone / seal | `D5-CORRIDOR-EXTENSION` / `404d42d9…6acd8` |
-  | after_save_sha256 | `3748e00c…5420bd` |
-  | replay requirement | `verify_extension_attempt` → `EXTENSION_COMPLETION_VERIFIED` |
+  | field              | value                                                             |
+  | ------------------ | ----------------------------------------------------------------- |
+  | directory          | `artifacts/experiments/d5-corridor-extension-native-candidate-3/` |
+  | attempt            | `D5-CORRIDOR-EXTENSION-3`                                         |
+  | milestone / seal   | `D5-CORRIDOR-EXTENSION` / `404d42d9…6acd8`                        |
+  | after_save_sha256  | `3748e00c…5420bd`                                                 |
+  | replay requirement | `verify_extension_attempt` → `EXTENSION_COMPLETION_VERIFIED`      |
 
   The binding function gains a v2 branch: a generic consumed-prerequisite
   check (same tuple discipline as `terrain_terraform_native.py::prerequisite_source_binding`,
@@ -93,12 +93,12 @@ retarget of the same pipeline**, following the established
 Eight→four exchange schedule (minimal census; within the historical
 32-request budget but planned smaller on purpose):
 
-| id | op | tile | expected | role |
-| --- | --- | --- | --- | --- |
-| `radius-00` | `radius` | none (tile `null` on the wire; the op reads the global `GSStation.GetCoverageRadius(STATION_TRUCK_STOP)`) | coverage radius natively measured (record `radius: 3`) | radius first, hard-ordered before any acceptance |
-| `accept-00` | `accept` | 50351 | cargo-1 acceptance **0** | **negative control of record** (A0 §13.3: 0/8 pre-construction; consumed `D5-FREIGHT-1` freight candidate-1 `site-00`: accept 0 post-refusal, E36) |
-| `accept-01` | `accept` | 50862 | cargo-1 acceptance **8/8** under measured radius 3 | the A1 feasibility fact: strong acceptance persists at the live bay-stop tile (A1 station sid 2, `DISTINCT_NEW_STATION`) |
-| `prod-00` | `prod` | pickup industry | cargo 1 production 104 (production readback of record) | production continuity across the A1 world |
+| id          | op       | tile                                                                                                      | expected                                               | role                                                                                                                                               |
+| ----------- | -------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `radius-00` | `radius` | none (tile `null` on the wire; the op reads the global `GSStation.GetCoverageRadius(STATION_TRUCK_STOP)`) | coverage radius natively measured (record `radius: 3`) | radius first, hard-ordered before any acceptance                                                                                                   |
+| `accept-00` | `accept` | 50351                                                                                                     | cargo-1 acceptance **0**                               | **negative control of record** (A0 §13.3: 0/8 pre-construction; consumed `D5-FREIGHT-1` freight candidate-1 `site-00`: accept 0 post-refusal, E36) |
+| `accept-01` | `accept` | 50862                                                                                                     | cargo-1 acceptance **8/8** under measured radius 3     | the A1 feasibility fact: strong acceptance persists at the live bay-stop tile (A1 station sid 2, `DISTINCT_NEW_STATION`)                           |
+| `prod-00`   | `prod`   | pickup industry                                                                                           | cargo 1 production 104 (production readback of record) | production continuity across the A1 world                                                                                                          |
 
 Controls and halt rules (carried from the
 `D5-ACCEPT-SURVEY-1` preparation doc §4):
@@ -137,7 +137,7 @@ Expected evidence (per the remediated lifecycle, all force-carrying):
   re-verified untouched by a fresh listing.
 - Acceptance criterion (pass): control 0, stop 8, radius 3, prod 104,
   zero mutation, cleanup certified, replay verified. The census alone
-  unlocks the *next gate* (freight staging design review); it does not
+  unlocks the _next gate_ (freight staging design review); it does not
   itself order or purchase anything.
 
 ## 4. Remaining uncertainties this census does not close (fact-of-record)
@@ -178,9 +178,9 @@ independent-review corrections (§7) folded in:
   the §3 table, v2 constants (`SURVEY_ATTEMPT = "D5-ACCEPT-SURVEY-2"`,
   prelaunch schema `d5-accept-survey-prelaunch-v2`), v2
   `survey_prerequisite_binding()` (generic consumed-prerequisite check
-  + A1 identity equality, replacing the v1 `attempt ==
+  - A1 identity equality, replacing the v1 `attempt ==
   "D4-CORRIDOR-5"` branch under the version selector — the v1 path
-  stays byte-for-byte for consumed-candidate-1 replay).
+    stays byte-for-byte for consumed-candidate-1 replay).
 - **The plan contract itself must be versioned** (review M3):
   `AcceptSurveyPlan` hard-binds the v1 world
   (`corridor_accept_survey.py:174–213` — `schema_version: Literal[1]`,
@@ -223,6 +223,7 @@ independent-review corrections (§7) folded in:
   tests/test_corridor_terrain_survey_native.py -q -p no:cacheprovider -rs`.
 
 ## 6. Fresh candidate staging checklist (§14.6-style; each item its own record)
+
 1. Implement §5 offline; suites green; consumed precedent candidates
    (accept-survey-1, A1 candidate-3) byte-verified untouched by
    listing/digest after the edit session ends.

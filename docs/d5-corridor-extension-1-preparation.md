@@ -62,12 +62,12 @@ Source: `artifacts/experiments/d5-terrain-survey-native-candidate-1/result.json`
 Witness (30 tiles) = built D4 corridor (45748…50351), retraced delivery front
 50095, run 50096/50352/50608/50864, standing on new stop 50863.
 
-| op | command | tiles | native quote |
-|----|---------|-------|--------------|
-| 0 | `GSRoad.BuildRoadFull` | 50096→50864 (run_len 4) | 454 |
-| 1 | `GSRoad.BuildRoad` | 50095–50096 | 71 |
-| 2 | `GSRoad.BuildRoadStation` (truck, `STATION_NEW`) | 50863 front 50864 | 307 |
-| 3 | route read (pure observation, 29 pairs) | — | 0 |
+| op  | command                                          | tiles                   | native quote |
+| --- | ------------------------------------------------ | ----------------------- | ------------ |
+| 0   | `GSRoad.BuildRoadFull`                           | 50096→50864 (run_len 4) | 454          |
+| 1   | `GSRoad.BuildRoad`                               | 50095–50096             | 71           |
+| 2   | `GSRoad.BuildRoadStation` (truck, `STATION_NEW`) | 50863 front 50864       | 307          |
+| 3   | route read (pure observation, 29 pairs)          | —                       | 0            |
 
 Station-merge discipline: a readback `sid` of 0 or 1 is a FAIL-CLOSED station-
 merge defect; the sid dataset is pinned from the built corridor's route-read

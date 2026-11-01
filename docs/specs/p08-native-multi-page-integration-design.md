@@ -19,12 +19,12 @@ is a six-tile rectangle inside that map: two pages per sweep, four requests tota
 Its exact rectangle, seed, request prefix and selected limits require later review
 and sealing. This proposal grants no permission for even that small subject.
 
-| Evidence level | Established claim |
-| --- | --- |
-| Historical native | One process, encrypted connection and request returned five records. Native REAL_PASS is supported within Model A local attestation. |
-| Current controlled | Pagination, ten-field equality, paired retention and offline replay pass controlled tests. The latest run reported 79 paired, 157 combined, 603 compatibility and 3,507 ordinary passes. These are carried-forward results, not tests executed by this design task. |
-| Proposed here | Native session adapter, multi-request lifecycle evidence, REAL outer package, authorization and whole-attempt verification. |
-| Future separately approved proof | Measured multi-page native accounting, session lifetime, two-sweep observations and cleanup. No production-world, saved-world, full-map or construction claim follows. |
+| Evidence level                   | Established claim                                                                                                                                                                                                                                                   |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Historical native                | One process, encrypted connection and request returned five records. Native REAL_PASS is supported within Model A local attestation.                                                                                                                                |
+| Current controlled               | Pagination, ten-field equality, paired retention and offline replay pass controlled tests. The latest run reported 79 paired, 157 combined, 603 compatibility and 3,507 ordinary passes. These are carried-forward results, not tests executed by this design task. |
+| Proposed here                    | Native session adapter, multi-request lifecycle evidence, REAL outer package, authorization and whole-attempt verification.                                                                                                                                         |
+| Future separately approved proof | Measured multi-page native accounting, session lifetime, two-sweep observations and cleanup. No production-world, saved-world, full-map or construction claim follows.                                                                                              |
 
 Historical complete offline acceptance remains AUDIT_BLOCKED because 13 original
 canonical inputs are missing. No compatibility exception reconstructs or ignores
@@ -33,19 +33,19 @@ summary is not restored primary evidence.
 
 ## Reuse and missing interfaces
 
-| Existing module | Reuse | Required new work |
-| --- | --- | --- |
-| [secure_admin.py](../../app/simulation/openttd/secure_admin.py) | Authorized-key login, directional authenticated encryption, ACTIVE-only traffic, quiescence, no insecure fallback | Bounded transcript/byte observations and queue admission for the new proof profile; preserve existing behavior |
-| [gamescript_transport.py](../../app/simulation/openttd/gamescript_transport.py) | Sequential `tile_facts_page`, exact receipt correlation, completion PING/PONG, terminal unusable transport | A native coordinator must restrict sends to the sealed plan and reject any unselected packet type |
-| [terrain_bridge.nut](../../app/simulation/openttd/terrain_bridge.nut) | Read-only protocol 1, five records/page, selector initialization/verification, native response markers | No road-semantic change; verify multi-request marker behavior against tagged 15.3 sources |
-| [main.nut](../../app/simulation/openttd/gamescript_bridge_package/main.nut) | Bounded event batch, script-tick yield and post-response marker | Test sequential page barriers; no new application command needed |
-| [terrain_sweeps.py](../../app/simulation/openttd/terrain_sweeps.py) | Private paginators, complete sweep transition, equality and immutable exchanges | Supply context only after native identity checks; no native trust change inside this pure module |
-| [terrain_paired_evidence.py](../../app/simulation/openttd/terrain_paired_evidence.py) | Exact nested inventory, caller-pinned descriptor, replay and derived identity | Embed unchanged as a computational subpackage; it continues to assert CONTROLLED data assembly only |
-| [terrain_native.py](../../app/simulation/openttd/proof/terrain_native.py) | Capture ownership, process health, secure startup and cleanup design | Separate multi-page backend. `SinglePageSession.send` and `SinglePageNativeBackend.tile_facts_page` explicitly prohibit a second request |
-| [terrain_authorization.py](../../app/simulation/openttd/proof/terrain_authorization.py), [terrain_seal.py](../../app/simulation/openttd/proof/terrain_seal.py) | Exact digest/destination, owner PID/start/nonce, attended trust, exclusive durable claim | Separate operation subject and validators. Existing operation is fixed to single-page; its grant cannot authorize multiple requests |
-| [terrain_retention.py](../../app/simulation/openttd/proof/terrain_retention.py), [ownership.py](../../app/simulation/openttd/proof/ownership.py) | Reviewed non-secret canonical retention, materialization commitments, sealed ownership and disposal | Review the new operation's exact source/config/page-plan identities without widening old allowlists |
-| [terrain_logs.py](../../app/simulation/openttd/proof/terrain_logs.py) | Explicit prefix and final-file digest concepts | Separate multi-page policy. v1 is bound to one request and cannot authorize a multi-page lifecycle index |
-| [terrain_collection.py](../../app/simulation/openttd/terrain_collection.py) | Reference for same-session and native-marker reconciliation | Leave WPO/month/industry admission unchanged. Do not fabricate WPO to use it for standalone collection |
+| Existing module                                                                                                                                                | Reuse                                                                                                             | Required new work                                                                                                                        |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| [secure_admin.py](../../app/simulation/openttd/secure_admin.py)                                                                                                | Authorized-key login, directional authenticated encryption, ACTIVE-only traffic, quiescence, no insecure fallback | Bounded transcript/byte observations and queue admission for the new proof profile; preserve existing behavior                           |
+| [gamescript_transport.py](../../app/simulation/openttd/gamescript_transport.py)                                                                                | Sequential `tile_facts_page`, exact receipt correlation, completion PING/PONG, terminal unusable transport        | A native coordinator must restrict sends to the sealed plan and reject any unselected packet type                                        |
+| [terrain_bridge.nut](../../app/simulation/openttd/terrain_bridge.nut)                                                                                          | Read-only protocol 1, five records/page, selector initialization/verification, native response markers            | No road-semantic change; verify multi-request marker behavior against tagged 15.3 sources                                                |
+| [main.nut](../../app/simulation/openttd/gamescript_bridge_package/main.nut)                                                                                    | Bounded event batch, script-tick yield and post-response marker                                                   | Test sequential page barriers; no new application command needed                                                                         |
+| [terrain_sweeps.py](../../app/simulation/openttd/terrain_sweeps.py)                                                                                            | Private paginators, complete sweep transition, equality and immutable exchanges                                   | Supply context only after native identity checks; no native trust change inside this pure module                                         |
+| [terrain_paired_evidence.py](../../app/simulation/openttd/terrain_paired_evidence.py)                                                                          | Exact nested inventory, caller-pinned descriptor, replay and derived identity                                     | Embed unchanged as a computational subpackage; it continues to assert CONTROLLED data assembly only                                      |
+| [terrain_native.py](../../app/simulation/openttd/proof/terrain_native.py)                                                                                      | Capture ownership, process health, secure startup and cleanup design                                              | Separate multi-page backend. `SinglePageSession.send` and `SinglePageNativeBackend.tile_facts_page` explicitly prohibit a second request |
+| [terrain_authorization.py](../../app/simulation/openttd/proof/terrain_authorization.py), [terrain_seal.py](../../app/simulation/openttd/proof/terrain_seal.py) | Exact digest/destination, owner PID/start/nonce, attended trust, exclusive durable claim                          | Separate operation subject and validators. Existing operation is fixed to single-page; its grant cannot authorize multiple requests      |
+| [terrain_retention.py](../../app/simulation/openttd/proof/terrain_retention.py), [ownership.py](../../app/simulation/openttd/proof/ownership.py)               | Reviewed non-secret canonical retention, materialization commitments, sealed ownership and disposal               | Review the new operation's exact source/config/page-plan identities without widening old allowlists                                      |
+| [terrain_logs.py](../../app/simulation/openttd/proof/terrain_logs.py)                                                                                          | Explicit prefix and final-file digest concepts                                                                    | Separate multi-page policy. v1 is bound to one request and cannot authorize a multi-page lifecycle index                                 |
+| [terrain_collection.py](../../app/simulation/openttd/terrain_collection.py)                                                                                    | Reference for same-session and native-marker reconciliation                                                       | Leave WPO/month/industry admission unchanged. Do not fabricate WPO to use it for standalone collection                                   |
 
 The smallest native orchestration module owns one backend and one `TerrainTwoSweep`.
 Its acquisition interface accepts a verified sealed subject and consumed typed
@@ -160,18 +160,18 @@ explicit in the future immutable subject and cannot exceed the reviewed regional
 envelope. Actual lengths and admitted counts are retained; theoretical ceilings
 are never substituted for observations.
 
-| Quantity | Per sweep | Two-sweep envelope | Basis and qualification |
-| --- | ---: | ---: | --- |
-| Tiles/pages | N<=256; P<=52 | Q<=104 pages | Existing protocol/plan, partial region |
-| Application request | <=159/page; <=8,268 | <=16,536 bytes | Exact serialized planned requests; preflight their actual sum |
-| Application response | <=508/page; <=26,416 | <=52,832 bytes | Exact received byte lengths, native 1450 ceiling is separate |
-| Query operations | <=8/page; <=416 | <=832 | Receipt counts reconciled with owned secure observer, not added twice |
-| Encrypted post-auth frames | <=8P query | <=6+8Q=838 | Two protocol/welcome + three setup + query + one graceful QUIT |
-| Native getters | <=44N+6P | <=88N+12P=23,152 | Static successful-path bound, not dynamic measurement |
-| Selector setters | P | Q<=104 | Handler executes `SetCurrentRoadType` once per page; do not reuse single-page setter=1 |
-| Native capture | n/a | <=262,144 bytes per stream | Existing bounded stdout/stderr; overflow terminally fails |
-| Paired subpackage | n/a | <=1,048,576 bytes, <=315 files | Unchanged v1 safety ceiling, includes metadata |
-| Application payload retention | n/a | <=69,368 bytes | Request+response subset of paired package, not extra copies |
+| Quantity                      |            Per sweep |             Two-sweep envelope | Basis and qualification                                                                |
+| ----------------------------- | -------------------: | -----------------------------: | -------------------------------------------------------------------------------------- |
+| Tiles/pages                   |        N<=256; P<=52 |                   Q<=104 pages | Existing protocol/plan, partial region                                                 |
+| Application request           |  <=159/page; <=8,268 |                 <=16,536 bytes | Exact serialized planned requests; preflight their actual sum                          |
+| Application response          | <=508/page; <=26,416 |                 <=52,832 bytes | Exact received byte lengths, native 1450 ceiling is separate                           |
+| Query operations              |      <=8/page; <=416 |                          <=832 | Receipt counts reconciled with owned secure observer, not added twice                  |
+| Encrypted post-auth frames    |           <=8P query |                     <=6+8Q=838 | Two protocol/welcome + three setup + query + one graceful QUIT                         |
+| Native getters                |             <=44N+6P |               <=88N+12P=23,152 | Static successful-path bound, not dynamic measurement                                  |
+| Selector setters              |                    P |                         Q<=104 | Handler executes `SetCurrentRoadType` once per page; do not reuse single-page setter=1 |
+| Native capture                |                  n/a |     <=262,144 bytes per stream | Existing bounded stdout/stderr; overflow terminally fails                              |
+| Paired subpackage             |                  n/a | <=1,048,576 bytes, <=315 files | Unchanged v1 safety ceiling, includes metadata                                         |
+| Application payload retention |                  n/a |                 <=69,368 bytes | Request+response subset of paired package, not extra copies                            |
 
 Four expected query frames are request, response, completion PING and PONG. The
 eight-operation ceiling remains a cap, not permission for four arbitrary extras.
@@ -257,22 +257,22 @@ REAL or infer native provenance from its stored context alone.
 
 The future contract specification must define these concrete commitments:
 
-* Immutable PRELAUNCH binds exact operation, source/runtime/bridge/config identities,
+- Immutable PRELAUNCH binds exact operation, source/runtime/bridge/config identities,
   historical protection/base, ownership/materializations, endpoints/public key,
   world recipe, context, both canonical request plans, all selected budgets and
   deadline/resource caps, acceptance gates and an authoritative artifact policy.
-* Model A attended grant binds that exact prelaunch SHA256, attempt, destination,
+- Model A attended grant binds that exact prelaunch SHA256, attempt, destination,
   owner PID/start/nonce, one launch, one connection and Q exact requests. Trust is
   LOCAL_OPERATOR_ATTESTED. CONTROLLED fixture grants remain explicitly separate
   and cannot establish genuine operator authorization.
-* Exclusive consumed claim and durable invocation marker bind the grant and exact
+- Exclusive consumed claim and durable invocation marker bind the grant and exact
   seal before final source validation/Popen. No retry, reconnect or resume allowance.
-* Completed outer descriptor binds the prelaunch digest and every retained artifact
+- Completed outer descriptor binds the prelaunch digest and every retained artifact
   identity/length/digest, paired descriptor, whole-attempt result and lifecycle index.
   The caller supplies both expected prelaunch and completion descriptor digests
   from a trusted record outside the mutable package. Prelaunch cannot know future
   response bytes; it binds the plan and verification policy, not a fabricated response.
-* The pinned completion digest establishes byte identity relative to local supplied
+- The pinned completion digest establishes byte identity relative to local supplied
   authority. It does not authenticate the operator, server or truth of all local
   process observations. A digest stored only beside the package is insufficient.
 
@@ -364,36 +364,36 @@ world correspondence, P05 optimization, native construction or P07 result follow
 
 ## Controlled milestones and test gates
 
-| Stage | Work | Required gate before advancing |
-| --- | --- | --- |
-| A | Write the separate REAL contract specification and fake-native coordinator; use real pagination/equality | Reviewed operation/phase inventories, supplied-pin authority, 1/5/6/255/256 tile plans, no frozen-contract changes |
-| B | Controlled secure stream, process lifecycle and deadline/resource tests | One connection/launch, no retry, exact schedule, all counters/buffers/timeouts bounded, no unselected packets, RSS/storage admission selected before native preparation |
-| C | Real writer/verifier replay on synthetic native evidence | Complete prefixes/final log, cleanup consistency, exact inventory; survives disposable cleanup and separate-cwd fresh-process verification |
-| D | Independent Spec, Standards and targeted adversarial implementation review | All mandatory tests and quality gates pass; no inconclusive acceptance claims, pinned baseline digests/history unchanged |
-| E | Separately requested preflight and immutable proof preparation | Reviewed small scope, current assets/source, budgets, deadlines, total size/memory admission, exact unauthorised seal and no consumption |
-| F | Future explicit attended authorization for one exact OpenTTD 15.3 attempt | Grant matches seal/attempt/destination; one process/session, no retries; post-run independent offline acceptance and accounting required |
+| Stage | Work                                                                                                     | Required gate before advancing                                                                                                                                          |
+| ----- | -------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A     | Write the separate REAL contract specification and fake-native coordinator; use real pagination/equality | Reviewed operation/phase inventories, supplied-pin authority, 1/5/6/255/256 tile plans, no frozen-contract changes                                                      |
+| B     | Controlled secure stream, process lifecycle and deadline/resource tests                                  | One connection/launch, no retry, exact schedule, all counters/buffers/timeouts bounded, no unselected packets, RSS/storage admission selected before native preparation |
+| C     | Real writer/verifier replay on synthetic native evidence                                                 | Complete prefixes/final log, cleanup consistency, exact inventory; survives disposable cleanup and separate-cwd fresh-process verification                              |
+| D     | Independent Spec, Standards and targeted adversarial implementation review                               | All mandatory tests and quality gates pass; no inconclusive acceptance claims, pinned baseline digests/history unchanged                                                |
+| E     | Separately requested preflight and immutable proof preparation                                           | Reviewed small scope, current assets/source, budgets, deadlines, total size/memory admission, exact unauthorised seal and no consumption                                |
+| F     | Future explicit attended authorization for one exact OpenTTD 15.3 attempt                                | Grant matches seal/attempt/destination; one process/session, no retries; post-run independent offline acceptance and accounting required                                |
 
 No stage E/F action occurs in this design task. Approval here permits only future
 controlled integration work. Native capacity is established only by a separately
 authorized retained native result and cannot be inferred from maximum-scope fake tests.
 
-| Test challenge | Required acceptance/rejection boundary |
-| --- | --- |
-| Complete equal 1/5/6/255/256 regions, partial final page | Existing two-sweep replay; no partial/full-map confusion |
-| Wrong order/cursor/ID, duplicate, stale or missing response | Sealed scheduler and transport correlation before admission |
-| Drift in any of ten fields, changed fingerprint/geometry, date regression | Identity gate and production equality replay |
-| Foreign process/session/endpoint or repeated authentication | Owned runtime and secure lifecycle gate |
-| Packet fragmentation/coalescing, duplicate after PONG, queued surplus | Completion/quiescence and exact frame deltas |
-| Per-page/sweep/combined caps, unselected packet, raw byte flood | Before-write/receive admission, aggregate counters and queue limits |
-| Deadline at every phase, EOF mid-sweep, interrupted second sweep | Terminal failure, bounded cleanup; no retry or accepted partial result |
-| Prefix corruption, wrong offset/hash, repeated or foreign markers | Multi-page log policy; valid append-only shutdown remains accepted |
-| Native response log disagrees with received response | Existing marker semantic comparison plus exact receipt byte commitments |
-| False cleanup gate, raw/summary conflict, live endpoint or missing disposal | Established cleanup/endpoint predicates plus outer result reconciliation |
-| Missing/extra/nested/symlink artifact; recomputed mutable manifests | Exact outer/nested inventory and caller pins |
-| Cross-attempt grant, log, page or cleanup substitution | Immutable plan, lineage, lifecycle and pinned completed descriptor |
-| CONTROLLED-to-REAL classification or reused single-page grant | Version/operation/mode and Model A authorization dispatch |
-| Delete permitted candidate/runtime/credential copies | Offline retained-source replay; protected/persistent identities remain untouched |
-| Baseline compatibility and protected historical artifacts | All 26 digests and historical integrity; 13 missing legacy inputs remain unresolved |
+| Test challenge                                                              | Required acceptance/rejection boundary                                              |
+| --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Complete equal 1/5/6/255/256 regions, partial final page                    | Existing two-sweep replay; no partial/full-map confusion                            |
+| Wrong order/cursor/ID, duplicate, stale or missing response                 | Sealed scheduler and transport correlation before admission                         |
+| Drift in any of ten fields, changed fingerprint/geometry, date regression   | Identity gate and production equality replay                                        |
+| Foreign process/session/endpoint or repeated authentication                 | Owned runtime and secure lifecycle gate                                             |
+| Packet fragmentation/coalescing, duplicate after PONG, queued surplus       | Completion/quiescence and exact frame deltas                                        |
+| Per-page/sweep/combined caps, unselected packet, raw byte flood             | Before-write/receive admission, aggregate counters and queue limits                 |
+| Deadline at every phase, EOF mid-sweep, interrupted second sweep            | Terminal failure, bounded cleanup; no retry or accepted partial result              |
+| Prefix corruption, wrong offset/hash, repeated or foreign markers           | Multi-page log policy; valid append-only shutdown remains accepted                  |
+| Native response log disagrees with received response                        | Existing marker semantic comparison plus exact receipt byte commitments             |
+| False cleanup gate, raw/summary conflict, live endpoint or missing disposal | Established cleanup/endpoint predicates plus outer result reconciliation            |
+| Missing/extra/nested/symlink artifact; recomputed mutable manifests         | Exact outer/nested inventory and caller pins                                        |
+| Cross-attempt grant, log, page or cleanup substitution                      | Immutable plan, lineage, lifecycle and pinned completed descriptor                  |
+| CONTROLLED-to-REAL classification or reused single-page grant               | Version/operation/mode and Model A authorization dispatch                           |
+| Delete permitted candidate/runtime/credential copies                        | Offline retained-source replay; protected/persistent identities remain untouched    |
+| Baseline compatibility and protected historical artifacts                   | All 26 digests and historical integrity; 13 missing legacy inputs remain unresolved |
 
 ## Independent design reviews
 

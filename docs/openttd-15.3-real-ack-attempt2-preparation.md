@@ -14,12 +14,12 @@ source-freeze. Its stdout contains the game console banner. Its stderr contains
 world generation, graphics loading, one authenticated Admin session and shutdown,
 but no script-origin lifecycle markers.
 
-| Fact | Classification | Reason |
-| --- | --- | --- |
-| Startup | B: never explicitly emitted | Old bridge Start had no logging call. |
-| Event receipt | B: never explicitly emitted | Old event/Handle path had no logging call. |
-| ACK send | B: never explicitly emitted | Real response/receipt proves network result; old Send path did not log success. |
-| Post-ACK liveness | B: never explicitly emitted | Old loop continued without an explicit observable marker. |
+| Fact              | Classification              | Reason                                                                          |
+| ----------------- | --------------------------- | ------------------------------------------------------------------------------- |
+| Startup           | B: never explicitly emitted | Old bridge Start had no logging call.                                           |
+| Event receipt     | B: never explicitly emitted | Old event/Handle path had no logging call.                                      |
+| ACK send          | B: never explicitly emitted | Real response/receipt proves network result; old Send path did not log success. |
+| Post-ACK liveness | B: never explicitly emitted | Old loop continued without an explicit observable marker.                       |
 
 No trustworthy missing marker was found in either raw stream, protocol evidence,
 response, receipt, lifecycle, sanitized config, or other retained artifact. The

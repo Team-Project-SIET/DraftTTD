@@ -1,12 +1,14 @@
 ---
+
 title: "Technical Debt"
 type: planning
 status: current
 updated: 2026-10-22
 tags:
-  - openttd
-  - planning
-  - debt
+- openttd
+- planning
+- debt
+
 ---
 
 # Technical Debt
@@ -46,8 +48,8 @@ Recorded, source-backed debt items. Only items stated by project records are lis
 ## Environment / hygiene
 
 - **Stray root file `--version`** — an unknown 694,136-byte untracked root file dated
-  2026-10-15. Instruction: preserve it, do not execute it (AI_HANDOFF). *(Its purpose
-  remains UNKNOWN — recorded, not investigated here.)*
+  2026-10-15. Instruction: preserve it, do not execute it (AI_HANDOFF). _(Its purpose
+  remains UNKNOWN — recorded, not investigated here.)_
 - **`.env` and credential-adjacent directories** must stay excluded from any transfer and
   out of any vault/publishing surface (AI_HANDOFF).
 - **Git-ignored retained evidence at scale** — protection manifests and ownership gates

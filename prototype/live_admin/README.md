@@ -41,7 +41,7 @@ openttd -g -G SEED -snull -mnull -vnull:ticks=74*DAYS -c GENERATED_CONFIG
 
 The null video driver has a bounded simulation loop but never sets the dedicated
 server flags or starts network listeners. Config injection alone is insufficient.
-Using `-D` *before* `-vnull` would not work: the last video-driver selection wins,
+Using `-D` _before_ `-vnull` would not work: the last video-driver selection wins,
 and the dedicated driver's MainLoop is what enables server mode.
 
 `lab_seam.py` replaces the private `_run_experiment` callable only in the isolated
@@ -110,14 +110,14 @@ Unknown packet types and trailing fields are ignored. Truncated known packets,
 server rejection, unexpected shutdown, or unsupported protocol versions fail
 explicitly. This client accepts only advertised protocol **2**.
 
-| Packet | ID | Parsed fields |
-|---|---:|---|
-| ServerProtocol | 103 | uint8 version; boolean-delimited uint16 update/frequency pairs |
-| ServerWelcome | 104 | name, revision, dedicated flag, legacy map-name, seed, landscape, start date, map dimensions |
-| Date | 107 | uint32 day number from 0000-01-01 (year zero is leap) |
-| CompanyInfo | 114 | ID, company/manager names, colour, password flag, inauguration year, AI flag, bankruptcy quarters, four share owners |
+| Packet         |  ID | Parsed fields                                                                                                                                        |
+| -------------- | --: | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ServerProtocol | 103 | uint8 version; boolean-delimited uint16 update/frequency pairs                                                                                       |
+| ServerWelcome  | 104 | name, revision, dedicated flag, legacy map-name, seed, landscape, start date, map dimensions                                                         |
+| Date           | 107 | uint32 day number from 0000-01-01 (year zero is leap)                                                                                                |
+| CompanyInfo    | 114 | ID, company/manager names, colour, password flag, inauguration year, AI flag, bankruptcy quarters, four share owners                                 |
 | CompanyEconomy | 117 | ID, signed 64-bit money/loan/yearly net income, current-quarter delivered cargo, two completed-quarter records (value, performance, delivered cargo) |
-| CompanyStats | 118 | ID; five uint16 vehicle counts and five uint16 facility counts: train, lorry, bus, plane, ship |
+| CompanyStats   | 118 | ID; five uint16 vehicle counts and five uint16 facility counts: train, lorry, bus, plane, ship                                                       |
 
 Read the sender, not only the header comments: 13.4 CompanyInfo sends bankruptcy
 and share data beyond the fields documented in its header. Economy `income` is
@@ -136,10 +136,10 @@ Economy and Stats polls always return all companies in 13.4.
 
 No external Admin library was installed or added as a project dependency.
 
-* [python3-openttd at e23bd94](https://github.com/horazont/python3-openttd/tree/e23bd94a52e533c1ee7d5f9be0d7a610fbc3536f)
+- [python3-openttd at e23bd94](https://github.com/horazont/python3-openttd/tree/e23bd94a52e533c1ee7d5f9be0d7a610fbc3536f)
   last commit inspected: 2021-08-15. Its protocol/client uses `asyncio.coroutine`
   and `asyncio.Event(loop=...)`, incompatible with the pinned Python 3.14 runtime.
-* [pyOpenTTDAdmin at 8b23207](https://github.com/liki-mc/pyOpenTTDAdmin/tree/8b23207f67a64ee0b965a7d4e56f6c85d51d8eca)
+- [pyOpenTTDAdmin at 8b23207](https://github.com/liki-mc/pyOpenTTDAdmin/tree/8b23207f67a64ee0b965a7d4e56f6c85d51d8eca)
   last commit inspected: 2026-06-12. Legacy password join exists, so it is not
   inherently restricted to modern OpenTTD. However `packet.py` parses income and
   money unsigned, CompanyStats discards station counts, and unknown packet IDs
@@ -154,20 +154,20 @@ No external Admin library was installed or added as a project dependency.
 Pinned OpenTTD tag **13.4**, commit
 `7e457a367e67f4e1b7d28ebd769e3a649ea60175`:
 
-* [Admin protocol guide](https://github.com/OpenTTD/OpenTTD/blob/13.4/docs/admin_network.md)
-* [tcp_admin.h](https://github.com/OpenTTD/OpenTTD/blob/13.4/src/network/core/tcp_admin.h)
-* [Actual packet senders/receivers](https://github.com/OpenTTD/OpenTTD/blob/13.4/src/network/network_admin.cpp)
-* [Packet serialization](https://github.com/OpenTTD/OpenTTD/blob/13.4/src/network/core/packet.cpp)
-* [Protocol version and packet limits](https://github.com/OpenTTD/OpenTTD/blob/13.4/src/network/core/config.h)
-* [Dedicated driver](https://github.com/OpenTTD/OpenTTD/blob/13.4/src/video/dedicated_v.cpp)
+- [Admin protocol guide](https://github.com/OpenTTD/OpenTTD/blob/13.4/docs/admin_network.md)
+- [tcp_admin.h](https://github.com/OpenTTD/OpenTTD/blob/13.4/src/network/core/tcp_admin.h)
+- [Actual packet senders/receivers](https://github.com/OpenTTD/OpenTTD/blob/13.4/src/network/network_admin.cpp)
+- [Packet serialization](https://github.com/OpenTTD/OpenTTD/blob/13.4/src/network/core/packet.cpp)
+- [Protocol version and packet limits](https://github.com/OpenTTD/OpenTTD/blob/13.4/src/network/core/config.h)
+- [Dedicated driver](https://github.com/OpenTTD/OpenTTD/blob/13.4/src/video/dedicated_v.cpp)
   and [null driver](https://github.com/OpenTTD/OpenTTD/blob/13.4/src/video/null_v.cpp)
-* [Launch option handling](https://github.com/OpenTTD/OpenTTD/blob/13.4/src/openttd.cpp)
-* [Listener startup](https://github.com/OpenTTD/OpenTTD/blob/13.4/src/network/network.cpp)
-* [Config version migration](https://github.com/OpenTTD/OpenTTD/blob/13.4/src/settings.cpp)
-* [Password settings](https://github.com/OpenTTD/OpenTTD/blob/13.4/src/table/settings/network_secrets_settings.ini)
-* [Vehicle/station count semantics](https://github.com/OpenTTD/OpenTTD/blob/13.4/src/network/network_server.cpp)
-* [Date conversion](https://github.com/OpenTTD/OpenTTD/blob/13.4/src/date.cpp)
-* [OpenTTDLab 0.0.75 source](https://github.com/michalc/OpenTTDLab/blob/v0.0.75/openttdlab.py)
+- [Launch option handling](https://github.com/OpenTTD/OpenTTD/blob/13.4/src/openttd.cpp)
+- [Listener startup](https://github.com/OpenTTD/OpenTTD/blob/13.4/src/network/network.cpp)
+- [Config version migration](https://github.com/OpenTTD/OpenTTD/blob/13.4/src/settings.cpp)
+- [Password settings](https://github.com/OpenTTD/OpenTTD/blob/13.4/src/table/settings/network_secrets_settings.ini)
+- [Vehicle/station count semantics](https://github.com/OpenTTD/OpenTTD/blob/13.4/src/network/network_server.cpp)
+- [Date conversion](https://github.com/OpenTTD/OpenTTD/blob/13.4/src/date.cpp)
+- [OpenTTDLab 0.0.75 source](https://github.com/michalc/OpenTTDLab/blob/v0.0.75/openttdlab.py)
 
 ## Lifecycle and limits
 

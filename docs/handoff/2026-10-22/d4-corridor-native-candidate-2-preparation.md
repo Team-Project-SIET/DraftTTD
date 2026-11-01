@@ -27,39 +27,39 @@ or wrote a claim. No Git stage/commit/push/reset/clean/stash was performed.
 
 ## 1. The staged candidate at a glance
 
-| Fact | Value |
-| --- | --- |
-| Candidate directory | `artifacts/experiments/d4-corridor-native-candidate-2/` (new directory, created `exist_ok=False`; no existing candidate touched) |
-| Attempt | `D4-CORRIDOR-2` (one attempt, milestone `D4-CONSTRUCTION`, kind `corridor`) |
-| Prelaunch schema | `d4-corridor-native-prelaunch-v1` |
-| Prelaunch seal (PRELAUNCH.json sha-256) | `de0e16f73d71efbad636271217a4981b4e6350412184bdbdfa17533e3d304f00` |
-| Source world mode | `PREREQUISITE_ATTEMPT_SOURCE_SAVE_LOAD` |
-| Source save | the consumed D3-TERRAFORMING-1 attempt's `after.sav`, sha-256 **`fbebef54dd466e0bea23cc30e11e94ebaf2a3ca07e2e9b7aadd6a6645c37d59e`** (re-verified unchanged before staging; the distinct `after-diagnostic.sav` remains never a substitute) |
-| Prerequisite record | `d4-native-prerequisite-attempt-v1`: attempt `D3-TERRAFORMING-1`, replay-verified, chain `… → D3-CLEARING-2 → D3-CLEARING-1` |
-| Welcome (must match at execution) | revision `15.3`, seed `17`, landscape `0`, 256×256, `start_day 712223` |
-| Company | 0 (authorized company for every op) |
-| Plan digest | `2a30e95048e89ffa1420e0ae392b79f4d051f447d7a15a3edb896b4bbdcabb3a` (the v2 digest `2a30e950…cabb3a` named in E23 §4) |
-| Schedule version | **2** |
-| Budgets | 1 launch, 1 connection, **25 planned requests** (8 ops × 3 exchanges + 1 route read), request budget **31**, 8 road ops, 0 retries/reconnects, readiness 45 s, request 10 s, total 900 s, response bound ≤ 640 B, request bound ≤ 512 B, gsadmin 1450 B |
-| Per-op cost ceiling | `MAX_CORRIDOR_COST = 2000` (£2,000), unchanged; **no aggregate phase budget** (the £16,000 worst-case figure remains an exposure bound, not a budget) |
-| Authorization | `PENDING — requires ONE fresh operator authorization after all preflight gates; no authorization file exists and no claim exists` |
-| Execution command (after authorization) | `.venv/bin/python -m app.simulation.openttd.proof.corridor_construction_native run artifacts/experiments/d4-corridor-native-candidate-2` |
+| Fact                                    | Value                                                                                                                                                                                                                                                   |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Candidate directory                     | `artifacts/experiments/d4-corridor-native-candidate-2/` (new directory, created `exist_ok=False`; no existing candidate touched)                                                                                                                        |
+| Attempt                                 | `D4-CORRIDOR-2` (one attempt, milestone `D4-CONSTRUCTION`, kind `corridor`)                                                                                                                                                                             |
+| Prelaunch schema                        | `d4-corridor-native-prelaunch-v1`                                                                                                                                                                                                                       |
+| Prelaunch seal (PRELAUNCH.json sha-256) | `de0e16f73d71efbad636271217a4981b4e6350412184bdbdfa17533e3d304f00`                                                                                                                                                                                      |
+| Source world mode                       | `PREREQUISITE_ATTEMPT_SOURCE_SAVE_LOAD`                                                                                                                                                                                                                 |
+| Source save                             | the consumed D3-TERRAFORMING-1 attempt's `after.sav`, sha-256 **`fbebef54dd466e0bea23cc30e11e94ebaf2a3ca07e2e9b7aadd6a6645c37d59e`** (re-verified unchanged before staging; the distinct `after-diagnostic.sav` remains never a substitute)             |
+| Prerequisite record                     | `d4-native-prerequisite-attempt-v1`: attempt `D3-TERRAFORMING-1`, replay-verified, chain `… → D3-CLEARING-2 → D3-CLEARING-1`                                                                                                                            |
+| Welcome (must match at execution)       | revision `15.3`, seed `17`, landscape `0`, 256×256, `start_day 712223`                                                                                                                                                                                  |
+| Company                                 | 0 (authorized company for every op)                                                                                                                                                                                                                     |
+| Plan digest                             | `2a30e95048e89ffa1420e0ae392b79f4d051f447d7a15a3edb896b4bbdcabb3a` (the v2 digest `2a30e950…cabb3a` named in E23 §4)                                                                                                                                    |
+| Schedule version                        | **2**                                                                                                                                                                                                                                                   |
+| Budgets                                 | 1 launch, 1 connection, **25 planned requests** (8 ops × 3 exchanges + 1 route read), request budget **31**, 8 road ops, 0 retries/reconnects, readiness 45 s, request 10 s, total 900 s, response bound ≤ 640 B, request bound ≤ 512 B, gsadmin 1450 B |
+| Per-op cost ceiling                     | `MAX_CORRIDOR_COST = 2000` (£2,000), unchanged; **no aggregate phase budget** (the £16,000 worst-case figure remains an exposure bound, not a budget)                                                                                                   |
+| Authorization                           | `PENDING — requires ONE fresh operator authorization after all preflight gates; no authorization file exists and no claim exists`                                                                                                                       |
+| Execution command (after authorization) | `.venv/bin/python -m app.simulation.openttd.proof.corridor_construction_native run artifacts/experiments/d4-corridor-native-candidate-2`                                                                                                                |
 
 ## 2. The staged corridor schedule (v2, eight operations)
 
 Derived offline by `corridor_schedule()` from the same pinned compiled facts;
 verified against the staged `PRELAUNCH.json` byte-for-byte:
 
-| Index | Operation | Pins (derived + asserted) |
-| --- | --- | --- |
-| 0 | `full` run A | `45747 → 45743`, run length 5 |
-| 1 | `full` run-B segment 1 | `45999 → 48047`, run length 9 |
-| 2 | `full` run-B segment 2 | `48303 → 50095`, run length 8 |
-| 3 | `road` interior join | `48047 ↔ 48303` |
-| 4 | `road` corner join | `45743 ↔ 45999` |
-| 5 | `station` pickup | tile `45748`, front `45747` |
-| 6 | `station` delivery | tile `50351`, front `50095` |
-| 7 | `depot` | tile `45487`, front `45743`, orientation `south` |
+| Index | Operation              | Pins (derived + asserted)                        |
+| ----- | ---------------------- | ------------------------------------------------ |
+| 0     | `full` run A           | `45747 → 45743`, run length 5                    |
+| 1     | `full` run-B segment 1 | `45999 → 48047`, run length 9                    |
+| 2     | `full` run-B segment 2 | `48303 → 50095`, run length 8                    |
+| 3     | `road` interior join   | `48047 ↔ 48303`                                  |
+| 4     | `road` corner join     | `45743 ↔ 45999`                                  |
+| 5     | `station` pickup       | tile `45748`, front `45747`                      |
+| 6     | `station` delivery     | tile `50351`, front `50095`                      |
+| 7     | `depot`                | tile `45487`, front `45743`, orientation `south` |
 
 ## 3. The attempt-identity decision (operator-approved)
 
@@ -98,14 +98,14 @@ never-consumed identity:
 
 ## 5. Offline validation performed
 
-| Check | Command | Result |
-| --- | --- | --- |
-| Focused suites (after the identity edit) | `.venv/bin/python -m pytest tests/test_corridor_construction.py tests/test_corridor_construction_native.py` | exit 0; **55 tests** (wire 23 + native 32), all pass, 0 skipped — the clicked-through dots are suppressed by the in-process Squirrel driver, exactly as recorded in E22/E23; both consumed-artifact replay regressions ran against untouched `D4-CORRIDOR-1` and still return the preserved-halt verdict under the v1 selector |
-| Lint | `.venv/bin/python -m ruff check` (module + both test files) | exit 0, "All checks passed!" |
-| Byte-compile | `.venv/bin/python -m compileall` (module + both test files) | exit 0, clean |
-| Whitespace hygiene | `git diff --check` | exit 0, clean |
-| Staging | `.venv/bin/python -m app.simulation.openttd.proof.corridor_construction_native prepare artifacts/experiments/d4-corridor-native-candidate-2` | exit 0, **`PRELAUNCH PASS`** (staging + offline launch-boundary rehearsal in one step) |
-| Standalone read-only preflight | `.venv/bin/python -m app.simulation.openttd.proof.corridor_construction_native preflight artifacts/experiments/d4-corridor-native-candidate-2` | exit 0, **`PREFLIGHT PASS`** |
+| Check                                    | Command                                                                                                                                        | Result                                                                                                                                                                                                                                                                                                                         |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Focused suites (after the identity edit) | `.venv/bin/python -m pytest tests/test_corridor_construction.py tests/test_corridor_construction_native.py`                                    | exit 0; **55 tests** (wire 23 + native 32), all pass, 0 skipped — the clicked-through dots are suppressed by the in-process Squirrel driver, exactly as recorded in E22/E23; both consumed-artifact replay regressions ran against untouched `D4-CORRIDOR-1` and still return the preserved-halt verdict under the v1 selector |
+| Lint                                     | `.venv/bin/python -m ruff check` (module + both test files)                                                                                    | exit 0, "All checks passed!"                                                                                                                                                                                                                                                                                                   |
+| Byte-compile                             | `.venv/bin/python -m compileall` (module + both test files)                                                                                    | exit 0, clean                                                                                                                                                                                                                                                                                                                  |
+| Whitespace hygiene                       | `git diff --check`                                                                                                                             | exit 0, clean                                                                                                                                                                                                                                                                                                                  |
+| Staging                                  | `.venv/bin/python -m app.simulation.openttd.proof.corridor_construction_native prepare artifacts/experiments/d4-corridor-native-candidate-2`   | exit 0, **`PRELAUNCH PASS`** (staging + offline launch-boundary rehearsal in one step)                                                                                                                                                                                                                                         |
+| Standalone read-only preflight           | `.venv/bin/python -m app.simulation.openttd.proof.corridor_construction_native preflight artifacts/experiments/d4-corridor-native-candidate-2` | exit 0, **`PREFLIGHT PASS`**                                                                                                                                                                                                                                                                                                   |
 
 The preflight gates are the documented D4 lineage set: prelaunch seal intact;
 claim absent; schema the D4 corridor lineage; the full frozen source closure +

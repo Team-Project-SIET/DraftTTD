@@ -1,12 +1,14 @@
 ---
+
 title: "OpenTTD Integration"
 type: architecture
 status: current
 updated: 2026-10-22
 tags:
-  - openttd
-  - architecture
-  - gamescript
+- openttd
+- architecture
+- gamescript
+
 ---
 
 # OpenTTD Integration

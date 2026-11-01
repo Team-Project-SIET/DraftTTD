@@ -1,12 +1,14 @@
 ---
+
 title: "Pending Milestones"
 type: milestone
 status: current
 updated: 2026-10-26
 tags:
-  - openttd
-  - milestone
-  - planning
+- openttd
+- milestone
+- planning
+
 ---
 
 # Pending Milestones

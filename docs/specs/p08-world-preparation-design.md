@@ -115,21 +115,21 @@ INVALID_PREPARATION_OUTPUT; never defer this check to optimization/runtime.
 
 ## Hard limits (v1)
 
-| Bound | Maximum |
-| --- | ---: |
-| Map tiles | 65,536 |
-| Industries examined | 32 |
-| OD/cargo relationships | 16 |
-| Mandatory demands per scenario | 1 |
-| Station candidates per role | 4 |
-| Depots per scenario | 1 |
-| Corridors per directed pair | 2 |
-| Fleet options | 32 |
-| Total infrastructure candidates | 64 |
-| Corridor tiles | 4,096 |
-| Search states per pair | 250,000 |
-| Aggregate expansions | 2,000,000 |
-| Canonical scenario bytes | 4 MiB |
+| Bound                           |   Maximum |
+| ------------------------------- | --------: |
+| Map tiles                       |    65,536 |
+| Industries examined             |        32 |
+| OD/cargo relationships          |        16 |
+| Mandatory demands per scenario  |         1 |
+| Station candidates per role     |         4 |
+| Depots per scenario             |         1 |
+| Corridors per directed pair     |         2 |
+| Fleet options                   |        32 |
+| Total infrastructure candidates |        64 |
+| Corridor tiles                  |     4,096 |
+| Search states per pair          |   250,000 |
+| Aggregate expansions            | 2,000,000 |
+| Canonical scenario bytes        |     4 MiB |
 
 No silent hard-bound truncation. Overflow is CANDIDATE_LIMIT_EXCEEDED. Station
 sector sampling is documented separately from these overflow rules.
@@ -231,16 +231,16 @@ P08 is uncommitted; `.env.example` is preserved. No commit or push was performed
 No P02/P03/P04/P05/P06/P07 source behavior, objective, schema or metric semantics
 were changed. No migration or database integration was added.
 
-| Scope | Passed | Skipped |
-| --- | ---: | ---: |
-| Focused P08 | 78 | 0 |
-| P05 optimizer | 37 | 0 |
-| P06 domain/executor | 71 | 0 |
-| P02/P03 contracts/world/transport | 97 | 0 |
-| P04 protocol/session/observer | 322 | 0 |
-| P07 realization/evaluation/setup/live integration | 37 | 3 |
-| Other controlled experiment/runtime regressions | 407 | 32 |
-| Total | 1,049 | 35 |
+| Scope                                             | Passed | Skipped |
+| ------------------------------------------------- | -----: | ------: |
+| Focused P08                                       |     78 |       0 |
+| P05 optimizer                                     |     37 |       0 |
+| P06 domain/executor                               |     71 |       0 |
+| P02/P03 contracts/world/transport                 |     97 |       0 |
+| P04 protocol/session/observer                     |    322 |       0 |
+| P07 realization/evaluation/setup/live integration |     37 |       3 |
+| Other controlled experiment/runtime regressions   |    407 |      32 |
+| Total                                             |  1,049 |      35 |
 
 The final whole controlled suite used `pytest -m 'not openttd'`; three real-OpenTTD
 cases were deselected. All 35 skips were opt-in PostgreSQL cases. PostgreSQL was

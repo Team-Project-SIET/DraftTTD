@@ -126,7 +126,7 @@ implementable.
 
 The funds ledger records every per-exchange delta but enforces only the
 purchase delta (`corridor_freight.py:33–38,949–968,1512–1522,1560–1561`);
-"halt on unexplained funds drift" has no definition of *unexplained*. Vehicle
+"halt on unexplained funds drift" has no definition of _unexplained_. Vehicle
 running costs are an expected, legitimate mechanism with no monitor, and a
 −£1 non-purchase drift was observed natively on the legacy lane
 (`docs/road-vehicle-lifecycle-proof.md:21,49`). Resolution (operator-approved
@@ -213,12 +213,12 @@ operations are never counted; the v1 budget is
 `FREIGHT_REQUEST_BUDGET = 32` (`corridor_freight.py:87`) and the GameScript
 refuses silently at the cap.
 
-| Component | Count | Composition (v1 IDs) |
-|---|---|---|
-| Fixed setup | 10 | site-00, engine-00, purchase-00, vread-00, order-00, order-01, order-read-00, monitor-00, start-00, vread-01 |
-| Per cycle (k=3) | 3 | load-NN, transit-NN, deliver-NN (monitor reads inside watch readbacks) |
-| Tail | 2 | finance-00, finish-00 |
-| Total | 10 + 2 + 3N ≤ 32 | **N ≤ 6** |
+| Component       | Count            | Composition (v1 IDs)                                                                                         |
+| --------------- | ---------------- | ------------------------------------------------------------------------------------------------------------ |
+| Fixed setup     | 10               | site-00, engine-00, purchase-00, vread-00, order-00, order-01, order-read-00, monitor-00, start-00, vread-01 |
+| Per cycle (k=3) | 3                | load-NN, transit-NN, deliver-NN (monitor reads inside watch readbacks)                                       |
+| Tail            | 2                | finance-00, finish-00                                                                                        |
+| Total           | 10 + 2 + 3N ≤ 32 | **N ≤ 6**                                                                                                    |
 
 Stricter/safer readings: k=4 (per-cycle finance read) → floor(20/4) = **5**;
 k=5 → **4**. Wall-clock worst case (all three windows saturate 60 s) binds

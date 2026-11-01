@@ -7,16 +7,16 @@ admission is a separate fail-closed gate.
 
 ## Distinct semantic layers
 
-| Layer | Identity / implemented relation | Evidence status |
-|---|---|---|
-| A. Original prepared-save bytes | `ControlledSourceLinks.original_save_digest`; optional owned fixture import hashes actual bytes | SOURCE_BYTES_VERIFIED for imported bytes, not parsed/loaded |
-| B. PreparedWorldManifest | Existing immutable model; `source_digest` must be A or explicitly identified G; `world_manifest_hash` remains sole world_fingerprint | CONTROLLED_VALIDATED; fingerprint includes preparation/planner metadata, not only save bytes |
-| C. Actual source loaded into runtime | `loaded_source_digest` equals A when asserted; None means missing | CONTROLLED_SIMULATED or MISSING, never real-proof receipt |
-| D. Continuous M0→M1→M2 runtime | Existing WPO qualification and owner context | REAL_PROVEN historical Attempt 4; controlled imported linkage to A remains UNPROVEN |
-| E. Final M2 structural observation | Exact existing structural digest and WPO match | REAL_PROVEN historical pipeline; matched typed input CONTROLLED_VALIDATED |
-| F. Qualified M1 production collected in M2 | Existing production digest/WPO identity; unchanged exact structural-source and qualification gates | REAL_PROVEN historical pipeline; matched typed input CONTROLLED_VALIDATED |
-| G. Post-qualification saved bytes | Separate nullable `post_qualification_save_digest`; optional owned fixture import hashes different bytes separately | None → UNPROVEN; present → CONTROLLED_SIMULATED; byte verification does not establish state correspondence |
-| H. Candidate-generation input | Frozen composition of WPO/facts/correspondence; future candidate references retain separate digests | CONTROLLED_VALIDATED; P08 adapter not implemented |
+| Layer                                      | Identity / implemented relation                                                                                                      | Evidence status                                                                                            |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
+| A. Original prepared-save bytes            | `ControlledSourceLinks.original_save_digest`; optional owned fixture import hashes actual bytes                                      | SOURCE_BYTES_VERIFIED for imported bytes, not parsed/loaded                                                |
+| B. PreparedWorldManifest                   | Existing immutable model; `source_digest` must be A or explicitly identified G; `world_manifest_hash` remains sole world_fingerprint | CONTROLLED_VALIDATED; fingerprint includes preparation/planner metadata, not only save bytes               |
+| C. Actual source loaded into runtime       | `loaded_source_digest` equals A when asserted; None means missing                                                                    | CONTROLLED_SIMULATED or MISSING, never real-proof receipt                                                  |
+| D. Continuous M0→M1→M2 runtime             | Existing WPO qualification and owner context                                                                                         | REAL_PROVEN historical Attempt 4; controlled imported linkage to A remains UNPROVEN                        |
+| E. Final M2 structural observation         | Exact existing structural digest and WPO match                                                                                       | REAL_PROVEN historical pipeline; matched typed input CONTROLLED_VALIDATED                                  |
+| F. Qualified M1 production collected in M2 | Existing production digest/WPO identity; unchanged exact structural-source and qualification gates                                   | REAL_PROVEN historical pipeline; matched typed input CONTROLLED_VALIDATED                                  |
+| G. Post-qualification saved bytes          | Separate nullable `post_qualification_save_digest`; optional owned fixture import hashes different bytes separately                  | None → UNPROVEN; present → CONTROLLED_SIMULATED; byte verification does not establish state correspondence |
+| H. Candidate-generation input              | Frozen composition of WPO/facts/correspondence; future candidate references retain separate digests                                  | CONTROLLED_VALIDATED; P08 adapter not implemented                                                          |
 
 `ControlledSourceLinks` schema has required original/runtime/config/bridge/world,
 WPO/final-structure/production identities; loaded and final save digests are nullable.

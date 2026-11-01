@@ -171,13 +171,13 @@ Every alternate was classified only against the measured acceptance survey
 and census evidence; none was assumed viable; none consumes this
 candidate's identity.
 
-| Tile (front) | measured acceptance | census | D3-raise corner evidence | status for this design |
-|---|---|---|---|---|
-| 50863 (50864) | 8 | slope 0 rows, x=175/176 | shared points y up to 197; row y=198 outside | **primary, implemented** (live slopes UNKNOWN until native verify) |
-| 51119 (51120) | 8 | slope 0 (51119 census row verified live this session) | same style, farther south (y=199, x=175) | not implemented; farther run (5 tiles), same gate class |
-| 51375 (51376) | 8 | slope 0 | beyond 51119 y=200 | not implemented; no acceptance benefit, longer run |
-| 50605 (50606) | 8 | 50602..50606 flat | west branch row x=173 | recorded fallback only (mirrored west branch), out of scope |
-| 50607 (50608) | 8 | slope 0 in census, **live slope 9/8** | inside raised terrace corner columns | refused by design — the halted attempt's stop |
+| Tile (front)  | measured acceptance | census                                                | D3-raise corner evidence                     | status for this design                                             |
+| ------------- | ------------------- | ----------------------------------------------------- | -------------------------------------------- | ------------------------------------------------------------------ |
+| 50863 (50864) | 8                   | slope 0 rows, x=175/176                               | shared points y up to 197; row y=198 outside | **primary, implemented** (live slopes UNKNOWN until native verify) |
+| 51119 (51120) | 8                   | slope 0 (51119 census row verified live this session) | same style, farther south (y=199, x=175)     | not implemented; farther run (5 tiles), same gate class            |
+| 51375 (51376) | 8                   | slope 0                                               | beyond 51119 y=200                           | not implemented; no acceptance benefit, longer run                 |
+| 50605 (50606) | 8                   | 50602..50606 flat                                     | west branch row x=173                        | recorded fallback only (mirrored west branch), out of scope        |
+| 50607 (50608) | 8                   | slope 0 in census, **live slope 9/8**                 | inside raised terrace corner columns         | refused by design — the halted attempt's stop                      |
 
 UNKNOWNs carried forward (all fail-closed at native admission; none is
 assumed by any test):

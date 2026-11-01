@@ -13,17 +13,17 @@ No native launch, AdminPort connection, evidence mutation or commit is included.
 Inventory verified against the working tree on 2026-10-18, `devmodule2` baseline
 `a348016` plus local uncommitted work. Native evidence packages were read only.
 
-| Capability | Existing implementation | Status |
-|---|---|---|
-| Single-run receipt evaluation with planned/actual metric comparison, provenance, findings | `app/experiments/freight_evaluation.py` (`evaluate_freight`, `FreightMetric`, `FreightEvaluation`) | Reused as-is |
-| Multi-service network evaluation and deterministic initial feedback codes | `app/experiments/freight_network.py` (`evaluate_freight_network`, `optimization_feedback`) | Reused as-is |
-| Cohort/descriptive history, CSV/JSON summary, self-contained SVG charts | `app/experiments/freight_analytics.py` (`summarize`, `render_html`, `analyze`, `_bars`) | Reused as-is (`_bars` reused for new charts) |
-| Continuous five-year reporting: monthly/quarterly/annual periods, finance reconciliation, setup cash coverage, charts, offline-recovery classification | `app/experiments/freight_continuous_analytics.py`, `app/simulation/openttd/freight_finance.py` (`reconcile_snapshots`, `reconcile_cash`) | Reused as-is |
-| Operational terminal summary for the fixed demo (OBSERVED/DERIVED/UNKNOWN labels, milestone rates) | `app/demo_operations.py` (`operational_snapshot`, `terminal_status`, `write_operational_report`) | Reused as-is |
-| Descriptive demo report comparison (2..16 P07 report dirs, world metadata retention) | `app/demo_operations.py` `compare_operational_reports` | Reused as-is |
-| Controlled P05/p08 allocation alternatives and A/B capacity preparation | `app/experiments/freight_alternatives.py`, `app/experiments/capacity_experiment.py` | Reused as-is (referenced by recommendations) |
-| Content-addressed run history | `app/experiments/freight_history.py` | Reused concept; no schema change |
-| Economy/game/clock separation metrics | `app/experiments/game_time.py` | Reused as-is |
+| Capability                                                                                                                                             | Existing implementation                                                                                                                  | Status                                       |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- |
+| Single-run receipt evaluation with planned/actual metric comparison, provenance, findings                                                              | `app/experiments/freight_evaluation.py` (`evaluate_freight`, `FreightMetric`, `FreightEvaluation`)                                       | Reused as-is                                 |
+| Multi-service network evaluation and deterministic initial feedback codes                                                                              | `app/experiments/freight_network.py` (`evaluate_freight_network`, `optimization_feedback`)                                               | Reused as-is                                 |
+| Cohort/descriptive history, CSV/JSON summary, self-contained SVG charts                                                                                | `app/experiments/freight_analytics.py` (`summarize`, `render_html`, `analyze`, `_bars`)                                                  | Reused as-is (`_bars` reused for new charts) |
+| Continuous five-year reporting: monthly/quarterly/annual periods, finance reconciliation, setup cash coverage, charts, offline-recovery classification | `app/experiments/freight_continuous_analytics.py`, `app/simulation/openttd/freight_finance.py` (`reconcile_snapshots`, `reconcile_cash`) | Reused as-is                                 |
+| Operational terminal summary for the fixed demo (OBSERVED/DERIVED/UNKNOWN labels, milestone rates)                                                     | `app/demo_operations.py` (`operational_snapshot`, `terminal_status`, `write_operational_report`)                                         | Reused as-is                                 |
+| Descriptive demo report comparison (2..16 P07 report dirs, world metadata retention)                                                                   | `app/demo_operations.py` `compare_operational_reports`                                                                                   | Reused as-is                                 |
+| Controlled P05/p08 allocation alternatives and A/B capacity preparation                                                                                | `app/experiments/freight_alternatives.py`, `app/experiments/capacity_experiment.py`                                                      | Reused as-is (referenced by recommendations) |
+| Content-addressed run history                                                                                                                          | `app/experiments/freight_history.py`                                                                                                     | Reused concept; no schema change             |
+| Economy/game/clock separation metrics                                                                                                                  | `app/experiments/game_time.py`                                                                                                           | Reused as-is                                 |
 
 ## 2. Genuine gaps (implemented by this extension)
 
@@ -110,13 +110,13 @@ Implementation details that keep the semantics defensible:
 `artifacts/experiments/p07-performance-insights-example/` (untracked, inside
 the gitignored `artifacts/` tree; no retained evidence directory touched):
 
-| File | Content |
-|---|---|
-| `insights.json` | Full `PerformanceInsights` document (SHA-traced to the Attempt 19 `summary.json` and its `PRELAUNCH.json` world recipe) |
-| `performance-report.md` | Human report: FAILED terminal status, headline metrics, per-service table, bottleneck reasoning, advisory recommendations, limitations |
-| `terminal-summary.txt` | Concise operational summary (UNKNOWN stays visible) |
-| `insights-charts.html` | Bounded SVG charts reusing the existing P07 `_bars` generator |
-| `comparison.json` | `MATCHED_WORLD_COMPARISON` of Attempt 19 (1826 days, 2980 cargo, £50,935 revenue, £28,459 CAPEX) and the fixed demo (163 days, 60 cargo, £1,022 revenue, £28,459 CAPEX), same analytical world recipe (seed 42, 64×64, NATIVE_GENERATED_DEMO), matched-pair rows only |
+| File                    | Content                                                                                                                                                                                                                                                               |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `insights.json`         | Full `PerformanceInsights` document (SHA-traced to the Attempt 19 `summary.json` and its `PRELAUNCH.json` world recipe)                                                                                                                                               |
+| `performance-report.md` | Human report: FAILED terminal status, headline metrics, per-service table, bottleneck reasoning, advisory recommendations, limitations                                                                                                                                |
+| `terminal-summary.txt`  | Concise operational summary (UNKNOWN stays visible)                                                                                                                                                                                                                   |
+| `insights-charts.html`  | Bounded SVG charts reusing the existing P07 `_bars` generator                                                                                                                                                                                                         |
+| `comparison.json`       | `MATCHED_WORLD_COMPARISON` of Attempt 19 (1826 days, 2980 cargo, £50,935 revenue, £28,459 CAPEX) and the fixed demo (163 days, 60 cargo, £1,022 revenue, £28,459 CAPEX), same analytical world recipe (seed 42, 64×64, NATIVE_GENERATED_DEMO), matched-pair rows only |
 
 Command used (offline only):
 
@@ -182,11 +182,11 @@ review note said "parenthesized"; the code is intentionally unparenthesized).
 
 ## 4. Evidence used
 
-| Source | Kind | Use |
-|---|---|---|
-| `artifacts/experiments/p07-attempt19-five-year-offline/summary.json` | Historical offline recovery of Attempt 19 (native terminal FAILED, separately verified) | Full-scale real-data tests and the complete offline example |
-| `artifacts/demos/playable-demo-25d891bc9f3444aca73058165d10055a-report/evaluation.json` | Verified fixed-demo native P07 evaluation | Fixed-demo compatibility tests and second example |
-| `artifacts/experiments/p07-attempt19-five-year-offline/metrics.csv`, `charts.html` | Same derivation | Cross-checked annual/monthly expectations in tests |
+| Source                                                                                  | Kind                                                                                    | Use                                                         |
+| --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| `artifacts/experiments/p07-attempt19-five-year-offline/summary.json`                    | Historical offline recovery of Attempt 19 (native terminal FAILED, separately verified) | Full-scale real-data tests and the complete offline example |
+| `artifacts/demos/playable-demo-25d891bc9f3444aca73058165d10055a-report/evaluation.json` | Verified fixed-demo native P07 evaluation                                               | Fixed-demo compatibility tests and second example           |
+| `artifacts/experiments/p07-attempt19-five-year-offline/metrics.csv`, `charts.html`      | Same derivation                                                                         | Cross-checked annual/monthly expectations in tests          |
 
 Attempt 19's original native terminal status remains FAILED; insights derived
 from its offline recovery keep that status visible and never relabel it.

@@ -26,7 +26,13 @@ Accepted-only, synthetic and nonfirst targets fail. No new discovery request occ
 The existing IndustryProductionRequest canonical serializer freezes exactly:
 
 ```json
-{"cargo_id":1,"industry_id":0,"protocol":1,"request_id":"openttd15-industry-production-001","type":"industry_production"}
+{
+	"cargo_id": 1,
+	"industry_id": 0,
+	"protocol": 1,
+	"request_id": "openttd15-industry-production-001",
+	"type": "industry_production"
+}
 ```
 
 The request is 121 bytes. `production-target.json` retains supporting paths and
@@ -52,16 +58,16 @@ engine sources in `tests/reference/industry_production_proof_15_3/` freeze relea
 station allocation, percentage conversion and common bridge API authority.
 `source-authority.json` binds those sources and the original semantic audits.
 
-| C++ API | Generated GameScript name | Semantics |
-|---|---|---|
-| ScriptIndustry::IsValidIndustry | GSIndustry.IsValidIndustry | Native pool membership; false for invalid industry. |
-| ScriptCargo::IsValidCargo | GSCargo.IsValidCargo | Active native cargo membership; false for invalid cargo. |
-| ScriptIndustry::GetLastMonthProduction | GSIndustry.GetLastMonthProduction | Previous economy-month production counter, uint16 storage; -1 for invalid industry/cargo/nonproduced relation. |
-| ScriptIndustry::GetLastMonthTransported | GSIndustry.GetLastMonthTransported | Previous economy-month station-allocation counter, uint16 storage; same -1 cases. |
-| ScriptIndustry::GetLastMonthTransportedPercentage | GSIndustry.GetLastMonthTransportedPercentage | Native quantized/clamped integer0..100; zero for zero production; same -1 cases. |
-| ScriptDate::GetCurrentDate | GSDate.GetCurrentDate | Current economy date, read immediately before and after metrics. |
-| ScriptLog::Info | GSLog.Info | Compact canonical native evidence. |
-| ScriptAdmin::Send | GSAdmin.Send | Native table-to-JSON transport;1450-byte ceiling. |
+| C++ API                                           | Generated GameScript name                    | Semantics                                                                                                      |
+| ------------------------------------------------- | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| ScriptIndustry::IsValidIndustry                   | GSIndustry.IsValidIndustry                   | Native pool membership; false for invalid industry.                                                            |
+| ScriptCargo::IsValidCargo                         | GSCargo.IsValidCargo                         | Active native cargo membership; false for invalid cargo.                                                       |
+| ScriptIndustry::GetLastMonthProduction            | GSIndustry.GetLastMonthProduction            | Previous economy-month production counter, uint16 storage; -1 for invalid industry/cargo/nonproduced relation. |
+| ScriptIndustry::GetLastMonthTransported           | GSIndustry.GetLastMonthTransported           | Previous economy-month station-allocation counter, uint16 storage; same -1 cases.                              |
+| ScriptIndustry::GetLastMonthTransportedPercentage | GSIndustry.GetLastMonthTransportedPercentage | Native quantized/clamped integer0..100; zero for zero production; same -1 cases.                               |
+| ScriptDate::GetCurrentDate                        | GSDate.GetCurrentDate                        | Current economy date, read immediately before and after metrics.                                               |
+| ScriptLog::Info                                   | GSLog.Info                                   | Compact canonical native evidence.                                                                             |
+| ScriptAdmin::Send                                 | GSAdmin.Send                                 | Native table-to-JSON transport;1450-byte ceiling.                                                              |
 
 The export CMake rules select `game;GS`; SquirrelExport replaces the `Script`
 prefix with `GS` and registers each original static method name. Names are sourced,
@@ -119,13 +125,13 @@ object with production-specific limits. SecureAdminSession invokes its observer 
 the actual encryption/decryption boundary. Query receipts are compared to these
 counts, never added a second time. The structural budget remains unchanged.
 
-| Category | Frames | Derivation |
-|---|---:|---|
-| Establishment | 2 | Encrypted SERVER_PROTOCOL + SERVER_WELCOME after authentication enablement. |
-| Setup | 3 | UPDATE_FREQUENCY + setup PING + matching PONG. |
-| Production query | 4 | One ADMIN_GAMESCRIPT + one SERVER_GAMESCRIPT + completion PING/PONG. |
-| Cleanup | 1 | Graceful ADMIN_QUIT; TCP EOF adds no frame. |
-| Total post-auth | 10 | 2+3+4+1; query operations4, setup/control overhead6. |
+| Category         | Frames | Derivation                                                                  |
+| ---------------- | -----: | --------------------------------------------------------------------------- |
+| Establishment    |      2 | Encrypted SERVER_PROTOCOL + SERVER_WELCOME after authentication enablement. |
+| Setup            |      3 | UPDATE_FREQUENCY + setup PING + matching PONG.                              |
+| Production query |      4 | One ADMIN_GAMESCRIPT + one SERVER_GAMESCRIPT + completion PING/PONG.        |
+| Cleanup          |      1 | Graceful ADMIN_QUIT; TCP EOF adds no frame.                                 |
+| Total post-auth  |     10 | 2+3+4+1; query operations4, setup/control overhead6.                        |
 
 Exact-at-budget succeeds. An over-budget frame fails before outbound write or
 semantic admission. Unexpected traffic cannot consume an arbitrary spare allowance.

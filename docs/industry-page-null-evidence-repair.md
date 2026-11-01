@@ -40,14 +40,14 @@ integer and uses the verified base-10 integer `tostring` delegate. `EvidenceBool
 requires a boolean and returns literal `true` or `false`. Wrong scalar types throw.
 No native debug/object/address representations are permitted in formal fields.
 
-| Field | Emission policy |
-| --- | --- |
-| after_id, next_after_id, first_id, last_id | Optional integer helper |
-| requested limit, returned count | Integer helper |
-| has_more | Boolean helper |
-| world-info dimensions | Integer helper after existing dimension validation |
-| request_id | Already validated unescaped ASCII string |
-| protocol, type, status, API version | Fixed literals after existing validation |
+| Field                                      | Emission policy                                    |
+| ------------------------------------------ | -------------------------------------------------- |
+| after_id, next_after_id, first_id, last_id | Optional integer helper                            |
+| requested limit, returned count            | Integer helper                                     |
+| has_more                                   | Boolean helper                                     |
+| world-info dimensions                      | Integer helper after existing dimension validation |
+| request_id                                 | Already validated unescaped ASCII string           |
+| protocol, type, status, API version        | Fixed literals after existing validation           |
 
 No logging framework is added. The evidence parser and validator remain unchanged
 and strict: complete metadata must exactly match canonical correlated fields.
@@ -86,7 +86,13 @@ The unchanged canonical request is 106 bytes with SHA-256
 `0050e460326e397a32ada31d3608c3aa4a1a8826bff361593e8d17e322a2dab8`:
 
 ```json
-{"after_id":null,"limit":3,"protocol":1,"request_id":"openttd15-industry-page-001","type":"industry_page"}
+{
+	"after_id": null,
+	"limit": 3,
+	"protocol": 1,
+	"request_id": "openttd15-industry-page-001",
+	"type": "industry_page"
+}
 ```
 
 **FRESH AUTHORIZATION REQUIRED — FROZEN SOURCE CHANGED.** No real launch,

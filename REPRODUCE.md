@@ -268,3 +268,67 @@ print(v.authorization_sha256, v.operator_key_identity)
 print(e.verify_extension_attempt(d)["verification"])
 EOF
 ```
+
+## 2026-11-01 addendum — D5 freight delivery v2 offline validation (checked)
+
+The D5 Freight Delivery v2 implementation of record (protocol-8 wire contract
+`app/simulation/openttd/corridor_freight_v2.py`, save-restore-bounded
+GameScript package `app/simulation/openttd/d5_freight_v2_package/`, staged
+runner `app/simulation/openttd/proof/corridor_freight_v2_native.py` and the
+repo-local stub `typings/squirrel.pyi`; no staging, no signing, no launch,
+no AdminPort, no claim, nothing written under `artifacts/`). Two focused
+offline suites in one run, exact result 2026-11-01: 48 + 67 passed, 0 failed
+(exit 0, every dot green; the `-rs` output is pattern-only, so read the dots):
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 .venv/bin/python -m pytest \
+  tests/test_corridor_freight_v2.py \
+  tests/test_corridor_freight_v2_native.py \
+  -q -p no:cacheprovider -rs
+```
+
+Offline facts re-derivable in a plain interpreter (values of record:
+plan/schedule digest
+`22bdb874f3d7df7a54e7bd4f5ca07fe024318927ef9cd6a996fbd0420f4a460f`, plan-model
+digest `779ff9ee5ef452c4d05a2a432b979095f2cb8055554f7121f950241db9de12c4`,
+route digest `b2f80f46…7131` distinct from the witness digest
+`f1f00e13…686c`, 30 exchanges = fixed 10 + 6 cycles×3 + tail 2 inside the
+32-unique-id request budget, a 640-byte site request inside the 768-byte
+bound, staged attempt `D5-FREIGHT-2` bound to the A1 close-out lineage, and
+the 10 s exchange timeout for a watch request):
+
+```bash
+.venv/bin/python - <<'EOF'
+from app.simulation.openttd.proof import corridor_freight_v2_native as w
+from app.simulation.openttd.proof.corridor_freight_v2_native import (
+    _freight_exchange_request,
+)
+plan = w.freight_plan_v2()
+sched = w.freight_schedule()
+site = _freight_exchange_request(sched[0], "0" * 64, plan, {})
+req = _freight_exchange_request(
+    next(e for e in sched if e["op"] == "vread"), "0" * 64, plan, {"vehicle": 9}
+)
+print("plan digest   ", w.plan_digest_of(sched))
+print("plan model    ", plan.digest)
+print("route digest  ", plan.route_digest)
+print("witness digest", plan.witness_digest)
+print("schedule      ", len(sched), "exchanges,", plan.cycles, "cycles")
+print("budgets       ", w.budgets()["planned_exchanges"], w.budgets()["requests"])
+print("site request  ", len(site.model_dump_json().encode()), "bytes (bound 768)")
+print("exchange time ", w.exchange_timeout_seconds(req, budget_table=w.budgets()), "s")
+EOF
+```
+
+Both suites are fully offline: neither file references `artifacts/`, so they
+do not depend on retained evidence bytes and lose nothing on a clone. The v2
+runner's staging and native-execute entry points (`prepare_candidate`,
+`execute_freight_attempt_v2`) and the replay verifier (`verify_freight_attempt`
+and its verify CLI) stay behind the operator gates of the design review §10
+item 5: staging approval, independent review, Gate C signing and a separate
+explicit launch approval each remain ungranted. The v1 protocol-5 bytes
+(`corridor_freight.py`, `d5_freight_package/`), the root `--version` file and
+every retained artifact are out of scope for this section; nothing in it
+stages, signs, launches or claims. Lint and type checks of record:
+`ruff check` clean and `uvx ty check` clean on both v2 test files and the
+runner (the runner keeps the two pre-existing class-level diagnostics only).

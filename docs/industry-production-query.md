@@ -13,7 +13,13 @@ a qualified real production history, a runtime preparation, or a planner adapter
 Canonical JSON uses sorted keys, compact separators and the existing ASCII serializer:
 
 ```json
-{"cargo_id":1,"industry_id":3,"protocol":1,"request_id":"prod-001","type":"industry_production"}
+{
+	"cargo_id": 1,
+	"industry_id": 3,
+	"protocol": 1,
+	"request_id": "prod-001",
+	"type": "industry_production"
+}
 ```
 
 The response type is `industry_production_result`, status `ok`. It echoes both IDs
@@ -23,14 +29,14 @@ capacity calculation, or native history-valid flag. Invalid industry/cargo or a
 non-produced relationship does not generate semantic success: the thin handler
 rejects it and the bounded owner fails without retry.
 
-| C++ Script API | Exact GameScript binding | Units / window / interpretation |
-| --- | --- | --- |
-| ScriptIndustry::IsValidIndustry | GSIndustry.IsValidIndustry | Current native industry validity. |
-| ScriptCargo::IsValidCargo | GSCargo.IsValidCargo | Active native cargo validity; prior verified cargo authority reused. |
-| ScriptIndustry::GetLastMonthProduction | GSIndustry.GetLastMonthProduction | uint16 cargo units reported in the previous economy-month bucket; invalid/non-produced returns -1. |
-| ScriptIndustry::GetLastMonthTransported | GSIndustry.GetLastMonthTransported | uint16 cargo units allocated into station waiting cargo for that bucket; not vehicle pickup or delivery. |
-| ScriptIndustry::GetLastMonthTransportedPercentage | GSIndustry.GetLastMonthTransportedPercentage | Native quantized/clamped integer 0..100 for that bucket; not a Python-computed percentage. |
-| ScriptDate::GetCurrentDate | GSDate.GetCurrentDate | Economy-date reading immediately before and after the native metrics. |
+| C++ Script API                                    | Exact GameScript binding                     | Units / window / interpretation                                                                          |
+| ------------------------------------------------- | -------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| ScriptIndustry::IsValidIndustry                   | GSIndustry.IsValidIndustry                   | Current native industry validity.                                                                        |
+| ScriptCargo::IsValidCargo                         | GSCargo.IsValidCargo                         | Active native cargo validity; prior verified cargo authority reused.                                     |
+| ScriptIndustry::GetLastMonthProduction            | GSIndustry.GetLastMonthProduction            | uint16 cargo units reported in the previous economy-month bucket; invalid/non-produced returns -1.       |
+| ScriptIndustry::GetLastMonthTransported           | GSIndustry.GetLastMonthTransported           | uint16 cargo units allocated into station waiting cargo for that bucket; not vehicle pickup or delivery. |
+| ScriptIndustry::GetLastMonthTransportedPercentage | GSIndustry.GetLastMonthTransportedPercentage | Native quantized/clamped integer 0..100 for that bucket; not a Python-computed percentage.               |
+| ScriptDate::GetCurrentDate                        | GSDate.GetCurrentDate                        | Economy-date reading immediately before and after the native metrics.                                    |
 
 Exact tag15.3 authority is hash-pinned in
 `tests/reference/industry_production_15_3/manifest.json`, referencing the industry

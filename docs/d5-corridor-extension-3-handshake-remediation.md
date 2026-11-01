@@ -29,7 +29,7 @@ Call chain of the defect:
 2. The native execution path authenticates with
    `await session.authenticate(metadata["attempt"], "1", timeout=10)`.
 3. `app/simulation/openttd/secure_admin.py::encode_join_secure` encodes the
-   client name; it correctly rejects the identity, but it is the *last*
+   client name; it correctly rejects the identity, but it is the _last_
    defense — nothing upstream validated the identity, so a 32-byte
    `attempt` survived preparation, PRELAUNCH and PREFLIGHT and only failed
    at the live handshake.
@@ -127,7 +127,7 @@ A fresh-context independent review pass was requested against the actual
 changes and returned **PASS**:
 
 - 15.3 capacity pinned in-repo (`ottd/src/network/core/config.h`: 25 and 33
-  bytes *including* NUL; `packet.cpp` `Recv_string` reads `length - 1`
+  bytes _including_ NUL; `packet.cpp` `Recv_string` reads `length - 1`
   payload bytes); validator semantics match exactly.
 - UTF-8 byte length verified by live run (`ø`×13 rejected at 26 bytes);
   NUL termination and embedded-NUL rejection verified.
@@ -162,13 +162,13 @@ changes and returned **PASS**:
 
 Candidate-specific values (recomputed from actual staged bytes):
 
-| Field | Value |
-| --- | --- |
-| PRELAUNCH seal `sha256(PRELAUNCH.json)` | `c76992187b0ace7b317e9f992f678bac675f9f89711cd87730fa8d0456aaa2b6` |
-| Plan model digest | `82246eb67f0fa6dfc0631a1fe7b84e84f963f9b7d8c8919fe4a064e8c98ef8d9` |
-| Schedule digest | `f091754de6d364d226b77555766ed5d2f3f3dfb38e23f42f5d3757fd62246c3a` |
-| Authorization payload digest | `38dd8ecc86f5d86edc3474bdd88e0aff4f7022be56d8891b15b06c547f3abbf9` |
-| Request / exchange budgets | requests 32, planned exchanges 10, max_cost 0, launches 1, retries 0, reconnects 0 |
+| Field                                   | Value                                                                              |
+| --------------------------------------- | ---------------------------------------------------------------------------------- |
+| PRELAUNCH seal `sha256(PRELAUNCH.json)` | `c76992187b0ace7b317e9f992f678bac675f9f89711cd87730fa8d0456aaa2b6`                 |
+| Plan model digest                       | `82246eb67f0fa6dfc0631a1fe7b84e84f963f9b7d8c8919fe4a064e8c98ef8d9`                 |
+| Schedule digest                         | `f091754de6d364d226b77555766ed5d2f3f3dfb38e23f42f5d3757fd62246c3a`                 |
+| Authorization payload digest            | `38dd8ecc86f5d86edc3474bdd88e0aff4f7022be56d8891b15b06c547f3abbf9`                 |
+| Request / exchange budgets              | requests 32, planned exchanges 10, max_cost 0, launches 1, retries 0, reconnects 0 |
 
 Verification executed for this candidate:
 

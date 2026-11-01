@@ -13,14 +13,14 @@ complete native 450-tile coal rectangle (industry 0 at (183,173) → industry 1 
 (172,199), COAL, radius-3 modified catchment). Replaying its immutable
 `network-facts-0.json` through the P08 supported corridor model proves:
 
-| Fact group | Count | Meaning |
-|---|---:|---|
-| Buildable flat vacant corridor tiles | 339 | The only supported road corridor tiles |
-| Water tiles | 17 | Native non-road, incl. the x=179 column y=186–198 |
-| Tree tiles | 50 | Natively `buildable=false` |
-| Rough tiles | 13 | Natively `buildable=false` |
-| Industry tiles | 12 | Occupied |
-| Natively non-buildable steep-slope tiles | 19 | Slope 8/9/12/13 escarpment |
+| Fact group                               | Count | Meaning                                           |
+| ---------------------------------------- | ----: | ------------------------------------------------- |
+| Buildable flat vacant corridor tiles     |   339 | The only supported road corridor tiles            |
+| Water tiles                              |    17 | Native non-road, incl. the x=179 column y=186–198 |
+| Tree tiles                               |    50 | Natively `buildable=false`                        |
+| Rough tiles                              |    13 | Natively `buildable=false`                        |
+| Industry tiles                           |    12 | Occupied                                          |
+| Natively non-buildable steep-slope tiles |    19 | Slope 8/9/12/13 escarpment                        |
 
 The pickup catchment (31 eligible stops, height 2, x=180–184 y=171–178) and the
 delivery catchment (20 eligible stops, height 1, x=170–176 y=197–200) lie in
@@ -41,7 +41,7 @@ facts (not by re-running P08 over a smaller slice):
 - **No connected route exists through any supported buildable tile** in the
   captured area: pickup and delivery stops never share a component.
 - **The first-four-stop search did not miss a feasible detour**: the
-  disconnection holds for *all* 31×20 eligible stop pairs, not only the first
+  disconnection holds for _all_ 31×20 eligible stop pairs, not only the first
   4×4 the formal search enumerates. The retained failure was already a
   complete-search outcome under the supported model; the new reachability
   oracle makes that explicit and recorded.
@@ -57,7 +57,7 @@ facts (not by re-running P08 over a smaller slice):
 the existing candidate selection:
 
 - `corridor_reachability(pickups, deliveries, tiles, width, *, budget)` — one
-  shared-super-source uniform-cost Dijkstra sweep over *every* eligible vacant
+  shared-super-source uniform-cost Dijkstra sweep over _every_ eligible vacant
   covered stop (not only the first four). `(cost, tile_id)` heap ordering keep
   the sweep deterministic; expansion work is bounded per phase by the existing
   `MAX_PATH_EXPANSIONS` (4096) and fails closed (`SEARCH_LIMIT_EXCEEDED`).
@@ -116,14 +116,14 @@ and a separate one-shot authorization.
 
 ## 4. Construction feasibility classification (Phase C)
 
-| Operation | Feasibility effect for Seed 17 coal pair | Classification |
-|---|---|---|
-| Tree clearing (50 tiles) | Does **not** connect the catchments (proven from retained facts) | Implementable only via native construction actions, but **insufficient**; excluded from executable plans |
-| Rough-land building (13 tiles) | Does not connect | Same as above: insufficient; no clearing evidence needed |
-| Additional turns | Turns are already unrestricted in the supported road model; not a barrier | Already supported; no enabling value |
+| Operation                                                                     | Feasibility effect for Seed 17 coal pair                                                                       | Classification                                                                                                                                                                                                                                                           |
+| ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Tree clearing (50 tiles)                                                      | Does **not** connect the catchments (proven from retained facts)                                               | Implementable only via native construction actions, but **insufficient**; excluded from executable plans                                                                                                                                                                 |
+| Rough-land building (13 tiles)                                                | Does not connect                                                                                               | Same as above: insufficient; no clearing evidence needed                                                                                                                                                                                                                 |
+| Additional turns                                                              | Turns are already unrestricted in the supported road model; not a barrier                                      | Already supported; no enabling value                                                                                                                                                                                                                                     |
 | Corridor levelling / crossing the 19 natively non-buildable steep-slope tiles | Would connect (detour ≤ 2..47 interior tiles) but requires terrain modification of natively non-buildable land | **Unsupported** — OpenTTD 15.3 GameScript exposes no land raising/lowering or demolition commands for GS companies; no verified foundation/earthworks command exists; requires a separate milestone with native Levelling evidence before any executable plan may use it |
-| Bridges over the 17 water tiles | Would connect across x=180 | **Excluded** by this milestone's restrictions; unsupported in the executable plan |
-| Tunnels / demolition | Not needed by any connecting route | Excluded |
+| Bridges over the 17 water tiles                                               | Would connect across x=180                                                                                     | **Excluded** by this milestone's restrictions; unsupported in the executable plan                                                                                                                                                                                        |
+| Tunnels / demolition                                                          | Not needed by any connecting route                                                                             | Excluded                                                                                                                                                                                                                                                                 |
 
 No unsupported construction action enters any executable plan; planning cost
 estimates remain separate from observed native spending.

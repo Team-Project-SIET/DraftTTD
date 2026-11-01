@@ -28,18 +28,18 @@ P01 does not implement a planner, optimizer, route construction algorithm, exact
 
 ## 4. Terminology
 
-| Term | Meaning |
-| --- | --- |
-| `ScenarioConfig` | Existing experiment identity and OpenTTD configuration text; does not describe planner-visible cargo/sites. |
-| `PlanningScenario` | Immutable, typed snapshot of planner-visible world, demand, options, economics, and limits. |
-| `PlanningLocation` | Stable scenario-local node whose canonical position is an OpenTTD tile. |
-| `RoutePlan` | Planned service and order intent for a cargo flow; never the legacy delivery `Route`. |
-| `FleetOption` | A vehicle or consist choice available to the planner. |
-| `FleetPlan` | Selected vehicle groups and counts for routes. |
-| `InfrastructurePlan` | Explicit construction intent and build ordering. |
-| `ExecutionPlan` | Immutable envelope containing all decisions required of the executor. |
+| Term                    | Meaning                                                                                                                                                                                                                                                                |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ScenarioConfig`        | Existing experiment identity and OpenTTD configuration text; does not describe planner-visible cargo/sites.                                                                                                                                                            |
+| `PlanningScenario`      | Immutable, typed snapshot of planner-visible world, demand, options, economics, and limits.                                                                                                                                                                            |
+| `PlanningLocation`      | Stable scenario-local node whose canonical position is an OpenTTD tile.                                                                                                                                                                                                |
+| `RoutePlan`             | Planned service and order intent for a cargo flow; never the legacy delivery `Route`.                                                                                                                                                                                  |
+| `FleetOption`           | A vehicle or consist choice available to the planner.                                                                                                                                                                                                                  |
+| `FleetPlan`             | Selected vehicle groups and counts for routes.                                                                                                                                                                                                                         |
+| `InfrastructurePlan`    | Explicit construction intent and build ordering.                                                                                                                                                                                                                       |
+| `ExecutionPlan`         | Immutable envelope containing all decisions required of the executor.                                                                                                                                                                                                  |
 | Prepared world manifest | Versioned evidence that scenario-local nodes, tiles, cargo and vehicle definitions resolve in the world to be launched. P02 represents this evidence and P03 validates supplied prepared-world facts; general world extraction/preparation is not thereby implemented. |
-| Estimated / realized | Planner predictions / measured OpenTTD outcomes, stored and named separately. |
+| Estimated / realized    | Planner predictions / measured OpenTTD outcomes, stored and named separately.                                                                                                                                                                                          |
 
 ## 5. Current architecture and evidence
 
@@ -149,12 +149,12 @@ and emit evidence of actual action results. It may resolve plan IDs to runtime h
 
 ## 22. Plan transport recommendation
 
-| Candidate | OpenTTD 13.4 fit | Determinism, size, debugging, security, complexity |
-| --- | --- | --- |
-| Raw JSON/static plan file in AI directory | AI file access and parser behavior are unproven here | Readable and size-flexible, but requires a verified 13.4 AI sandbox/file API and safe parser; not selected without proof. |
-| AI settings carrying plan data | Existing launcher accepts only integer setting values | Too small for routes/infrastructure and prone to encoding/version errors; use at most a bounded plan identifier/hash if supported later. |
+| Candidate                                                      | OpenTTD 13.4 fit                                                                           | Determinism, size, debugging, security, complexity                                                                                                                             |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Raw JSON/static plan file in AI directory                      | AI file access and parser behavior are unproven here                                       | Readable and size-flexible, but requires a verified 13.4 AI sandbox/file API and safe parser; not selected without proof.                                                      |
+| AI settings carrying plan data                                 | Existing launcher accepts only integer setting values                                      | Too small for routes/infrastructure and prone to encoding/version errors; use at most a bounded plan identifier/hash if supported later.                                       |
 | Generated Squirrel data module inside a pinned thin-AI package | P03 implements and proves module loading and isolated packaging for its bounded v1 fixture | Deterministic generated constants can encode a bounded v1 plan; inspectable in retained source/package artifact; requires strict escaping, size cap, and hash/checksum checks. |
-| Other deterministic pre-start artifact | Depends on verified 13.4 APIs | May be reconsidered if a simpler file read is proven. |
+| Other deterministic pre-start artifact                         | Depends on verified 13.4 APIs                                                              | May be reconsidered if a simpler file read is proven.                                                                                                                          |
 
 **Recommended v1:** validate canonical JSON in Python, then generate a data-only Squirrel module using a fixed serializer and package it with a pinned thin AI in the isolated pre-start workspace. Python planning code emits only the JSON contract; the transport adapter owns generation. Retain the canonical JSON, generated module/package digest, generator version, and plan hash. P03's retained Attempt #6 proves this transport for the bounded fixture;
 it does not establish arbitrary OpenTTD load limits or general construction execution. Reject oversized or unrepresentable plans prelaunch. Treat generated data as untrusted text: escape strings, allowlist tokens, cap size/depth, and never interpolate raw plan text as executable code. The existing `LiveLaunchPreparation` pinned-AI allowlist and asset checks must be extended explicitly in the later implementation; P03's separate staging supports plan transport, while production launch integration
@@ -194,13 +194,13 @@ Three-dimensional packing remains an optional independent planning constraint. A
 
 ## 31. Typed failure model
 
-| Stage | Codes / treatment |
-| --- | --- |
-| Planning input/generation | `INVALID_SCENARIO`, `PLANNER_INFEASIBLE`, `PLANNER_FAILURE`; no plan or launch. |
-| Validation/prelaunch | `UNSUPPORTED_PLAN_VERSION`, `SCENARIO_MISMATCH`, `INVALID_PLAN`, `UNKNOWN_NODE`, `UNSUPPORTED_MODE`, `INVALID_FLEET`, `UNSUPPORTED_CONSTRUCTION`, `PLAN_TRANSPORT_FAILURE`; no OpenTTD process. |
-| Executor setup after launch | `UNBUILDABLE_INFRASTRUCTURE`, `INVALID_FLEET`, `EXECUTOR_SETUP_FAILURE`, `WORLD_RESOLUTION_FAILURE`; retain plan hash, failing action and partial receipt, mark experiment failed, do not score as a valid candidate. |
-| Runtime/observation/finalization | Existing typed startup, protocol, `OBSERVER_LOST`, timeout, finalization and cleanup handling remains under the runner. |
-| Persistence | Existing terminal/telemetry persistence and outcome-manifest evidence rules remain distinct. |
+| Stage                            | Codes / treatment                                                                                                                                                                                                     |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Planning input/generation        | `INVALID_SCENARIO`, `PLANNER_INFEASIBLE`, `PLANNER_FAILURE`; no plan or launch.                                                                                                                                       |
+| Validation/prelaunch             | `UNSUPPORTED_PLAN_VERSION`, `SCENARIO_MISMATCH`, `INVALID_PLAN`, `UNKNOWN_NODE`, `UNSUPPORTED_MODE`, `INVALID_FLEET`, `UNSUPPORTED_CONSTRUCTION`, `PLAN_TRANSPORT_FAILURE`; no OpenTTD process.                       |
+| Executor setup after launch      | `UNBUILDABLE_INFRASTRUCTURE`, `INVALID_FLEET`, `EXECUTOR_SETUP_FAILURE`, `WORLD_RESOLUTION_FAILURE`; retain plan hash, failing action and partial receipt, mark experiment failed, do not score as a valid candidate. |
+| Runtime/observation/finalization | Existing typed startup, protocol, `OBSERVER_LOST`, timeout, finalization and cleanup handling remains under the runner.                                                                                               |
+| Persistence                      | Existing terminal/telemetry persistence and outcome-manifest evidence rules remain distinct.                                                                                                                          |
 
 Failure diagnostics must be bounded and sanitized. A prelaunch validation failure must not be misreported as `OBSERVER_LOST`; a partial build must not produce a successful optimization evaluation even if a final save is available. Failure category and original plan identity survive later cleanup/persistence errors according to the existing outcome precedence rules.
 

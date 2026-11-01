@@ -70,7 +70,13 @@ or included in the canonical observation/digest.
 Canonical request:
 
 ```json
-{"after_id":null,"limit":2,"protocol":1,"request_id":"catalog-p001","type":"cargo_page"}
+{
+	"after_id": null,
+	"limit": 2,
+	"protocol": 1,
+	"request_id": "catalog-p001",
+	"type": "cargo_page"
+}
 ```
 
 Response schema: protocol 1, type `cargo_page_result`, matching request_id, status
@@ -87,7 +93,13 @@ GSAdmin.Send native ceiling remains **1450 bytes**.
 Worst-case record, including all fields, is 76 bytes:
 
 ```json
-{"classes":32767,"freight":false,"id":63,"label":"FFFFFFFF","town_effect":5}
+{
+	"classes": 32767,
+	"freight": false,
+	"id": 63,
+	"label": "FFFFFFFF",
+	"town_effect": 5
+}
 ```
 
 The largest empty envelope is 186 bytes (64-byte safe request ID, terminal null

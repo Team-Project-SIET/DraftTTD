@@ -1,7 +1,7 @@
 # OpenTTD 15.3 one-launch ACK proof procedure
 
 **PRELAUNCH ONLY — not executed.** `CONTEXT.md` remains the local architecture
- authority. The next real attempt requires separate explicit authorization for
+authority. The next real attempt requires separate explicit authorization for
 exactly one gameplay launch and one bridge request. This is communication only:
 P05, P06, P07, P08 extraction, construction, vehicles, orders, terrain and finance
 are outside this proof. No real world or live AdminPort was used in preparation.
@@ -116,7 +116,7 @@ absence of a crash never establishes that gate.
 Exact canonical request (digest recorded in PRELAUNCH.json):
 
 ```json
-{"protocol":1,"request_id":"openttd15-real-ack-001","type":"ping"}
+{ "protocol": 1, "request_id": "openttd15-real-ack-001", "type": "ping" }
 ```
 
 The ACK deadline is 15 seconds. Existing strict envelope validation and exact-ID

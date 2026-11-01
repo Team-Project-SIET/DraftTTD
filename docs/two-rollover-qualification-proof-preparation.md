@@ -22,15 +22,15 @@ anchor/final month crossing, instability, incomplete evidence and budget overflo
 
 Independent phase request/byte/query limits:
 
-| Phase | Requests | Bytes | Query operations |
-|---|---:|---:|---:|
-| Clock | 304 | 82384 | 2432 |
-| Anchor structural | 96 | 49152 | 1024 |
-| Anchor lifetime | 32 | 7936 | 256 |
-| Final structural | 96 | 49152 | 1024 |
-| Final lifetime | 32 | 7936 | 256 |
-| Final production | 512 | 171520 | 4096 |
-| Total | 1072 | 368080 | 9088 |
+| Phase             | Requests |  Bytes | Query operations |
+| ----------------- | -------: | -----: | ---------------: |
+| Clock             |      304 |  82384 |             2432 |
+| Anchor structural |       96 |  49152 |             1024 |
+| Anchor lifetime   |       32 |   7936 |              256 |
+| Final structural  |       96 |  49152 |             1024 |
+| Final lifetime    |       32 |   7936 |              256 |
+| Final production  |      512 | 171520 |             4096 |
+| Total             |     1072 | 368080 |             9088 |
 
 The existing native observer counts one continuous session: two establishment,
 three subscription/barrier frames and one graceful QUIT. 9088+6=9094. Phase changes,

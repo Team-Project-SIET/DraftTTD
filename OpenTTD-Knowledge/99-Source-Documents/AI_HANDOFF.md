@@ -50,18 +50,18 @@ all historical packages. Fresh controlled validation is recorded in REPRODUCE.
 PREPARED is implementation awaiting native qualification; PARTIAL is incomplete
 acceptance; FAILED is an immutable consumed outcome; UNKNOWN means missing facts.
 
-| Area | State and boundary |
-|---|---|
-| Stable fixed demo | VERIFIED native 15.3 gameplay: P08/P05 selected 3 freight services, vehicles 4/5/6 constructed, 60 coal delivered, £1,022 revenue; spectator joined/inspected; fresh P07, cleanup and evidence checks passed. E1. |
-| Canonical creation Q3 | PROVEN in retained native engineering evidence; result `CANONICAL_CREATED_PENDING_FRESH_PROCESS_RELOAD`, 1 launch/connection, 27 mutations. E2. |
-| Fresh-process reload Q3 | PROVEN reload-only: `CANONICAL_RELOAD_ONLY_VERIFIED`, exact semantic correspondence, 1 launch/connection, 0 mutations. Purchase/dispatch/unpause disabled. E2. |
-| Attempt 19 | Five economy years recorded, original native terminal FAILED at finalization (`company-policy.json` already existed). Separate offline recovery valid within derived scope; never relabel original terminal. E3. |
-| Random World implementation | Controlled/offline implementation available in dirty tree; native generation/discovery/GUI verified in Seed 17, native service execution remains unverified. E4/E5. |
-| Tile Classification V2 capture | NATIVE VERIFIED capture completed 2026-10-18 (90/90 pages, 450/450 tiles, schema 2, staged AI + GameScript startup, zero script deaths, 0 mutations, cleanup PASS); SOURCE_SAVE_FUSION verdict **REJECTED** — 83 projected-flag disagreements, nothing fused; the 19 historically UNKNOWN tiles were observed CLEAR in the fresh census and stay UNKNOWN in the retained assessment; P08 remains `INCOMPLETE_TILE_CLASSIFICATION`. E16. |
-| Seed 17 smoke | FAILED under old capture-area gate; no service construction/delivery; P05 NOT_RUN. E4. |
-| Larger random capture | Controlled/offline correction, no new native run: 512 fully observed tiles per rectangle; fixed demo stays 256; road path stays 47. E5. |
-| Fourth vehicle / matched experiments | Native intervention and matched A/B outcome not established by reload-only Q3. Retain as future scoped work. |
-| OpenTTD 13.4 proofs | Historical regression evidence only; cannot establish 15.3 compatibility. |
+| Area                                 | State and boundary                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Stable fixed demo                    | VERIFIED native 15.3 gameplay: P08/P05 selected 3 freight services, vehicles 4/5/6 constructed, 60 coal delivered, £1,022 revenue; spectator joined/inspected; fresh P07, cleanup and evidence checks passed. E1.                                                                                                                                                                                                                       |
+| Canonical creation Q3                | PROVEN in retained native engineering evidence; result `CANONICAL_CREATED_PENDING_FRESH_PROCESS_RELOAD`, 1 launch/connection, 27 mutations. E2.                                                                                                                                                                                                                                                                                         |
+| Fresh-process reload Q3              | PROVEN reload-only: `CANONICAL_RELOAD_ONLY_VERIFIED`, exact semantic correspondence, 1 launch/connection, 0 mutations. Purchase/dispatch/unpause disabled. E2.                                                                                                                                                                                                                                                                          |
+| Attempt 19                           | Five economy years recorded, original native terminal FAILED at finalization (`company-policy.json` already existed). Separate offline recovery valid within derived scope; never relabel original terminal. E3.                                                                                                                                                                                                                        |
+| Random World implementation          | Controlled/offline implementation available in dirty tree; native generation/discovery/GUI verified in Seed 17, native service execution remains unverified. E4/E5.                                                                                                                                                                                                                                                                     |
+| Tile Classification V2 capture       | NATIVE VERIFIED capture completed 2026-10-18 (90/90 pages, 450/450 tiles, schema 2, staged AI + GameScript startup, zero script deaths, 0 mutations, cleanup PASS); SOURCE_SAVE_FUSION verdict **REJECTED** — 83 projected-flag disagreements, nothing fused; the 19 historically UNKNOWN tiles were observed CLEAR in the fresh census and stay UNKNOWN in the retained assessment; P08 remains `INCOMPLETE_TILE_CLASSIFICATION`. E16. |
+| Seed 17 smoke                        | FAILED under old capture-area gate; no service construction/delivery; P05 NOT_RUN. E4.                                                                                                                                                                                                                                                                                                                                                  |
+| Larger random capture                | Controlled/offline correction, no new native run: 512 fully observed tiles per rectangle; fixed demo stays 256; road path stays 47. E5.                                                                                                                                                                                                                                                                                                 |
+| Fourth vehicle / matched experiments | Native intervention and matched A/B outcome not established by reload-only Q3. Retain as future scoped work.                                                                                                                                                                                                                                                                                                                            |
+| OpenTTD 13.4 proofs                  | Historical regression evidence only; cannot establish 15.3 compatibility.                                                                                                                                                                                                                                                                                                                                                               |
 
 The fixed demo remains the stable default. Its CLI is:
 
@@ -91,18 +91,18 @@ flowchart LR
   V --> P07[P07 evaluation and reports]
 ```
 
-| Responsibility | Read these files when changing it |
-|---|---|
-| Public fixed/random CLI, spectator lifecycle | `app/openttd_demo.py`, `tests/test_openttd_demo.py`, `examples/openttd-demo/README.md` |
-| Random recipe, discovery, budgets, diagnostics, bounded solver | `app/demo_random.py`, `app/demo_random_native.py`, `tests/test_demo_random*.py`, `tests/test_random_*.py` |
-| Native lifecycle, isolated assets/configuration, cleanup/retention | `app/simulation/openttd/proof/freight_delivery.py`, `proof/harness.py`, `runtime/`, `proof/ownership.py`, `proof/historical_protection.py` |
-| Qualified observations and complete supplemental capture | `freight_runtime_planning.py`, `supplemental_planning_facts.py`, `world_planning_observation.py`, `planning_fact_input.py` under `app/simulation/openttd/` |
-| P08 adaptation/road search/network composition | `app/planning/p08_adapter.py`, `p08_road.py`, `p08_network.py`, `preparation/` |
-| P05 pure selection and contracts | `app/planning/domain.py`, `canonical.py`, `optimizer.py`, `validation.py`; `docs/specs/planning-executor-boundary.md` |
-| Compile/admit/execute/replay | `app/simulation/openttd/freight_planning.py`, `freight_native_network.py`, `freight_delivery.py`, `freight_planning_replay.py` |
-| Wire transport and native bridge | `gamescript_transport.py`, `secure_admin.py`, `freight_delivery_package/*.nut`; planner, network and funding composition is staged by the Python proof runner |
-| P07 and operational monitoring | `app/planning/network_cli.py`, `app/experiments/freight_network.py`, `app/demo_operations.py`, `tests/test_demo_operations.py` |
-| Canonical state/save/reload | `app/simulation/openttd/proof/canonical_fleet.py`, `freight_canonical*.py`, package `canonical*.nut`; `docs/capacity-experiment.md` |
+| Responsibility                                                     | Read these files when changing it                                                                                                                             |
+| ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Public fixed/random CLI, spectator lifecycle                       | `app/openttd_demo.py`, `tests/test_openttd_demo.py`, `examples/openttd-demo/README.md`                                                                        |
+| Random recipe, discovery, budgets, diagnostics, bounded solver     | `app/demo_random.py`, `app/demo_random_native.py`, `tests/test_demo_random*.py`, `tests/test_random_*.py`                                                     |
+| Native lifecycle, isolated assets/configuration, cleanup/retention | `app/simulation/openttd/proof/freight_delivery.py`, `proof/harness.py`, `runtime/`, `proof/ownership.py`, `proof/historical_protection.py`                    |
+| Qualified observations and complete supplemental capture           | `freight_runtime_planning.py`, `supplemental_planning_facts.py`, `world_planning_observation.py`, `planning_fact_input.py` under `app/simulation/openttd/`    |
+| P08 adaptation/road search/network composition                     | `app/planning/p08_adapter.py`, `p08_road.py`, `p08_network.py`, `preparation/`                                                                                |
+| P05 pure selection and contracts                                   | `app/planning/domain.py`, `canonical.py`, `optimizer.py`, `validation.py`; `docs/specs/planning-executor-boundary.md`                                         |
+| Compile/admit/execute/replay                                       | `app/simulation/openttd/freight_planning.py`, `freight_native_network.py`, `freight_delivery.py`, `freight_planning_replay.py`                                |
+| Wire transport and native bridge                                   | `gamescript_transport.py`, `secure_admin.py`, `freight_delivery_package/*.nut`; planner, network and funding composition is staged by the Python proof runner |
+| P07 and operational monitoring                                     | `app/planning/network_cli.py`, `app/experiments/freight_network.py`, `app/demo_operations.py`, `tests/test_demo_operations.py`                                |
+| Canonical state/save/reload                                        | `app/simulation/openttd/proof/canonical_fleet.py`, `freight_canonical*.py`, package `canonical*.nut`; `docs/capacity-experiment.md`                           |
 
 Python owns optimization, identity, validation, deadlines and evidence binding.
 GameScript executes synchronous commands under `GSCompanyMode`, returns bounded
@@ -134,14 +134,14 @@ generation, discovery and spectator navigation verified. All six failed the old
 No service was built/delivered and P05 did not run. Funding setup is separate from
 service construction; the smoke records one funding mutation.
 
-| Cargo | Manhattan distance | Rectangle area (tiles) | New 512-tile capture admission |
-|---|---:|---:|---|
-| Coal | 37 | 450 | YES, observation only |
-| Wood | 185 | 1122 | NO |
-| Livestock | 260 | 17947 | NO |
-| Grain | 260 | 17947 | NO |
-| Oil | 179 | 8436 | NO |
-| Iron ore | 94 | 2457 | NO |
+| Cargo     | Manhattan distance | Rectangle area (tiles) | New 512-tile capture admission |
+| --------- | -----------------: | ---------------------: | ------------------------------ |
+| Coal      |                 37 |                    450 | YES, observation only          |
+| Wood      |                185 |                   1122 | NO                             |
+| Livestock |                260 |                  17947 | NO                             |
+| Grain     |                260 |                  17947 | NO                             |
+| Oil       |                179 |                   8436 | NO                             |
+| Iron ore  |                 94 |                   2457 | NO                             |
 
 New random profile `random-rectangle-512-v1` requires every tile and both declared
 cargo-coverage scopes, 45 seconds per capture and at most 546 reads. The global

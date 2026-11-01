@@ -107,7 +107,7 @@ Verified fail-closed facts (code paths inspected, not assumed):
 2. **The classification package composition is never materialized for a
    runtime.** `terrain_classification_bridge.classification_package_bytes()` is
    memory-only by contract ("no file writes"); the only GameScript staging
-   helper, `gamescript_bridge.stage_bridge()`, writes the frozen *base*
+   helper, `gamescript_bridge.stage_bridge()`, writes the frozen _base_
    package whose `main.nut` implements neither the classification handler nor
    the composed marker. The candidate records only the composition digest; no
    reviewed code installs `info.nut` + composed `main.nut` into a runtime

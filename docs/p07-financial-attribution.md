@@ -12,13 +12,13 @@ Retained evidence directories and native records were read only.
 
 ## 1. Capability inventory (pre-existing P07 finance code)
 
-| Capability | Existing implementation | Status |
-|---|---|---|
-| Deterministic operating-window cash identity and profit/ROI gates | `app/simulation/openttd/freight_finance.py` (`reconcile_cash`, `reconcile_snapshots`); pinned tests in `tests/test_freight_finance.py` | Reused as-is; identities mirrored, not re-implemented |
-| Continuous five-year finance reconciliation, setup cash coverage, period aggregates | `app/experiments/freight_continuous_analytics.py`, continuous.nut retained report shape | Reused as-is |
-| Native receipt CAPEX classification (`sum(mutation_costs[:6])` = infrastructure, `mutation_costs[6]` = vehicle purchase) and native `financial-reconciliation-v1` record | `app/simulation/openttd/freight_native_network.py` | Reused as-is (read-only pins) |
-| Batch service receipts with per-service construction readbacks | retained `service-receipt-*.json` / `receipt.json` | Reused as-is |
-| Performance insights layer with OBSERVED/DERIVED/HYPOTHESIS/UNKNOWN semantics | `app/experiments/performance_insights.py` | Reused; only extended by the minimal `financial_attribution` status field (§3.4) |
+| Capability                                                                                                                                                               | Existing implementation                                                                                                                | Status                                                                           |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Deterministic operating-window cash identity and profit/ROI gates                                                                                                        | `app/simulation/openttd/freight_finance.py` (`reconcile_cash`, `reconcile_snapshots`); pinned tests in `tests/test_freight_finance.py` | Reused as-is; identities mirrored, not re-implemented                            |
+| Continuous five-year finance reconciliation, setup cash coverage, period aggregates                                                                                      | `app/experiments/freight_continuous_analytics.py`, continuous.nut retained report shape                                                | Reused as-is                                                                     |
+| Native receipt CAPEX classification (`sum(mutation_costs[:6])` = infrastructure, `mutation_costs[6]` = vehicle purchase) and native `financial-reconciliation-v1` record | `app/simulation/openttd/freight_native_network.py`                                                                                     | Reused as-is (read-only pins)                                                    |
+| Batch service receipts with per-service construction readbacks                                                                                                           | retained `service-receipt-*.json` / `receipt.json`                                                                                     | Reused as-is                                                                     |
+| Performance insights layer with OBSERVED/DERIVED/HYPOTHESIS/UNKNOWN semantics                                                                                            | `app/experiments/performance_insights.py`                                                                                              | Reused; only extended by the minimal `financial_attribution` status field (§3.4) |
 
 What P07 finance did **not** provide before this work:
 
@@ -26,11 +26,11 @@ What P07 finance did **not** provide before this work:
    (CAPEX by kind, revenue, aggregate expenses, funding, residuals) with
    declared sources/derivations/missing-data behaviour per entry.
 2. No unified reconciliation statements that run the pinned identities over the
-   *retained documents and native records* and report whether each identity
+   _retained documents and native records_ and report whether each identity
    holds (`identity_verified`) instead of just computing residuals.
 3. No per-service financial attribution binding retained receipts to services,
    with operating-expense attribution declared UNKNOWN rather than inferred.
-4. No coverage indicators stating exactly *what* the retained evidence can and
+4. No coverage indicators stating exactly _what_ the retained evidence can and
    cannot attribute (and what would change that).
 5. No explicit, machine-readable claim gate: every profit/ROI-shaped metric is
    listed as UNSUPPORTED with a reason and the observations required to ever
@@ -192,17 +192,17 @@ preserved separately (offline recovery never re-labels it).
 Ledger highlights (24 entries, all per-entry provenance in
 `financial-attribution.json`):
 
-| Category | Amount GBP | Status | Window |
-|---|---:|---|---|
-| `REVENUE_TRANSPORT` | 50935 | OBSERVED | operating |
-| `EXPENSE_AGGREGATE_UNALLOCATED` | -16312 | OBSERVED | operating |
-| `CAPEX_CONSTRUCTION_ROAD` | -3910 / -4067 / -4138 | OBSERVED | setup (per receipt) |
-| `CAPEX_CONSTRUCTION_FACILITY` | -1019 × 3 | OBSERVED | setup (per receipt) |
-| `CAPEX_VEHICLE_PURCHASE` | -4429 × 3 | OBSERVED | setup (per receipt) |
-| `FUNDING_CAPITAL` | 400000 | OBSERVED | funding window (capital readback) |
-| `COMPANY_INITIAL_CASH` | 100000 | DERIVED | funding window |
-| `OPEX_{VEHICLE_RUNNING,LOAN_INTEREST,PROPERTY_MAINTENANCE}` | UNKNOWN ×3 | UNKNOWN | operating |
-| `UNATTRIBUTED_CASH_MOVEMENT` | -1500 / -50 | DERIVED | operating / setup |
+| Category                                                    |            Amount GBP | Status   | Window                            |
+| ----------------------------------------------------------- | --------------------: | -------- | --------------------------------- |
+| `REVENUE_TRANSPORT`                                         |                 50935 | OBSERVED | operating                         |
+| `EXPENSE_AGGREGATE_UNALLOCATED`                             |                -16312 | OBSERVED | operating                         |
+| `CAPEX_CONSTRUCTION_ROAD`                                   | -3910 / -4067 / -4138 | OBSERVED | setup (per receipt)               |
+| `CAPEX_CONSTRUCTION_FACILITY`                               |             -1019 × 3 | OBSERVED | setup (per receipt)               |
+| `CAPEX_VEHICLE_PURCHASE`                                    |             -4429 × 3 | OBSERVED | setup (per receipt)               |
+| `FUNDING_CAPITAL`                                           |                400000 | OBSERVED | funding window (capital readback) |
+| `COMPANY_INITIAL_CASH`                                      |                100000 | DERIVED  | funding window                    |
+| `OPEX_{VEHICLE_RUNNING,LOAN_INTEREST,PROPERTY_MAINTENANCE}` |            UNKNOWN ×3 | UNKNOWN  | operating                         |
+| `UNATTRIBUTED_CASH_MOVEMENT`                                |           -1500 / -50 | DERIVED  | operating / setup                 |
 
 Reconciliation: `recon-setup-window` residual **-50 GBP**, identity verified
 (the retained record stores the unattributed setup decrease as +50; the ledger
@@ -229,16 +229,16 @@ directory. Classification: `PARTIAL_FINANCIAL_ATTRIBUTION`.
 
 Ledger highlights:
 
-| Category | Amount GBP | Status | Window |
-|---|---:|---|---|
-| `REVENUE_TRANSPORT` | 1022 | OBSERVED | serial batch window |
-| `CAPEX_CONSTRUCTION_UNSPLIT` | -15172 | OBSERVED | setup |
-| `CAPEX_VEHICLE_PURCHASE` | -13287 | OBSERVED | setup |
-| `FUNDING_CAPITAL` | 400000 | OBSERVED | funding window |
-| `COMPANY_INITIAL_CASH` | 100000 | DERIVED | funding window |
-| `EXPENSE_AGGREGATE_UNALLOCATED` | UNKNOWN | UNKNOWN | serial batch window (`operating_costs=null`) |
-| `OPEX_*` | UNKNOWN ×3 | UNKNOWN | serial batch window |
-| `UNATTRIBUTED_CASH_MOVEMENT` | -384 / -678 | DERIVED | funding→admission / batch window |
+| Category                        |  Amount GBP | Status   | Window                                       |
+| ------------------------------- | ----------: | -------- | -------------------------------------------- |
+| `REVENUE_TRANSPORT`             |        1022 | OBSERVED | serial batch window                          |
+| `CAPEX_CONSTRUCTION_UNSPLIT`    |      -15172 | OBSERVED | setup                                        |
+| `CAPEX_VEHICLE_PURCHASE`        |      -13287 | OBSERVED | setup                                        |
+| `FUNDING_CAPITAL`               |      400000 | OBSERVED | funding window                               |
+| `COMPANY_INITIAL_CASH`          |      100000 | DERIVED  | funding window                               |
+| `EXPENSE_AGGREGATE_UNALLOCATED` |     UNKNOWN | UNKNOWN  | serial batch window (`operating_costs=null`) |
+| `OPEX_*`                        |  UNKNOWN ×3 | UNKNOWN  | serial batch window                          |
+| `UNATTRIBUTED_CASH_MOVEMENT`    | -384 / -678 | DERIVED  | funding→admission / batch window             |
 
 Reconciliation: `recon-funding-to-admission` residual **-384 GBP**, verified;
 `recon-batch-window` residual **-678 GBP**, verified against

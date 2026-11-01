@@ -27,7 +27,7 @@ delivery, OPEX, net-profit or ROI fact exists anywhere in the D-chain
 records, and the full OPEX/net-profit/ROI row of the matrix is
 `UNKNOWN`.
 
-Meanwhile the same repository has proven on *other* worlds, never on this
+Meanwhile the same repository has proven on _other_ worlds, never on this
 one: (a) the native vehicle purchase → single order → start → depot-departure
 lifecycle (road-vehicle-lifecycle Attempt 2, legacy infrastructure lane,
 engine 123, capacity 20, price £4,429, MOVED at ticks 23–73), and (b) a
@@ -117,16 +117,16 @@ success: the same one-shot discipline that made D4 completeable applies.
 
 New files, mirroring the proven D4 layout:
 
-| Artifact | Role |
-|---|---|
-| `app/simulation/openttd/corridor_freight.py` | Protocol-5 contracts (`FreightRequest`/`FreightReadback`/phase contracts), plan identity, admission/verification functions |
-| `app/simulation/openttd/corridor_route_optimizer.py` | Offline map-to-route production step: feasible tiles → P05 candidates → selected route/plan, with bounded alternative enumeration and optional tile costs |
-| `app/simulation/openttd/d5_freight_package/info.nut`, `main.nut` | GameScript bridge; ports the proven lifecycle kernel (`road_vehicle_package` Site/Compatible/VState/VCommand/Motion) plus the delivery-evidence kernel (`freight_delivery_package` GSCargoMonitor arming/snapshot semantics) bound to the D4 corridor geometry |
-| `app/simulation/openttd/proof/corridor_freight_native.py` | Ceremony: staging, PRELAUNCH seal, claim, authorization payload, one-attempt runner, readback persistence, receipt build, cleanup, replay verifier; reuses `corridor_construction_native` helpers (encoding, freeze, manifest, save binding) and `road_vehicle_lifecycle` admission/verify semantics by import, not by copy, where they carry no extra world assumptions |
-| `tests/test_corridor_route_optimizer.py` | Source-backed competing-route and CAPEX-objective tests over sealed census tiles |
-| `tests/test_corridor_freight.py` | Controlled stub-VM protocol/admission/verification tests (pattern of `tests/test_corridor_construction.py`) |
-| `tests/test_corridor_freight_native.py` | Ceremony-level offline tests: staging refusal cases, replay of controlled frames, retained-evidence regressions (skip when retained dirs absent) |
-| `docs/d5-corridor-freight-design.md` (this file) and later a preparation/outcome record pair | Design now; staging/outcome records only when the real gates pass |
+| Artifact                                                                                     | Role                                                                                                                                                                                                                                                                                                                                                                     |
+| -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `app/simulation/openttd/corridor_freight.py`                                                 | Protocol-5 contracts (`FreightRequest`/`FreightReadback`/phase contracts), plan identity, admission/verification functions                                                                                                                                                                                                                                               |
+| `app/simulation/openttd/corridor_route_optimizer.py`                                         | Offline map-to-route production step: feasible tiles → P05 candidates → selected route/plan, with bounded alternative enumeration and optional tile costs                                                                                                                                                                                                                |
+| `app/simulation/openttd/d5_freight_package/info.nut`, `main.nut`                             | GameScript bridge; ports the proven lifecycle kernel (`road_vehicle_package` Site/Compatible/VState/VCommand/Motion) plus the delivery-evidence kernel (`freight_delivery_package` GSCargoMonitor arming/snapshot semantics) bound to the D4 corridor geometry                                                                                                           |
+| `app/simulation/openttd/proof/corridor_freight_native.py`                                    | Ceremony: staging, PRELAUNCH seal, claim, authorization payload, one-attempt runner, readback persistence, receipt build, cleanup, replay verifier; reuses `corridor_construction_native` helpers (encoding, freeze, manifest, save binding) and `road_vehicle_lifecycle` admission/verify semantics by import, not by copy, where they carry no extra world assumptions |
+| `tests/test_corridor_route_optimizer.py`                                                     | Source-backed competing-route and CAPEX-objective tests over sealed census tiles                                                                                                                                                                                                                                                                                         |
+| `tests/test_corridor_freight.py`                                                             | Controlled stub-VM protocol/admission/verification tests (pattern of `tests/test_corridor_construction.py`)                                                                                                                                                                                                                                                              |
+| `tests/test_corridor_freight_native.py`                                                      | Ceremony-level offline tests: staging refusal cases, replay of controlled frames, retained-evidence regressions (skip when retained dirs absent)                                                                                                                                                                                                                         |
+| `docs/d5-corridor-freight-design.md` (this file) and later a preparation/outcome record pair | Design now; staging/outcome records only when the real gates pass                                                                                                                                                                                                                                                                                                        |
 
 Data flow: candidate-5 authoritative `after.sav` (immutable input) → staged
 isolated disposable copy → sanitized OpenTTD 15.3 runtime + admin crypto →
@@ -208,7 +208,7 @@ are outside it.
 
 The retained D5 candidate-5 world exposes only **one built** road route (the
 24-tile D4 witness). Competing feasible routes in the sealed census data
-prove the optimizer *can* select among alternatives and that a tile cost can
+prove the optimizer _can_ select among alternatives and that a tile cost can
 flip the decision, but they are not an executable D5 route: the D5 staged
 run remains bound to the single built corridor. Genuine competing
 **executable** routes are blocked on an authoritative post-D4 built-road
@@ -217,21 +217,21 @@ and is not claimed as proven.
 
 Ops (request→status, each with exact expected exchange state):
 
-| op | Purpose | Success status | Native cost |
-|---|---|---|---|
-| `site` | admission packet (facts below) | `READY` / refusals typed | 0 |
-| `engine` | enumerate + admit one engine/pair under the policy | `READY` | 0 |
-| `purchase` | test-mode quote then `BuildVehicle` at depot | `BUILT` (new vehicle id) | quote £≤2,000 |
-| `vread` | independent vehicle readback | `READ` | 0 |
-| `order` | append pickup stop order (`OF_FULL_LOAD`) then delivery (`OF_NO_LOAD`) | `ORDERED` (per stop) | 0 |
-| `order-read` | exact order inventory | `ORDER_SET_VERIFIED` | 0 |
-| `monitor` | arm industry pickup/delivery monitors (keep_monitoring=true) pre-start | `ARMED` | 0 |
-| `start` | start vehicle | `STARTED` | 0 |
-| `load-watch` | window 1: full load observed at pickup | `LOADED` (with load readback) | 0 |
-| `transit-watch` | window 2: tile transitions along the witness to delivery | `AT_DELIVERY` | 0 |
-| `deliver-watch` | window 3: unloading + monitor consume (keep_monitoring=false) | `DELIVERED` | 0 |
-| `finance` | funds + income/profit monitor readbacks | `FINANCE_VERIFIED` | 0 |
-| `finish` | stop vehicle; final readback | `PHASE_STOPPED` | 0 |
+| op              | Purpose                                                                | Success status                | Native cost   |
+| --------------- | ---------------------------------------------------------------------- | ----------------------------- | ------------- |
+| `site`          | admission packet (facts below)                                         | `READY` / refusals typed      | 0             |
+| `engine`        | enumerate + admit one engine/pair under the policy                     | `READY`                       | 0             |
+| `purchase`      | test-mode quote then `BuildVehicle` at depot                           | `BUILT` (new vehicle id)      | quote £≤2,000 |
+| `vread`         | independent vehicle readback                                           | `READ`                        | 0             |
+| `order`         | append pickup stop order (`OF_FULL_LOAD`) then delivery (`OF_NO_LOAD`) | `ORDERED` (per stop)          | 0             |
+| `order-read`    | exact order inventory                                                  | `ORDER_SET_VERIFIED`          | 0             |
+| `monitor`       | arm industry pickup/delivery monitors (keep_monitoring=true) pre-start | `ARMED`                       | 0             |
+| `start`         | start vehicle                                                          | `STARTED`                     | 0             |
+| `load-watch`    | window 1: full load observed at pickup                                 | `LOADED` (with load readback) | 0             |
+| `transit-watch` | window 2: tile transitions along the witness to delivery               | `AT_DELIVERY`                 | 0             |
+| `deliver-watch` | window 3: unloading + monitor consume (keep_monitoring=false)          | `DELIVERED`                   | 0             |
+| `finance`       | funds + income/profit monitor readbacks                                | `FINANCE_VERIFIED`            | 0             |
+| `finish`        | stop vehicle; final readback                                           | `PHASE_STOPPED`               | 0             |
 
 Planned exchanges 15; hard request cap 32; the request-budget machinery is
 D4's (admission refuses the 33rd request permanently).
@@ -272,13 +272,13 @@ the full chain through replay.
 
 ### Typed failure modes
 
-| Class | Examples | Behavior |
-|---|---|---|
-| Admission refusals before mutation | `INVALID_SITE` (missing stop/depot witness/acceptance < 1/8), `NO_ENGINE`, `UNAVAILABLE_ENGINE`, `INSUFFICIENT_FUNDS`, `COST_LIMIT`, `COST_CHANGED` (quote ≠ realized), `PAUSED` | halt, zero-cost, evidence retained |
-| Readback discipline | `READBACK_MISMATCH` (correlation/identity/order-set/footprint), `OUT_OF_ORDER` (exchange-state machine) | halt prefix-preserved |
-| Observation | `CLOCK_STALLED`, `WINDOW_EXHAUSTED`, wall-deadline expiry | inconclusive; optionally later stops (never a success) |
-| Runtime | listener/connection/launch failures, script-log health findings | cleanup still runs and is certified; attempt `FAILED_*` |
-| Cleanup | any of the 4 flags false | historical record stays failed, like candidate-3's |
+| Class                              | Examples                                                                                                                                                                         | Behavior                                                |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| Admission refusals before mutation | `INVALID_SITE` (missing stop/depot witness/acceptance < 1/8), `NO_ENGINE`, `UNAVAILABLE_ENGINE`, `INSUFFICIENT_FUNDS`, `COST_LIMIT`, `COST_CHANGED` (quote ≠ realized), `PAUSED` | halt, zero-cost, evidence retained                      |
+| Readback discipline                | `READBACK_MISMATCH` (correlation/identity/order-set/footprint), `OUT_OF_ORDER` (exchange-state machine)                                                                          | halt prefix-preserved                                   |
+| Observation                        | `CLOCK_STALLED`, `WINDOW_EXHAUSTED`, wall-deadline expiry                                                                                                                        | inconclusive; optionally later stops (never a success)  |
+| Runtime                            | listener/connection/launch failures, script-log health findings                                                                                                                  | cleanup still runs and is certified; attempt `FAILED_*` |
+| Cleanup                            | any of the 4 flags false                                                                                                                                                         | historical record stays failed, like candidate-3's      |
 
 ## 5. Security and trust boundaries
 
@@ -401,20 +401,20 @@ is assigned only when a real record exists.
 
 ## 9. Explicit pass/fail acceptance criteria
 
-| # | Criterion | PASS | FAIL |
-|---|---|---|---|
-| A1 | Staging (offline) | PRELAUNCH seal matches `PRELAUNCH.sha256`; payload digest matches candidate bytes; frozen closure re-verified inside a fresh read-only `PREFLIGHT PASS`; never-consumed state | any seal/freeze identity mismatch refuses staging |
-| A2 | Review gate | fresh-context independent review returns PASS (all checks) | any FAIL/PASS-WITH-CONCERNS keeps the candidate unlaunched |
-| A3 | Authorization gate | explicit operator authorization record covers signing + exactly one attempt | no authorization record → PENDING_AUTHORIZATION forever |
-| A4 | Site admission (native) | all §4 `site` facts hold; funds £492,149 | any fact fails → zero-mutation halt |
-| A5 | Engine/purchase | one admitted engine; tested quote > 0 equals realized price ≤ £2,000; exactly one purchase | quote mismatch/second purchase/order violation |
-| A6 | Order set | exactly `[pickup OF_FULL_LOAD, delivery OF_NO_LOAD]`, both goto-station | any extra/missing/mistyped order |
-| A7 | Loading | observed full load `L > 0`; vehicle-full state; waiting decrement consistent | no load within window → `WINDOW_EXHAUSTED` (inconclusive, not passed) |
-| A8 | Delivery | monitor pickup & delivery amounts == L; vehicle empty after unload; accepted-cargo/income increase in the same quarter with corroboration | any mismatch → halt, no receipt |
-| A9 | Finance | every per-exchange funds delta reconciles exactly; purchase recorded at quote | any unexplained delta |
-| A10 | Evidence | §7 items 1–8 all present and re-verified; replay `RECEIPT_VERIFIED` (exit 0) | missing piece → `verified: false`, no label |
-| A11 | Cleanup | 4/4 flags true, rc 0, endpoints certified, workspace absent | any false → historical `FAILED_CLEANUP` preserved |
-| A12 | Preservation | D2/D3/D4 evidence byte-unchanged (candidate-5 manifest 90/90, candidate-4 80/80 re-verified); analytics over the attempt byte-identical twice; all matrix status vocabulary (PROVEN/CONTROLLED/PREPARED/PARTIAL/FAILED/UNKNOWN) intact | any tamper |
+| #   | Criterion               | PASS                                                                                                                                                                                                                                   | FAIL                                                                  |
+| --- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| A1  | Staging (offline)       | PRELAUNCH seal matches `PRELAUNCH.sha256`; payload digest matches candidate bytes; frozen closure re-verified inside a fresh read-only `PREFLIGHT PASS`; never-consumed state                                                          | any seal/freeze identity mismatch refuses staging                     |
+| A2  | Review gate             | fresh-context independent review returns PASS (all checks)                                                                                                                                                                             | any FAIL/PASS-WITH-CONCERNS keeps the candidate unlaunched            |
+| A3  | Authorization gate      | explicit operator authorization record covers signing + exactly one attempt                                                                                                                                                            | no authorization record → PENDING_AUTHORIZATION forever               |
+| A4  | Site admission (native) | all §4 `site` facts hold; funds £492,149                                                                                                                                                                                               | any fact fails → zero-mutation halt                                   |
+| A5  | Engine/purchase         | one admitted engine; tested quote > 0 equals realized price ≤ £2,000; exactly one purchase                                                                                                                                             | quote mismatch/second purchase/order violation                        |
+| A6  | Order set               | exactly `[pickup OF_FULL_LOAD, delivery OF_NO_LOAD]`, both goto-station                                                                                                                                                                | any extra/missing/mistyped order                                      |
+| A7  | Loading                 | observed full load `L > 0`; vehicle-full state; waiting decrement consistent                                                                                                                                                           | no load within window → `WINDOW_EXHAUSTED` (inconclusive, not passed) |
+| A8  | Delivery                | monitor pickup & delivery amounts == L; vehicle empty after unload; accepted-cargo/income increase in the same quarter with corroboration                                                                                              | any mismatch → halt, no receipt                                       |
+| A9  | Finance                 | every per-exchange funds delta reconciles exactly; purchase recorded at quote                                                                                                                                                          | any unexplained delta                                                 |
+| A10 | Evidence                | §7 items 1–8 all present and re-verified; replay `RECEIPT_VERIFIED` (exit 0)                                                                                                                                                           | missing piece → `verified: false`, no label                           |
+| A11 | Cleanup                 | 4/4 flags true, rc 0, endpoints certified, workspace absent                                                                                                                                                                            | any false → historical `FAILED_CLEANUP` preserved                     |
+| A12 | Preservation            | D2/D3/D4 evidence byte-unchanged (candidate-5 manifest 90/90, candidate-4 80/80 re-verified); analytics over the attempt byte-identical twice; all matrix status vocabulary (PROVEN/CONTROLLED/PREPARED/PARTIAL/FAILED/UNKNOWN) intact | any tamper                                                            |
 
 Only when A1–A12 all pass does the matrix line "D5 corridor freight cycle"
 become PROVEN for exactly the staged D5 scope. Any partial result keeps the
@@ -424,16 +424,16 @@ met. Full OPEX/net-profit/ROI remain **UNKNOWN** regardless of outcome
 
 ## 10. Risks, assumptions, fallback behavior
 
-| Risk | Likelihood/effect | Fallback |
-|---|---|---|
+| Risk                                                                                       | Likelihood/effect                                                         | Fallback                                                                                                                                                              |
+| ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Industry 0's cargo-1 production too slow: waiting stays 0 ⇒ no full load within the window | medium; attempt ends `WINDOW_EXHAUSTED` (inconclusive), funds −price only | close the attempt with retained evidence; analysis; a follow-up D5 design may carry longer windows or an operator-approved production decision — never a silent retry |
-| Delivery-stop acceptance below 1/8 natively (census measured 0 pre-construction) | low-medium; admission refuses before mutation | typed `INVALID_SITE`; no order, no purchase; the acceptance fact will then be the design finding of record |
-| No compatible engine exists in this world | low; `NO_ENGINE` refusal | close attempt; policy review offline |
-| Vehicle cannot route the built road (e.g. one-way/slope nuance invisible to construction) | low-medium; `INVALID_ROUTE`/`RUN_FAILED` at transit | halt with witness + path frames; the corridor validator gains a defect-finding record |
-| Price changed by world state at purchase (inflation/settings) | low; `COST_CHANGED` | refuse; quote health check offline first |
-| Response bound exceeded by a D5 readback | low; encoding refuses before send | shrink that readback, or give it a named larger constant (640 precedent), then a fresh review gate |
-| Native scene differs from controlled stub semantics (15.3 API drift) | low on this pinned runtime | controlled tests + documented 15.3 API pins; staged but unlaunched candidate until review clears |
-| Full-load order leaves the vehicle at the delivery station cycling after D5 ends | expected world behavior | documented; the `finish` op stops the vehicle (owned, not sold); no further authority implied |
+| Delivery-stop acceptance below 1/8 natively (census measured 0 pre-construction)           | low-medium; admission refuses before mutation                             | typed `INVALID_SITE`; no order, no purchase; the acceptance fact will then be the design finding of record                                                            |
+| No compatible engine exists in this world                                                  | low; `NO_ENGINE` refusal                                                  | close attempt; policy review offline                                                                                                                                  |
+| Vehicle cannot route the built road (e.g. one-way/slope nuance invisible to construction)  | low-medium; `INVALID_ROUTE`/`RUN_FAILED` at transit                       | halt with witness + path frames; the corridor validator gains a defect-finding record                                                                                 |
+| Price changed by world state at purchase (inflation/settings)                              | low; `COST_CHANGED`                                                       | refuse; quote health check offline first                                                                                                                              |
+| Response bound exceeded by a D5 readback                                                   | low; encoding refuses before send                                         | shrink that readback, or give it a named larger constant (640 precedent), then a fresh review gate                                                                    |
+| Native scene differs from controlled stub semantics (15.3 API drift)                       | low on this pinned runtime                                                | controlled tests + documented 15.3 API pins; staged but unlaunched candidate until review clears                                                                      |
+| Full-load order leaves the vehicle at the delivery station cycling after D5 ends           | expected world behavior                                                   | documented; the `finish` op stops the vehicle (owned, not sold); no further authority implied                                                                         |
 
 Assumptions: the candidate-5 `after.sav` loads on the staged runtime
 (verified for candidate-5 itself, same machinery); GSCargoMonitor semantics
@@ -450,20 +450,20 @@ and forward-path conclusions written only as new dated records.
 All T1–T8 are offline. T9/T10 are future gates inside the D5 implementation
 task, executed only under their own explicit operator authorization:
 
-| # | Task | Depends on | Output |
-|---|---|---|---|
-| T1 | Protocol-5 contracts in `corridor_freight.py` (§4) + focused tests | — | typed request/readback/plan, bound constants |
-| T2 | `d5_freight_package` GameScript (port lifecycle + delivery kernels, bind D4 geometry) | T1 | staged package bytes |
-| T3 | Receipt/verify/replay offline functions (D4 helpers by import) | T1 | verifier skeleton, deterministic outputs |
-| T4 | Ceremony module `corridor_freight_native.py` (schedule, admission, run-per-phase, cleanup wiring) | T1–T3 | staging + run + replay commands |
-| T5 | Controlled/retained/regression suites (§6) all green; ruff/py_compile/`git diff --check` | T4 | 129+ regressions intact, new counts recorded |
-| T6 | Preparation guide + spec docs (`docs/d5-corridor-freight-…`), task-list/matrix planning rows | T5 | documentation set |
-| T7 | **Gate: independent fresh-context review (read-only, PASS)** | T6 | review record |
-| T8 | Staging per D4 procedure (one identity constant in T4's module; frozen closure; PREFLIGHT PASS) | T7 | candidate `-candidate-1` PENDING_AUTHORIZATION |
-| T9 | **Gate: explicit operator authorization** (signing + exactly one attempt) | T8 | signed AUTHORIZATION.json |
-| T10 | The one native attempt (§3/§9) | T9 | result per §7 |
-| T11 | Outcome records: handoff outcome, matrix/EVIDENCE_INDEX E-entry, TASKS, analytics run, close-out | T10 | evidence rows E36+… |
-| T12 | Later: P05 optimizer wiring + planning-vs-execution analytics on real facts | T11 separate design | out of this milestone |
+| #   | Task                                                                                              | Depends on          | Output                                         |
+| --- | ------------------------------------------------------------------------------------------------- | ------------------- | ---------------------------------------------- |
+| T1  | Protocol-5 contracts in `corridor_freight.py` (§4) + focused tests                                | —                   | typed request/readback/plan, bound constants   |
+| T2  | `d5_freight_package` GameScript (port lifecycle + delivery kernels, bind D4 geometry)             | T1                  | staged package bytes                           |
+| T3  | Receipt/verify/replay offline functions (D4 helpers by import)                                    | T1                  | verifier skeleton, deterministic outputs       |
+| T4  | Ceremony module `corridor_freight_native.py` (schedule, admission, run-per-phase, cleanup wiring) | T1–T3               | staging + run + replay commands                |
+| T5  | Controlled/retained/regression suites (§6) all green; ruff/py_compile/`git diff --check`          | T4                  | 129+ regressions intact, new counts recorded   |
+| T6  | Preparation guide + spec docs (`docs/d5-corridor-freight-…`), task-list/matrix planning rows      | T5                  | documentation set                              |
+| T7  | **Gate: independent fresh-context review (read-only, PASS)**                                      | T6                  | review record                                  |
+| T8  | Staging per D4 procedure (one identity constant in T4's module; frozen closure; PREFLIGHT PASS)   | T7                  | candidate `-candidate-1` PENDING_AUTHORIZATION |
+| T9  | **Gate: explicit operator authorization** (signing + exactly one attempt)                         | T8                  | signed AUTHORIZATION.json                      |
+| T10 | The one native attempt (§3/§9)                                                                    | T9                  | result per §7                                  |
+| T11 | Outcome records: handoff outcome, matrix/EVIDENCE_INDEX E-entry, TASKS, analytics run, close-out  | T10                 | evidence rows E36+…                            |
+| T12 | Later: P05 optimizer wiring + planning-vs-execution analytics on real facts                       | T11 separate design | out of this milestone                          |
 
 Critical path: T1 → T4 → T5 → T7 → T8 → T9 → T10 → T11. The plan mirrors
 D4's proven chain: contracts → package → ceremony → tests → review →

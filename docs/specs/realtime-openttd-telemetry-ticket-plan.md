@@ -693,30 +693,30 @@ before claiming its criterion complete. Feature acceptance waits for all tickets
 not merely the tickets with owner assignments. Tickets without an owner assignment
 are necessary supporting slices, not optional work.
 
-| Spec criterion (verbatim) | Owner | Shared coverage |
-|---|---|---|
-| AC01: Existing run/compare defaults execute the existing fast batch path; history and metrics remain compatible. | T01 | T02, T09, T10, T11, T17 |
-| AC02: Live mode launches exactly one owned dedicated process using pinned verified assets and no private Lab launch interception or replacement binary. | T07 | T05, T06, T09, T17 |
-| AC03: Live and batch mode provenance are explicit, and mixed-mode comparison is rejected by default. | T11 | T01, T02, T10 |
-| AC04: LiveSimulationRunner alone owns ports, secrets, readiness, deadlines, save/quit, signaling, cancellation and cleanup. | T07 | T06, T09, T13 |
-| AC05: AdminObserver is restricted to observation/authentication/connection maintenance; packet tests forbid RCON and other game-control messages. | T04 | T12 |
-| AC06: Protocol v2 and correct Welcome identity are required; required update frequencies are negotiated before running. | T04 | T07 |
-| AC07: Date, CompanyInfo, CompanyEconomy and CompanyStats become typed, persisted observations during the same real process's lifetime. | T17 | T03, T04, T08, T10 |
-| AC08: The production real test receives meaningful changing values and completed-quarter data without asserting prototype-specific financial results. | T17 | — |
-| AC09: Yearly Admin net values, quarter-scoped save metrics, current balances, history values and any future cumulative series cannot be confused by names or metadata. | T03 | T08, T09, T11 |
-| AC10: No route, consist, wagon, capacity or separate cost metrics are invented from Admin counts. | T03 | — |
-| AC11: Observations link to the existing ExperimentRun before a final SimulationRun exists; the final result links through that same run exactly once. | T10 | T02, T08, T09, T17 |
-| AC12: Explicit final save succeeds after a runner-owned stopping barrier, and the public Lab parser plus existing conversion produce the final SimulationResult/artifact. | T09 | T07, T17 |
-| AC13: A final-save date later than the requested target is recorded honestly; an older autosave is never silently substituted for successful live finalization. | T09 | — |
-| AC14: Successful simulation with recovered gaps reports telemetry incomplete and exit 3; fatal observation/storage failures follow the specified table. | T12 | T08, T10, T11, T14 |
-| AC15: All listed startup, authentication, loss, DB, timeout, cancellation and shutdown cases have externally observable tests and bounded cleanup. | T16 | T04, T07, T08, T09, T10, T12, T13, T14, T15 |
-| AC16: Queue/database backpressure cannot indefinitely block supervision; retries are bounded/idempotent and overload is visible. | T08 | T07, T14 |
-| AC17: Concurrent runs isolate ports, files, IDs and secrets; collisions cannot attach an observer to another run or kill an unrelated process. | T06 | T05, T07, T16 |
-| AC18: Passwords never appear in CLI output, argv, stored metadata, final artifacts or exception reports; loopback and permission checks pass. | T16 | T04, T05, T06, T08, T09, T10, T11, T14, T15 |
-| AC19: Cancellation and supervisor death leave no live owned OpenTTD process; resource/task/thread cleanup is verified, with unavoidable SIGKILL artifact limits documented. | T13 | T07, T16 |
-| AC20: Database outage retains an outcome manifest/artifacts; recovery cannot rerun the simulation or overwrite a conflicting result. | T15 | T14 |
-| AC21: Additive migration preserves existing populated history and passes actual PostgreSQL checks; unrelated logistics workflows are untouched. | T02 | T08, T16 |
-| AC22: Production has no imports from the prototype and no private OpenTTDLab launcher references; selected evidence/fixtures remain available after prototype runtime removal. | T18 | T03, T04, T05, T07, T09, T17 |
+| Spec criterion (verbatim)                                                                                                                                                      | Owner | Shared coverage                             |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----- | ------------------------------------------- |
+| AC01: Existing run/compare defaults execute the existing fast batch path; history and metrics remain compatible.                                                               | T01   | T02, T09, T10, T11, T17                     |
+| AC02: Live mode launches exactly one owned dedicated process using pinned verified assets and no private Lab launch interception or replacement binary.                        | T07   | T05, T06, T09, T17                          |
+| AC03: Live and batch mode provenance are explicit, and mixed-mode comparison is rejected by default.                                                                           | T11   | T01, T02, T10                               |
+| AC04: LiveSimulationRunner alone owns ports, secrets, readiness, deadlines, save/quit, signaling, cancellation and cleanup.                                                    | T07   | T06, T09, T13                               |
+| AC05: AdminObserver is restricted to observation/authentication/connection maintenance; packet tests forbid RCON and other game-control messages.                              | T04   | T12                                         |
+| AC06: Protocol v2 and correct Welcome identity are required; required update frequencies are negotiated before running.                                                        | T04   | T07                                         |
+| AC07: Date, CompanyInfo, CompanyEconomy and CompanyStats become typed, persisted observations during the same real process's lifetime.                                         | T17   | T03, T04, T08, T10                          |
+| AC08: The production real test receives meaningful changing values and completed-quarter data without asserting prototype-specific financial results.                          | T17   | —                                           |
+| AC09: Yearly Admin net values, quarter-scoped save metrics, current balances, history values and any future cumulative series cannot be confused by names or metadata.         | T03   | T08, T09, T11                               |
+| AC10: No route, consist, wagon, capacity or separate cost metrics are invented from Admin counts.                                                                              | T03   | —                                           |
+| AC11: Observations link to the existing ExperimentRun before a final SimulationRun exists; the final result links through that same run exactly once.                          | T10   | T02, T08, T09, T17                          |
+| AC12: Explicit final save succeeds after a runner-owned stopping barrier, and the public Lab parser plus existing conversion produce the final SimulationResult/artifact.      | T09   | T07, T17                                    |
+| AC13: A final-save date later than the requested target is recorded honestly; an older autosave is never silently substituted for successful live finalization.                | T09   | —                                           |
+| AC14: Successful simulation with recovered gaps reports telemetry incomplete and exit 3; fatal observation/storage failures follow the specified table.                        | T12   | T08, T10, T11, T14                          |
+| AC15: All listed startup, authentication, loss, DB, timeout, cancellation and shutdown cases have externally observable tests and bounded cleanup.                             | T16   | T04, T07, T08, T09, T10, T12, T13, T14, T15 |
+| AC16: Queue/database backpressure cannot indefinitely block supervision; retries are bounded/idempotent and overload is visible.                                               | T08   | T07, T14                                    |
+| AC17: Concurrent runs isolate ports, files, IDs and secrets; collisions cannot attach an observer to another run or kill an unrelated process.                                 | T06   | T05, T07, T16                               |
+| AC18: Passwords never appear in CLI output, argv, stored metadata, final artifacts or exception reports; loopback and permission checks pass.                                  | T16   | T04, T05, T06, T08, T09, T10, T11, T14, T15 |
+| AC19: Cancellation and supervisor death leave no live owned OpenTTD process; resource/task/thread cleanup is verified, with unavoidable SIGKILL artifact limits documented.    | T13   | T07, T16                                    |
+| AC20: Database outage retains an outcome manifest/artifacts; recovery cannot rerun the simulation or overwrite a conflicting result.                                           | T15   | T14                                         |
+| AC21: Additive migration preserves existing populated history and passes actual PostgreSQL checks; unrelated logistics workflows are untouched.                                | T02   | T08, T16                                    |
+| AC22: Production has no imports from the prototype and no private OpenTTDLab launcher references; selected evidence/fixtures remain available after prototype runtime removal. | T18   | T03, T04, T05, T07, T09, T17                |
 
 ## Failure-table coverage audit
 
@@ -724,22 +724,22 @@ This table makes AC15's shared coverage explicit rather than burying failure wor
 in the smoke test. T16 audits completion of every row; owning implementation slices
 supply the tests, and T11 supplies CLI exit-code rendering.
 
-| Specification condition | Implementation/test slice |
-|---|---|
-| Startup, assets or bind failure | T05, T06, T07; composed evidence T16 |
-| Admin authentication failure | T04, T07 |
-| Unsupported protocol/identity or malformed known packet | T03, T04, T07 |
-| Connection loss, recovered/exhausted budget, world reset | T12 |
-| DB failure before launch | T10; outage evidence T14 |
-| Transient telemetry DB failure | T08; composed outcome T14 |
-| Exhausted/permanent DB failure or queue full | T08, T14 |
-| Normal completion and missing required observation types | T09, T10, T12 |
-| Timeout, SIGINT/cancellation, SIGTERM | T07 baseline; full policy T13 |
-| Expected versus unexpected ServerShutdown/EOF | T04/T07 baseline; full policy T13 |
-| Save or final parse failure | T09 |
-| Final DB commit failure and local retention | T14 |
-| Explicit terminal recovery and conflict rejection | T15 |
-| Abrupt supervisor death / abandoned workspace handling | T13, T15 |
+| Specification condition                                  | Implementation/test slice            |
+| -------------------------------------------------------- | ------------------------------------ |
+| Startup, assets or bind failure                          | T05, T06, T07; composed evidence T16 |
+| Admin authentication failure                             | T04, T07                             |
+| Unsupported protocol/identity or malformed known packet  | T03, T04, T07                        |
+| Connection loss, recovered/exhausted budget, world reset | T12                                  |
+| DB failure before launch                                 | T10; outage evidence T14             |
+| Transient telemetry DB failure                           | T08; composed outcome T14            |
+| Exhausted/permanent DB failure or queue full             | T08, T14                             |
+| Normal completion and missing required observation types | T09, T10, T12                        |
+| Timeout, SIGINT/cancellation, SIGTERM                    | T07 baseline; full policy T13        |
+| Expected versus unexpected ServerShutdown/EOF            | T04/T07 baseline; full policy T13    |
+| Save or final parse failure                              | T09                                  |
+| Final DB commit failure and local retention              | T14                                  |
+| Explicit terminal recovery and conflict rejection        | T15                                  |
+| Abrupt supervisor death / abandoned workspace handling   | T13, T15                             |
 
 ## Validation and publication boundary
 

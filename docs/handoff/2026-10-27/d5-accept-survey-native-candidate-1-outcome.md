@@ -81,16 +81,16 @@ Date: 2026-10-27. Predecessors:
 
 ## 2. The measured acceptance facts (verbatim)
 
-| Exchange | Tile | Measured | Census hypothesis | Divergence |
-|---|---|---|---|---|
-| radius-00 | — | radius 3 | radius unmeasured before | new native fact |
-| accept-00 (control) | 50351 | 0 | 0 | none |
-| accept-01 | 50607 (175,197) | 8 | 8 | none |
-| accept-02 | 50863 (175,198) | 8 | 8 | none |
-| accept-03 | 51119 (175,199) | 8 | 8 | none |
-| accept-04 | 51375 (175,200) | 8 | 8 | none |
-| accept-05 | 50605 (173,197) | 8 | 8 | none |
-| prod-00 | — | production 104 | 104 (E36 site readback) | none |
+| Exchange            | Tile            | Measured       | Census hypothesis        | Divergence      |
+| ------------------- | --------------- | -------------- | ------------------------ | --------------- |
+| radius-00           | —               | radius 3       | radius unmeasured before | new native fact |
+| accept-00 (control) | 50351           | 0              | 0                        | none            |
+| accept-01           | 50607 (175,197) | 8              | 8                        | none            |
+| accept-02           | 50863 (175,198) | 8              | 8                        | none            |
+| accept-03           | 51119 (175,199) | 8              | 8                        | none            |
+| accept-04           | 51375 (175,200) | 8              | 8                        | none            |
+| accept-05           | 50605 (173,197) | 8              | 8                        | none            |
+| prod-00             | —               | production 104 | 104 (E36 site readback)  | none            |
 
 Key facts:
 

@@ -69,7 +69,7 @@ binds each response to a receipt and validates the logged canonical bytes
 against the parsed payload (`TileFactsReceipt`/`TileFactsExchange`). The
 classification capture needs the same parity — a `TileClassificationReceipt`
 that correlates the staged handler's logged canonical page bytes with the
-parsed response — *before* any authorization is spent; this module provides
+parsed response — _before_ any authorization is spent; this module provides
 the wire contracts but not yet that receipt layer, and no capture is proposed
 without it.
 
@@ -107,7 +107,7 @@ construction authority):
 evidence cannot establish (724 expansions). Feeding the schema-2 hypothesis
 that those 19 tiles are houses/stations moves the code to
 `UNSUPPORTED_CONSTRUCTION` (1056 expansions, same corridor shape). This is a
-classification *sensitivity* demonstration, not a native finding: Seed 17's
+classification _sensitivity_ demonstration, not a native finding: Seed 17's
 retained result stays "no supported route, no executable proposal, P05 not
 executed" and its consumption is final.
 

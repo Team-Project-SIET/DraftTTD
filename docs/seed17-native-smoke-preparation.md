@@ -7,16 +7,16 @@ is never retried, relabeled or unlocked; its review remains frozen.
 
 ## Fresh attempt identity
 
-| Item | Value |
-|---|---|
-| Run directory (unconsumed, no `CLAIM.json`) | `artifacts/demos/playable-demo-698799a2dfb146948fd2983ff2032253` |
-| Review directory (frozen inputs + verdict) | `artifacts/demos/random-smoke-review-698799a2dfb146948fd2983ff2032253` |
-| PRELAUNCH SHA-256 | `70ced0e40b43e726720aa19a033ae20cc8005b50f4396034f4f2a60148f204e7` |
-| frozen-inputs.json SHA-256 | `685ea77c4af7b6df391b90090be851e60f6fe2c4e282646b2ac37aaac1403747` |
-| independent-preflight.json SHA-256 (round 2, PASS) | `3abd617ce42a3254…` (see review directory) |
-| Launch harness SHA-256 | `3fa8cfb967989a99923d4490b8ab8e8d5e1e7998d3c95fae415e1f7b9f348319` |
-| World request | seed 17, 256×256, temperate, terrain 0, towns 1, industries 2 |
-| Planning budget | GBP 500,000, preset `high-budget-500k`, P05 ≤ 30 s, ≤ 4 services/vehicles |
+| Item                                               | Value                                                                     |
+| -------------------------------------------------- | ------------------------------------------------------------------------- |
+| Run directory (unconsumed, no `CLAIM.json`)        | `artifacts/demos/playable-demo-698799a2dfb146948fd2983ff2032253`          |
+| Review directory (frozen inputs + verdict)         | `artifacts/demos/random-smoke-review-698799a2dfb146948fd2983ff2032253`    |
+| PRELAUNCH SHA-256                                  | `70ced0e40b43e726720aa19a033ae20cc8005b50f4396034f4f2a60148f204e7`        |
+| frozen-inputs.json SHA-256                         | `685ea77c4af7b6df391b90090be851e60f6fe2c4e282646b2ac37aaac1403747`        |
+| independent-preflight.json SHA-256 (round 2, PASS) | `3abd617ce42a3254…` (see review directory)                                |
+| Launch harness SHA-256                             | `3fa8cfb967989a99923d4490b8ab8e8d5e1e7998d3c95fae415e1f7b9f348319`        |
+| World request                                      | seed 17, 256×256, temperate, terrain 0, towns 1, industries 2             |
+| Planning budget                                    | GBP 500,000, preset `high-budget-500k`, P05 ≤ 30 s, ≤ 4 services/vehicles |
 
 The superseded, unconsumed preparation `playable-demo-20401e97…` remains on disk
 unchanged; it is obsolete (frozen to pre-512-correction bytes) and is never launched.

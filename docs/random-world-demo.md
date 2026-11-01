@@ -37,17 +37,17 @@ options require `--random-world`. Random `check` validates configuration and
 prerequisites without generation. Random `plan` writes a reproducible recipe,
 not a synthetic world or a claim of feasible services.
 
-| Setting | Supported range |
-|---|---|
-| Seed | 0..4294967294 (the all-ones random-seed sentinel is excluded) |
-| Map size | 256×256 only |
-| Climate | temperate, arctic, tropic, toyland |
-| Terrain type | native difficulty values 0..5 |
-| Town density | native values 0..3; custom town counts excluded |
-| Industry density | native values 0..4; zero may yield no freight services |
-| Candidate relationships | 1..16; at most 8192 source/cargo/destination checks |
-| Services / vehicles | independently 1..8; one vehicle per selected service |
-| P05 solve time | 1..60 wall-clock seconds, default 30; killed/reaped on timeout |
+| Setting                 | Supported range                                                |
+| ----------------------- | -------------------------------------------------------------- |
+| Seed                    | 0..4294967294 (the all-ones random-seed sentinel is excluded)  |
+| Map size                | 256×256 only                                                   |
+| Climate                 | temperate, arctic, tropic, toyland                             |
+| Terrain type            | native difficulty values 0..5                                  |
+| Town density            | native values 0..3; custom town counts excluded                |
+| Industry density        | native values 0..4; zero may yield no freight services         |
+| Candidate relationships | 1..16; at most 8192 source/cargo/destination checks            |
+| Services / vehicles     | independently 1..8; one vehicle per selected service           |
+| P05 solve time          | 1..60 wall-clock seconds, default 30; killed/reaped on timeout |
 
 The existing finite GBP 500,000 scenario funds random runs. P05 spending is capped
 at that budget; each native service still has the executor's GBP 100,000 admission

@@ -10,15 +10,15 @@ remains 96. These ceilings do not imply a particular industry or cargo count.
 
 The total post-auth frame ceiling is **1030**, with this boundary defined explicitly:
 
-| Category | Maximum frames | Production authority |
-| --- | ---: | --- |
-| Encrypted session establishment | 2 | `SecureAdminSession.authenticate`: encrypted SERVER_PROTOCOL and SERVER_WELCOME after ENABLE_ENCRYPTION |
-| Explicit subscription setup | 3 | `GameScriptTransport.subscribe`: UPDATE_FREQUENCY, ADMIN_PING, SERVER_PONG |
-| Inventory query operations | 256 | Existing inventory session budget |
-| Capability query operations | 256 | Existing capability session budget |
-| Catalog query operations | 512 | Existing catalog session budget |
-| Graceful Admin close | 1 | `AdminStream.close(quit=True)`: ADMIN_QUIT |
-| Total | 1030 | 2 + 3 + 256 + 256 + 512 + 1 |
+| Category                        | Maximum frames | Production authority                                                                                    |
+| ------------------------------- | -------------: | ------------------------------------------------------------------------------------------------------- |
+| Encrypted session establishment |              2 | `SecureAdminSession.authenticate`: encrypted SERVER_PROTOCOL and SERVER_WELCOME after ENABLE_ENCRYPTION |
+| Explicit subscription setup     |              3 | `GameScriptTransport.subscribe`: UPDATE_FREQUENCY, ADMIN_PING, SERVER_PONG                              |
+| Inventory query operations      |            256 | Existing inventory session budget                                                                       |
+| Capability query operations     |            256 | Existing capability session budget                                                                      |
+| Catalog query operations        |            512 | Existing catalog session budget                                                                         |
+| Graceful Admin close            |              1 | `AdminStream.close(quit=True)`: ADMIN_QUIT                                                              |
+| Total                           |           1030 | 2 + 3 + 256 + 256 + 512 + 1                                                                             |
 
 Authentication JOIN_SECURE, AUTH_REQUEST, AUTH_RESPONSE and ENABLE_ENCRYPTION
 belong to authentication, preceding this boundary. TCP EOF, socket closure and

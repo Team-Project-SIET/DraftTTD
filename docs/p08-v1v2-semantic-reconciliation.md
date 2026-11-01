@@ -18,12 +18,12 @@ are untouched; reconciliation does not relabel them.
 
 Concept mapping (fields compared as equivalent concepts, not as raw booleans):
 
-| Retained V1 field | Producer concept | Fresh V2 concept | Rule |
-| --- | --- | --- | --- |
-| `buildable` | planner `Vacant(t)` (`planner.nut` → `infrastructure.nut`: flat + unowned + bare) | `GSTile.IsBuildable` bit (15.3: `MP_CLEAR`/`MP_TREES`/coast/own-plain-road) | rebuild `Vacant` from the schema-2 mask (`slope==0 ∧ owner==-1 ∧ ¬(excluded bits)`) and accept the recorded transformation `SEMANTIC_V1_VACANT_VS_NATIVE_ISBUILDABLE` when the rebuild matches the retained producer |
-| `water/coast/tree/farm/rock/rough/rail/water_transport` | identical `GSTile` calls both sides | same bit | bit-for-bit; mismatch = `TEMPORAL_SECOND_INSTANT` (state difference), `GENUINE_CONTRADICTION` when the census instant falls inside the retained capture window |
-| `road` | `GSRoad.IsRoadTile` both sides | `road_tile` bit (not the OR of `road_track`/`road_src_type`, which have no V1 counterpart) | bit-for-bit as above |
-| `air_transport` | `GSTile.HasTransportType(TRANSPORT_AIR)` | `GSAirport.IsAirportTile` | distinct native predicates: equality observed corpus-wide only; any mismatch = `UNRESOLVED_DISTINCT_PREDICATE` (blocks binding verdicts, never reinterpreted) |
+| Retained V1 field                                       | Producer concept                                                                  | Fresh V2 concept                                                                           | Rule                                                                                                                                                                                                                 |
+| ------------------------------------------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `buildable`                                             | planner `Vacant(t)` (`planner.nut` → `infrastructure.nut`: flat + unowned + bare) | `GSTile.IsBuildable` bit (15.3: `MP_CLEAR`/`MP_TREES`/coast/own-plain-road)                | rebuild `Vacant` from the schema-2 mask (`slope==0 ∧ owner==-1 ∧ ¬(excluded bits)`) and accept the recorded transformation `SEMANTIC_V1_VACANT_VS_NATIVE_ISBUILDABLE` when the rebuild matches the retained producer |
+| `water/coast/tree/farm/rock/rough/rail/water_transport` | identical `GSTile` calls both sides                                               | same bit                                                                                   | bit-for-bit; mismatch = `TEMPORAL_SECOND_INSTANT` (state difference), `GENUINE_CONTRADICTION` when the census instant falls inside the retained capture window                                                       |
+| `road`                                                  | `GSRoad.IsRoadTile` both sides                                                    | `road_tile` bit (not the OR of `road_track`/`road_src_type`, which have no V1 counterpart) | bit-for-bit as above                                                                                                                                                                                                 |
+| `air_transport`                                         | `GSTile.HasTransportType(TRANSPORT_AIR)`                                          | `GSAirport.IsAirportTile`                                                                  | distinct native predicates: equality observed corpus-wide only; any mismatch = `UNRESOLVED_DISTINCT_PREDICATE` (blocks binding verdicts, never reinterpreted)                                                        |
 
 Any unexplained `buildable` residual with zero shared-predicate differences is
 `GENUINE_CONTRADICTION`. Temporal (second-instant) tiles are never fused and
@@ -34,12 +34,12 @@ never reclassified; they keep the fusion gate closed.
 `replay_retained_census(retained_facts, candidate_dir)` rebuilds the sealed
 sweep from the candidate page payloads through the project's own code
 (`TileClassificationRequest.parse` + receipt correlation + exchange validation
-+ `TileClassificationSweep.record`), verifies the candidate's 198-entry frozen
-artifact manifest in place, and asserts the rebuilt seal reproduces
-`classification-completeness.json` (83 coherence failures, class counts,
-unknown tiles, bound flag, region). Per-page provenance: each page is verified
-single-instant; the census spans economy dates 712224–712226 versus the
-retained capture window 712285–712291.
+- `TileClassificationSweep.record`), verifies the candidate's 198-entry frozen
+  artifact manifest in place, and asserts the rebuilt seal reproduces
+  `classification-completeness.json` (83 coherence failures, class counts,
+  unknown tiles, bound flag, region). Per-page provenance: each page is verified
+  single-instant; the census spans economy dates 712224–712226 versus the
+  retained capture window 712285–712291.
 
 Derived report: `artifacts/experiments/v1v2-semantic-reconciliation/reconciliation-report.json`
 

@@ -57,20 +57,20 @@ and did not block this fresh candidate.
 
 ## 2. Candidate identity and authorization
 
-| Gate | Result |
-| --- | --- |
-| Candidate | `D4-CORRIDOR-4`, milestone `D4-CONSTRUCTION`, kind `corridor` |
-| Directory | `artifacts/experiments/d4-corridor-native-candidate-4/` |
-| PRELAUNCH seal | `88cd1ecc7b7b76d3f305deccdb820fa64782a6896e342263b4bb86b281fd22c3` — matched `PRELAUNCH.sha256` |
-| Authorization payload | sha-256 `4037c5d8a6c8dc3bcc4998dcc4b906f80eb48536a00ffca6947574ccfa487c7f` over 2,307 canonical bytes; recomputed and matched before signing |
-| Plan digest | `b5b472ff5ae15d74ad618436eb36603dd07fbaf091c14610bd7f6e8862283a78` (v3, 7 ops) |
-| Source world | D3 `after.sav` `fbebef54dd466e0bea23cc30e11e94ebaf2a3ca07e2e9b7aadd6a6645c37d59e`; staged `source.sav` matched |
-| Frozen closure | 3,448 entries; `verify_freeze` PASS |
-| Schedule | v3: 7 road ops, 22 planned exchanges, request cap 28, per-op ceiling £2,000, no `48047↔48303` interior join, corner `45743↔45999` present |
-| `AUTHORIZATION.json` | sha-256 `b069b48434b4cab8abf55400b878776fadb0d1917868c4f73e01fd8b7cb5db6d`; 64-byte Ed25519 signature; `verify_authorization` PASS under the pinned production anchor |
-| Operator identity | `sha256-ed25519-public-key:cbb63ff58f17f13df3e1be0735fad18497e3a0c6ad6b5dd55491d708ae40c614` |
-| Claim | consumed, `launches_allowed: 1`, `retries: 0` |
-| Native launch / connection | 1 / 1 |
+| Gate                       | Result                                                                                                                                                                |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Candidate                  | `D4-CORRIDOR-4`, milestone `D4-CONSTRUCTION`, kind `corridor`                                                                                                         |
+| Directory                  | `artifacts/experiments/d4-corridor-native-candidate-4/`                                                                                                               |
+| PRELAUNCH seal             | `88cd1ecc7b7b76d3f305deccdb820fa64782a6896e342263b4bb86b281fd22c3` — matched `PRELAUNCH.sha256`                                                                       |
+| Authorization payload      | sha-256 `4037c5d8a6c8dc3bcc4998dcc4b906f80eb48536a00ffca6947574ccfa487c7f` over 2,307 canonical bytes; recomputed and matched before signing                          |
+| Plan digest                | `b5b472ff5ae15d74ad618436eb36603dd07fbaf091c14610bd7f6e8862283a78` (v3, 7 ops)                                                                                        |
+| Source world               | D3 `after.sav` `fbebef54dd466e0bea23cc30e11e94ebaf2a3ca07e2e9b7aadd6a6645c37d59e`; staged `source.sav` matched                                                        |
+| Frozen closure             | 3,448 entries; `verify_freeze` PASS                                                                                                                                   |
+| Schedule                   | v3: 7 road ops, 22 planned exchanges, request cap 28, per-op ceiling £2,000, no `48047↔48303` interior join, corner `45743↔45999` present                             |
+| `AUTHORIZATION.json`       | sha-256 `b069b48434b4cab8abf55400b878776fadb0d1917868c4f73e01fd8b7cb5db6d`; 64-byte Ed25519 signature; `verify_authorization` PASS under the pinned production anchor |
+| Operator identity          | `sha256-ed25519-public-key:cbb63ff58f17f13df3e1be0735fad18497e3a0c6ad6b5dd55491d708ae40c614`                                                                          |
+| Claim                      | consumed, `launches_allowed: 1`, `retries: 0`                                                                                                                         |
+| Native launch / connection | 1 / 1                                                                                                                                                                 |
 
 The approved secret-handling path was used: the operator private key was read
 only to produce the signature, was never printed, copied into a report, or
@@ -81,16 +81,16 @@ after signing.
 
 Funds started at **£496,543**.
 
-| Op | Planned scope | Admission | Native cost | Readback | Funds after |
-| --- | --- | --- | --- | --- | --- |
-| `op-00` | run A `45747→45743`, 5 tiles | READY, £785 | BUILT, £785 | `confirm-00` READ, digest matched | £495,758 |
-| `op-01` | run-B segment `45999→48047`, 9 tiles | READY, £1,398 | BUILT, £1,398 | `confirm-01` READ, digest matched | £494,360 |
-| `op-02` | run-B segment `48303→50095`, 8 tiles | READY, £1,151 | BUILT, £1,151 | `confirm-02` READ, digest matched | £493,209 |
-| `op-03` | perpendicular corner `45743↔45999`, 2 tiles | READY, £71 | BUILT, £71 | `confirm-03` READ, digest matched | £493,138 |
-| `op-04` | pickup stop tile `45748`, front `45747` | READY, £307 | BUILT, £307 | `confirm-04` READ, digest matched | £492,831 |
-| `op-05` | delivery stop tile `50351`, front `50095` | READY, £292 | BUILT, £292 | `confirm-05` READ, digest matched | £492,539 |
-| `op-06` | depot tile `45487`, front `45743` | READY, £390 | native log says BUILT; response rejected before parsing | **none accepted** | frame reports £492,149 |
-| route read | 24-tile witness, 23 pairs | not reached | — | — | — |
+| Op         | Planned scope                               | Admission     | Native cost                                             | Readback                          | Funds after            |
+| ---------- | ------------------------------------------- | ------------- | ------------------------------------------------------- | --------------------------------- | ---------------------- |
+| `op-00`    | run A `45747→45743`, 5 tiles                | READY, £785   | BUILT, £785                                             | `confirm-00` READ, digest matched | £495,758               |
+| `op-01`    | run-B segment `45999→48047`, 9 tiles        | READY, £1,398 | BUILT, £1,398                                           | `confirm-01` READ, digest matched | £494,360               |
+| `op-02`    | run-B segment `48303→50095`, 8 tiles        | READY, £1,151 | BUILT, £1,151                                           | `confirm-02` READ, digest matched | £493,209               |
+| `op-03`    | perpendicular corner `45743↔45999`, 2 tiles | READY, £71    | BUILT, £71                                              | `confirm-03` READ, digest matched | £493,138               |
+| `op-04`    | pickup stop tile `45748`, front `45747`     | READY, £307   | BUILT, £307                                             | `confirm-04` READ, digest matched | £492,831               |
+| `op-05`    | delivery stop tile `50351`, front `50095`   | READY, £292   | BUILT, £292                                             | `confirm-05` READ, digest matched | £492,539               |
+| `op-06`    | depot tile `45487`, front `45743`           | READY, £390   | native log says BUILT; response rejected before parsing | **none accepted**                 | frame reports £492,149 |
+| route read | 24-tile witness, 23 pairs                   | not reached   | —                                                       | —                                 | —                      |
 
 Verified prefix reconciliation:
 
@@ -123,36 +123,36 @@ compensation, route read, or later operation. The phase record is
 
 ## 5. Native state, saves, manifest, and replay
 
-| Fact | Value |
-| --- | --- |
-| Session-before save | `session-before.sav` sha-256 `a3e6b5102ae12f98fd782c5a417ac2bc2237397ef3ca66163ed4695ce369cc5c` |
-| Diagnostic save | `after-diagnostic.sav` sha-256 `abf3c8857e5449c0d46e8b51be3b8ccc5b218ae37f6cd249b3fc5ed5813945c0` |
-| Authoritative `after.sav` | **absent** |
-| `receipt.json` | **absent** |
-| Candidate manifest | **80/80 OK** |
-| Requests retained | 19 of 28 (6 × 3 verified exchanges + `inspect-06`; the `depot-06` request file is retained but its response file was never written) |
-| Read-only replay | **fails with the same `MalformedMessage`**, before any verdict; no `PHASE_HALTED_EVIDENCE_PRESERVED` label is claimed |
-| Cleanup | `reaped: true`, `sockets_closed: true`, `workspace_disposed: true`, `credential_removed: true`, `cleanup_error: []`, return code 0 |
-| Remaining process/listener/workspace | none; candidate-4 `isolated/` empty |
+| Fact                                 | Value                                                                                                                               |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Session-before save                  | `session-before.sav` sha-256 `a3e6b5102ae12f98fd782c5a417ac2bc2237397ef3ca66163ed4695ce369cc5c`                                     |
+| Diagnostic save                      | `after-diagnostic.sav` sha-256 `abf3c8857e5449c0d46e8b51be3b8ccc5b218ae37f6cd249b3fc5ed5813945c0`                                   |
+| Authoritative `after.sav`            | **absent**                                                                                                                          |
+| `receipt.json`                       | **absent**                                                                                                                          |
+| Candidate manifest                   | **80/80 OK**                                                                                                                        |
+| Requests retained                    | 19 of 28 (6 × 3 verified exchanges + `inspect-06`; the `depot-06` request file is retained but its response file was never written) |
+| Read-only replay                     | **fails with the same `MalformedMessage`**, before any verdict; no `PHASE_HALTED_EVIDENCE_PRESERVED` label is claimed               |
+| Cleanup                              | `reaped: true`, `sockets_closed: true`, `workspace_disposed: true`, `credential_removed: true`, `cleanup_error: []`, return code 0  |
+| Remaining process/listener/workspace | none; candidate-4 `isolated/` empty                                                                                                 |
 
 `after-diagnostic.sav` is not a receipt-bound authoritative save and must never
 be used as one. The world beyond the six verified operations remains uncertain.
 
 ## 6. Acceptance assessment
 
-| D4 acceptance area | Result |
-| --- | --- |
-| Candidate identity / authorization binding | PASS |
-| One-shot claim / no retry | PASS |
-| v3 schedule invariants | PASS — 7 ops, 22 planned, cap 28, ceiling £2,000, no interior join, corner present |
-| All seven scheduled operations executed and verified | **FAIL** — 6/7 verified; `op-06` response rejected |
-| Per-operation receipts for the full schedule | **FAIL** — `op-00`–`op-05` only |
-| Route receipt (23/23 witness pairs, stops, depot) | **FAIL** — not reached |
-| Authoritative receipt-bound after-save | **FAIL** — absent |
-| Funds reconciliation for verified ops | PASS — £496,543 → £492,539 |
-| Cleanup certification | **PASS** — all four cleanup fields true, workspace disposed |
-| Replay verification | **FAIL** — verifier raises `MalformedMessage` on the retained 513-byte response |
-| Milestone D4 complete | **NO — INCOMPLETE (native)** |
+| D4 acceptance area                                   | Result                                                                             |
+| ---------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Candidate identity / authorization binding           | PASS                                                                               |
+| One-shot claim / no retry                            | PASS                                                                               |
+| v3 schedule invariants                               | PASS — 7 ops, 22 planned, cap 28, ceiling £2,000, no interior join, corner present |
+| All seven scheduled operations executed and verified | **FAIL** — 6/7 verified; `op-06` response rejected                                 |
+| Per-operation receipts for the full schedule         | **FAIL** — `op-00`–`op-05` only                                                    |
+| Route receipt (23/23 witness pairs, stops, depot)    | **FAIL** — not reached                                                             |
+| Authoritative receipt-bound after-save               | **FAIL** — absent                                                                  |
+| Funds reconciliation for verified ops                | PASS — £496,543 → £492,539                                                         |
+| Cleanup certification                                | **PASS** — all four cleanup fields true, workspace disposed                        |
+| Replay verification                                  | **FAIL** — verifier raises `MalformedMessage` on the retained 513-byte response    |
+| Milestone D4 complete                                | **NO — INCOMPLETE (native)**                                                       |
 
 ## 7. Evidence preservation
 

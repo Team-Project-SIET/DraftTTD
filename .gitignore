@@ -11,6 +11,7 @@ htmlcov/
 docs/examsrs*
 --version
 .agents/
-OpenTTD-Knowledge.zip
+package.json
 skills-lock.json
 .perch/
+node_modules/

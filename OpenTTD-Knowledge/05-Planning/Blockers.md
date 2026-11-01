@@ -1,12 +1,14 @@
 ---
+
 title: "Blockers"
 type: planning
 status: current
 updated: 2026-10-26
 tags:
-  - openttd
-  - planning
-  - blockers
+- openttd
+- planning
+- blockers
+
 ---
 
 # Blockers
@@ -16,7 +18,7 @@ Live blockers with their sources. A blocker stays listed until a dated record re
 
 ## 1. Authorization is always required before native work
 
-**Type: process, standing.** The project's one-shot model means the *only* way anything
+**Type: process, standing.** The project's one-shot model means the _only_ way anything
 native happens is a fresh, explicit operator authorization per attempt (E17/E19 launch
 records: "the record-writing session did NOT initiate the launch" — authorizations were
 consumed by separate operator actions). That now includes D4: the one-shot
@@ -54,9 +56,9 @@ unchanged); the retained frame now parses, but replay still refuses for missing
 durable confirmation. **D4 remains INCOMPLETE (native).** No retry, re-sign,
 replacement candidate or claim reuse is permitted. Candidate-3's historical
 `FAILED_CLEANUP` remains unchanged; cleanup certification was resolved as
-attempt-scoped, not a cross-candidate prerequisite. *(Chain close 2026-10-26,
+attempt-scoped, not a cross-candidate prerequisite. _(Chain close 2026-10-26,
 E35: `D4-CORRIDOR-5` completed the v3 schedule natively — D4 is no longer
-incomplete; see §8 below.)*
+incomplete; see §8 below.)_
 **Operator-guidance correction 2026-10-24 (documentation only):** the extraction
 commands in the provisioning doc §1 and D2-3 §6(b) were corrected to the tested
 `od`/`tr` pipeline with `pipefail` state preserved; validation used synthetic keys
@@ -91,7 +93,7 @@ documentation defect, **not** the authorization blocker: no `AUTHORIZATION.json`
   re-observation of exactly those six tiles, and/or an explicit operator policy decision
   declaring the save-instant census authoritative; sealed in a NEW reviewed candidate.
   Status caveat: this reconciliation is uncommitted working-tree work, not an indexed
-  evidence record (no E-ID). *(Contradiction preserved, not resolved.)*
+  evidence record (no E-ID). _(Contradiction preserved, not resolved.)_
   **Update 2026-10-24:** the operator-facing **policy decision record** is
   prepared (offline only, deciding nothing):
   `docs/random-world-six-tile-policy-decision.md` — it formalizes exactly the
