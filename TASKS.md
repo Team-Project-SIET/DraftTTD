@@ -1347,3 +1347,90 @@ during validation and recorded unchanged
 (test_structural_world cargo-catalog fixture manifest digest mismatch,
 present at `bf6cc0b`; evidence intact, not regenerated). Evidence index
 E53; review doc §12 is the authoritative fix record.
+
+### 2026-11-02 — D5 Freight Delivery v2 candidate staged fresh (D5-FREIGHT-3, E54)
+
+Explicit operator authorization in-session covered the staging gate only
+(review §10 item 5, first gate). Identity step of record first (E37
+precedent): `FREIGHT_ATTEMPT_V2` bumped `D5-FREIGHT-2` → `D5-FREIGHT-3` in
+`corridor_freight_v2.py` (module docstring and the one literal test
+assertion updated with it) so the once-staged, never-consumed
+`D5-FREIGHT-2` name is never reused for a fresh candidate; the attempt
+identity feeds the plan model, so the plan-model digest of record moved to
+`19112a9b…76e0` (pre-edit `779ff9ee…12c4` stays on the stale candidate-2).
+Both v2 suites re-verified exit 0 (61 + 67) and ruff stayed clean on the
+touched paths before staging.
+
+One command, first attempt, exit 0: `.venv/bin/python
+-m app.simulation.openttd.proof.corridor_freight_v2_native prepare
+artifacts/experiments/d5-corridor-freight-native-candidate-3` printed
+`PRELAUNCH PASS`. The staged candidate of record:
+`artifacts/experiments/d5-corridor-freight-native-candidate-3/`, attempt
+`D5-FREIGHT-3`, kind `freight`, schema `d5-freight2-prelaunch-v1`, seal
+(`PRELAUNCH.json` sha256, also `PRELAUNCH.sha256`)
+`f308d32722508e3ed29bd3d297e9152cc5f8b33dae1ff1f666c02cd5bfd18a0e`; the
+**E53 schedule of record** is what this candidate binds: plan/schedule
+digest `ed5bad82…b1ff4` (staged == live derivation; uniform 10-economy-day
+`window_day_cap` lease on all three watch windows), plan model
+`19112a9b…76e0`, route `b2f80f46…7131` / witness `f1f00e13…686c`
+unchanged; budgets unchanged {1 launch, 1 connection, 32 requests, 30
+planned, 6 cycles, 60 days, window_day_cap 10, watch_ticks 2048,
+running_cost_allowance 12, max_cost 5000, funds 490257}; the pinned A1
+prerequisite re-verified end-to-end (`D5-CORRIDOR-EXTENSION-3`, seal
+`404d42d9…6acd8`, after-save `3748e00c…5420bd`,
+`EXTENSION_COMPLETION_VERIFIED`; world = the A1 `after.sav` in the
+prerequisite source-save load mode, pinned welcome seed 17 / 15.3 /
+256×256 / start_day 712223); binary sha `276d5b…904c`; endpoints game
+58339 / admin 44483 reserved then released; isolated retained workspace
+`openttd-15.3-uwcxtrxo` with the composed v2 GameScript (frozen closure
+3,493 entries pinning the wire module `1efa9421…13a8`, runner module
+`176b0096…82ca`, package `main.nut` `6704aa6e…952d` == shipped package ==
+isolated `game/RoadFreightProof/main.nut`, and `info.nut`
+`03e5af7b…f7b`); the launch argv was recorded and never executed.
+Read-only re-proofs: standalone `preflight` → `PREFLIGHT PASS`; `verify`
+→ `AUTHORIZATION_UNVERIFIED` / `CLAIM_ABSENT`, exit 1
+(authorized-never-consumed). `AUTHORIZATION.json` does not exist and no
+claim was consumed: staging wrote no authorization. Nothing was signed,
+launched, connected or attempted; candidate-1 (consumed `D5-FREIGHT-1`)
+and the stale-by-source-drift candidate-2 byte-untouched; the root
+`--version` file untouched; no commit or push. The E53 fix round itself was
+committed by the operator as `a7d06fc` (2026-11-02 07:00 +0700) before this
+staging step; the E54 identity edit and today's records are uncommitted on
+top of it. Remaining operator gates:
+independent read-only review, Gate C signing and a separate explicit
+launch approval. Evidence index E54.
+
+### 2026-11-02 — D5 Freight Delivery v2 Gate C Option-1 signing (E55)
+
+Explicit operator authorization in-session covered the Gate C signing gate
+only ("Gate C agree Operator Signing for Candidate-3"), after the same
+session's read-only evidence verification of the E54 staged bytes (six
+checks OK; not a code review). Documented Option-1 checklist
+([key provisioning doc §1/§2/§4](docs/handoff/2026-10-17/operator-key-provisioning.md),
+A1 §12.5/E39/E43 pipeline). One earlier invocation was interrupted by a
+transport failure mid-flight; read-only state check confirmed it died
+before any write (`AUTHORIZATION.json`, `CLAIM.json`,
+`LAUNCH-CONSUMED.json` all absent, no signature existed) and the complete
+checklist then executed exactly once from the refusal gates — no signature
+was ever produced twice. Refusal gates first; canonical authorization
+payload sha256
+`9cad63e481af565d67207424bc24c1e372b8e120a286b0a05c88327a897fa62b`; seed
+handled only as the exit-status/shape-checked pipeline variable (never
+printed, written or argument-passed); derived key equal to the pinned
+production anchor `5063982b…4880f` before signing; a single
+`sign_authorization_record` run; the 64-byte signature verified under the
+pinned anchor over the exact canonical bytes before any write;
+`AUTHORIZATION.json` written (record sha256
+`3153d3407432be68038f1aaa390a8f3c5ec440834ea0e5983f8cde7b47f1dda5`);
+seed unset-verified empty. Read-only post-checks: `verify_authorization` →
+PASS binding attempt `D5-FREIGHT-3` / milestone `D5-FREIGHT` to prelaunch
+seal `f308d327…18a0e` with `operator_key_identity`
+`sha256-ed25519-public-key:cbb63ff5…40c614` (unchanged production anchor);
+standalone `preflight` → `PREFLIGHT PASS` exit 0; standalone `verify` →
+`AUTHORIZATION_UNVERIFIED`/`CLAIM_ABSENT`, exit 1 (authorized, never
+consumed); candidate-2 seal re-verified unchanged `35557a74…76d4`;
+candidate-3 `PRELAUNCH.json` bytes untouched; no claim, no launch, no
+connection, no gate retried. The signature is binding only and is NOT
+launch approval: the final remaining gate is one separate explicit
+operator launch approval for exactly one native attempt through the
+no-retry lifecycle, then replay + certified cleanup. Evidence index E55.

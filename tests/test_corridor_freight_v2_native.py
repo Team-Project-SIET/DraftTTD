@@ -697,7 +697,7 @@ def test_expected_readback_policy_covers_every_phase():
 
 
 def test_attempt_name_binds_the_v2_scope():
-    assert d5v2.attempt_name() == FREIGHT_ATTEMPT_V2 == "D5-FREIGHT-2"
+    assert d5v2.attempt_name() == FREIGHT_ATTEMPT_V2 == "D5-FREIGHT-3"
 
 
 # --- authorization payload, planned exchanges and wire identities -------------

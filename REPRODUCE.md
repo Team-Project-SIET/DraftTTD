@@ -380,12 +380,15 @@ ruff check app/simulation/openttd/corridor_freight_v2.py \
 git diff --check
 ```
 
-The staged candidate of record
+The staged candidate of record is now
+`artifacts/experiments/d5-corridor-freight-native-candidate-3` (E54,
+2026-11-02) binding the E53 schedule: its proof commands sit in the staged
+addendum section below. The earlier staged candidate
 `artifacts/experiments/d5-corridor-freight-native-candidate-2` keeps the
 pre-E53 sealed plan digest `22bdb874…60f` and stays byte-untouched: it is
-stale-by-source-drift against the E53 working tree by construction (no
-re-stage, no re-seal), and its authorization state remains
-`PENDING`/`CLAIM_ABSENT` exactly as recorded in the staging addendum below.
+stale-by-source-drift against this working tree by construction (no
+re-stage, no re-seal), and both candidates' authorization states remain
+`PENDING`/`CLAIM_ABSENT` exactly as recorded in their staging addenda.
 
 ## 2026-11-01 addendum — D5 freight delivery v2 staging (checked, gated at one gate)
 
@@ -425,3 +428,98 @@ workspace with an owned session key, argv recorded and never executed,
 `AUTHORIZATION.json` absent, no claim consumed. The `run` subcommand stays
 behind Gate C signing and a separate explicit launch approval; nothing in
 this section stages again, signs, launches or consumes.
+
+## 2026-11-02 addendum — D5 freight delivery v2 fresh staging (E54, gated at one gate)
+
+Explicit operator authorization granted in-session covered the staging gate
+only, after the identity step of record (attempt `D5-FREIGHT-2` →
+`D5-FREIGHT-3` in `corridor_freight_v2.py`, so the once-staged
+never-consumed `D5-FREIGHT-2` name is never reused; this moves the
+plan-model digest of record to `19112a9b…76e0`). The staging command of
+record, one run, first attempt, exit 0:
+
+```bash
+.venv/bin/python -m app.simulation.openttd.proof.corridor_freight_v2_native \
+  prepare artifacts/experiments/d5-corridor-freight-native-candidate-3
+# → PRELAUNCH PASS /home/fed/codes/softdev2/artifacts/experiments/d5-corridor-freight-native-candidate-3
+```
+
+Re-runnable read-only proofs on the staged candidate (never a re-stage,
+never a re-seal, never an execution):
+
+```bash
+.venv/bin/python -m app.simulation.openttd.proof.corridor_freight_v2_native \
+  preflight artifacts/experiments/d5-corridor-freight-native-candidate-3
+# → PREFLIGHT PASS
+
+.venv/bin/python -m app.simulation.openttd.proof.corridor_freight_v2_native \
+  verify artifacts/experiments/d5-corridor-freight-native-candidate-3
+# → {"authorization_state": "CLAIM_ABSENT", "statement": "the candidate was
+#    never consumed by an operator authorization; no verified receipt is
+#    possible", "verification": "AUTHORIZATION_UNVERIFIED"} — exit 1 by design
+```
+
+Facts of record: attempt `D5-FREIGHT-3`, kind `freight`, schema
+`d5-freight2-prelaunch-v1`, seal (`PRELAUNCH.json` sha256, also
+`PRELAUNCH.sha256`)
+`f308d32722508e3ed29bd3d297e9152cc5f8b33dae1ff1f666c02cd5bfd18a0e`, the
+**E53 schedule of record** with plan/schedule digest
+`ed5bad82…b1ff4` (staged == live derivation; uniform 10-economy-day
+`window_day_cap` lease on all three watch windows) and plan-model digest
+`19112a9b…76e0`, route `b2f80f46…7131` / witness `f1f00e13…686c`
+unchanged; budgets unchanged {1 launch, 1 connection, 32 requests, 30
+planned, 6 cycles, 60 days, window_day_cap 10, watch_ticks 2048,
+running_cost_allowance 12, max_cost 5000, funds 490257, cycle_wall_cap
+180, total 900}; pinned prerequisite `d5-corridor-extension-native-candidate-3`
+re-verified (`D5-CORRIDOR-EXTENSION-3`, seal `404d42d9…6acd8` consumed,
+after-save `3748e00c…5420bd`, `EXTENSION_COMPLETION_VERIFIED`), world =
+the A1 `after.sav` in the prerequisite source-save load mode with the
+pinned welcome (seed 17, 15.3, 256×256, start_day 712223); pinned binary
+sha `276d5b…904c` verified with no identical process running, endpoints
+game 58339 / admin 44483 reserved and released, isolated retained
+workspace `openttd-15.3-uwcxtrxo` with the composed v2 GameScript, launch
+argv recorded and never executed, frozen closure 3,493 entries pinning the
+wire module `1efa9421…13a8`, runner module `176b0096…82ca`, package
+`main.nut` `6704aa6e…952d` (== shipped package == isolated
+`game/RoadFreightProof/main.nut`) and `info.nut` `03e5af7b…f7b`.
+`AUTHORIZATION.json` absent, no claim consumed; candidate-1 (consumed) and
+the stale-by-source-drift candidate-2 byte-untouched. The `run`
+subcommand stays behind Gate C signing and a separate explicit launch
+approval; nothing in this section stages again, signs, launches or
+consumes.
+
+## 2026-11-02 addendum — D5 freight delivery v2 Gate C Option-1 signing (E55, gated at one gate)
+
+Explicit operator authorization in-session covered the Gate C signing gate
+only, on the E54 staged bytes (seal `f308d327…18a0e` re-verified; the same
+session's read-only evidence verification had first confirmed seal,
+manifest, source freeze, prerequisite, HEAD and working-tree identity). One
+earlier invocation of the checklist was interrupted by a transport failure
+before any write (no authorization existed, no signature ever produced);
+state was checked read-only and the complete checklist then executed
+exactly once from the refusal gates. The pipeline of record is the
+[key provisioning doc §1/§2/§4](docs/handoff/2026-10-17/
+operator-key-provisioning.md) Option-1 checklist (refusal gates → checked
+seed extraction → derived-key ≡ pinned-anchor check → one
+`sign_authorization_record` run → signature verified under the pinned
+anchor before any write → `write_authorization_record` → seed cleared),
+as executed for the A1 §12.5/E39/E43 record.
+
+Facts of record: canonical authorization payload sha256
+`9cad63e481af565d67207424bc24c1e372b8e120a286b0a05c88327a897fa62b`;
+`AUTHORIZATION.json` sha256
+`3153d3407432be68038f1aaa390a8f3c5ec440834ea0e5983f8cde7b47f1dda5`;
+`verify_authorization` PASS under the pinned anchor
+`sha256-ed25519-public-key:cbb63ff58f17f13df3e1be0735fad18497e3a0c6ad6b5dd55491d708ae40c614`
+binding attempt `D5-FREIGHT-3` / milestone `D5-FREIGHT` to seal
+`f308d327…18a0e` (payload includes `operation_schedule`, `plan_digest`
+`ed5bad82…b1ff4`, the exact budget table and the exact approved execution
+command). `CLAIM.json` and `LAUNCH-CONSUMED.json` stay absent (created only
+at launch). Re-runnable read-only proofs and their current outputs:
+`preflight` → `PREFLIGHT PASS` exit 0; `verify` →
+`{"authorization_state": "CLAIM_ABSENT", …, "verification":
+"AUTHORIZATION_UNVERIFIED"}` exit 1 by design (authorized, never
+consumed). The signature is binding only and is NOT launch approval: the
+final remaining gate is one separate explicit operator launch approval for
+exactly one native attempt, then replay + certified cleanup; nothing in
+this section signs again, claims, launches or consumes.

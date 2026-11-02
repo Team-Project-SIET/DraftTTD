@@ -8,7 +8,7 @@ security framework is introduced; the shared machinery is parameterized at
 call time (closure root, prerequisite lineage, sealed freight pins) so the
 consumed v1 freight ceremony is untouched.
 
-The staged candidate ``D5-FREIGHT-2`` binds the A1 close-out lineage
+The staged candidate ``D5-FREIGHT-3`` binds the A1 close-out lineage
 byte-exactly:
 
 1. Its source world is the replay-verified retained ``after.sav`` of the

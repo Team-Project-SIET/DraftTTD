@@ -107,7 +107,10 @@ FREIGHT_MAP_WIDTH = 256
 FREIGHT_MAP_HEIGHT = 256
 FREIGHT_MAX_TILE_ID = FREIGHT_MAP_WIDTH * FREIGHT_MAP_HEIGHT - 1
 FREIGHT_SCHEDULE_VERSION = 2
-FREIGHT_ATTEMPT_V2 = "D5-FREIGHT-2"
+# Attempt identity of record: E53's fix round leaves the once-staged
+# D5-FREIGHT-2 name on its (stale-by-drift, never consumed) candidate; a
+# fresh candidate derives a fresh identity instead of reusing it.
+FREIGHT_ATTEMPT_V2 = "D5-FREIGHT-3"
 FREIGHT_COMPANY = 0
 FREIGHT_CARGO_ID = 1
 # World pins of record (E41-E44): the A1 close-out after-save and its funds.
