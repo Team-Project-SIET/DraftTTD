@@ -579,23 +579,35 @@ frozen protocol-5/-6/-8 families), staging pipeline
 `app/simulation/openttd/proof/corridor_box_census_native.py`, composed
 GameScript package `app/simulation/openttd/d5_census_package/`
 (`NetworkFreightProof extends D5CensusProof`), and the offline suites
-`tests/test_corridor_box_census.py` + `tests/test_corridor_box_census_native.py`.
+`tests/test_corridor_box_census.py`,
+`tests/test_corridor_box_census_vm.py` +
+`tests/test_corridor_box_census_native.py`.
 Verification of record (one run each, exit 0):
 
 ```bash
 .venv/bin/python -m pytest tests/test_corridor_box_census.py \
-  tests/test_corridor_box_census_native.py -q -p no:cacheprovider
-# → 42 + 35 = 77 passed
+  tests/test_corridor_box_census_vm.py tests/test_corridor_box_census_native.py \
+  -q -p no:cacheprovider
+# → 34 + 8 + 35 = 77 passed
+```
+
+Suite layout = E59 §9 items 4–6 as three files: the wire suite
+(`test_corridor_box_census.py`, 34 tests), the package-VM suite
+(`test_corridor_box_census_vm.py`, 8 tests — imports the wire file's VM
+stubs and shared fixtures), and the staging/replay suite
+(`test_corridor_box_census_native.py`, 35 tests).
 
 ruff check app/simulation/openttd/corridor_box_census.py \
   app/simulation/openttd/proof/corridor_box_census_native.py \
   app/simulation/openttd/d5_census_package \
-  tests/test_corridor_box_census.py tests/test_corridor_box_census_native.py
+  tests/test_corridor_box_census.py tests/test_corridor_box_census_vm.py \
+  tests/test_corridor_box_census_native.py
 # → All checks passed!
 
 uvx ty check app/simulation/openttd/corridor_box_census.py \
   app/simulation/openttd/proof/corridor_box_census_native.py \
-  tests/test_corridor_box_census.py tests/test_corridor_box_census_native.py
+  tests/test_corridor_box_census.py tests/test_corridor_box_census_vm.py \
+  tests/test_corridor_box_census_native.py
 # → 1 diagnostic (the frozen-mirror `invalid-method-override connect` class
 #    the survey pipeline already carries); rest clean
 
@@ -629,3 +641,71 @@ end-to-end (`PRELAUNCH PASS`) and was discarded; the test suites stage
 fresh candidates under `pytest` tmp directories through the same
 production function, offline and consumable by the replay verifier only
 after the missing post-launch artifacts are provided by the test.
+
+## 2026-11-02 addendum — D5-BOX-CENSUS-1 staged (E61, checked)
+
+Operator-authorized offline staging of the E60 census implementation of
+record; one first-attempt run each, outputs verbatim, nothing launched:
+
+```bash
+.venv/bin/python -m app.simulation.openttd.proof.corridor_box_census_native \
+  prepare artifacts/experiments/d5-box-census-native-candidate-1
+#  → PRELAUNCH PASS /home/fed/codes/softdev2/artifacts/experiments/d5-box-census-native-candidate-1
+
+.venv/bin/python -m app.simulation.openttd.proof.corridor_box_census_native \
+  preflight artifacts/experiments/d5-box-census-native-candidate-1
+#  → PREFLIGHT PASS
+
+.venv/bin/python -m app.simulation.openttd.proof.corridor_box_census_native \
+  verify artifacts/experiments/d5-box-census-native-candidate-1
+#  → {"authorization_state": "CLAIM_ABSENT", "statement": "the census
+#     candidate was never consumed by an operator authorization; no verified
+#     completion is possible", "verification": "AUTHORIZATION_UNVERIFIED"}
+#    exit=1 (correct for an unconsumed candidate)
+```
+
+Candidate of record `artifacts/experiments/d5-box-census-native-candidate-1`
+(attempt `D5-BOX-CENSUS-1`, schema `d5-box-census-prelaunch-v1`): seal
+(PRELAUNCH.json sha256, recomputed == `PRELAUNCH.sha256`)
+`c4497053de7f2a280e41c771876deb45d299dcc74cde9f8eed97c8b30091e381`;
+prerequisite the consumed A1 `D5-CORRIDOR-EXTENSION-3`
+(`prerequisite` defaults to
+`artifacts/experiments/d5-corridor-extension-native-candidate-3`, whose own
+seal `404d42d9…acd8` matched), after-save `3748e00c…5420bd`; world mode
+`PREREQUISITE_ATTEMPT_SOURCE_SAVE_LOAD` (seed 17, revision 15.3, start_day
+712223); OpenTTD binary sha256 `276d5b69…1904c`; authorization key identity
+public_key `cdc03e4b…0706`; budgets 1 launch / 10 planned exchanges / 32
+requests / max_cost 0 / expected funds 490257 / reconnects 0 / retries 0.
+No AUTHORIZATION.json or CLAIM.json exists in the candidate; `run` was never
+invoked. The E60 `/tmp/opencode/census-prep-probe` staging was a discarded
+probe and is not this record.
+
+## 2026-11-02 addendum — D5-BOX-CENSUS-1 independent read-only verification (E62, checked)
+
+Read-only re-verification of the E61 candidate
+`artifacts/experiments/d5-box-census-native-candidate-1`:
+
+```bash
+.venv/bin/python -m app.simulation.openttd.proof.corridor_box_census_native \
+  preflight artifacts/experiments/d5-box-census-native-candidate-1
+#  → PREFLIGHT PASS
+.venv/bin/python -m app.simulation.openttd.proof.corridor_box_census_native \
+  verify artifacts/experiments/d5-box-census-native-candidate-1
+#  → AUTHORIZATION_UNVERIFIED / CLAIM_ABSENT, exit 1 (still unconsumed)
+```
+
+Then a 13-axis read-only byte audit (source-derived re-derivation script; no
+candidate writes, `.venv/bin/python -B`): 13/13 PASS, READY-FOR-GATE-C —
+seal `c4497053…e381` recompute; identity constants; three-way world/prereq
+binding `3748e00c…5420bd` + prereq seal `404d42d9…acd8`; binary bytes re-hashed
+`276d5b69…1904c`; OpenGFX `validate_baseset` in-place (archive
+`43a0c1da…03be`); 4 staged `.nut` byte-equal (bridge `NetworkFreightProof
+extends D5CensusProof`); `census_planned` == derived schedule; budgets ==
+`census_budgets()`; cross-guard ops pinned; refusal surface clean (23 files);
+lineage clean; `x25519(.admin-secret) == public_key`; frozen record 3495
+entries re-digested, none uncovered.
+
+Disclosed limitation: the fresh-context subagent review was unavailable this
+round (provider free-usage limit); the audit was performed in-session with
+independent machinery — a true fresh-context review remains an operator
+option. No launch/sign/claim; no candidate bytes mutated.

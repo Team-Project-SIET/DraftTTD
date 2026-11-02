@@ -1678,13 +1678,17 @@ from the E49 receipt, verify arms `CENSUS_COMPLETION_VERIFIED` /
 `d5_census_package/` (`census_planned` == the Python schedule, bridge
 `NetworkFreightProof extends D5CensusProof`).
 
-**Verification of record:** `tests/test_corridor_box_census.py` 42 passed +
-`tests/test_corridor_box_census_native.py` 35 passed (77, exit 0; the native
-suite stages real candidates from the consumed A1 prerequisite through the
-production `prepare` function and replays a synthetic consumed attempt
-through the production verifier); ruff clean on all five touched paths;
-`git diff --check` clean; `uvx ty check` only the one frozen-mirror
-`connect` override diagnostic (survey pipeline carries the identical class).
+**Verification of record:** E59 §9 items 4–6 as three suites —
+`tests/test_corridor_box_census.py` (wire, 34 passed) +
+`tests/test_corridor_box_census_vm.py` (package-VM handler tests, 8 passed;
+imports the wire file's VM stubs and shared fixtures) +
+`tests/test_corridor_box_census_native.py` (staging/replay, 35 passed)
+(77, exit 0; the native suite stages real candidates from the consumed A1
+prerequisite through the production `prepare` function and replays a
+synthetic consumed attempt through the production verifier); ruff clean on
+all six touched paths; `git diff --check` clean; `uvx ty check` only the
+one frozen-mirror `connect` override diagnostic (survey pipeline carries
+the identical class).
 One real `prepare` probe run against a `/tmp` staging path (offline,
 discarded) proved staging end-to-end (`PRELAUNCH PASS`).
 
@@ -1703,3 +1707,56 @@ lifted to a tuple, per-box `last_id` seeded `-1` instead of null.
 Gate C signing and a separate launch approval each remain ungranted
 operator gates; the census `run` CLI stays unused; no commit by this round.
 Evidence index E60.
+
+### 2026-11-02 — D5-BOX-CENSUS-1 staged (E61)
+
+Operator-authorized offline staging of the E60 implementation of record:
+`artifacts/experiments/d5-box-census-native-candidate-1` created in one
+first-attempt run of `prepare` (which self-runs preflight): `PRELAUNCH PASS`,
+exit 0. Seal of record (PRELAUNCH.json sha256, recomputed == PRELAUNCH.sha256):
+`c4497053…e381`. Attempt
+`D5-BOX-CENSUS-1`, schema `d5-box-census-prelaunch-v1`; prerequisite the
+consumed A1 `D5-CORRIDOR-EXTENSION-3` (after-save `3748e00c…5420bd`,
+prerequisite seal `404d42d9…acd8`); world mode
+`PREREQUISITE_ATTEMPT_SOURCE_SAVE_LOAD` (seed 17, revision 15.3, start_day
+712223); binary sha `276d5b69…1904c`; key identity public_key
+`cdc03e4b…0706`; budgets 1 launch / 10 exchanges / 32 requests /
+max_cost 0 / funds £490,257; guard `d5-box-census-cross-guard-v1`.
+
+Read-only gates after staging: independent `preflight` → `PREFLIGHT
+PASS`; `verify` → `AUTHORIZATION_UNVERIFIED` / `CLAIM_ABSENT`, exit 1
+(no AUTHORIZATION.json / CLAIM.json anywhere in the candidate). The E60
+`/tmp` probe staging stays discarded; not this record.
+
+**Stop.** Staging approval consumed; independent review, Gate C signing and
+a separate launch approval remain ungranted operator gates; the `run`
+subcommand was never invoked; no evidence bytes mutated; no commit by this
+round. Evidence index E61.
+
+### 2026-11-02 — D5-BOX-CENSUS-1 independent read-only verification (E62)
+
+Read-only verification of the E61 staged candidate
+`artifacts/experiments/d5-box-census-native-candidate-1`. Gates re-run:
+`preflight` → `PREFLIGHT PASS`; `verify` → `AUTHORIZATION_UNVERIFIED` /
+`CLAIM_ABSENT`, exit 1 (correct — still unconsumed).
+
+**13/13 audit axes PASS, READY-FOR-GATE-C:** seal recompute; identity
+constants; three-way world/prerequisite binding (staged `source.sav` == A1
+after-save `3748e00c…5420bd` == recorded digest, prereq seal `404d42d9…acd8`); binary bytes == staged + frozen pins
+(`276d5b69…1904c`); OpenGFX `validate_baseset` in-place re-validation
+(archive `43a0c1da–03be`); 4 staged `.nut` byte-equal to sources with
+bridge `NetworkFreightProof extends D5CensusProof`; staged `census_planned`
+== derived schedule; budgets == `census_budgets()`; cross-guard pinned;
+refusal surface clean (23 staged files, no launch artifacts); lineage clean;
+key pair derived from the staged credential == record public_key;
+3495 frozen entries re-digested, none uncovered.
+
+**Disclosed limitation:** the fresh-context subagent review was unavailable
+(provider free-usage limit); this was an in-session independent-machinery
+audit — source-derived re-derivation + byte comparisons + credential
+key-pair derivation — with no candidate writes; a true fresh-context
+review remains available to the operator on request. Two mid-round FAIL
+lines were auditor script artifacts, not candidate findings.
+
+**Stop.** No launch/sign/claim; no candidate bytes mutated; no commit by
+this round. Evidence index E62.
