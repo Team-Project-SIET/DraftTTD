@@ -1,13 +1,21 @@
-"""D5-BOX-CENSUS-1 native staging pipeline (offline preparation only).
+"""D5-BOX-CENSUS-2 native staging pipeline (offline preparation only).
 
 The branch-8 finding (E58) left the ``D5-FREIGHT-4`` site gate's
 exactly-one discovery boxes unresolved from retained evidence and prescribed
 the box census of ``docs/d5-box-census-1-protocol-design-2026-11-02.md``
 (E59): a strictly read-only native enumeration of the industries inside each
 stop's radius-3 discovery box over the authoritative A1 close-out world. The
-protocol-9 wire contract (``app.simulation.openttd.corridor_box_census``)
-plus its GameScript handler in ``d5_census_package`` are already written; the
-remaining gap is the native pipeline. The staging/claim machinery in
+first census attempt (``D5-BOX-CENSUS-1``, E64) terminated with
+`UNSUPPORTED_NATIVE_FACT` on the delivery box's first exchange: the 15.3
+native `GetLastMonthProduction` returns -1 for an industry that does not
+handle the census cargo as produced, and the E59 contract of record refused
+that fact as a row. The E65 addendum (§12 of the design doc) carries the
+fact verbatim as ``p == -1`` — roles stay derived Python-side — and this
+attempt identity of record is the adapted two-attempt lineage's SECOND
+attempt. The protocol-9 wire contract
+(``app.simulation.openttd.corridor_box_census``) plus its GameScript handler
+in ``d5_census_package`` carry that one adapted row semantics; the
+remaining pipeline is unchanged. The staging/claim machinery in
 ``corridor_freight_native`` and ``corridor_accept_survey_native`` is
 plan-bound to their own contract families, so the census gets a third narrow
 pipeline bound explicitly to ``BoxCensusPlan`` and its single pinned
@@ -141,9 +149,11 @@ CENSUS_CLOSURE_ROOT = "app.simulation.openttd.proof.corridor_box_census_native"
 
 KIND = "census"
 MILESTONE_CENSUS = "D5-BOX-CENSUS"
-# Single attempt identity of record (E59 §6): one attempt, one prelaunch
-# schema; a re-run attempt of the lineage needs its own design record first.
-CENSUS_ATTEMPT = "D5-BOX-CENSUS-1"
+# Single attempt identity of record. CENSUS_ATTEMPT_2 follows the E65
+# addendum (the E64 terminal halt measured the 15.3 non-producer fact on the
+# delivery box): one attempt, one prelaunch schema; a re-run attempt of the
+# lineage needs its own design record first.
+CENSUS_ATTEMPT = "D5-BOX-CENSUS-2"
 D5_CENSUS_PRELAUNCH_SCHEMA = "d5-box-census-prelaunch-v1"
 # The census candidate keeps the shared native consumed-launch marker family
 # and the shared prerequisite lineage schema (`d5-native-prerequisite-

@@ -116,8 +116,13 @@ class D5CensusProof extends GSController {
                 if (typeof row != "table" || !("id" in row) || !("tile" in row) ||
                     !("p" in row) || !("a" in row)) throw "D5_RESPONSE_OUT_OF_BOUNDS"
                 if (row.id < 0 || row.id > 65535 || row.tile < 0 || row.tile > 65535 ||
-                    row.p < 0 || row.p > 2147483647 || row.a < 0 || row.a > 2)
+                    row.a < 0 || row.a > 2) throw "D5_RESPONSE_OUT_OF_BOUNDS"
+                if (row.p > 2147483647 || (row.p < 0 && row.p != -1)) {
+                    /* The -1 allowance is the 15.3 native non-producer fact
+                     * (E65 addendum); every other negative stays out of the
+                     * response domain. */
                     throw "D5_RESPONSE_OUT_OF_BOUNDS"
+                }
             }
         }
     }
@@ -189,7 +194,17 @@ class D5CensusProof extends GSController {
                     continue
                 if (ind in member) continue
                 local production = GSIndustry.GetLastMonthProduction(ind, CENSUS_CARGO)
-                if (production < 0 || production > 2147483647) throw "D5_NATIVE_FACT"
+                /* -1 is the 15.3 native fact of record (E65 addendum): the
+                 * industry does not handle the census cargo as produced
+                 * (ScriptIndustry::GetLastMonthProduction returns -1 there,
+                 * never a count). Carried verbatim to the readback as
+                 * p = -1; never translated. Any other negative read stays
+                 * an unsupported native fact: the scan refuses it. */
+                if (production == -1) {
+                    GSLog.Info("D5_CENSUS_BOX_NON_PRODUCER " + ind + " " + tile)
+                } else if (production < 0 || production > 2147483647) {
+                    throw "D5_NATIVE_FACT"
+                }
                 local accepted = GSIndustry.IsCargoAccepted(ind, CENSUS_CARGO)
                 if (accepted < 0 || accepted > 2) throw "D5_NATIVE_FACT"
                 /* dx ascending within dy ascending visits tiles in ascending
@@ -302,6 +317,12 @@ class D5CensusProof extends GSController {
                         }
                     }
                 } catch (error) {
+                    /* The inner native error text is evidence: logged with
+                     * the exchange label before the refusal status, so the
+                     * retained session's stderr carries the exact thrown
+                     * fact and the readback never needs to. */
+                    GSLog.Info("D5_CENSUS_THROW " + q.request_id + " " +
+                        (typeof error == "string" ? error : typeof error))
                     r.status = "UNSUPPORTED_NATIVE_FACT"
                 }
             }

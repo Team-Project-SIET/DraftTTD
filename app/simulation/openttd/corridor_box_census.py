@@ -332,15 +332,20 @@ class CensusRow(Contract):
 
     ``id`` is the native industry id, ``tile`` the minimum tile index of the
     industry's box tiles (the deterministic anchor of the deterministic
-    scan), ``p`` the last-month production of cargo 1 (a negative native
-    read is an unsupported native fact, never a row) and ``a`` the cargo-1
-    acceptance state (0 not accepted, 1 accepted, 2 temporary refusal).
-    Roles are never carried here: they are derived Python-side.
+    scan), ``p`` the last-month production of cargo 1 — exactly ``-1`` is
+    the 15.3 native fact that the industry does not handle this cargo as
+    produced (``ScriptIndustry::GetLastMonthProduction`` returns ``-1`` and
+    never a count there), any other negative native read stays an
+    unsupported native fact, never a row — and ``a`` the cargo-1 acceptance
+    state (0 not accepted, 1 accepted, 2 temporary refusal). Roles are
+    never carried here: they are derived Python-side (producer iff
+    ``p > 0``, acceptor iff ``a == 1``), so the ``-1`` fact neither creates
+    nor removes any role-filtered membership.
     """
 
     id: Annotated[StrictInt, Field(ge=0, le=65535)]
     tile: TileID
-    p: Annotated[StrictInt, Field(ge=0, le=2147483647)]
+    p: Annotated[StrictInt, Field(ge=-1, le=2147483647)]
     a: Annotated[StrictInt, Field(ge=0, le=2)]
 
 

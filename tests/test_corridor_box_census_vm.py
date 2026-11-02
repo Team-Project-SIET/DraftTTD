@@ -70,8 +70,16 @@ def test_handler_box_scan_values():
     rows = [dict(row) for row in page.rows]
     assert rows == [
         {"id": 0, "tile": 45748, "p": 104, "a": 0},
-        {"id": 2, "tile": 45751, "p": 0, "a": 0},
-        {"id": 5, "tile": 44981, "p": 0, "a": 0},
+        {"id": 2, "tile": 45751, "p": -1, "a": 0},
+        {"id": 5, "tile": 44981, "p": -1, "a": 0},
+    ]
+    markers = [str(line) for line in vm_root(vm)["markers"]]
+    # Industry 5's first sighting (44981) precedes industry 2 in the
+    # ascending scan, so the non-producer facts log in sighting order.
+    assert markers[-3:] == [
+        "D5_CENSUS_BOX_NON_PRODUCER 5 44981",
+        "D5_CENSUS_BOX_NON_PRODUCER 2 45751",
+        "D5_CENSUS pbox-00 READY",
     ]
     assert page.count == 3 and page.more is False and page.cursor == 0
     assert page.tile == 45748 and page.funds == FUNDS

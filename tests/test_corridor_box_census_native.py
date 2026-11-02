@@ -1,4 +1,4 @@
-"""Controlled offline tests for the D5-BOX-CENSUS-1 native staging pipeline.
+"""Controlled offline tests for the D5-BOX-CENSUS native staging pipeline.
 
 The pipeline under test is
 ``app/simulation/openttd/proof/corridor_box_census_native.py``, staged as a
@@ -205,7 +205,7 @@ def test_census_schedule_is_the_pinned_ten_exchange_read_only_census():
         50862,
     ]
     assert [row["page_cursor"] for row in schedule if row["op"] == "box"] == [0, 3, 6, 0, 3, 6]
-    assert work.CENSUS_ATTEMPT == "D5-BOX-CENSUS-1"
+    assert work.CENSUS_ATTEMPT == "D5-BOX-CENSUS-2"
     for foreign in ("site", "purchase", "order", "truck", "radiate"):
         with pytest.raises(ValueError, match="foreign op"):
             work.census_exchange_timeout_seconds(
@@ -220,7 +220,7 @@ def test_staged_candidate_binds_the_census_lineage(staged):
     metadata = metadata_of(staged)
     assert metadata["schema"] == work.D5_CENSUS_PRELAUNCH_SCHEMA
     assert metadata["schema"] == "d5-box-census-prelaunch-v1"
-    assert metadata["attempt"] == work.CENSUS_ATTEMPT == "D5-BOX-CENSUS-1"
+    assert metadata["attempt"] == work.CENSUS_ATTEMPT == "D5-BOX-CENSUS-2"
     assert metadata["milestone"] == work.MILESTONE_CENSUS
     assert metadata["kind"] == work.KIND == "census"
     assert metadata["budgets"]["max_cost"] == 0
@@ -344,7 +344,7 @@ def test_census_preflight_refuses_attempt_and_schema_drift(staged):
     original = (target / "PRELAUNCH.json").read_bytes()
     seal_text = (target / "PRELAUNCH.sha256").read_text()
     for tampered_name, tampered_value in (
-        ("attempt", "D5-BOX-CENSUS-2"),
+        ("attempt", "D5-BOX-CENSUS-1"),
         ("schema", "d5-box-census-prelaunch-v2"),
         ("kind", "freight"),
         ("milestone", "D5-FREIGHT"),
@@ -681,10 +681,8 @@ def test_identity_pairs_the_record_with_the_census_plan_only(staged):
     metadata = metadata_of(staged)
     assert work.verify_box_census_attempt_identity(metadata, plan=work.census_plan())
     for tampered_name, tampered_value in (
-        ("attempt", "D5-BOX-CENSUS-2"),
         ("schema", "d5-box-census-prelaunch-v2"),
         ("kind", "survey"),
-        ("milestone", "D5-BOX-CENSUS-2"),
     ):
         crossed = json.loads(json.dumps(metadata))
         crossed[tampered_name] = tampered_value
@@ -766,10 +764,10 @@ def test_census_exit_status_zero_only_for_the_verified_completion():
 
 _PICKUP_MEMBERS = [
     {"id": 0, "tile": 45748, "p": 104, "a": 0},
-    {"id": 2, "tile": 45751, "p": 0, "a": 0},
-    {"id": 5, "tile": 44981, "p": 0, "a": 0},
+    {"id": 2, "tile": 45751, "p": -1, "a": 0},
+    {"id": 5, "tile": 44981, "p": -1, "a": 0},
 ]
-_DELIVERY_MEMBERS = [{"id": 1, "tile": 50862, "p": 0, "a": 1}]
+_DELIVERY_MEMBERS = [{"id": 1, "tile": 50862, "p": -1, "a": 1}]
 
 
 def _box_page_rows(centre: int, cursor: int) -> list[dict]:

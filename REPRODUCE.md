@@ -812,3 +812,138 @@ record; measured facts and the refusal stand as recorded, never relabelled.
 Re-attempting the census on this candidate is impossible — any new attempt
 needs a fresh staging → review → Gate C cycle on a new candidate + seal and a
 fresh operator launch approval. No commit by the agent.
+
+## 2026-11-02 addendum — D5-BOX-CENSUS-2 adaptation + staging (E65/E66)
+
+Root cause of the E64 terminal halt, pinned at source for the open of record:
+OpenTTD 15.3 `src/script/api/script_industry.cpp` (`ScriptIndustry::
+GetLastMonthProduction`) returns `-1` for any industry that does not handle
+the queried cargo as produced and never throws for valid arguments;
+`IsCargoAccepted` returns 0/1/2. The delivery box's acceptors do not produce
+cargo 1, so the E59-consistent `production < 0` guard fired inside
+`CensusBoxOp` and the blanket catch mapped the fact to
+`UNSUPPORTED_NATIVE_FACT`. The E65 addendum (§12 of the census design doc)
+carries the fact verbatim: `CensusRow.p` domain widens to `{-1} ∪
+[0, 2147483647]` with `-1` meaning only the native non-producer fact; roles
+stay `p > 0` / `a == 1`; the handler logs
+`D5_CENSUS_BOX_NON_PRODUCER <industry> <first-sighting-tile>` per
+non-producer and `D5_CENSUS_THROW <request_id> <fact>` inside the blanket
+catch; every other negative read stays refused. Attempt identity of record
+becomes `D5-BOX-CENSUS-2`.
+
+Offline verification: suites 35 + 8 + 35 = 78 passed, exit 0; ruff clean on
+all six touched paths; `uvx ty` leaves only the pre-existing tolerated
+frozen-mirror `connect` diagnostic; `git diff --check` clean. Staging:
+`.venv/bin/python -m app.simulation.openttd.proof.corridor_box_census_native
+prepare artifacts/experiments/d5-box-census-native-candidate-2` → `PRELAUNCH
+PASS` (23 files), seal (PRELAUNCH.json sha256)
+`deb121ada1e7337692b4daadb01e59978b066d00298ceca00dc51f6b2684690f`;
+independent payload derivation
+`1116d140c2c0b423…` (derived == pipeline key pair); plan digest
+`ee47cc14065201d9…` re-derived from the module and pinned byte-exact in the
+staged prelaunch; staged package `sha256 93c04d12856b3e3f…` byte-identical
+to the tree's adapted `main.nut`; preflight `PREFLIGHT PASS` exit 0; verify
+`AUTHORIZATION_UNVERIFIED`/`CLAIM_ABSENT` exit 1 by design.
+
+## 2026-11-02 addendum — D5-BOX-CENSUS-2 Gate C Option-1 signing (E67, one gate)
+
+In-session operator authorization covered exactly the Gate C signing gate of
+candidate-2 (E66-staged bytes, seal re-verified). The pipeline of record is
+the key-provisioning doc Option-1 checklist (refusal gates → checked seed
+extraction in-shell, never printed/filed/arg-passed, cleared →
+derived-key ≡ pinned-anchor check → one `sign_authorization_record` run →
+signature verified under the pinned anchor before any write →
+`write_authorization_record` → in-process verify → seed cleared
+(`SEED_CLEARED`)). Facts of record: payload sha256
+`1116d140c2c0b4237b938aeb95ae229bc1e9f7cc75ed45a34c281e69493e2f86`;
+`AUTHORIZATION.json` sha256
+`ea74e1f8c595fc1a7832f7d5ca1954d3a5b328684c8646b7c99cf637c8aff3c9`;
+operator key identity
+`sha256-ed25519-public-key:cbb63ff58f17f13df3e1be0735fad18497e3a0c6ad6b5dd55491d708ae40c614`
+binding attempt `D5-BOX-CENSUS-2`/milestone `D5-BOX-CENSUS` to seal
+`deb121ada1e7337692b4daadb01e59978b066d00298ceca00dc51f6b2684690f` (payload
+includes `operation_schedule`+`plan_digest`, the exact budget table, the A1
+`source_world` binding `3748e00c…`, and the exact approved
+`execution_command`). `CLAIM.json`/`LAUNCH-CONSUMED.json` stay absent
+(created only at launch). Re-runnable read-only proofs: `preflight` →
+`PREFLIGHT PASS` exit 0; `verify` → `AUTHORIZATION_UNVERIFIED`/`CLAIM_ABSENT`
+exit 1 by design (authorized, never consumed). The signature is binding only
+and is NOT launch approval: the final gate is one separate explicit operator
+launch approval for exactly one native attempt, then replay + certified
+cleanup; nothing in this section signs again, claims, launches or consumes.
+
+## 2026-11-02 addendum — D5-BOX-CENSUS-2 launch consumed (E68, terminal)
+
+One in-session operator launch approval ("Approved — run once, now") was
+consumed for exactly one attempt on the E67-signed candidate-2 (seal and
+AUTHORIZATION bytes re-verified post-launch). Command of record:
+
+```
+.venv/bin/python -m app.simulation.openttd.proof.corridor_box_census_native \
+  run artifacts/experiments/d5-box-census-native-candidate-2
+# run-exit=1 (terminal on this candidate)
+```
+
+Measured census facts of record: ALL 10 exchanges READY — radius 3, spots
+(50351, 0) / (50862, 8), prod 104, funds £490257 constant, cost £0,
+state_changed false, requests 10/32, connections 1, `preflight: "PASS"`,
+phase verification `CENSUS_COMPLETE`, plan `ee47cc…` byte-pinned. The
+both-boxes memberships the census exists to name, now measured once and
+kept under `result.json` + per-exchange JSONs:
+
+- pickup box 45748: exactly-one producer member — `{id: 0, tile: 44983,
+  p: 104, a: 0}`; pages cursor 0/3/6 = row_count 1/0/0, `more: false`
+  everywhere, `overflow: false`.
+- delivery box 50862: exactly-one acceptor member — `{id: 1, tile: 51116,
+  p: -1, a: 1}`; pages cursor 0/3/6 = row_count 1/0/0, `more: false`
+  everywhere, `overflow: false`. The `p: -1` is the adapted E65 native
+  non-producer fact (15.3 `GetLastMonthProduction`), carried verbatim from
+  the handler logs (`D5_CENSUS_BOX_NON_PRODUCER 1 51116`) to the wire.
+- branch-8 offline recompute on those rows: verdict `CENSUS_GATE_PASSES`,
+  role_counts {producer: 1, acceptor: 1}, statement "the role-filtered
+  recompute from the listed census rows matches the v2 gate's own
+  exactly-one check on both boxes".
+
+Terminal classification: `status: "FAILED_CLEANUP"`,
+`prior_status: "NATIVE_CENSUS_COMPLETE"`. The attempt's completion gate
+refused on the one post-reap endpoint observation (verbatim
+`cleanup.json`): `verification_error: "Live or ambiguous endpoint socket:
+{'table': 'tcp', 'local': '127.0.0.1', 'local_port': 42838, 'remote':
+'127.0.0.1', 'remote_port': 57125, 'state': 11, 'inode': 0}"` — kernel
+state 11 = TCP_CLOSING, not 6 = TCP_TIME_WAIT; the frozen
+`linux-kernel-endpoint-closure-v1` policy allows residual TIME_WAIT only
+(ambiguous=FAIL_CLOSED, sleeps 0, retries 0), so the observation instant
+landed inside the loopback simultaneous-close transition it cannot
+certify. The process itself reaped cleanly (`returncode 0`,
+`remaining_processes: []`, `cleanup_error: []`), but the certification
+gate is therefore not met and the attempt cannot verify as complete.
+
+Independent official read-only replay of record:
+
+```
+.venv/bin/python -m app.simulation.openttd.proof.corridor_box_census_native \
+  verify artifacts/experiments/d5-box-census-native-candidate-2
+{"cleanup_complete": false,
+ "cleanup_verification_error": "Live or ambiguous endpoint socket: …state 11…",
+ "result_status": "FAILED_CLEANUP",
+ "verification": "ATTEMPT_FAILED_EVIDENCE_PRESERVED"}
+# verify-exit=1
+```
+
+One-attempt conservation: `CLAIM.json` `{"consumed": true,
+"launches_allowed": 1, "retries": 0}`, `LAUNCH-CONSUMED.json` schema
+`d5-native-launch-consumed`; the E67 authorization is consumed and any
+further launch on this candidate refuses on the CLAIM gate. 58 files
+retained under candidate-2, covered by `artifact-manifest.sha256`.
+
+Interpretation (E59 §8 matrix): the "both boxes role-filtered exactly 1"
+row's facts ARE MET on the measured bytes (branch-8 `CENSUS_GATE_PASSES`),
+and the census's own evidence prescribes no site-plan adaptation. The
+attempt verdict of record stays FAILED_CLEANUP — an attempt-ceremony
+refusal at its one unmet gate, never a census finding, never relabelled.
+Promoting the F-12-fix → `D5-FREIGHT-4` sequencing on these bytes is a
+design-review decision on the retained evidence, not an automatic gate
+closure. Re-attempting the census needs a fresh staging → review → Gate C
+cycle on a new candidate + seal and a fresh operator launch approval; both
+consumed attempts (candidate-1, candidate-2) stay terminal. No commit by
+the agent.

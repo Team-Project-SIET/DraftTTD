@@ -1839,3 +1839,92 @@ launch on it is refused by the CLAIM gate (no `run` re-execution attempted);
 any census re-attempt requires a fresh staging → review → Gate C cycle on
 a new candidate + seal and a fresh operator launch approval. No commit by
 this round. Evidence index E64.
+
+### 2026-11-02 — D5-BOX-CENSUS-2 adaptation round implemented + staged (E65/E66)
+
+E65: root cause of the E64 terminal halt pinned at source — the 15.3
+`GetLastMonthProduction` of record returns -1 for any industry that does
+not handle the queried cargo as produced, and `IsCargoAccepted` never
+throws for valid arguments. Adapted the contract to carry the fact
+verbatim: `CensusRow.p ∈ {-1} ∪ [0, 2^31-1]`, `-1` = the native
+non-producer fact, never translated; roles untouched (producer iff
+`p > 0`, acceptor iff `a == 1`); handler logs
+`D5_CENSUS_BOX_NON_PRODUCER`/`D5_CENSUS_THROW`; every other negative
+read stays refused; schedule, pins, budget, grid unchanged; plan digest
+survives byte-exact; attempt identity → `D5-BOX-CENSUS-2`. Suites
+35 + 8 + 35 = 78 passed; ruff clean; `uvx ty` only the one tolerated
+frozen-mirror `connect` diagnostic. Design record: §12 addendum in the
+census design doc.
+
+E66: candidate-2 staged offline (`prepare`, `PRELAUNCH PASS`), 23 files;
+seal `deb121ada1e73376…`; payload digest `1116d140c2c0b423…`
+(two independent derivations agree); plan `ee47cc…` byte-exact in the
+staged prelaunch; package bytes tree↔candidate identical; preflight
+re-run `PREFLIGHT PASS`; `verify` `CLAIM_ABSENT` exit 1 by design.
+READY-FOR-GATE-C on the E65-adapted bytes.
+
+**Stop.** Remaining gates: Gate C signing needs one separate explicit
+operator approval; then the launch needs one further explicit operator
+approval (one attempt, no retry). No commit by this round.
+
+### 2026-11-02 — D5-BOX-CENSUS-2 Gate C Option-1 signed (E67)
+
+In-session operator authorization covered exactly the Gate C signing gate of
+candidate-2. `AUTHORIZATION.json` written exactly once from the clean
+refusal gates per the key-provisioning doc Option-1 checklist: checked
+seed extraction (in-shell, never printed/filed/arg-passed, cleared) →
+derived public ≡ pinned anchor `5063982b…880f` (identity
+`cbb63ff5…40c614`) → exactly one signing run → signature verified
+under the pinned anchor before any write → in-process verify PASS.
+
+Facts of record: payload sha256 `1116d140…86` (attempt `D5-BOX-CENSUS-2`,
+seal `deb121ada…` binding, plan `operation_schedule`+`plan_digest`,
+A1 source_world `3748e00c…`, budgets, exact `execution_command`);
+`AUTHORIZATION.json` sha256 `ea74e1f8…c9`; candidate 24 files;
+`CLAIM.json`/`LAUNCH-CONSUMED.json` absent. Post-gate: `preflight`
+`PREFLIGHT PASS`; `verify` `CLAIM_ABSENT` exit 1 by design.
+
+**Stop.** Signature binding only and NOT launch approval; the final gate
+is one separate explicit operator launch approval for exactly one native
+attempt. No commit by this round.
+
+### 2026-11-02 — D5-BOX-CENSUS-2 launch consumed: complete measured census,
+cleanup certification refused (E68)
+
+One in-session operator launch approval consumed for exactly one attempt on
+the E67-signed candidate-2. ALL 10 exchanges measured READY, funds
+£490257 constant, cost £0, state_changed false, phase verification
+`CENSUS_COMPLETE`, plan `ee47cc…` byte-pinned.
+
+Measured memberships of record (the question both rounds existed to
+answer): pickup box 45748 = exactly-one producer member — industry 0, tile
+44983, p 104, a 0 (pages 1+empty+empty, no overflow). Delivery box 50862 =
+exactly-one acceptor member — industry 1, tile 51116, **p -1** (the carried
+15.3 native non-producer fact, never translated), a 1 (cargo 1 accepted;
+pages 1+empty+empty, no overflow). Branch-8 offline recompute:
+`CENSUS_GATE_PASSES`, role_counts {producer: 1, acceptor: 1}.
+
+Terminal classification: run exit 1, `FAILED_CLEANUP` with
+`prior_status NATIVE_CENSUS_COMPLETE`. The attempt-completion gate refused
+on the one post-reap endpoint observation: kernel TCP_CLOSING (state 11)
+on the loopback client socket (42838→57125, inode 0) instead of TIME_WAIT
+(6); policy `linux-kernel-endpoint-closure-v1` of record allows residual
+TIME_WAIT only (ambiguous=FAIL_CLOSED, no sleeps, no retries). The
+observation instant landed inside the simultaneous-close transition. The
+process reaped cleanly (returncode 0, remaining_processes []), but the
+certification gate is not met, so the attempt cannot verify as complete.
+
+Independent replay: `verify` → `ATTEMPT_FAILED_EVIDENCE_PRESERVED` exit 1
+from retained bytes, no forced relabel. 58 files retained under
+candidate-2 incl. all ten request/response JSONs (first-ever READY dbox
+pages), session saves, receipts, frames.
+
+**Interpretation (E59 §8):** the “both boxes role-filtered exactly 1”
+facts ARE MET on the measured bytes; the census's own evidence prescribes
+no site-plan adaptation. The attempt verdict of record stays
+FAILED_CLEANUP (an attempt-ceremony refusal, never a census finding).
+Promoting the F-12-fix → `D5-FREIGHT-4` sequencing on these bytes is a
+design-review decision on the retained evidence, not an automatic gate
+closure; re-running the census needs a fresh staging → review → Gate C
++ separate launch approval (this candidate terminal). No commit by this
+round.

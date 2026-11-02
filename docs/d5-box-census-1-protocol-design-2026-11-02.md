@@ -328,3 +328,75 @@ claimed; no `artifacts/` write of any kind; `D5-FREIGHT-3` and all prior
 evidence byte-unchanged and terminal; no order of execution changes (an
 implementation round still needs staging approval → independent review →
 Gate C signing → separate explicit launch approval). Evidence index E59.
+
+## 12. Addendum E65 (2026-11-02): the E64 terminal halt, root-caused and adapted
+
+The first census attempt (`D5-BOX-CENSUS-1`, candidate-1) executed once under
+its single operator launch approval and terminated with
+`PHASE_HALTED_PREFIX_PRESERVED` / `CENSUS_INCOMPLETE`: `dbox-00` refused with
+`UNSUPPORTED_NATIVE_FACT` while every producers-side exchange (radius, both
+spots, prod, three pickup pages) measured READY. Producer box 45748 measured
+exactly-one member; delivery box 50862 measured nothing. Evidence of record:
+`artifacts/experiments/d5-box-census-native-candidate-1/` (32 files,
+E64 ledger row).
+
+**Root cause (source-pinned).** The 15.3 implementation of record of
+`ScriptIndustry::GetLastMonthProduction` (`src/script/api/script_industry.cpp`
+at tag 15.3, upstream OpenTTD):
+
+```cpp
+auto it = i->GetCargoProduced(cargo_type);
+if (it == std::end(i->produced)) return -1;   // the non-producer fact
+return it->history[LAST_MONTH].production;
+```
+
+returns **-1 for any industry that does not handle the queried cargo as
+produced** — it never throws for valid arguments. The delivery box's accepting
+industries (the E49-proven 8/8 acceptance at stop 50862) do not produce cargo
+1, so the handler's `production < 0` guard fired inside `CensusBoxOp` and the
+handler's blanket catch mapped the thrown fact to `UNSUPPORTED_NATIVE_FACT`.
+`IsCargoAccepted` (same source, same tag) never throws for a valid industry
+and cargo: it returns `CAS_NOT_ACCEPTED` (0) / `CAS_ACCEPTED` (1) /
+`CAS_TEMP_REFUSED` (2). The pickup box worked because its only industry
+produces cargo 1. The E59 §3.4 contract had pinned "a negative native read is
+an unsupported native fact, never a row" — which made the acceptor-side
+membership structurally unnameable: the E64 halt enforced that defect
+faithfully.
+
+**Adaptation decision (this addendum is the design record for attempt 2).**
+The -1 return **is the native fact** "this industry does not handle the census
+cargo as produced", a measured fact the census of record exists to list. The
+row semantics adapt minimally:
+
+- `CensusRow.p` widens its domain to exactly `{-1} ∪ [0, 2147483647]`; the
+  value `-1` means *and only means* the 15.3 native non-producer fact above,
+  carried verbatim from the handler to the readback — never translated into a
+  production count, never merged with a genuine `p == 0` (a producing
+  industry with zero output stays distinguishable from a non-producer).
+- Every other negative production read stays an unsupported native fact: the
+  handler still refuses it (defence in depth), and the handler's blanket
+  catch now logs the exact thrown fact (`D5_CENSUS_THROW <request_id> …`)
+  before the refusal status, so the next retained session's stderr carries
+  what attempt 1 discarded.
+- The handler additionally logs `D5_CENSUS_BOX_NON_PRODUCER <industry>
+  <first-sighting-tile>` for every non-producer it enumerates, so a
+  `p == -1` row is always corroborated by the retained session log.
+- Role derivation is **untouched**: producer iff `p > 0`, acceptor iff
+  `a == 1`. A `-1` row can neither enter nor pick any role-filtered
+  membership — the fact is evidence, never a role.
+- The scan order, page grid (cursors 0/3/6), drained-page semantics, one-shot
+  32-request budget, spot controls, plan pins and the ten-exchange schedule
+  are unchanged; `BoxCensusPlan` carries no attempt identity, so the plan
+  digest of record (`ee47cc14065201d9…`) survives attempt 2 byte-exact.
+- Pin tables of the handler unchanged; attempt identity of record becomes
+  `D5-BOX-CENSUS-2` (one attempt, one prelaunch schema; a re-run attempt of
+  the lineage needed this design record first, per E59 §6).
+
+**Offline verification of record.** Wire 35 + package-VM 8 + native 35 = 78
+tests pass (the wire suite grew by the `-1`-facts-carry test; the stub worlds
+now seed non-producers as `p == -1`, mirroring the 15.3 fact; the synthetic
+consumed fixtures carry the fact end-to-end). Ruff clean on all six touched
+paths; `uvx ty` leaves only the one tolerated frozen-mirror `connect`
+diagnostic. No staging, no signing, no launch, no `artifacts/` write, no
+commit happened for this addendum; staging, independent review, Gate C
+signing and a separate launch approval each remain ungranted operator gates.

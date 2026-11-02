@@ -650,6 +650,39 @@ def test_parse_box_rows_and_more_formula():
     assert full.more is True and full.count == 4
 
 
+def test_non_producer_native_fact_is_carried_not_translated():
+    """The 15.3 non-producer fact rides the wire as p = -1, verbatim (E65).
+
+    Role derivation is untouched: p > 0 makes a producer, a == 1 an
+    acceptor, so a -1 row can never enter or pick the role-filtered
+    membership — the fact is evidence, never a role.
+    """
+    page = make_request(7)  # dbox-00: the delivery box's first page
+    rows = [
+        {"id": 1, "tile": 50862, "p": -1, "a": 1},
+        {"id": 4, "tile": 50863, "p": -1, "a": 0},
+    ]
+    readback = cc.CensusReadback.parse_for(
+        page, json.dumps(readback_payload(page, count=2, more=False, rows=rows, cursor=0),
+                         separators=(",", ":")).encode()
+    )
+    assert [(row.p, row.a) for row in readback.rows] == [(-1, 1), (-1, 0)]
+    with pytest.raises(ValueError, match="greater than or equal to -1"):
+        cc.CensusReadback.parse_for(
+            page,
+            json.dumps(
+                readback_payload(
+                    page, count=2, more=False, cursor=0,
+                    rows=[
+                        {"id": 1, "tile": 50862, "p": -1, "a": 1},
+                        {"id": 4, "tile": 50863, "p": -2, "a": 0},
+                    ],
+                ),
+                separators=(",", ":"),
+            ).encode(),
+        )
+
+
 def test_parse_refusal_observability_boundaries():
     spot = make_request(1)
     with pytest.raises(ValueError, match="unclaimed observation set"):
@@ -717,10 +750,10 @@ def test_worst_case_response_byte_audit_is_431_wire_and_471_null_form():
 
 PASS_WORLD = [
     (0, [45748], 104, 0),  # the pickup producer of record
-    (2, [45751], 0, 0),  # a non-producer member inside the pickup box
-    (5, [45749, 44981], 0, 0),  # two member tiles: anchor = the first scan sighting
-    (1, [50862], 0, 1),  # the A1 acceptor of record
-    (4, [50863], 0, 0),  # a non-acceptor member inside the A1 box
+    (2, [45751], -1, 0),  # non-producer member inside the pickup box (15.3 fact)
+    (5, [45749, 44981], -1, 0),  # two member tiles: anchor = the first scan sighting
+    (1, [50862], -1, 1),  # the A1 acceptor of record (does not produce cargo 1)
+    (4, [50863], -1, 0),  # a non-acceptor member inside the A1 box
 ]
 
 
@@ -758,7 +791,7 @@ def test_min_tile_anchor_is_first_scan_sighting():
 
 
 def test_drained_pages_measure_absence():
-    world = [(0, [45748], 104, 0), (1, [50862], 0, 1)]
+    world = [(0, [45748], 104, 0), (1, [50862], -1, 1)]
     _, _, phase = run_census_vm(world)
     pickup = phase["boxes"][str(PICKUP_CENTRE)]
     delivery = phase["boxes"][str(DELIVERY_CENTRE)]
@@ -767,6 +800,7 @@ def test_drained_pages_measure_absence():
         assert [page["row_count"] for page in box["pages"]] == [1, 0, 0]
         assert [page["more"] for page in box["pages"]] == [False, False, False]
     assert pickup["count"] == 1 and delivery["count"] == 1
+    assert delivery["members"] == [{"a": 1, "id": 1, "p": -1, "tile": 50862}]
     assert phase["branch8"]["verdict"] == "CENSUS_GATE_PASSES"
 
 
@@ -782,7 +816,7 @@ def test_overflow_is_an_explicit_undecided_finding():
         (10, [45747], 1, 0),
         (65534, [45750], 1, 0),
         (65535, [46001], 1, 0),
-        (1, [50862], 0, 1),
+        (1, [50862], -1, 1),
     ]
     _, _, phase = run_census_vm(world)
     pickup = phase["boxes"][str(PICKUP_CENTRE)]
@@ -798,7 +832,7 @@ def test_branch_recompute_fails_on_two_producers():
     world = [
         (0, [45748], 104, 0),
         (10, [45750], 5, 0),  # a second producer inside the pickup box
-        (1, [50862], 0, 1),
+        (1, [50862], -1, 1),
     ]
     _, _, phase = run_census_vm(world)
     assert phase["branch8"]["verdict"] == "CENSUS_GATE_FAILS"
@@ -808,9 +842,9 @@ def test_branch_recompute_fails_on_two_producers():
 def test_branch_recompute_fails_on_two_acceptors():
     world = [
         (0, [45748], 104, 0),
-        (1, [50862], 0, 1),
-        (11, [50864], 0, 2),  # CAS_TEMP_REFUSED is not an acceptor
-        (12, [50865], 0, 1),  # a second accepted industry inside the box
+        (1, [50862], -1, 1),
+        (11, [50864], -1, 2),  # CAS_TEMP_REFUSED is not an acceptor
+        (12, [50865], -1, 1),  # a second accepted industry inside the box
     ]
     _, _, phase = run_census_vm(world)
     assert phase["branch8"]["verdict"] == "CENSUS_GATE_FAILS"
