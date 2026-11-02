@@ -527,20 +527,35 @@ def shape_world(
 ) -> None:
     """Drive the stub world between exchanges (real running would do this).
 
-    The loaded cycles snapshot partial loads (cycle 0 full, the rest
-    partial), move the truck pickup→delivery→empty, and walk the stub
-    finances by the fixed per-cycle income; the typed zero cycles keep the
-    world untouched except for the on-route empty-departure tile.
+    The loaded cycles arm the pickup monitor for the cycle's departure
+    snapshot, put the truck at the pickup stop, and move it out on the
+    first window Sleep with a one-shot ::mover (a real vehicle departs the
+    stop on its own); the deliver exchange completes the monitor arithmetic
+    with the delivery residue and walks the stub finances by the fixed
+    per-cycle income. The typed zero cycles put the truck at the pickup
+    stop first and move it to the on-route empty-departure tile on the
+    first Sleep, leaving the monitors untouched (zero residue).
     """
     prefix = label.partition("-")[0]
     one = int(label.partition("-")[2]) if prefix in ("load", "transit", "deliver") else 0
     if prefix == "load":
         if zero:
-            vm.execute(f"::vehicles[{vehicle}].location = {ZERO_DEPARTURE_TILE};")
+            vm.execute(
+                f"::vehicles[{vehicle}].location = {PICKUP};\n"
+                "::mover <- function() {"
+                f" ::vehicles[{vehicle}].location = {ZERO_DEPARTURE_TILE};"
+                " ::mover = null;"
+                "};"
+            )
             return
         vm.execute(
             f"::vehicles[{vehicle}].load = {LOADS[one]};\n"
-            f"::vehicles[{vehicle}].location = {PICKUP};"
+            f"::vehicles[{vehicle}].location = {PICKUP};\n"
+            f"::monitors.pickup[{PICKUP_INDUSTRY}] <- {LOADS[one]};\n"
+            "::mover <- function() {"
+            f" ::vehicles[{vehicle}].location = {PICKUP_FRONT};"
+            " ::mover = null;"
+            "};"
         )
     elif prefix == "transit":
         vm.execute(f"::vehicles[{vehicle}].location = {DELIVERY};")
@@ -550,9 +565,10 @@ def shape_world(
         # The F-6 ledger walk of record: the funds and the quarter income
         # move by the fixed per-cycle render; the stub delivered counter
         # adds its fixed per-row render (the finance gate reads deltas).
+        # The pickup residue was set at the load exchange and still reads
+        # the departure snapshot; the delivery residue arms here.
         vm.execute(
             f"::vehicles[{vehicle}].load = 0;\n"
-            f"::monitors.pickup[{PICKUP_INDUSTRY}] <- {LOADS[one]};\n"
             f"::monitors.delivery[{DELIVERY_INDUSTRY}] <- {LOADS[one]};\n"
             f"::funds += {INCOME_PER_CYCLE};\n"
             f"::finances.income += {INCOME_PER_CYCLE};\n"
@@ -793,15 +809,22 @@ def test_full_attempt_completes_and_verifies_attempt_end_to_end():
     assert monitors.pickup_amount == 0 and monitors.delivery_amount == 0
     started = exchanges[8][1]
     assert started.state == "RUNNING" and started.speed == 5
+    # E53: the start reply carries the economy day of record the windows'
+    # aggregate ledger is measured against.
+    assert started.day is not None and started.day > 0
     vread_01 = exchanges[9][1]
     assert vread_01.state == "RUNNING" and vread_01.in_depot is False
     loaded = exchanges[10][1]
     assert loaded.load == ENGINE_CAPACITY == loaded.capacity and loaded.wait == 5
+    # E53: the departure snapshot binds its matching monitor evidence.
+    assert loaded.pickup_amount == loaded.load
     arrived = exchanges[11][1]
     assert (arrived.position, arrived.progress) == (DELIVERY, POSITION_PROGRESS)
     delivered = exchanges[12][1]
     assert delivered.load == 0 and delivered.pickup_amount == ENGINE_CAPACITY
     assert delivered.delivery_amount == ENGINE_CAPACITY and delivered.recheck is True
+    # E53: the accepted delivery echoes the very bay tile it was typed at.
+    assert delivered.position == DELIVERY
     finance = exchanges[28][1]
     assert finance.income == INCOME_TOTAL and finance.delivered == 120
     assert finance.last_accepted == 900
@@ -864,8 +887,10 @@ def test_every_exchange_reply_keeps_the_correlation_stride():
             assert readback.expected_cost == request.expected_cost
         if request.op in ("load-watch", "transit-watch", "deliver-watch"):
             assert readback.watch_ticks == request.watch_ticks
-            if request.op == "load-watch":
-                assert readback.watch_days == request.watch_days
+            # E53: all three watch windows lease the per-cycle day cap.
+            assert readback.watch_days == request.watch_days == (
+                cfv.FREIGHT_CYCLE_DAY_CAP_V2
+            )
 
 
 def test_purchase_funds_reconcile_exactly_once():
@@ -899,6 +924,9 @@ def test_zero_attempt_completes_as_typed_zero_cycle_events():
     for request, readback in load_rows:
         assert readback.status == "ZERO_DEPARTED"
         assert readback.load == 0 and readback.paused is False
+        # E53: the typed event proves the empty departure via zero pickup
+        # residue beside the departure sample itself.
+        assert readback.pickup_amount == 0
         assert readback.tick is not None and readback.day is not None
         assert readback.income == 0 and readback.funds == FUNDS - ENGINE_QUOTE
     arrived = exchanges[11][1]
@@ -909,6 +937,7 @@ def test_zero_attempt_completes_as_typed_zero_cycle_events():
     assert delivered.load == 0
     assert delivered.pickup_amount == 0 and delivered.delivery_amount == 0
     assert delivered.recheck is True
+    assert delivered.position == DELIVERY
     finance = exchanges[28][1]
     assert finance.income == 0 and finance.delivered == 0
     finished = exchanges[29][1]
@@ -1539,7 +1568,383 @@ def test_zero_departure_window_exempts_the_depot_and_pickup_only():
     assert readback.status == "WINDOW_EXHAUSTED"
 
 
-# --- python-level admission refusals (fail-closed trust anchors) ------------------
+# --- E53 fix round regression tests -------------------------------------------------
+
+
+def test_empty_depot_to_pickup_travel_keeps_waiting_instead_of_typing_zero():
+    """Blocker (a): a vehicle observed empty on the depot-to-pickup travel
+    leg is pre-departure waiting — WINDOW_EXHAUSTED under its lease, never
+    the typed ZERO_DEPARTED event the old on-route rule fired."""
+    vm = build_vm()
+    exchanges, plan = run_prefix_until(vm, "vread-01")
+    vehicle = exchanges[2][1].vehicle
+    # Pre-pickup on-route travel: an empty truck between the depot front
+    # and the pickup stop (route indices 4..5 belong to the depot leg).
+    vm.execute(
+        f"::vehicles[{vehicle}].load = 0;\n"
+        f"::vehicles[{vehicle}].location = {ROUTE[3]};"
+    )
+    request = work._freight_exchange_request(
+        _entry_of("load-00"), PRELAUNCH, plan, _state_of(exchanges)
+    )
+    readback = drive(vm, request)
+    assert readback.status == "WINDOW_EXHAUSTED"
+    assert readback.tick is not None and readback.day is not None
+    probes = freight_phase_outcome_v2(
+        exchanges + [(request, readback)], prelaunch_digest=PRELAUNCH, plan=plan
+    )
+    assert probes["failed"]["world_state"] == "INCONCLUSIVE_WINDOW"
+    assert probes["zero_departed_cycles"] == 0
+
+
+def test_empty_pickup_standing_and_depot_standing_keep_waiting_too():
+    """Blocker (a) at the stop: standing empty at the pickup stop (index 0)
+    never types the departure event, lease or not."""
+    vm = build_vm()
+    exchanges, plan = run_prefix_until(vm, "vread-01")
+    vehicle = exchanges[2][1].vehicle
+    vm.execute(
+        f"::vehicles[{vehicle}].load = 0;\n"
+        f"::vehicles[{vehicle}].location = {PICKUP};"
+    )
+    request = work._freight_exchange_request(
+        _entry_of("load-00"), PRELAUNCH, plan, _state_of(exchanges)
+    )
+    readback = drive(vm, request)
+    assert readback.status == "WINDOW_EXHAUSTED"
+    probes = freight_phase_outcome_v2(
+        exchanges + [(request, readback)], prelaunch_digest=PRELAUNCH, plan=plan
+    )
+    assert probes["failed"]["world_state"] == "INCONCLUSIVE_WINDOW"
+
+
+def test_off_route_empty_and_loaded_samples_type_invalid_route():
+    """Blocker (a) complement: a vehicle off the ordered road (not in the
+    pinned depot) is a typed INVALID_ROUTE refusal — loaded or empty — and
+    never a departure event."""
+    vm = build_vm()
+    exchanges, plan = run_prefix_until(vm, "vread-01")
+    vehicle = exchanges[2][1].vehicle
+    request = work._freight_exchange_request(
+        _entry_of("load-00"), PRELAUNCH, plan, _state_of(exchanges)
+    )
+    vm.execute(
+        f"::vehicles[{vehicle}].load = 0;\n"
+        f"::monitors.pickup[{PICKUP_INDUSTRY}] <- 5;\n"
+        f"::vehicles[{vehicle}].location = 46000;"
+    )
+    empty = drive(vm, request)
+    assert empty.status == "INVALID_ROUTE"
+    assert empty.load is None and empty.tick is None and empty.day is None
+    load_only = request.model_copy(update={"request_id": "load-50"})
+    # The second dispatch shapes a loaded off-route vehicle: still refusal,
+    # and the first breach already halted the schedule (prefix-preserving).
+    assert drive(vm, load_only).status == "OUT_OF_ORDER"
+
+
+def test_off_route_loaded_sample_types_invalid_route():
+    """The loaded form of the off-route refusal, with the schedule still
+    intact (fresh VM: the refusal arrives before any halt)."""
+    vm = build_vm()
+    exchanges, plan = run_prefix_until(vm, "vread-01")
+    vehicle = exchanges[2][1].vehicle
+    vm.execute(
+        f"::vehicles[{vehicle}].load = {LOADS[0]};\n"
+        f"::monitors.pickup[{PICKUP_INDUSTRY}] <- {LOADS[0]};\n"
+        f"::vehicles[{vehicle}].location = 46000;"
+    )
+    request = work._freight_exchange_request(
+        _entry_of("load-00"), PRELAUNCH, plan, _state_of(exchanges)
+    )
+    readback = drive(vm, request)
+    assert readback.status == "INVALID_ROUTE"
+    assert readback.load is None and readback.position is None
+
+
+def test_loaded_snapshot_requires_verified_departure_and_monitor_evidence():
+    """Blocker (b): LOADED is typed only at a verified departure with its
+    matching pickup-monitor echo — loading-in-progress at the stop keeps
+    waiting; a departed-but-contradicted monitor refuses instead; a
+    consistent departure snapshot verifies."""
+    plan = work.freight_plan_v2()
+    # 1. Standing at the pickup with cargo: no departure, no snapshot.
+    vm = build_vm()
+    exchanges, _ = run_prefix_until(vm, "vread-01")
+    vehicle = exchanges[2][1].vehicle
+    vm.execute(
+        f"::vehicles[{vehicle}].load = {LOADS[0]};\n"
+        f"::monitors.pickup[{PICKUP_INDUSTRY}] <- {LOADS[0]};\n"
+        f"::vehicles[{vehicle}].location = {PICKUP};"
+    )
+    request = work._freight_exchange_request(
+        _entry_of("load-00"), PRELAUNCH, plan, _state_of(exchanges)
+    )
+    waiting = drive(vm, request)
+    assert waiting.status == "WINDOW_EXHAUSTED"
+    # 2. Departed, but the monitor contradicts the truck load: fail-closed.
+    vm2 = build_vm()
+    exchanges2, plan = run_prefix_until(vm2, "vread-01")
+    vehicle = exchanges2[2][1].vehicle
+    vm2.execute(
+        f"::vehicles[{vehicle}].load = {LOADS[0]};\n"
+        f"::vehicles[{vehicle}].location = {PICKUP};\n"
+        f"::monitors.pickup[{PICKUP_INDUSTRY}] <- {LOADS[0] - 1};\n"
+        "::mover <- function() {"
+        f" ::vehicles[{vehicle}].location = {PICKUP_FRONT};"
+        " ::mover = null;"
+        "};"
+    )
+    drifted = drive(vm2, request)
+    assert drifted.status == "READBACK_MISMATCH"
+    # 3. The verified departure with matching evidence types the snapshot.
+    vm3 = build_vm()
+    exchanges3, plan = run_prefix_until(vm3, "vread-01")
+    vehicle = exchanges3[2][1].vehicle
+    vm3.execute(
+        f"::vehicles[{vehicle}].load = {LOADS[0]};\n"
+        f"::vehicles[{vehicle}].location = {PICKUP};\n"
+        f"::monitors.pickup[{PICKUP_INDUSTRY}] <- {LOADS[0]};\n"
+        "::mover <- function() {"
+        f" ::vehicles[{vehicle}].location = {PICKUP_FRONT};"
+        " ::mover = null;"
+        "};"
+    )
+    snapshot = drive(vm3, request)
+    assert snapshot.status == "LOADED"
+    assert snapshot.pickup_amount == snapshot.load == LOADS[0]
+
+
+def test_zero_departure_requires_zero_pickup_monitor_evidence():
+    """Blocker (b) complement: an empty departure past the pickup stop with
+    a nonzero pickup residue contradicts the typed event (READBACK_MISMATCH);
+    zero residue re-types the schedule's empty-run evidence."""
+    plan = work.freight_plan_v2()
+    base = work.freight_schedule()[10]
+    # Nonzero residue: contradicted empty departure.
+    vm = build_vm()
+    exchanges, plan = run_prefix_until(vm, "vread-01")
+    vehicle = exchanges[2][1].vehicle
+    vm.execute(
+        f"::vehicles[{vehicle}].location = {PICKUP};\n"
+        f"::monitors.pickup[{PICKUP_INDUSTRY}] <- 7;\n"
+        "::mover <- function() {"
+        f" ::vehicles[{vehicle}].location = {ZERO_DEPARTURE_TILE};"
+        " ::mover = null;"
+        "};"
+    )
+    request = work._freight_exchange_request(
+        _entry_of("load-00"), PRELAUNCH, plan, _state_of(exchanges)
+    )
+    contradicted = drive(vm, request)
+    assert contradicted.status == "READBACK_MISMATCH"
+    # Zero residue: the same proof types the F-11 event.
+    vm2 = build_vm()
+    exchanges2, plan = run_prefix_until(vm2, "vread-01")
+    vm2.execute(
+        f"::vehicles[{exchanges2[2][1].vehicle}].location = {PICKUP};\n"
+        "::mover <- function() {"
+        f" ::vehicles[{exchanges2[2][1].vehicle}].location = {ZERO_DEPARTURE_TILE};"
+        " ::mover = null;"
+        "};"
+    )
+    typed = drive(vm2, request)
+    assert typed.status == "ZERO_DEPARTED"
+    assert typed.pickup_amount == 0
+    assert base["watch_days"] == cfv.FREIGHT_CYCLE_DAY_CAP_V2
+
+
+def test_delivery_acceptance_requires_the_bay_with_zero_cargo():
+    """Blocker (c): the deliver window types nothing until the vehicle
+    stands at the pinned bay tile — the front approach (one tile away)
+    keeps waiting even with zero cargo and settled monitors."""
+    vm = build_vm()
+    exchanges, plan = run_prefix_until(vm, "transit-00")
+    load_request, loaded_readback = exchanges[-2]
+    assert load_request.request_id == "load-00"
+    assert loaded_readback.status == "LOADED"
+    vehicle = loaded_readback.vehicle
+    # The prefix's own load-00 window typed the verified departure (the
+    # stub world's one-shot mover walked the truck out on the first Sleep).
+    # Not at the bay: a fresh deliver-00 window stands the vehicle on the
+    # front approach, one tile off the pinned bay, with the delivery residue
+    # already armed — the at-bay gate still refuses to advance the unload
+    # arithmetic, so the window stays waiting until its lease expires.
+    vm.execute(
+        f"::vehicles[{vehicle}].location = {ROUTE[27]};\n"
+        f"::monitors.delivery[{DELIVERY_INDUSTRY}] <- {LOADS[0]};"
+    )
+    deliver_request = work._freight_exchange_request(
+        _entry_of("deliver-00"), PRELAUNCH, plan, _state_of(exchanges)
+    )
+    starved = deliver_request.model_copy(update={"watch_days": 1})
+    readback = drive(vm, starved)
+    assert readback.status == "WINDOW_EXHAUSTED"
+    assert readback.load is None
+    # At the bay with zero cargo the window types the delivery.
+    vm2 = build_vm()
+    exchanges2, plan = run_prefix_until(vm2, "deliver-00")
+    delivered = exchanges2[-1][1]
+    assert delivered.status == "DELIVERED"
+    assert delivered.position == DELIVERY
+    assert delivered.load == 0 and delivered.recheck is True
+
+
+
+def test_python_level_delivered_verifier_refuses_off_bay_acceptance():
+    """Blocker (c) python-side: a DELIVERED echo naming any other tile than
+    the plan's bay is refused before it can claim the cycle receipt."""
+    from app.simulation.openttd.corridor_freight_v2 import verify_freight_delivered_v2
+
+    vm = build_vm()
+    exchanges, plan = run_prefix_until(vm, "deliver-00")
+    delivered = exchanges[-1][1]
+    assert delivered.status == "DELIVERED" and delivered.position == DELIVERY
+    gate = verify_freight_delivered_v2(
+        delivered, vehicle=delivered.vehicle, load=LOADS[0], delivery=plan.delivery
+    )
+    assert gate["position"] == DELIVERY
+    for drifted in (
+        delivered.model_copy(update={"position": DELIVERY_FRONT}),
+        delivered.model_copy(update={"position": None}),
+    ):
+        with pytest.raises(ValueError, match="delivery bay"):
+            verify_freight_delivered_v2(
+                drifted,
+                vehicle=delivered.vehicle,
+                load=LOADS[0],
+                delivery=plan.delivery,
+            )
+    # A verifier pinned to some other bay cannot accept this echo either.
+    with pytest.raises(ValueError, match="delivery bay"):
+        verify_freight_delivered_v2(
+            delivered,
+            vehicle=delivered.vehicle,
+            load=LOADS[0],
+            delivery=int(ROUTE[5]),
+        )
+
+
+def test_python_level_loaded_verifier_refuses_missing_monitor_evidence():
+    """Blocker (b) python-side: a LOADED echo without its pickup-monitor
+    evidence, or with drifted evidence, is refused."""
+    from app.simulation.openttd.corridor_freight_v2 import verify_freight_loaded_v2
+
+    vm = build_vm()
+    exchanges, plan = run_prefix_until(vm, "load-00")
+    site = work.admit_freight_site_v2(
+        exchanges[0][1], prelaunch_digest=PRELAUNCH, plan=plan
+    )
+    engine = work.admit_freight_engine_v2(
+        exchanges[1][1], prelaunch_digest=PRELAUNCH, plan=plan, site=site
+    )
+    loaded = exchanges[-1][1]
+    assert loaded.status == "LOADED" and loaded.pickup_amount == loaded.load
+    verify_freight_loaded_v2(
+        loaded,
+        vehicle=loaded.vehicle,
+        engine=engine,
+        waiting_baseline=site.waiting,
+    )
+    for drifted, match in (
+        (loaded.model_copy(update={"pickup_amount": None}), "monitor"),
+        (loaded.model_copy(update={"pickup_amount": loaded.load - 1}), "monitor"),
+    ):
+        with pytest.raises(ValueError, match=match):
+            verify_freight_loaded_v2(
+                drifted,
+                vehicle=loaded.vehicle,
+                engine=engine,
+                waiting_baseline=site.waiting,
+            )
+
+
+
+def test_freight_window_dispatch_refusal_types_the_aggregate_day_gate():
+    """Blocker (d) unit: the authority gate admits a window only while its
+    lease fits the 60-day aggregate budget."""
+    assert cfv.freight_window_dispatch_refusal_v2(0, 10) is None
+    assert cfv.freight_window_dispatch_refusal_v2(50, 10) is None
+    refusal = cfv.freight_window_dispatch_refusal_v2(51, 10)
+    assert refusal is not None and "60-day aggregate attempt authority" in refusal
+    assert cfv.freight_window_dispatch_refusal_v2(60, 10) is not None
+    # Staged rows: every watch window leases exactly the cycle day cap.
+    for entry in work.freight_schedule():
+        if entry["op"].endswith("-watch"):
+            assert entry["watch_days"] == cfv.FREIGHT_CYCLE_DAY_CAP_V2 == 10
+            assert entry["watch_ticks"] == cfv.WATCH_MAX_TICKS_V2 == 2048
+
+
+def test_freight_day_authority_helper_skips_non_window_exchanges():
+    """Blocker (d) unit: the executor's pre-dispatch helper gates only the
+    three watch ops, typing the same aggregate refusal."""
+    schedule = work.freight_schedule()
+    for entry in schedule:
+        assert work._freight_day_authority(entry, 0) is None
+    watch = next(e for e in schedule if e["op"] == "deliver-watch")
+    assert work._freight_day_authority(watch, 50) is None
+    refusal = work._freight_day_authority(watch, 55)
+    assert refusal is not None and "60-day aggregate attempt authority" in refusal
+    fixed = next(e for e in schedule if e["op"] == "vread")
+    assert work._freight_day_authority(fixed, 9999) is None
+
+
+def test_evidence_windows_beyond_the_day_authority_are_refused():
+    """Blocker (d) replay: watch evidence whose day ledger crosses the
+    60-day authority is refused by the production verifier — the gate is
+    indistinguishable from the executor's pre-dispatch halt."""
+    vm = build_vm()
+    exchanges, plan = run_attempt(vm)
+    reference = next(
+        readback.day
+        for request, readback in exchanges
+        if request.request_id == "start-00"
+    )
+    assert reference is not None
+    tampered_day = int(reference) + 55
+    # Tamper the load-01 readback day far forward so its verified ledger
+    # span stays inside the 60-day authority (55), but the next window's
+    # dispatch gate (55 + 10) does not fit the aggregate attempt authority.
+    rebuilt = []
+    for request, readback in exchanges:
+        if request.request_id == "load-01" and readback.status == "LOADED":
+            readback = readback.model_copy(update={"day": tampered_day})
+        rebuilt.append((request, readback))
+    probes = freight_phase_outcome_v2(
+        rebuilt, prelaunch_digest=PRELAUNCH, plan=plan
+    )
+    assert probes["verification"] == "PARTIAL_EXECUTION_EVIDENCE"
+    assert "60-day aggregate attempt authority" in probes["failed"]["error"]
+
+
+def test_watch_request_drifted_from_staged_window_budgets_is_refused():
+    """Replay hardening: a watch request whose tick or day echoes drifted
+    from the staged schedule rows is refused before any evidence binds."""
+    plan = work.freight_plan_v2()
+    vm = build_vm()
+    exchanges, plan = run_prefix_until(vm, "load-00")
+    request, readback = exchanges[-1]
+    assert readback.status == "LOADED"
+    prefix = exchanges[:-1]
+    probes = freight_phase_outcome_v2(
+        prefix + [(request, readback)], prelaunch_digest=PRELAUNCH, plan=plan
+    )
+    assert probes["failed"] is None
+    for updates in (
+        {"watch_ticks": cfv.WATCH_MAX_TICKS_V2 - 1},
+        {"watch_ticks": 0},
+        {"watch_days": cfv.FREIGHT_CYCLE_DAY_CAP_V2 + 1},
+        {"watch_days": 0},
+    ):
+        drifted = request.model_copy(update=updates)
+        tampered = freight_phase_outcome_v2(
+            prefix + [(drifted, readback)], prelaunch_digest=PRELAUNCH, plan=plan
+        )
+        assert tampered["failed"] is not None, updates
+        assert "staged window budgets" in tampered["failed"]["error"]
+
+
+
+# --- finish honesty ----------------------------------------------------------------
 
 
 def _site_ready(vm: SQVM):

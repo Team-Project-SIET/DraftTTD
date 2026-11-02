@@ -433,10 +433,10 @@ Example:
 
 ```json
 {
-	"type": "command_result",
-	"request_id": "p08-000123",
-	"status": "ok",
-	"object_id": 42
+  "type": "command_result",
+  "request_id": "p08-000123",
+  "status": "ok",
+  "object_id": 42
 }
 ```
 
@@ -567,8 +567,8 @@ Example:
 
 ```json
 {
-	"request_id": "p08-000123",
-	"command": "build_road"
+  "request_id": "p08-000123",
+  "command": "build_road"
 }
 ```
 

@@ -332,3 +332,105 @@ decision.
 
 This record ends at design review. The next phase (v2 implementation)
 requires separate explicit operator authorization.
+
+## 12. E53 fix round (2026-11-01, offline, no staging)
+
+An independent read-only review of the E51/E52 implementation raised four
+blockers plus corrections. This section records the offline fix round that
+addressed them; it launches nothing, stages nothing, re-seals nothing and
+writes nothing under `artifacts/`.
+
+**Blocker (a) — no `ZERO_DEPARTED` during depot-to-pickup travel.**
+`main.nut` LoadWatch now samples the window against its pickup visit: a
+`saw_pickup` flag is set only when a sample reads the truck at the pinned
+pickup stop, and a departure-class reading is typed only when
+`saw_pickup` holds, `RouteIndex(loc) >= 1`, and the load reads 0 with a
+zero pickup-monitor keeper reading. A pre-pickup on-route sample (depot
+leg), the standing-at-stop sample and every other non-terminal sample stay
+waiting (`WINDOW_EXHAUSTED` under the window lease, `tick`/`day` echoed);
+an off-route tile is the typed `INVALID_ROUTE` refusal, loaded or empty.
+The refusal-halt discipline is unchanged.
+
+**Blocker (b) — `LOADED` requires a verified departure and matching
+evidence.** The departure snapshot is typed only at the verified departure
+sample (saw-pickup then past-the-stop) with
+`GSCargoMonitor.GetIndustryPickupAmount(..., keep=true) == load`; the reply
+gains a `pickup_amount` echo. `verify_freight_loaded_v2` refuses a snapshot
+whose monitor echo is missing or drifted (fail-closed, "monitor … (E53)").
+A contradicted departure types `READBACK_MISMATCH`. `verify_freight_zero_departed_v2`
+requires zero pickup-monitor evidence on the empty departure ("pickup
+monitor … (E53)").
+
+**Blocker (c) — delivery accepted only at the bay with zero cargo.**
+DeliverWatch now gates every window sample on `loc == this.delivery`
+(off-bay samples keep waiting; the unload/monitor arithmetic cannot
+discharge) and the `DELIVERED` reply echoes `r.position`. The wire contract
+adds `position` to the deliver subset; `verify_freight_delivered_v2` takes
+the plan's `delivery` bay and refuses any echo naming another tile ("pinned
+delivery bay (E53)").
+
+**Blocker (d) — the 60-day aggregate economy-day authority is enforced.**
+Every one of the three watch windows now stages the uniform per-window
+lease (`window_day_cap`, `FREIGHT_CYCLE_DAY_CAP_V2 = 10` at `watch_days`),
+and the staged `MAX_DAYS = 60` is bound by the import-time invariant
+`10 × 6 == 60`. All watch replies echo the lease. The executor's
+pre-dispatch gate `_freight_day_authority` refuses any watch dispatch whose
+elapsed-day ledger cannot still fit the next window
+(`freight_window_dispatch_refusal_v2`: "a 10-economy-day window cannot fit
+the 60-day aggregate attempt authority: … already elapsed"); non-watch ops
+pass through. `StartOp` echoes the day of record (`start` subset gains
+`day`), the day ledger is latched at `start-00`, each verified watch
+readback settles the ledger span (regressed or >60 → typed verification
+defect), and `verify_freight_attempt_v2` emits `day_ledger`.
+Replay hardening in `_freight_verify_step_v2` refuses watch requests whose
+tick/day echo drifted from the staged rows ("staged window budgets") before
+any evidence binds, and refuses watch evidence without a latched day
+reference.
+
+**CONTEXT.md authority restored.** The review found `bf6cc0b`'s
+`CONTEXT.md` broke the pinned bytes
+(`36648f9c2fee4106efb35ae4ee8722983ebdfb482889e66ad53d759f6fa7cc29`,
+`docs/authority/context-authority-supersession.json`, ADR-014) with two
+tab-indented JSON code-fence hunks. The E53 fix round restored the exact
+pinned bytes (verified sha256-equal to `fee7459:CONTEXT.md`); the
+protected authority checks pass again
+(test_authority_supersession, test_historical_protection,
+test_industry_production_proof::test_architecture_authority_unchanged —
+118 passed across the four recorded check files).
+
+**Documentation corrected.** REPRODUCE.md no longer claims a 10-second
+watch exchange timeout (phase-budget timeouts of record: 10 s fixed
+requests, 65 s watch windows), carries the E53 suite counts and the
+updated digest of record, and appends an E53 addendum; AI_HANDOFF.md no
+longer claims the v2 implementation was "not committed" (`bf6cc0b` exists
+and is recorded), and its CONTEXT.md pin-status section reflects the
+restored pin; this section records the round.
+
+**Verification of record** (all offline): `tests/test_corridor_freight_v2.py`
+61 passed + `tests/test_corridor_freight_v2_native.py` 67 passed in one run,
+exit 0; `ruff check` clean on every touched path; `git diff --check` clean;
+`uvx ty check` reports only the same five pre-existing diagnostics already
+present at `bf6cc0b`. Derived values of record: schedule/plan digest
+`ed5bad8237dd68985ab712a2df6430564be4d9077d770f2b78ff84a684eb1ff4`
+(E51's `22bdb874…60f` stages exactly the pre-E53 schedule), plan-model
+digest `779ff9ee…12c4`, route `b2f80f46…7131` and witness `f1f00e13…686c`
+unchanged.
+
+**Candidate staleness (expected, no action).** The staged candidate of
+record `artifacts/experiments/d5-corridor-freight-native-candidate-2`
+keeps the pre-E53 sealed bounds and becomes stale-by-source-drift against
+this fix round by construction. Its bytes were never modified, re-staged or
+re-sealed; its authorization state remains as recorded in E52
+(`AUTHORIZATION_UNVERIFIED` / `CLAIM_ABSENT`, `PENDING`). The remaining
+gates stay as in §10 item 5: any next candidate must be staged fresh,
+independently reviewed, Gate C signed and separately launch-approved
+before execution.
+
+**Not addressed by this round** (recorded, unchanged): F-1/F-10 engine
+provenance is still an open condition; F-13 wall-clock retention stays as
+implemented; and a pre-existing baseline failure unrelated to D5 was
+observed during validation
+(`tests/test_structural_world.py::test_real_catalog_and_enrichment_regression_fixtures_are_valid_but_separate_runs`
+— the committed `tests/fixtures/cargo_catalog_checkpoint/manifest.json`
+pins an older `runtime-identity.json` digest than the committed file
+bytes; pre-existing at `bf6cc0b`, out of D5 scope, evidence untouched).

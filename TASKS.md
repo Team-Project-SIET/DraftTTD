@@ -1248,3 +1248,102 @@ nothing written under `artifacts/`; the root `--version` file untouched.
 Stop point: §10 item-5 gates — staging approval, independent review, Gate C
 signing and a separate explicit launch approval each remain ungranted
 operator gates. Evidence index E51.
+
+### 2026-11-01 — D5 Freight Delivery v2 candidate staged (E52)
+
+Explicit operator authorization granted in-session covered the staging gate
+only (§10 item 5, first gate), nothing else. One command, first attempt, exit
+0: `.venv/bin/python
+-m app.simulation.openttd.proof.corridor_freight_v2_native prepare
+artifacts/experiments/d5-corridor-freight-native-candidate-2` printed
+`PRELAUNCH PASS`. The staged candidate of record:
+`artifacts/experiments/d5-corridor-freight-native-candidate-2/`, attempt
+`D5-FREIGHT-2`, kind `freight`, schema `d5-freight2-prelaunch-v1`, seal
+(`PRELAUNCH.json` sha256, also `PRELAUNCH.sha256`)
+`35557a74c33188fb2555a43871025099b2998eea317d8bbf9cf047a8d5b676d4`; the
+pinned prerequisite re-verified against the retained
+`d5-corridor-extension-native-candidate-3` record (attempt
+`D5-CORRIDOR-EXTENSION-3`, after-save `3748e00c…5420bd`); plan/schedule
+digest `22bdb874…60f` and the budgets 1 launch / 32 requests / 60 days
+unchanged from the E51 pins; binary sha `276d5b…904c` verified and no
+identical process running; endpoints reserved then released (game 57627,
+admin 34189); an isolated retained workspace with an owned session key and
+the composed v2 GameScript was created, the launch argv was recorded and
+never executed. Read-only re-proofs: standalone `preflight` →
+`PREFLIGHT PASS`; `verify` → `AUTHORIZATION_UNVERIFIED` / `CLAIM_ABSENT`,
+exit 1 ("the candidate was never consumed by an operator authorization; no
+verified receipt is possible"). `AUTHORIZATION.json` does not exist and no
+claim was consumed: staging wrote no authorization. Nothing was signed,
+launched, connected or attempted; the v1 candidate-1 record, the root
+`--version` file and every other retained artifact stayed untouched; no
+commit or push. Remaining operator gates: independent read-only review,
+Gate C signing and a separate explicit launch approval. Evidence index E52.
+
+### 2026-11-01 — D5 Freight Delivery v2 E53 fix round (offline, no staging)
+
+Offline fix round against the independent implementation review of the
+E51/E52 work (branch `miles/fright-delivery` HEAD `bf6cc0b`; the v2
+implementation and E52 staging-record documentation were committed as
+`bf6cc0b` before this round). Applied, all offline:
+
+1. **Freight state transitions fail-closed (blockers a–c):**
+   `d5_freight_v2_package/main.nut` LoadWatch now gates the typed
+   `ZERO_DEPARTED` event on a sampled pickup visit plus a past-the-stop
+   reading with zero load and a zero pickup-monitor keeper reading — the
+   depot-to-pickup travel leg and standing-at-stop samples stay waiting
+   (`WINDOW_EXHAUSTED`, lease-bounded), off-route samples type
+   `INVALID_ROUTE` loaded or empty; LOADED is typed only at the verified
+   departure sample with `GetIndustryPickupAmount(keep=true) == load` and a
+   new `pickup_amount` echo; DeliverWatch gates every sample on
+   `loc == this.delivery` and the `DELIVERED` reply echoes `r.position`.
+   The wire contract (`corridor_freight_v2.py`) gained the matching echo
+   subsets and Python-level evidence gates
+   (`verify_freight_loaded_v2`/`verify_freight_zero_departed_v2`
+   monitor requirements, `verify_freight_delivered_v2` pinned-bay
+   requirement).
+2. **60-day aggregate economy-day authority enforced (blocker d):** all
+   three watch windows stage the uniform 10-economy-day lease
+   (`window_day_cap`; `FREIGHT_CYCLE_DAY_CAP_V2 × 6 == 60` import
+   invariant). `StartOp` echoes its day of record; the day ledger is
+   latched at `start-00`; `_freight_day_authority` gates every watch
+   dispatch pre-send; `_freight_verify_step_v2` hardens replay (staged
+   budget-echo drift refusals, missing day reference, ledger span
+   regression or > 60 typed defects);
+   `verify_freight_attempt_v2` emits `day_ledger`.
+3. **CONTEXT.md authority restored:** `bf6cc0b` had re-tabbed two JSON
+   code-fence hunks inside the pinned file; the exact pinned bytes
+   (sha256 `36648f9c…cc29`, supersession record ADR-014) were restored and
+   sha256-verified against the pinned commit's `CONTEXT.md` (`fee7459`).
+   The protected authority checks pass again (see 4).
+4. **Verification of record (all offline, exit 0 where stated):**
+   `tests/test_corridor_freight_v2.py` 61 passed +
+   `tests/test_corridor_freight_v2_native.py` 67 passed in one run
+   (13 new E53 regression tests in the VM suite); protected authority
+   checks 118 passed (test_authority_supersession + test_historical_protection
+   + test_industry_production_proof + test_structural_production);
+   `ruff check` clean on every touched path; `git diff --check` clean;
+   `uvx ty` reports only the same five pre-existing diagnostics present at
+   `bf6cc0b`. New schedule/plan digest of record
+   `ed5bad82…b1ff4` (E51/E52's `22bdb874…60f` stages exactly the pre-E53
+   schedule); plan-model `779ff9ee…12c4`, route `b2f80f46…7131`, witness
+   `f1f00e13…686c` unchanged.
+5. **Docs corrected:** REPRODUCE.md (suite counts, phase-budget exchange
+   timeouts of record 10 s/65 s, updated digest, E53 addendum), AI_HANDOFF.md
+   (commit of record `bf6cc0b` acknowledged; CONTEXT.md pin status
+   restored), review doc §12 E53 section appended, evidence index E53 row.
+6. **Staged-candidate staleness recorded:** the staged, never-consumed
+   `artifacts/experiments/d5-corridor-freight-native-candidate-2` keeps the
+   pre-E53 seal and becomes stale-by-source-drift against this working
+   tree by construction — never re-staged, re-sealed or relabeled; its
+   authorization state stays `PENDING` (`AUTHORIZATION_UNVERIFIED` /
+   `CLAIM_ABSENT`). Pre-launch gates reset: the next candidate must be
+   staged fresh, independently reviewed, Gate C signed and separately
+   launch-approved.
+
+Nothing staged, signed, authorized, launched, claimed or committed by this
+round; nothing written under `artifacts/`; the root `--version` file
+untouched. One pre-existing baseline failure unrelated to D5 was observed
+during validation and recorded unchanged
+(test_structural_world cargo-catalog fixture manifest digest mismatch,
+present at `bf6cc0b`; evidence intact, not regenerated). Evidence index
+E53; review doc §12 is the authoritative fix record.

@@ -18,15 +18,24 @@
  * deliver cycles, then finance corroboration and finish — thirty exchanges,
  * the §4 arithmetic 10 + 2 + 3*6 <= 32 resolved at staging. Per cycle the
  * departure snapshot gates 0 < load <= capacity (partial loads legal, full
- * load never demanded), the arrival gate reads that same load at the pinned
- * delivery bay, and the delivery window reconciles both industry monitor
- * deltas against the departure snapshot exactly, then consumes BOTH monitors
- * with keep=false behind that gate and re-arms them by observing zero residue
- * with keep=true. A departure with zero cargo is a typed ZERO_DEPARTED (F-11):
- * it is never a success, never WINDOW_EXHAUSTED, and the schedule continues —
- * the cycle is simply recorded as evidence with an empty load, so a zero
- * cycle arrives at the bay, reads both monitors zero, consumes zero and
- * re-arms zero (exactly what the honest empty run does).
+ * load never demanded) after a verified departure (E53): the vehicle must
+ * first be sampled standing at the pickup stop inside the window, and then
+ * be read past that stop on the ordered route (route index >= 1), with the
+ * pickup monitor's keep=true reading equal to the truck load at the
+ * departure sample — a positive truck cargo atom alone is loading-in-
+ * progress, not a departure snapshot. An empty sample past the pickup stop
+ * under the same departure proof, with the pickup monitor reading zero
+ * residue, is the typed ZERO_DEPARTED (F-11): never a success, never
+ * WINDOW_EXHAUSTED, and the schedule continues — the cycle is simply
+ * recorded as evidence with an empty load, so a zero cycle arrives at the
+ * bay, reads both monitors zero, consumes zero and re-arms zero (exactly
+ * what the honest empty run does). The depot-to-pickup travel leg and the
+ * depot itself are pre-departure waiting in both load states, and a vehicle
+ * standing off the ordered road is a typed INVALID_ROUTE, loaded or empty.
+ * The delivery window accepts nothing but the pinned delivery bay itself:
+ * the acceptance sample must read the vehicle at that bay with zero
+ * remaining cargo, and the DELIVERED reply echoes the bay tile beside the
+ * reconciled monitor deltas (E53).
  *
  * The handler re-binds the A1 close-out geometry: pickup stop 45748 (front
  * 45747), delivery bay 50862 (front 50863), depot 45487 (front 45743), and
@@ -54,8 +63,9 @@
  * becomes OUT_OF_ORDER. Watch windows poll one script tick per sample with
  * clock sanity (regression/stall fail-closed, pause checked first), and
  * window/day caps bounded by the request echoes and the module constants
- * (2048 ticks; the per-cycle economy-day lease comes in the request echo and
- * is bounded by the 60-day attempt budget) — caps, never promises. Every
+ * (2048 ticks; every watch window carries its economy-day lease echo, each
+ * lease laying inside the 60-day aggregate attempt authority whose dispatch
+ * gate Python owns) — caps, never promises. Every
  * success, typed-zero and inconclusive reply carries the quarter income so
  * each exchange span attributes its funds delta; refusals carry no
  * observation set at all. A refusal or an inconclusive window halts the
@@ -375,9 +385,12 @@ class D5FreightV2Proof extends GSController {
             return q.vehicle >= 0 && q.order_index == -1 &&
                 q.expected_cost == 0 &&
                 q.watch_ticks >= 1 && q.watch_days >= 1
-        /* transit-watch / deliver-watch */
+        /* transit-watch / deliver-watch: E53 gives all three windows the
+         * same bounded echo shape — the tick lease and the economy-day
+         * lease, uniform per-window caps under the 60-day aggregate
+         * authority. */
         return q.vehicle >= 0 && q.order_index == -1 && q.expected_cost == 0 &&
-            q.watch_ticks >= 1 && q.watch_days == -1
+            q.watch_ticks >= 1 && q.watch_days >= 1
     }
 
     function ObserveStop(tile, front, company) {
@@ -1031,7 +1044,7 @@ class D5FreightV2Proof extends GSController {
         }
     }
 
-    /* -- op: start ---------------------------------------------------------- */
+    /* -- op: start (the one start command; carries the day of record) -------- */
     function StartOp(q, r) {
         if (GSGame.IsPaused()) {
             r.status = "PAUSED"
@@ -1056,8 +1069,16 @@ class D5FreightV2Proof extends GSController {
                 q.company, GSCompany.CURRENT_QUARTER)
             if (income < -2147483648 || income > 2147483647)
                 throw "D5_NATIVE_FACT"
+            /* E53: the start reply carries the economy day of record. Python
+             * locks its day-authority ledger onto this echo: every later
+             * window span is measured against it and the 60-day aggregate
+             * attempt authority is re-checked before any further window is
+             * dispatched. */
+            local day = GSDate.GetCurrentDate()
+            if (day < 0 || day > 2147483647) throw "D5_NATIVE_FACT"
             r.state <- state
             r.speed <- speed
+            r.day <- day
             r.income <- income
             r.status = "STARTED"
         } catch (error) {
@@ -1068,16 +1089,21 @@ class D5FreightV2Proof extends GSController {
     /* -- watch window helpers ------------------------------------------------ */
     function WindowCaps(q) {
         local cap_t = q.watch_ticks < MAX_TICKS ? q.watch_ticks : MAX_TICKS
-        /* transit/deliver windows carry no day echo (-1); they are bounded by
-         * the module day cap, not by a nonsensical negative budget. */
+        /* Every watch window presents its economy-day lease (E53: all three
+         * carry the per-window cap of record); the module day cap bounds the
+         * echo, so an oversized lease never widens the window. */
         local cap_d = q.watch_days < 0 ? MAX_DAYS :
             (q.watch_days < MAX_DAYS ? q.watch_days : MAX_DAYS)
         return [cap_t, cap_d]
     }
 
-    /* -- op: load-watch (window 1: one positive departure-load snapshot) ----- */
+    /* -- op: load-watch (window 1: the verified departure-load snapshot) ----- */
     function LoadWatch(q, r) {
         if (!VehicleReady(q)) {
+            r.status = "STALE_ADMISSION"
+            return
+        }
+        if (this.pickup_industry < 0 || this.delivery_industry < 0) {
             r.status = "STALE_ADMISSION"
             return
         }
@@ -1097,6 +1123,12 @@ class D5FreightV2Proof extends GSController {
                 return
             }
             local samples = 0
+            /* E53: the departure credit. The vehicle must be sampled standing
+             * at the pickup stop during this window before any past-pickup
+             * reading can type a departure: the depot-to-pickup travel leg
+             * runs the ordered route in the rising-index direction only
+             * after that visit, so an on-route index alone proves nothing. */
+            local saw_pickup = false
             for (;;) {
                 /* Pause is refused on every sample (fail-closed, first
                  * sample included); the clock sanity follows only real
@@ -1123,22 +1155,85 @@ class D5FreightV2Proof extends GSController {
                     r.status = "WINDOW_EXHAUSTED"
                     return
                 }
+                local loc = GSVehicle.GetLocation(this.vehicle_id)
+                if (loc == this.pickup) saw_pickup = true
+                local index = RouteIndex(loc)
+                /* A vehicle standing off the ordered road (and not in the
+                 * pinned depot) drives where the corridor receipt never
+                 * built road: fail-closed INVALID_ROUTE, loaded or empty
+                 * (E53) — never a typed departure event. */
+                if (loc != this.depot_tile && index < 0) {
+                    r.status = "INVALID_ROUTE"
+                    return
+                }
                 local load = GSVehicle.GetCargoLoad(this.vehicle_id, FREIGHT_CARGO)
                 if (load < 0) {
                     r.status = "UNSUPPORTED_NATIVE_FACT"
                     return
                 }
-                /* The departure gate of record: any positive load within the
-                 * vehicle's capacity is a departure snapshot (partial loads
-                 * legal; full load never demanded). */
+                /* The window's monitor evidence of record (keep=true
+                 * observation, never a consumption): the pickup industry's
+                 * own cargo reading at the sample boundary. It gates both
+                 * window outcomes below. */
+                local pickup_amount = GSCargoMonitor.GetIndustryPickupAmount(
+                    q.company, FREIGHT_CARGO, this.pickup_industry, true)
+                if (pickup_amount < 0) {
+                    r.status = "UNSUPPORTED_NATIVE_FACT"
+                    return
+                }
+                /* The departure proof of record: this window sampled the
+                 * vehicle at the pickup stop and it now stands past that
+                 * stop on the ordered route. Without the sampled visit the
+                 * on-route index can be the depot-to-pickup travel leg, and
+                 * travelling home empty or loaded is waiting, never a
+                 * departure event. */
+                local departure_sample = saw_pickup && index >= 1
                 if (load > 0) {
                     if (load > capacity) {
                         r.status = "UNSUPPORTED_NATIVE_FACT"
                         return
                     }
-                    local wait = GSStation.GetCargoWaiting(this.site_sid0, FREIGHT_CARGO)
-                    if (wait < 0) {
-                        r.status = "UNSUPPORTED_NATIVE_FACT"
+                    if (departure_sample) {
+                        /* LOADED (F-4): the departure snapshot must carry
+                         * its matching monitor evidence — the industry
+                         * pickup monitor reads exactly the truck load. A
+                         * contradicted reading is a typed mismatch, never a
+                         * snapshot; a stop-standing cargo atom alone is
+                         * loading-in-progress and keeps waiting. */
+                        if (pickup_amount != load) {
+                            r.status = "READBACK_MISMATCH"
+                            return
+                        }
+                        local wait = GSStation.GetCargoWaiting(this.site_sid0, FREIGHT_CARGO)
+                        if (wait < 0) {
+                            r.status = "UNSUPPORTED_NATIVE_FACT"
+                            return
+                        }
+                        local income = GSCompany.GetQuarterlyIncome(
+                            q.company, GSCompany.CURRENT_QUARTER)
+                        if (income < -2147483648 || income > 2147483647)
+                            throw "D5_NATIVE_FACT"
+                        r.paused <- false
+                        r.load <- load
+                        r.capacity <- capacity
+                        r.wait <- wait
+                        r.pickup_amount <- pickup_amount
+                        r.income <- income
+                        r.tick <- prev
+                        r.day <- day
+                        r.status = "LOADED"
+                        this.observed_load = load
+                        return
+                    }
+                } else if (departure_sample) {
+                    /* F-11: the verified empty departure is its own typed
+                     * outcome with the pickup monitor reading zero residue
+                     * (E53); a contradicted residue is a typed mismatch.
+                     * The schedule continues on the typed event: the
+                     * deliver window reconciles the empty load against
+                     * zero monitors. */
+                    if (pickup_amount != 0) {
+                        r.status = "READBACK_MISMATCH"
                         return
                     }
                     local income = GSCompany.GetQuarterlyIncome(
@@ -1147,31 +1242,7 @@ class D5FreightV2Proof extends GSController {
                         throw "D5_NATIVE_FACT"
                     r.paused <- false
                     r.load <- load
-                    r.capacity <- capacity
-                    r.wait <- wait
-                    r.income <- income
-                    r.tick <- prev
-                    r.day <- day
-                    r.status = "LOADED"
-                    this.observed_load = load
-                    return
-                }
-                /* F-11: a departure with no cargo is its own typed outcome.
-                 * The vehicle waiting at the pickup stop (route index 0) or
-                 * standing in the pinned depot is pre-departure waiting; any
-                 * other on-route tile proves the truck left the pickup empty,
-                 * and that observation is carried honestly as ZERO_DEPARTED
-                 * (never LOADED, never WINDOW_EXHAUSTED). The schedule
-                 * continues: the deliver window of this cycle reconciles an
-                 * empty load against zero monitors. */
-                local loc = GSVehicle.GetLocation(this.vehicle_id)
-                if (loc != this.depot_tile && loc != this.pickup) {
-                    local income = GSCompany.GetQuarterlyIncome(
-                        q.company, GSCompany.CURRENT_QUARTER)
-                    if (income < -2147483648 || income > 2147483647)
-                        throw "D5_NATIVE_FACT"
-                    r.paused <- false
-                    r.load <- load
+                    r.pickup_amount <- pickup_amount
                     r.income <- income
                     r.tick <- prev
                     r.day <- day
@@ -1179,6 +1250,10 @@ class D5FreightV2Proof extends GSController {
                     this.observed_load = 0
                     return
                 }
+                /* Pre-departure waiting: the pinned depot, the pickup stop
+                 * itself (index 0, loading empty or partial), or the
+                 * unsampled depot-to-pickup travel leg. The window is the
+                 * lease, never a promise. */
                 samples++
                 if (samples > cap_t) {
                     r.tick <- prev
@@ -1352,6 +1427,23 @@ class D5FreightV2Proof extends GSController {
                     r.status = "UNSUPPORTED_NATIVE_FACT"
                     return
                 }
+                /* E53: only the pinned delivery bay itself may type a
+                 * delivery. The unload arithmetic runs behind the at-bay
+                 * gate — any other tile (the front approach included) keeps
+                 * the window waiting, so the vehicle's actual position is
+                 * proven at the acceptance sample and the DELIVERED reply
+                 * echoes that bay tile. */
+                local loc = GSVehicle.GetLocation(this.vehicle_id)
+                if (loc != this.delivery) {
+                    samples++
+                    if (samples > cap_t) {
+                        r.tick <- prev
+                        r.day <- day
+                        r.status = "WINDOW_EXHAUSTED"
+                        return
+                    }
+                    continue
+                }
                 if (load == 0) {
                     local pickup = GSCargoMonitor.GetIndustryPickupAmount(
                         q.company, FREIGHT_CARGO, this.pickup_industry, true)
@@ -1398,6 +1490,7 @@ class D5FreightV2Proof extends GSController {
                         throw "D5_NATIVE_FACT"
                     r.paused <- false
                     r.load <- load
+                    r.position <- loc
                     r.pickup_amount <- pickup
                     r.delivery_amount <- delivery
                     r.recheck <- true

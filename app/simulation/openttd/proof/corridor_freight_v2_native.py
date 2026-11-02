@@ -101,6 +101,7 @@ from app.simulation.openttd.corridor_freight_v2 import (
     freight_exchange_cycle_index_v2,
     freight_exchange_sequence_v2,
     freight_phase_outcome_v2,
+    freight_window_dispatch_refusal_v2,
     verify_freight_attempt_v2,
 )
 from app.simulation.openttd.gamescript_transport import (
@@ -423,9 +424,10 @@ def freight_schedule() -> list[dict]:
 
     Each row carries the exchange id, its op, and the phase-budget echoes
     the windows present (bounded by the wire contract's own caps); order
-    rows carry their stop index; the load window carries the per-cycle
-    economy-day lease. A drift from the wire contract's own schedule
-    refuses staging.
+    rows carry their stop index; E53 gives every watch window the same
+    per-cap economy-day lease, and the wire contract's aggregate authority
+    gate owns the 60-day budget arithmetic across them. A drift from the
+    wire contract's own schedule refuses staging.
     """
     schedule: list[dict] = []
     for exchange_id, op in freight_exchange_sequence_v2(PLANNED_FREIGHT_CYCLES_V2):
@@ -437,6 +439,7 @@ def freight_schedule() -> list[dict]:
             row["watch_days"] = FREIGHT_CYCLE_DAY_CAP_V2
         elif op in ("transit-watch", "deliver-watch"):
             row["watch_ticks"] = WATCH_MAX_TICKS_V2
+            row["watch_days"] = FREIGHT_CYCLE_DAY_CAP_V2
         schedule.append(row)
     if [entry["exchange"] for entry in schedule] != list(FREIGHT_EXCHANGE_IDS_V2):
         raise FreightV2StagingError("the staged freight v2 schedule drifted from the contract")
@@ -534,7 +537,7 @@ def _expected_world_pins(plan: FreightPlanV2) -> dict:
         cycle_day_cap=plan.cycle_day_cap,
         request_budget=plan.request_budget,
         watch_ticks=WATCH_MAX_TICKS_V2,
-        load_watch_days=FREIGHT_CYCLE_DAY_CAP_V2,
+        window_day_cap=FREIGHT_CYCLE_DAY_CAP_V2,
         expected_fleet=0,
     )
 
@@ -632,7 +635,7 @@ def plan_policy() -> dict:
             cycle_day_cap=plan.cycle_day_cap,
             request_budget=plan.request_budget,
             watch_ticks=WATCH_MAX_TICKS_V2,
-            load_watch_days=FREIGHT_CYCLE_DAY_CAP_V2,
+            window_day_cap=FREIGHT_CYCLE_DAY_CAP_V2,
             expected_fleet=0,
             running_cost_allowance=FREIGHT_RUNNING_COST_ALLOWANCE_V2,
             statement=(
@@ -666,7 +669,9 @@ def budgets() -> dict:
     (30 planned exchanges of the 32 unique-id dispatcher cap); there is
     deliberately no aggregate phase-spending budget — the per-exchange
     ``max_cost`` ceiling plus the single realized purchase remain the only
-    cost contract.
+    cost contract. The aggregate E53 economy-day authority (``day_budget``)
+    binds the watch windows instead: every window dispatch is gated on the
+    elapsed-day ledger against its per-window ``window_day_cap`` lease.
     """
     return dict(
         launches=1,
@@ -684,7 +689,7 @@ def budgets() -> dict:
         exchange_margin_seconds=FREIGHT_EXCHANGE_MARGIN_SECONDS,
         total_seconds=900,
         watch_ticks=WATCH_MAX_TICKS_V2,
-        load_watch_days=FREIGHT_CYCLE_DAY_CAP_V2,
+        window_day_cap=FREIGHT_CYCLE_DAY_CAP_V2,
         day_budget=FREIGHT_DAY_BUDGET_V2,
         cycle_wall_cap_seconds=FREIGHT_CYCLE_WALL_CAP_SECONDS_V2,
         running_cost_allowance=FREIGHT_RUNNING_COST_ALLOWANCE_V2,
@@ -729,14 +734,20 @@ def expected_readback_policy() -> dict:
         ),
         drive=(
             "the cycles record their honest observations under their "
-            "bounded tick/day budgets: the departure load satisfies "
-            "0 < load <= capacity (F-4, partial loads legal), the arrival "
-            "reads the same departure load at the pinned delivery bay at "
-            "full route progress, and the delivery window reconciles both "
+            "bounded tick/day budgets: the departure snapshot satisfies "
+            "0 < load <= capacity (F-4, partial loads legal) and is typed "
+            "only after the verified departure (E53: sampled pickup visit, "
+            "then an on-route reading past the stop, with the pickup "
+            "monitor's own reading equal to the truck load at that sample); "
+            "an empty departure under the same proof with zero pickup "
+            "residue is the typed ZERO_DEPARTED event (F-11), never a "
+            "success; the depot-to-pickup travel leg stays waiting, an "
+            "off-route vehicle is typed INVALID_ROUTE, the delivery is "
+            "typed only at the pinned bay tile whose echo the DELIVERED "
+            "reply carries, and the delivery window reconciles both "
             "monitor deltas with the departure snapshot exactly, consumes "
             "both with keep=false and re-arms by observing zero residue "
-            "with keep=true; a departure with zero cargo is the typed "
-            "ZERO_DEPARTED event (F-11), never a success"
+            "with keep=true under the 60-day aggregate day authority"
         ),
         finance=(
             "the finance exchange records the income and delivered-cargo "
@@ -1041,13 +1052,14 @@ def preflight(prepared: PreparedProof) -> dict:
     for entry in staged:
         if entry["op"] not in FREIGHT_OPS_V2:
             raise ValueError("a scheduled exchange carries an unknown op")
-        if entry["op"] in ("transit-watch", "deliver-watch") and entry.get("watch_days"):
-            raise ValueError("a delivery window presents no day budget")
-        if entry["op"] == "load-watch" and (
+        # E53: every watch window presents the staged tick lease and the
+        # uniform per-window economy-day lease; the aggregate attempt
+        # authority gate owns the 60-day arithmetic across the windows.
+        if entry["op"] in ("load-watch", "transit-watch", "deliver-watch") and (
             entry["watch_ticks"] != WATCH_MAX_TICKS_V2
             or entry["watch_days"] != FREIGHT_CYCLE_DAY_CAP_V2
         ):
-            raise ValueError("the load window exceeds its bounded phase budget")
+            raise ValueError("the watch window exceeds its bounded phase budgets")
         if entry["op"] in ("site",) and entry.get("order_index") is not None:
             raise ValueError("a non-order exchange carries no stop index")
         if entry["op"] == "order" and entry.get("order_index") not in (0, 1):
@@ -1258,11 +1270,9 @@ def _freight_exchange_request(
         vehicle = int(state["vehicle"])
     if op == "order":
         order_index = int(entry["order_index"])
-    if op == "load-watch":
+    if op == "load-watch" or op in ("transit-watch", "deliver-watch"):
         watch_ticks = int(entry["watch_ticks"])
         watch_days = int(entry["watch_days"])
-    elif op in ("transit-watch", "deliver-watch"):
-        watch_ticks = int(entry["watch_ticks"])
     return FreightRequestV2(
         op=op,
         request_id=entry["exchange"],
@@ -1319,6 +1329,24 @@ def verify_request_against_plan(
         raise ValueError("only the site request may carry a route or witness digest")
 
 
+def _freight_day_authority(entry: dict, days_used: int) -> str | None:
+    """The typed pre-dispatch refusals for the aggregate day authority (E53).
+
+    Returns the refusal text when the planned exchange's window lease
+    cannot fit the 60-day aggregate attempt authority against the elapsed
+    day ledger. The ledger's provenance is the readback day echoes
+    themselves: the start exchange latched the day of record and each
+    verified window settled the span with its own day echo, so the dispatch
+    gate's arithmetic stays indistinguishable-by-induction from the
+    retained evidence — every window also stops at its own lease day, the
+    stopped attempt dispatches nothing further, and the aggregate span
+    cannot escape the budget. Non-window exchanges pass.
+    """
+    if entry["op"] not in ("load-watch", "transit-watch", "deliver-watch"):
+        return None
+    return freight_window_dispatch_refusal_v2(days_used, int(entry["watch_days"]))
+
+
 async def execute_freight_attempt_v2(prepared: PreparedProof, backend) -> dict:
     """Execute the authorized one-attempt freight v2 phase (never offline).
 
@@ -1367,7 +1395,15 @@ async def execute_freight_attempt_v2(prepared: PreparedProof, backend) -> dict:
     )
     frames = []
     exchanges: list[tuple[FreightRequestV2, FreightReadbackV2]] = []
-    state: dict[str, Any] = dict(site=None, engine=None, vehicle=-1)
+    state: dict[str, Any] = dict(
+        site=None,
+        engine=None,
+        vehicle=-1,
+        # E53 aggregate day authority: the start exchange latches the day
+        # of record; each verified watch window settles the elapsed span.
+        day_reference=None,
+        days_used=0,
+    )
     overall_deadline = event_loop_deadline(metadata["budgets"]["total_seconds"])
     try:
         async with asyncio.timeout(metadata["budgets"]["total_seconds"]):
@@ -1412,6 +1448,13 @@ async def execute_freight_attempt_v2(prepared: PreparedProof, backend) -> dict:
             for entry in schedule:
                 label = entry["exchange"]
                 try:
+                    # E53: the aggregate authority gate fires before this
+                    # exchange's request is ever built or sent — a window
+                    # whose lease cannot fit the remaining budget types the
+                    # pre-dispatch halt here, with no bytes on the wire.
+                    refusal = _freight_day_authority(entry, state["days_used"])
+                    if refusal is not None:
+                        raise ValueError(refusal)
                     request = _freight_exchange_request(entry, seal, plan, state)
                     verify_request_against_plan(request, plan=plan, seal=seal)
                     readback = await exchange(
@@ -1460,6 +1503,26 @@ async def execute_freight_attempt_v2(prepared: PreparedProof, backend) -> dict:
                         )
                     elif entry["op"] == "purchase":
                         state["vehicle"] = readback.vehicle
+                    elif entry["op"] == "start" and label == "start-00":
+                        # E53: the verified start reply fixes the day of
+                        # record; every later window span is measured
+                        # against it.
+                        if readback.day is None:
+                            raise ValueError("the start exchange did not echo its day of record")
+                        state["day_reference"] = readback.day
+                    elif entry["op"] in ("load-watch", "transit-watch", "deliver-watch"):
+                        # E53: the verified window settles the elapsed-day
+                        # ledger with its own day echo; a regression, or a
+                        # span escaping the whole attempt authority, halts
+                        # here (the probe above already ran the same gate).
+                        if state["day_reference"] is None or readback.day is None:
+                            raise ValueError("watch evidence lost its day ledger basis")
+                        span = readback.day - state["day_reference"]
+                        if span < 0 or span > FREIGHT_DAY_BUDGET_V2:
+                            raise ValueError(
+                                "the window day ledger regressed or escaped its authority"
+                            )
+                        state["days_used"] = span
                 except Exception as error:
                     result["halt"] = dict(
                         label=label, error=type(error).__name__ + ": " + str(error)

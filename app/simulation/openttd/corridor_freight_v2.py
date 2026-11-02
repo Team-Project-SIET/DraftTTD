@@ -378,6 +378,40 @@ def freight_cycle_group_budget_ok_v2(
     return exchanges_used + 3 <= budget
 
 
+def freight_window_dispatch_refusal_v2(days_used: int, watch_days: int) -> str | None:
+    """The E53 aggregate economy-day authority gate for one watch dispatch.
+
+    Every watch window leases its per-cap economy days; the 60-day attempt
+    authority binds the aggregate elapsed time across ALL windows, not any
+    single one. ``days_used`` is the economy-day span the already-verified
+    windows covered (each readback's own day echo against the start
+    exchange's day-of-record). A window may be dispatched only while its
+    lease fits what remains: ``days_used + watch_days`` crossing the
+    authority is a typed pre-dispatch halt. Because every window also stops
+    at its own lease day (``WINDOW_EXHAUSTED``), the aggregate span stays
+    inside the budget by induction — the gate makes that induction check,
+    never a promise.
+    """
+    if days_used + watch_days > FREIGHT_DAY_BUDGET_V2:
+        return (
+            f"a {watch_days}-economy-day window cannot fit the "
+            f"{FREIGHT_DAY_BUDGET_V2}-day aggregate attempt authority: "
+            f"{days_used} already elapsed"
+        )
+    return None
+
+
+def window_watch_day_cap_v2(op: FreightOpV2) -> int:
+    """The per-window economy-day lease the staged schedule rows carry.
+
+    E53: all three watch windows lease the identical per-cap day count
+    (the cycle day split of the attempt budget), so the row derivation
+    stays uniform and the aggregate authority owns the budget arithmetic.
+    Non-window operations carry no day lease (-1).
+    """
+    return FREIGHT_CYCLE_DAY_CAP_V2 if op in _FREIGHT_WATCH_OPS_V2 else -1
+
+
 PLANNED_FREIGHT_CYCLES_V2 = freight_planned_cycle_count_v2()
 PLANNED_FREIGHT_EXCHANGES_V2 = (
     FREIGHT_FIXED_EXCHANGE_COUNT_V2
@@ -646,8 +680,11 @@ class FreightRequestV2(Contract):
         elif self.op in ("transit-watch", "deliver-watch"):
             if not pitched or self.order_index != -1 or self.expected_cost != 0:
                 raise ValueError("window echoes the vehicle identity only")
-            if self.watch_ticks < 1 or self.watch_days != -1:
-                raise ValueError("window presents its tick budget and no day budget")
+            if self.watch_ticks < 1 or self.watch_days < 1:
+                raise ValueError(
+                    "window presents its tick and day budget echoes (E53: all "
+                    "three watch windows lease the per-cycle day cap)"
+                )
         else:  # pragma: no cover - FreightOpV2 excludes unknown ops
             raise ValueError("unknown freight op")
         return self
@@ -770,14 +807,17 @@ _FREIGHT_SUBSETS_V2: dict[FreightOpV2, frozenset[str]] = {
     "monitor": frozenset(
         ("pickup_amount", "delivery_amount", "income", "delivered")
     ),
-    "start": frozenset(("state", "speed", "income")),
-    "load-watch": frozenset(("load", "capacity", "wait", "tick", "day", "paused", "income")),
+    "start": frozenset(("state", "speed", "day", "income")),
+    "load-watch": frozenset(
+        ("load", "capacity", "wait", "pickup_amount", "tick", "day", "paused", "income")
+    ),
     "transit-watch": frozenset(
         ("position", "progress", "load", "tick", "day", "paused", "income")
     ),
     "deliver-watch": frozenset(
         (
             "load",
+            "position",
             "pickup_amount",
             "delivery_amount",
             "recheck",
@@ -964,13 +1004,16 @@ class FreightReadbackV2(Contract):
             raise ValueError("order echoes carry stop indexes")
         if self.op not in _FREIGHT_WATCH_OPS_V2 and self.watch_ticks != -1:
             raise ValueError("watch echoes belong to window exchanges")
-        if self.op != "load-watch" and self.watch_days != -1:
-            raise ValueError("day budgets belong to load-watch alone")
+        if self.op not in _FREIGHT_WATCH_OPS_V2 and self.watch_days != -1:
+            raise ValueError("day budgets belong to watch windows")
         if success and self.op in _FREIGHT_WATCH_OPS_V2:
             if self.watch_ticks < 1:
                 raise ValueError("window success must echo its tick budget")
-            if self.op == "load-watch" and self.watch_days < 1:
-                raise ValueError("load-watch success must echo its day budget")
+            if self.watch_days < 1:
+                raise ValueError(
+                    "window success must echo its day budget (E53: every "
+                    "watch window leases the per-cycle day cap)"
+                )
         return self
 
     @classmethod
@@ -1607,14 +1650,19 @@ def verify_freight_loaded_v2(
     engine: FreightEngineIntentV2,
     waiting_baseline: int,
 ) -> dict:
-    """Verify the load-watch window result: one positive observed load (F-4).
+    """Verify the load-watch window result: the verified departure snapshot.
 
     The departure gate is the partial-load gate of record: the observed
     departure load must satisfy ``0 < load <= capacity`` — full-load is
-    never demanded. The waiting delta against the admitted site baseline
-    is recorded as observational corroboration only (unbounded industry
-    arrivals can mask the decrement, so the delta is evidence, not a
-    gate); the same honesty statement protocol 5 recorded stays in force.
+    never demanded — and it is typed only when the window proves an actual
+    departure (sampled pickup visit, then an on-route reading past the
+    stop, E53). The departure sample must also carry its matching pickup
+    monitor evidence: the industry monitor's own reading equals the truck
+    load, so a first positive cargo atom never stands for a snapshot. The
+    waiting delta against the admitted site baseline is recorded as
+    observational corroboration only (unbounded industry arrivals can mask
+    the decrement, so the delta is evidence, not a gate); the same honesty
+    statement protocol 5 recorded stays in force.
     """
     if loaded.op != "load-watch" or loaded.status != "LOADED" or loaded.cost != 0:
         raise ValueError("load window result mismatch")
@@ -1626,12 +1674,18 @@ def verify_freight_loaded_v2(
         raise ValueError("the observed load must satisfy 0 < load <= capacity")
     if loaded.wait is None:
         raise ValueError("the loaded readback must record its station waiting level")
+    if loaded.pickup_amount is None or loaded.pickup_amount != loaded.load:
+        raise ValueError(
+            "the departure snapshot must carry its matching pickup monitor "
+            "evidence (E53)"
+        )
     waiting_delta = loaded.wait - waiting_baseline
     return dict(
         schema="company-freight2-loaded-receipt-v1",
         request_id=loaded.request_id,
         load=loaded.load,
         capacity=loaded.capacity,
+        pickup_amount=loaded.pickup_amount,
         partial=loaded.load < loaded.capacity,
         waiting=loaded.wait,
         waiting_delta=waiting_delta,
@@ -1650,11 +1704,12 @@ def verify_freight_loaded_v2(
 def verify_freight_zero_departed_v2(zero: FreightReadbackV2, *, vehicle: int) -> dict:
     """Verify a typed zero-departure cycle event (F-11).
 
-    The load watch observed a departure with no cargo load. The cycle is
-    dropped as a typed event: never a success, never folded into
-    WINDOW_EXHAUSTED, and the receipt stays bound to the same exchange
-    evidence so the phase outcome can type the attempt's zero-cycle
-    terminal state.
+    The load watch observed a verified departure with no cargo load: the
+    vehicle read past the sampled pickup stop empty and the pickup monitor
+    read zero residue at that sample (E53). The cycle is dropped as a typed
+    event: never a success, never folded into WINDOW_EXHAUSTED, and the
+    receipt stays bound to the same exchange evidence so the phase outcome
+    can type the attempt's zero-cycle terminal state.
     """
     if zero.op != "load-watch" or zero.status != "ZERO_DEPARTED" or zero.cost != 0:
         raise ValueError("zero-departure cycle event mismatch")
@@ -1662,10 +1717,15 @@ def verify_freight_zero_departed_v2(zero: FreightReadbackV2, *, vehicle: int) ->
         raise ValueError("zero-departure echo mismatch")
     if zero.load != 0:
         raise ValueError("a zero-departure event must read zero observed load")
+    if zero.pickup_amount != 0:
+        raise ValueError(
+            "a zero-departure event must carry zero pickup-monitor evidence (E53)"
+        )
     return dict(
         schema="company-freight2-zero-departed-receipt-v1",
         request_id=zero.request_id,
         load=zero.load,
+        pickup_amount=zero.pickup_amount,
         tick=zero.tick or 0,
         day=zero.day or 0,
         funds=zero.funds,
@@ -1712,13 +1772,16 @@ def verify_freight_arrival_v2(
 
 
 def verify_freight_delivered_v2(
-    unloaded: FreightReadbackV2, *, vehicle: int, load: int
+    unloaded: FreightReadbackV2, *, vehicle: int, load: int, delivery: int
 ) -> dict:
     """Verify the deliver-watch window result: unload plus monitor arithmetic.
 
-    The per-cycle snapshot discipline gates: the vehicle must be empty at
-    the bay, both monitor deltas must equal the departure load exactly,
-    and the consume-with-recheck re-arming read must observe zero residue.
+    The per-cycle snapshot discipline gates: the acceptance sample must
+    read the vehicle at the pinned delivery bay with zero remaining cargo
+    (E53: the at-bay gate precedes any unload arithmetic and the DELIVERED
+    echo carries the bay tile), both monitor deltas must equal the
+    departure load exactly, and the consume-with-recheck re-arming read
+    must observe zero residue.
     """
     if unloaded.op != "deliver-watch" or unloaded.status != "DELIVERED" or unloaded.cost != 0:
         raise ValueError("delivery window result mismatch")
@@ -1726,6 +1789,11 @@ def verify_freight_delivered_v2(
         raise ValueError("delivery readback echo mismatch")
     if unloaded.load != 0:
         raise ValueError("the vehicle must read empty after its unload")
+    if unloaded.position != delivery:
+        raise ValueError(
+            "the delivery acceptance must read the vehicle at the pinned "
+            "delivery bay (E53)"
+        )
     if (
         unloaded.pickup_amount is None
         or unloaded.delivery_amount is None
@@ -1739,10 +1807,12 @@ def verify_freight_delivered_v2(
         schema="company-freight2-delivered-receipt-v1",
         request_id=unloaded.request_id,
         load=unloaded.load,
+        position=unloaded.position,
         pickup_amount=unloaded.pickup_amount,
         delivery_amount=unloaded.delivery_amount,
         recheck=unloaded.recheck,
         watch_ticks=unloaded.watch_ticks,
+        watch_days=unloaded.watch_days,
         tick=unloaded.tick,
         day=unloaded.day,
         funds=unloaded.funds,
@@ -1935,6 +2005,11 @@ def _freight_state_v2() -> dict:
         cycle_receipts=[],
         cycle_events=[],
         zero_events=[],
+        # E53 day-authority ledger: the start exchange's economy day of
+        # record, and the aggregate span the verified windows covered so
+        # far (None until the first watch window is verified).
+        day_reference=None,
+        day_used=None,
     )
 
 
@@ -2064,10 +2139,14 @@ def _freight_success_step_v2(
         if cycle_index is None:
             raise ValueError("cycle receipts belong to cycle exchanges")
         # The window gates run for zero and loaded departures alike: the
-        # delivery pass must still be proven empty with zero monitor
-        # residue. The cycle layer claims the typed receipt (F-11) on top.
+        # delivery pass must still be proven empty at the pinned bay with
+        # zero monitor residue. The cycle layer claims the typed receipt
+        # (F-11) on top.
         gate = verify_freight_delivered_v2(
-            readback, vehicle=state["vehicle"], load=state["load"]
+            readback,
+            vehicle=state["vehicle"],
+            load=state["load"],
+            delivery=plan.delivery,
         )
         if state["load"] == 0:
             cycle_receipt = dict(
@@ -2150,6 +2229,34 @@ def _freight_verify_step_v2(
     if request.expected_cost != readback.expected_cost:
         raise ValueError("request and readback quote echoes disagree")
     op = request.op
+    if op in _FREIGHT_WATCH_OPS_V2:
+        # E53 replay hardening: a watch request must present exactly the
+        # staged per-window budgets the plan derivation schedules (tick cap
+        # and the uniform per-window economy-day lease); anything else is a
+        # request this schedule could never have built.
+        if (
+            request.watch_ticks != WATCH_MAX_TICKS_V2
+            or request.watch_days != window_watch_day_cap_v2(op)
+        ):
+            raise ValueError(
+                "watch request echoes drifted from the staged window budgets"
+            )
+        # E53 aggregate authority: the dispatch gate runs on the ledger the
+        # already-verified windows recorded, before any window evidence is
+        # consumed — the same refusal the executor types before dispatch,
+        # so replayed evidence cannot exploit a window the live gate would
+        # never have opened.
+        if state["day_reference"] is None:
+            raise ValueError(
+                "the day authority is not latched: the start exchange's "
+                "day of record must verify before any watch window"
+            )
+        refusal = freight_window_dispatch_refusal_v2(
+            state["day_used"] if state["day_used"] is not None else 0,
+            request.watch_days,
+        )
+        if refusal is not None:
+            raise ValueError(refusal)
     if readback.status != _FREIGHT_SUCCESS_STATUS_V2[op] and not (
         op == "load-watch" and readback.status == "ZERO_DEPARTED"
     ):
@@ -2160,6 +2267,23 @@ def _freight_verify_step_v2(
         )
     finally:
         state["reads"][request.request_id] = readback
+    if op == "start" and request.request_id == "start-00":
+        # E53: the day of record every later window span is measured
+        # against; a missing or unusable echo is refused before the ledger
+        # can gain windows.
+        if readback.day is None:
+            raise ValueError("the start exchange did not echo its day of record")
+        state["day_reference"] = readback.day
+    if op in _FREIGHT_WATCH_OPS_V2:
+        # E53 day ledger: the verified window's own day echo settles the
+        # aggregate span. A regression, or a span beyond the whole attempt
+        # authority, is a typed verification defect.
+        if readback.day is None or state["day_reference"] is None:
+            raise ValueError("watch evidence lost its day ledger basis")
+        span = readback.day - state["day_reference"]
+        if span < 0 or span > FREIGHT_DAY_BUDGET_V2:
+            raise ValueError("the window day ledger regressed or escaped its authority")
+        state["day_used"] = span
     previous_income = state["income"]
     if state["funds"] is None:
         # The first span runs from the pinned A1 close-out funds on, so the
@@ -2256,6 +2380,14 @@ def verify_freight_attempt_v2(
         completed_cycles=completed,
         zero_cycle_receipts=zeroed,
         zero_watch_events=zero_watches,
+        # E53: the aggregate economy-day authority the verified windows
+        # covered (each window's own day echo against the start day of
+        # record), bounded by the 60-day attempt budget.
+        day_ledger=dict(
+            reference=state["day_reference"],
+            used=state["day_used"] if state["day_used"] is not None else 0,
+            budget=FREIGHT_DAY_BUDGET_V2,
+        ),
         receipts=receipts,
         funds_ledger=state["ledger"],
         funds=funds_report,

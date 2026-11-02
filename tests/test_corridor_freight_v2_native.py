@@ -546,7 +546,7 @@ def test_freight_schedule_is_the_fixed_thirty_exchange_cycle():
         assert load_row["watch_days"] == FREIGHT_CYCLE_DAY_CAP_V2 == 10
         transit_row = schedule[10 + 3 * cycle + 1]
         assert transit_row["watch_ticks"] == WATCH_MAX_TICKS_V2
-        assert "watch_days" not in transit_row
+        assert transit_row["watch_days"] == FREIGHT_CYCLE_DAY_CAP_V2 == 10
         assert d5v2.freight_exchange_cycle_index_v2(transit_row["exchange"]) == cycle
     assert d5v2._scheduled_exchange_ids(schedule) == set(FREIGHT_EXCHANGE_IDS_V2)
 
@@ -633,7 +633,7 @@ def test_plan_policy_binds_schedule_world_and_wire_identity():
     assert world["expected_fleet"] == 0
     assert world["request_budget"] == FREIGHT_REQUEST_BUDGET_V2 == 32
     assert world["watch_ticks"] == WATCH_MAX_TICKS_V2
-    assert world["load_watch_days"] == FREIGHT_CYCLE_DAY_CAP_V2
+    assert world["window_day_cap"] == FREIGHT_CYCLE_DAY_CAP_V2
     assert world["running_cost_allowance"] == d5v2.FREIGHT_RUNNING_COST_ALLOWANCE_V2 == 12
     assert plan_policy["prerequisite_world"]["schema"] == d5v2.D5_FREIGHT_V2_PREREQUISITE_SCHEMA
     assert "truck stops" in plan_policy["prerequisite_world"]["statement"]
@@ -656,7 +656,7 @@ def test_budgets_match_the_staged_contract():
         "exchange_margin_seconds": 5,
         "total_seconds": 900,
         "watch_ticks": 2048,
-        "load_watch_days": 10,
+        "window_day_cap": 10,
         "day_budget": 60,
         "cycle_wall_cap_seconds": d5v2.FREIGHT_CYCLE_WALL_CAP_SECONDS_V2,
         "running_cost_allowance": 12,
@@ -965,8 +965,10 @@ def test_wire_requests_map_every_planned_exchange():
                 FREIGHT_CYCLE_DAY_CAP_V2,
             )
         elif op in ("transit-watch", "deliver-watch"):
-            assert request.watch_ticks == WATCH_MAX_TICKS_V2
-            assert request.watch_days == -1
+            assert (request.watch_ticks, request.watch_days) == (
+                WATCH_MAX_TICKS_V2,
+                FREIGHT_CYCLE_DAY_CAP_V2,
+            )
         else:
             assert (request.watch_ticks, request.watch_days) == (-1, -1)
         d5v2.verify_request_against_plan(request, plan=plan, seal=SEAL)
@@ -1039,6 +1041,7 @@ def _watch_request() -> tuple[FreightRequestV2, FreightReadbackV2]:
         load=20,
         capacity=20,
         wait=3,
+        pickup_amount=20,
         tick=100,
         day=730,
         paused=False,
@@ -1419,7 +1422,13 @@ def _consumed_freight_exchanges(
             )
         elif op == "start":
             readback = _synthetic_readback(
-                request, "STARTED", funds, state="RUNNING", speed=40, income=income
+                request,
+                "STARTED",
+                funds,
+                state="RUNNING",
+                speed=40,
+                day=day,
+                income=income,
             )
         elif request.request_id == "vread-01":
             readback = _synthetic_readback(
@@ -1442,6 +1451,7 @@ def _consumed_freight_exchanges(
                     "ZERO_DEPARTED",
                     funds,
                     load=0,
+                    pickup_amount=0,
                     tick=tick,
                     day=day,
                 )
@@ -1453,6 +1463,7 @@ def _consumed_freight_exchanges(
                     load=load,
                     capacity=20,
                     wait=5,
+                    pickup_amount=load,
                     tick=tick,
                     day=day,
                     paused=False,
@@ -1467,7 +1478,7 @@ def _consumed_freight_exchanges(
                 progress=pair_total,
                 load=load,
                 tick=tick + 30,
-                day=day + 3,
+                day=day,
                 paused=False,
                 income=income,
             )
@@ -1481,11 +1492,12 @@ def _consumed_freight_exchanges(
                 "DELIVERED",
                 funds,
                 load=0,
+                position=request.delivery,
                 pickup_amount=load,
                 delivery_amount=load,
                 recheck=True,
                 tick=tick + 50,
-                day=day + 5,
+                day=day,
                 paused=False,
                 income=income,
             )

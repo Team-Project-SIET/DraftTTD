@@ -277,8 +277,9 @@ GameScript package `app/simulation/openttd/d5_freight_v2_package/`, staged
 runner `app/simulation/openttd/proof/corridor_freight_v2_native.py` and the
 repo-local stub `typings/squirrel.pyi`; no staging, no signing, no launch,
 no AdminPort, no claim, nothing written under `artifacts/`). Two focused
-offline suites in one run, exact result 2026-11-01: 48 + 67 passed, 0 failed
-(exit 0, every dot green; the `-rs` output is pattern-only, so read the dots):
+offline suites in one run — E51 of record 48 + 67 passed; the E53 fix round
+(2026-11-01) of record 61 + 67 passed with 0 failed (exit 0, every dot green;
+the `-rs` output is pattern-only, so read the dots):
 
 ```bash
 PYTHONDONTWRITEBYTECODE=1 .venv/bin/python -m pytest \
@@ -287,15 +288,17 @@ PYTHONDONTWRITEBYTECODE=1 .venv/bin/python -m pytest \
   -q -p no:cacheprovider -rs
 ```
 
-Offline facts re-derivable in a plain interpreter (values of record:
-plan/schedule digest
-`22bdb874f3d7df7a54e7bd4f5ca07fe024318927ef9cd6a996fbd0420f4a460f`, plan-model
+Offline facts re-derivable in a plain interpreter (values of record — E53
+updated: the schedule digest of record is now
+`ed5bad8237dd68985ab712a2df6430564be4d9077d770f2b78ff84a684eb1ff4` because
+every watch window now stages the uniform 10-economy-day lease; plan-model
 digest `779ff9ee5ef452c4d05a2a432b979095f2cb8055554f7121f950241db9de12c4`,
 route digest `b2f80f46…7131` distinct from the witness digest
 `f1f00e13…686c`, 30 exchanges = fixed 10 + 6 cycles×3 + tail 2 inside the
 32-unique-id request budget, a 640-byte site request inside the 768-byte
-bound, staged attempt `D5-FREIGHT-2` bound to the A1 close-out lineage, and
-the 10 s exchange timeout for a watch request):
+bound (`load` watch window 415 B), staged attempt `D5-FREIGHT-2` bound to
+the A1 close-out lineage, and the phase-budget exchange timeouts of record
+10 s for fixed-request exchanges and 65 s for a watch window):
 
 ```bash
 .venv/bin/python - <<'EOF'
@@ -309,26 +312,116 @@ site = _freight_exchange_request(sched[0], "0" * 64, plan, {})
 req = _freight_exchange_request(
     next(e for e in sched if e["op"] == "vread"), "0" * 64, plan, {"vehicle": 9}
 )
+watch = _freight_exchange_request(
+    next(e for e in sched if e["op"] == "load-watch"), "0" * 64, plan,
+    {"site": None,
+     "engine": __import__("types").SimpleNamespace(engine=123, quote=4429),
+     "vehicle": 9},
+)
 print("plan digest   ", w.plan_digest_of(sched))
 print("plan model    ", plan.digest)
 print("route digest  ", plan.route_digest)
 print("witness digest", plan.witness_digest)
 print("schedule      ", len(sched), "exchanges,", plan.cycles, "cycles")
+print("watch leases  ", [e["watch_days"] for e in sched if e["op"].endswith("-watch")][:3])
 print("budgets       ", w.budgets()["planned_exchanges"], w.budgets()["requests"])
 print("site request  ", len(site.model_dump_json().encode()), "bytes (bound 768)")
-print("exchange time ", w.exchange_timeout_seconds(req, budget_table=w.budgets()), "s")
+print("exchange time ", w.exchange_timeout_seconds(req, budget_table=w.budgets()), "s",
+      w.exchange_timeout_seconds(watch, budget_table=w.budgets()), "s")
 EOF
 ```
 
-Both suites are fully offline: neither file references `artifacts/`, so they
-do not depend on retained evidence bytes and lose nothing on a clone. The v2
-runner's staging and native-execute entry points (`prepare_candidate`,
-`execute_freight_attempt_v2`) and the replay verifier (`verify_freight_attempt`
-and its verify CLI) stay behind the operator gates of the design review §10
-item 5: staging approval, independent review, Gate C signing and a separate
-explicit launch approval each remain ungranted. The v1 protocol-5 bytes
-(`corridor_freight.py`, `d5_freight_package/`), the root `--version` file and
-every retained artifact are out of scope for this section; nothing in it
-stages, signs, launches or claims. Lint and type checks of record:
-`ruff check` clean and `uvx ty check` clean on both v2 test files and the
-runner (the runner keeps the two pre-existing class-level diagnostics only).
+Both suites are fully offline: neither file references `artifacts/` (verified
+again for the E53 fix round by grep over both files), so they do not depend
+on retained evidence bytes and lose nothing on a clone. The v2 runner's
+remaining entry points (`execute_freight_attempt_v2` and the replay verifier
+`verify_freight_attempt` with its verify CLI) stay behind the operator gates
+of the design review §10 item 5: after the 2026-11-01 staging grant recorded
+below (E52), staging approval is granted, and independent review, Gate C
+signing and a separate explicit launch approval each remain ungranted. The
+v1 protocol-5 bytes (`corridor_freight.py`, `d5_freight_package/`), the root
+`--version` file and every retained artifact are out of scope for this
+section; nothing in it stages, signs, launches or claims. Lint and type
+checks of record for the E53 fix round: `ruff check` and `git diff --check`
+both clean squarely on the touched paths; `uvx ty check` on the wire
+contract, the runner and both suites reports only the same five pre-existing
+diagnostics already present at `bf6cc0b`.
+
+## 2026-11-01 addendum — D5 freight delivery v2 E53 fix round (checked)
+
+The E53 fix round against the independent design review
+([docs/d5-freight-delivery-v2-design-review-2026-11-01.md](docs/d5-freight-delivery-v2-design-review-2026-11-01.md)
+§12) restored `CONTEXT.md` byte-exact to the authority-supersession pin
+(`sha256 36648f9c2fee4106efb35ae4ee8722983ebdfb482889e66ad53d759f6fa7cc29`),
+fixed the freight state transitions (a wait-only pre-pickup/pickup-standing
+window, an at-bay-and-empty delivery gate with the echoed bay tile, a
+verified-departure LOADED snapshot bound to its matching pickup-monitor
+echo), enforced the 60-day aggregate economy-day authority across the three
+per-cycle windows, and hardened the replay verifier against drifted watch
+requests. Verified offline facts, one run (exit 0):
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 .venv/bin/python -m pytest \
+  tests/test_corridor_freight_v2.py \
+  tests/test_corridor_freight_v2_native.py \
+  -q -p no:cacheprovider -rs
+# → 61 + 67 passed, 0 failed
+
+PYTHONDONTWRITEBYTECODE=1 .venv/bin/python -m pytest \
+  tests/test_authority_supersession.py tests/test_historical_protection.py \
+  tests/test_industry_production_proof.py tests/test_structural_production.py \
+  -q -p no:cacheprovider
+# → 118 passed (the protected authority tests pass with the pinned bytes)
+
+ruff check app/simulation/openttd/corridor_freight_v2.py \
+  app/simulation/openttd/d5_freight_v2_package \
+  app/simulation/openttd/proof/corridor_freight_v2_native.py \
+  tests/test_corridor_freight_v2.py tests/test_corridor_freight_v2_native.py
+git diff --check
+```
+
+The staged candidate of record
+`artifacts/experiments/d5-corridor-freight-native-candidate-2` keeps the
+pre-E53 sealed plan digest `22bdb874…60f` and stays byte-untouched: it is
+stale-by-source-drift against the E53 working tree by construction (no
+re-stage, no re-seal), and its authorization state remains
+`PENDING`/`CLAIM_ABSENT` exactly as recorded in the staging addendum below.
+
+## 2026-11-01 addendum — D5 freight delivery v2 staging (checked, gated at one gate)
+
+Explicit operator authorization granted in-session covered the staging gate
+only. The staging command of record, one run, first attempt, exit 0:
+
+```bash
+.venv/bin/python -m app.simulation.openttd.proof.corridor_freight_v2_native \
+  prepare artifacts/experiments/d5-corridor-freight-native-candidate-2
+# → PRELAUNCH PASS /home/fed/codes/softdev2/artifacts/experiments/d5-corridor-freight-native-candidate-2
+```
+
+Re-runnable read-only proofs on the staged candidate (never a re-stage, never
+a re-seal, never an execution):
+
+```bash
+.venv/bin/python -m app.simulation.openttd.proof.corridor_freight_v2_native \
+  preflight artifacts/experiments/d5-corridor-freight-native-candidate-2
+# → PREFLIGHT PASS
+
+.venv/bin/python -m app.simulation.openttd.proof.corridor_freight_v2_native \
+  verify artifacts/experiments/d5-corridor-freight-native-candidate-2
+# → {"authorization_state": "CLAIM_ABSENT", "statement": "the candidate was
+#    never consumed by an operator authorization; no verified receipt is
+#    possible", "verification": "AUTHORIZATION_UNVERIFIED"} — exit 1 by design
+```
+
+Facts of record: attempt `D5-FREIGHT-2`, kind `freight`, schema
+`d5-freight2-prelaunch-v1`, seal (`PRELAUNCH.json` sha256)
+`35557a74c33188fb2555a43871025099b2998eea317d8bbf9cf047a8d5b676d4`, pinned
+prerequisite `d5-corridor-extension-native-candidate-3` re-verified (attempt
+`D5-CORRIDOR-EXTENSION-3`, after-save `3748e00c…5420bd`), plan digest
+`22bdb874…60f` and the 1-launch / 32-request / 60-day budgets unchanged, the
+pinned binary sha `276d5b…904c` verified with no identical process running,
+endpoints game 57627 / admin 34189 reserved and released, isolated retained
+workspace with an owned session key, argv recorded and never executed,
+`AUTHORIZATION.json` absent, no claim consumed. The `run` subcommand stays
+behind Gate C signing and a separate explicit launch approval; nothing in
+this section stages again, signs, launches or consumes.
