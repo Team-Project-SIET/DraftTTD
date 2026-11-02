@@ -569,3 +569,63 @@ observation the staged E53 schedule assumed — not staged-source drift.
 The attempt is terminal: no retry, re-stage, re-seal, re-sign or relaunch
 ever; diagnosis and any fresh `D5-FREIGHT-4` candidate are separate
 operator-approved gates. Nothing in this section launches again.
+
+## 2026-11-02 addendum — D5-BOX-CENSUS-1 offline implementation (E60, checked)
+
+Implementation of the E58-prescribed, E59-designed read-only box census,
+strictly offline per its design: new additive protocol-9 wire contract
+`app/simulation/openttd/corridor_box_census.py` (appenditive against the
+frozen protocol-5/-6/-8 families), staging pipeline
+`app/simulation/openttd/proof/corridor_box_census_native.py`, composed
+GameScript package `app/simulation/openttd/d5_census_package/`
+(`NetworkFreightProof extends D5CensusProof`), and the offline suites
+`tests/test_corridor_box_census.py` + `tests/test_corridor_box_census_native.py`.
+Verification of record (one run each, exit 0):
+
+```bash
+.venv/bin/python -m pytest tests/test_corridor_box_census.py \
+  tests/test_corridor_box_census_native.py -q -p no:cacheprovider
+# → 42 + 35 = 77 passed
+
+ruff check app/simulation/openttd/corridor_box_census.py \
+  app/simulation/openttd/proof/corridor_box_census_native.py \
+  app/simulation/openttd/d5_census_package \
+  tests/test_corridor_box_census.py tests/test_corridor_box_census_native.py
+# → All checks passed!
+
+uvx ty check app/simulation/openttd/corridor_box_census.py \
+  app/simulation/openttd/proof/corridor_box_census_native.py \
+  tests/test_corridor_box_census.py tests/test_corridor_box_census_native.py
+# → 1 diagnostic (the frozen-mirror `invalid-method-override connect` class
+#    the survey pipeline already carries); rest clean
+
+git diff --check
+```
+
+Commands of record for the census candidate lifecycle (each a separate
+operator gate after implementation; nothing was executed against any
+retained directory, so no line below has been run against `artifacts/`):
+
+```bash
+.venv/bin/python -m app.simulation.openttd.proof.corridor_box_census_native \
+  prepare <staging-directory>
+#  → PRELAUNCH PASS <staging-directory>
+.venv/bin/python -m app.simulation.openttd.proof.corridor_box_census_native \
+  preflight <staging-directory>
+#  → PREFLIGHT PASS
+.venv/bin/python -m app.simulation.openttd.proof.corridor_box_census_native \
+  run <candidate-directory>          # launch-gated, never yet authorized
+.venv/bin/python -m app.simulation.openttd.proof.corridor_box_census_native \
+  verify <candidate-directory>
+#  → CENSUS_COMPLETION_VERIFIED (exit 0) or PHASE_HALTED_EVIDENCE_PRESERVED
+```
+
+`--prerequisite` defaults to the consumed A1 attempt directory
+`artifacts/experiments/d5-corridor-extension-native-candidate-3`
+(after-save `3748e00c…5420bd`), exactly as the survey pipeline binds it.
+One implementation probe run of `prepare` against a `/tmp` staging path
+(not this repo's tree, not `artifacts/`) proved the staging pipeline
+end-to-end (`PRELAUNCH PASS`) and was discarded; the test suites stage
+fresh candidates under `pytest` tmp directories through the same
+production function, offline and consumable by the replay verifier only
+after the missing post-launch artifacts are provided by the test.

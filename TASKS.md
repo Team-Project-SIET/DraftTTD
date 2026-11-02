@@ -1549,3 +1549,157 @@ fact was never built and never measured until the v2 gate demanded it.
 commit. Any correction (e.g. a fix round or a fresh candidate identity
 `D5-FREIGHT-4` with its own staging, review, Gate C signing and launch
 approval) is a separate operator-approved gate. Evidence index E57.
+
+### 2026-11-02 — F-12 + branch-8 design/evidence resolution (E58)
+
+Offline docs-only record
+([details](docs/d5-freight-4-f12-branch8-design-resolution-2026-11-02.md)):
+read-only over `artifacts/` and `ottd/`; no source change, no candidate
+change, no evidence regeneration, no launch/connection/signing/claim/retry;
+prior text intact; `D5-FREIGHT-3` and all historical evidence byte-unchanged.
+
+**Branch 4 (F-12) — closed at design level.** Instrument kept (source
+semantics verified again: `script_road.cpp:107-125`, `road_map.cpp:54-70`,
+`follow_track.hpp:272-312`); the world fix is prescribed, not implemented:
+demolish depot 45487 → build the road pair 45743↔45487 (this lays the missing
+N stub on 45743) → rebuild `BuildRoadDepot(45487, front 45743)`. New
+feasibility check of record: `CmdBuildRoadDepot` (`ottd/src/road_cmd.cpp:1137`)
+itself runs `CMD_LANDSCAPE_CLEAR` on the target in the non-rotate path, so the
+rebuild is legal over the pair's S bit; road pieces into a standing depot stay
+refuted (`road_cmd.cpp:516-518`) and script span APIs require `start != end`,
+so the demolish is unavoidable. The fix is mandatory: the plan model ends each
+cycle `in_depot`, so an un-fixed world fails at depot return even with a
+relaxed gate — branches stay strict. After the fix, `D5-FREIGHT-4`'s
+prerequisite chain re-binds to the post-fix after-save.
+
+**Branch 8 (discovery boxes exactly-one) — unresolved from retained
+evidence; census prescribed.** The gate needs distinct cargo-role member
+counts of the two radius-3 boxes; the only industry inventories on disk are
+attempt19-world: a complete 6-industry page (ids 0–5, every entry
+`tile = x + y·64`, synthetic layout, max tile 3364 < 4096) that cannot
+describe the pinned 256×256 seed-17 D5 world (§2.1 of the preparation doc;
+D5 live tiles exceed 4096); `network-facts` coverage and
+`world-planning-observation` lifetimes are the same attempt19 world; D2/D3
+reads show per-tile `industry: null` only. E49 measured aggregates (8/8 at
+50862 r3, 0 at 50351, prod id 0 = 104) that cannot split into member counts.
+Prescription: **`D5-BOX-CENSUS-1`** — E49-class read-only census (fresh
+identity, own staging/review/Gate C/launch approval) that scans the pickup
+box (center 45748 = (180,178), r 3) and the delivery box (center 50862 =
+(174,198), r 3) and reports per-industry {id, tile, role fact} lists, never
+enforcing exactly-one so every outcome is learnable; box counts 1/1 mean the
+v2 gate cannot surprise, ≠1 means the site plan adapts first (the gate never
+downgrades).
+
+**Sequencing of record:** `D5-BOX-CENSUS-1` → F-12 world fix (own mutation
+candidate + post-fix verification) → fresh `D5-FREIGHT-4` (staging,
+independent review, Gate C re-sign, separate launch approval).
+
+**Stop.** E58 ends at the same line as E57: no fix round, no census launch,
+no general code review, no commit; every next step is a separate
+operator-approved gate. Evidence index E58.
+
+### 2026-11-02 — D5-BOX-CENSUS-1 protocol design (E59)
+
+Offline docs-only design of the E58-prescribed read-only census
+([details](docs/d5-box-census-1-protocol-design-2026-11-02.md)): no source
+implementation, no candidate staging, no evidence mutation, no signing, no
+AdminPort connection, no launch, no Git mutation; prior text intact;
+`D5-FREIGHT-3` and all historical evidence byte-unchanged.
+
+**Protocol 9, additive.** New module `corridor_box_census.py`; number
+allocation 4/5/6/7/8 taken (E51 precedent: consumed contract families are
+never retrofitted — list-shaped rows do not fit `SurveyReadback`'s scalar
+subsets). Four ops: the three E49 spot re-measures (`radius` 3, `accept`
+50351 = 0, `accept` 50862 = 8, `prod` id 0 = 104 — chain-continuity
+controls, halt-on-divergence, never relabeled) and the new `box` op: a
+49-tile scan of each stop's radius-3 box in exact `DiscoveryBoxes`
+iteration order, one row per distinct industry —
+`{id ≤ 65535, tile = min member tile, p, a}` with
+`p = GSIndustry.GetLastMonthProduction`, `a = GSIndustry.IsCargoAccepted`
+(source-verified: 0 = `CAS_NOT_ACCEPTED`, 1 = `CAS_ACCEPTED`,
+2 = `CAS_TEMP_REFUSED`).
+
+**Every outcome observable.** Static cursor grid (0/3/6) per box; drained
+pages measured READY-empty (absence is a measurement); a third page still
+`more = true` is an explicit overflow finding; roles are derived
+Python-side (producer iff `p > 0`, acceptor iff `a == 1`, matching the v2
+gate verbatim) so the branch-8 verdict is offline-replayable from rows; no
+exactly-one enforcement anywhere in the census.
+
+**Exact schedule (10 planned of 32 budget):** radius-00; acc-00 (50351);
+acc-01 (50862); prod-00; pbox-00..02 (45748, cursors 0/3/6); dbox-00..02
+(50862, cursors 0/3/6). Spots run before box pages; a spot divergence
+halts prefix-preservingly. `max_cost 0`, funds pin 490257, one launch and
+connection, zero retries. Measured wire audit: worst box request 217 B;
+worst page-3 box response 431 B (page 3/box chosen over page 4's thin
+33 B margin; 9 ids/box exceeds the v2 8-role bound).
+
+**Bindings and shapes:** prerequisite = consumed A1 extension candidate-3
+after-save `3748e00c…5420bd` (the E47 anchor; every D5 session since A1
+reloads identical world state); prelaunch schema
+`d5-box-census-prelaunch-v1`, attempt map `{1: D5-BOX-CENSUS-1}`;
+GameScript lives in a separate composed package `d5_census_package/` so
+the frozen `d5_freight_package` source the E47 composition pinned
+(`0337fb36…97ae`) does not drift. Receipt `company-box-census-receipt-v1`;
+fail-closed outcome `box-census-phase-outcome-v1` (MEASURED/REFUSED/
+MISSING/MALFORMED, first halt ends verification, pending never manufactures
+success); replay arms `CENSUS_COMPLETION_VERIFIED` /
+`CENSUS_HALTED_EVIDENCE_PRESERVED`.
+
+**Next-gate ladder:** 1/1 boxes → fix round then `D5-FREIGHT-4`; ≠1, empty
+box or overflow → site-plan adaptation round first; spot divergence →
+halt and lineage investigation. Implementation (wire module, native
+pipeline, census package, three test suites, `REPRODUCE.md` commands of
+record) is its own operator-approved round — this record creates none of
+it.
+
+**Stop.** E59 ends at protocol design: implementation, staging, review,
+Gate C signing and launch approval each remain separate operator gates;
+no census launch; no commit. Evidence index E59.
+
+### 2026-11-02 — D5-BOX-CENSUS-1 offline implementation (E60)
+
+Implementation of the E59 protocol, strictly offline per its design ([§3.4
+updated](docs/d5-box-census-1-protocol-design-2026-11-02.md)): no candidate
+staging, no evidence mutation, no signing/claim/AdminPort/launch; nothing
+written under `artifacts/`; `D5-FREIGHT-3` and all historical evidence
+byte-unchanged; `CONTEXT.md` pin `36648f9c…cc29` intact after the edits.
+
+**Delivered:** protocol-9 wire module `corridor_box_census.py`
+(plan/schedule pins, per-op echo subsets, spot controls
+`{acc-00: 0, acc-01: 8}` and `prod` 104 halt-on-divergence, box pages on
+cursors 0/3/6 with `more == (count > cursor + len(rows))`, drained pages
+READY-empty, receipts `company-box-census-receipt-v1`, phase outcome
+MEASURED/REFUSED/MISSING/MALFORMED with prefix-preserving halt);
+staging pipeline `proof/corridor_box_census_native.py` (pinned consumed A1
+prerequisite `3748e00c…5420bd`, hypotheses `RETAINED_CENSUS_REBOUND` re-bound
+from the E49 receipt, verify arms `CENSUS_COMPLETION_VERIFIED` /
+`PHASE_HALTED_EVIDENCE_PRESERVED`, exit-status discipline); census package
+`d5_census_package/` (`census_planned` == the Python schedule, bridge
+`NetworkFreightProof extends D5CensusProof`).
+
+**Verification of record:** `tests/test_corridor_box_census.py` 42 passed +
+`tests/test_corridor_box_census_native.py` 35 passed (77, exit 0; the native
+suite stages real candidates from the consumed A1 prerequisite through the
+production `prepare` function and replays a synthetic consumed attempt
+through the production verifier); ruff clean on all five touched paths;
+`git diff --check` clean; `uvx ty check` only the one frozen-mirror
+`connect` override diagnostic (survey pipeline carries the identical class).
+One real `prepare` probe run against a `/tmp` staging path (offline,
+discarded) proved staging end-to-end (`PRELAUNCH PASS`).
+
+**Disclosures:** (a) E59 §3.4's drafted `count >= cursor + len(rows)` page-3
+validator contradicted the READY-empty drained-page rule and was not
+implemented; the implemented rule is `more == (count > cursor + len(rows))`.
+(b) The §3.4 wire audit re-measured exact: request 217 B, handler-emitted
+page-3 response 431 B (slack 81), page-4 shadow 478 B (margin 34; E59's
+'33 B margin' wording corrected); the audit additionally records the
+null-inclusive Python canonical parse-side 471 B — never wire bytes; no
+wire byte changed. (c) Runtime defects fixed during validation: verifier
+membership lookup `request.tile not in plan.box_centres`, request `rows`
+lifted to a tuple, per-box `last_id` seeded `-1` instead of null.
+
+**Stop.** E60 ends at implementation: staging approval, independent review,
+Gate C signing and a separate launch approval each remain ungranted
+operator gates; the census `run` CLI stays unused; no commit by this round.
+Evidence index E60.
