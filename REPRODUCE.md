@@ -523,3 +523,49 @@ consumed). The signature is binding only and is NOT launch approval: the
 final remaining gate is one separate explicit operator launch approval for
 exactly one native attempt, then replay + certified cleanup; nothing in
 this section signs again, claims, launches or consumes.
+
+## 2026-11-02 addendum — D5 freight delivery v2 launch executed exactly once (E56, terminal)
+
+One explicit operator launch approval in-session covered exactly one native
+OpenTTD 15.3 attempt for `D5-FREIGHT-3`, no retries, no reconnects. The
+launch command of record, executed once, exit 1:
+
+```bash
+.venv/bin/python -m app.simulation.openttd.proof.corridor_freight_v2_native \
+  run artifacts/experiments/d5-corridor-freight-native-candidate-3
+# → {"cleanup_complete": true, "connections": 1, "exchanges": [], "halt":
+#    {"error": "ValueError: freight exchange site-00 failed verification:
+#    freight v2 exchange site-00 ended INVALID_SITE", "label": "site-00"},
+#    "last_status": "NOT_DISPATCHED", "native_launches": 1, "requests": 1,
+#    "returncode": 0, "state_changed": false, "status":
+#    "PHASE_HALTED_PREFIX_PRESERVED", "verified": false} — run-exit=1
+```
+
+Facts of record: preflight PASS; the one-shot claim consumed exactly once
+(`CLAIM.json` + `LAUNCH-CONSUMED.json` with the E55 authorization sha
+`3153d340…f1dda5` and key identity `…cbb63ff5…40c614`); exchange `site-00`
+(pickup 45748, delivery 50862, depot 45487, company 0, route
+`b2f80f46…7131` and witness `f1f00e13…686c` both == staged) read back
+`INVALID_SITE`, cost 0, funds 490257 unchanged, nothing dispatched, world
+`HALTED_BEFORE_MUTATION`; certified cleanup all-true (credential removed,
+listener closed, only an ephemeral `TIME_WAIT` on game port 58339 / admin
+44483). Official read-only replay (never a re-run):
+
+```bash
+.venv/bin/python -m app.simulation.openttd.proof.corridor_freight_v2_native \
+  verify artifacts/experiments/d5-corridor-freight-native-candidate-3
+# → {"failed": {"error": "freight v2 exchange site-00 ended INVALID_SITE",
+#    "label": "site-00", "status": "INVALID_SITE",
+#    "world_state": "HALTED_BEFORE_MUTATION", "zero_seen": false},
+#    "result_status": "PHASE_HALTED_PREFIX_PRESERVED",
+#    "verification": "PHASE_HALTED_EVIDENCE_PRESERVED"} — exit 1
+```
+
+The site gate is an 8-branch refusal chain and a refused readback carries
+no observation set by contract, so the fired branch is not disclosed on
+the wire; preflight and the E55 closure pins stayed intact, so this is the
+A1-anchored native world disagreeing with at least one site-admission
+observation the staged E53 schedule assumed — not staged-source drift.
+The attempt is terminal: no retry, re-stage, re-seal, re-sign or relaunch
+ever; diagnosis and any fresh `D5-FREIGHT-4` candidate are separate
+operator-approved gates. Nothing in this section launches again.

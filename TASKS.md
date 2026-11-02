@@ -1434,3 +1434,118 @@ connection, no gate retried. The signature is binding only and is NOT
 launch approval: the final remaining gate is one separate explicit
 operator launch approval for exactly one native attempt through the
 no-retry lifecycle, then replay + certified cleanup. Evidence index E55.
+
+### 2026-11-02 — D5 Freight Delivery v2 native launch executed exactly once (E56)
+
+Explicit operator authorization in-session covered exactly one native
+OpenTTD 15.3 launch (`D5-FREIGHT-3`), no retries, no reconnects. The `run`
+subcommand ran once and returned exit 1 with status
+`PHASE_HALTED_PREFIX_PRESERVED`: preflight PASS, the one-shot operator claim
+consumed exactly once (`CLAIM.json` + `LAUNCH-CONSUMED.json` carry the E55
+authorization sha `3153d340…f1dda5` and the pinned key identity), 1 native
+launch, 1 connection, 1 request executed of the 32-request budget, and the
+first exchange `site-00` (pickup 45748, delivery 50862, depot 45487,
+company 0) read back `INVALID_SITE` — cost 0, funds 490,257 unchanged,
+`command_accepted` false, `state_changed` false, no vehicle dispatched,
+world `HALTED_BEFORE_MUTATION`, decision-log decisive line
+`[18] [I] D5_V2_RESPONSE site-00 INVALID_SITE`. Certified cleanup
+completed all-true (credential removed, admin listener closed, only an
+ephemeral `TIME_WAIT` kernel state left on game port 58339 / admin 44483).
+Official read-only replay `verify` →
+`PHASE_HALTED_EVIDENCE_PRESERVED` exit 1 with the same halt facts. The
+GameScript site gate is an 8-branch refusal chain (pickup stop, delivery
+stop, depot identity, the F-12 directed depot-edge probe in both
+directions, witness pairs, zero-fleet, delivery acceptance exactly 8/8,
+discovery boxes exactly-one); a refused readback carries no observation set
+by contract, so the fired branch is not disclosed on the wire. Preflight
+passed and the E55 closure pins stayed intact, so this is the A1-anchored
+native world disagreeing with at least one site-admission observation the
+staged E53 schedule assumed — not staged-source drift; the candidate's
+staged bytes and the retained attempt evidence are byte-preserved for
+replay. Nothing was retried, re-staged, re-sealed, re-signed or relaunched;
+candidate-1 (consumed) and candidate-2 (stale-by-drift, never-consumed)
+stayed byte-untouched; the root `--version` file untouched; no commit or
+push. Diagnosis or a fix round is NOT started: any deeper census/analysis
+is a separate operator-approved step (E53 precedent), and any next
+candidate must be staged fresh under a fresh attempt identity
+(`D5-FREIGHT-4`), independently reviewed, Gate-C re-signed and separately
+launch-approved. Evidence index E56.
+
+### 2026-11-02 — D5 Freight Delivery v2 read-only diagnosis census (E57)
+
+**Operator-approved census gate over the retained E56 bytes.** Scope was
+strictly offline and read-only: diagnosis of which of the eight `site-00`
+admission branches fired `INVALID_SITE` in the consumed single launch
+(`D5-FREIGHT-3`, E56). Nothing was launched, connected, signed, consumed or
+retried; no source or candidate bytes changed; no evidence was regenerated;
+all retained artifacts (including `session-before.sav`) are byte-untouched;
+no commit or push; no general code review, no fix round.
+
+**Verdict — firing branch: the F-12 directed depot-entry probe (branch 4 of
+8).** The v2 site admission evaluates branch 4 as
+`else if (obs.depot.edge)` → `INVALID_SITE`
+(`app/simulation/openttd/d5_freight_v2_package/main.nut:628-631`), where the
+observation was built pre-verdict as
+`edge = GSRoad.AreRoadTilesConnected(45743, 45487) &&
+GSRoad.AreRoadTilesConnected(45487, 45743)` (`main.nut:432-446`).
+
+**Classification: stale assumption at the design layer.** Not a world-state
+mismatch — the session world is consistent with every retained receipt — and
+not a runtime/implementation defect: the `.nut` faithfully implements the
+gate the v2 design demanded, and the demanded bit does not exist and could
+not have been created by any operation in this world's history.
+
+Branch census (all facts from retained receipts, plus the vendored OpenTTD
+15.3 source for the probe semantics):
+
+| # | Branch | Verdict | Evidence |
+|---|--------|---------|----------|
+| 1 | pickup stop | PASS (receipt-proven) | `d4-corridor-native-candidate-4/confirm-04-response.json` + candidate-5 `confirm-04-response.json`: stop 45748, truck true, sid 0, stop_owner 0, front 45747, `linked true` — D4 station semantics `GSRoad.GetRoadStationFrontTile(45748) == 45747` (`d4_corridor_package/main.nut:184-190`); state survives A1 (A1 built only the extension side: `full-00` 50096→50864, `road-01` 50095→50096, `spur-02` 50864→50863, `station-03` delivery side; post-A1 `route-00` re-read pickup stop sid 0). |
+| 2 | delivery stop | PASS (receipt-proven) | A1 `station-03-response.json`: sid 2, front 50863, `linked true`, stop_owner 0. |
+| 3 | depot identity | PASS (receipt-proven) | D4 candidate-5 `depot-06-response.json` (BUILT) + `confirm-06-response.json`: depot true, front_id 45743, depot_linked true, owners 0. |
+| 4 | depot edge (F-12) | **FAIL — the firing branch** | see proof below. |
+| 5 | witness pairs | PASS (receipt-proven) | v2 `Witness` iterates the 29-tile route (28 pairs, two-directional + owner-0, `main.nut:453-466`); every route pair is one of the A1 `route-00` proven 30/30 connected pairs (`d5_extension_package/main.nut:200` = identical semantics, `first_fail -1`). |
+| 6 | zero-fleet | PASS (well-supported) | no BuildVehicle op in any retained dispatch of the lineage; funds 490257 == expected throughout. |
+| 7 | acceptance 8/8 | PASS (receipt-proven) | census `d5-accept-survey-native-candidate-2/accept-01-response.json`: `GSTile.GetCargoAcceptance(50862, cargo 1, 1, 1, radius 3) == 8` — the exact probe signature of branch 7, measured on the same post-A1 world. |
+| 8 | discovery boxes exactly-one | UNKNOWN (moot) | no receipt ever enumerated stop-radius box membership; `prod-00` measured only the pinned industry's production. Sits after the firing branch in the chain. |
+
+**Why branch 4 is deterministically false on this world** (this is the reason
+the census could conclude without a `.sav` parse — per-session save bytes
+differ by design, re-serializing the same content):
+
+- OpenTTD 15.3 `AreRoadTilesConnected(t1, t2)` requires the neighbor-facing
+  road bit on BOTH tiles (`ottd/src/script/api/script_road.cpp:107-125`);
+  for the depot tile, `GetAnyRoadBits` returns only its single exit bit
+  toward the front (`ottd/src/road_map.cpp:54-70`,
+  `DiagDirToRoadBits(GetRoadDepotDirection(tile))`). Both directions of the
+  F-12 pair therefore hinge on the same single fact: a depot-facing (north)
+  road stub on road tile 45743.
+- Extensive sweep of every retained build receipt in the whole lineage
+  (all `artifacts/experiments/*`, statuses BUILT/CLEARED/PLANTED): tile
+  45487 appears **only** in `depot-06-response.json` (the depot build
+  itself: tile 45487, front 45743). No road op ever laid an edge into the
+  depot tile. The D4 schedule laid run 45747→45743, run Bs 45999→48047 and
+  48303→50095, and the corner join (45743, 45999) — corridor-facing bits
+  only; A1 built only the extension side (full-00 50096→50864, road-01
+  50095→50096, spur-02 50864→50863).
+- `CmdBuildRoadDepot` (`ottd/src/road_cmd.cpp:1137`) touches only its own
+  tile (landscape-clear + `MakeRoadDepot`); it lays no stub on the front
+  tile, and road cannot be laid into a depot tile after the build. So the
+  depot-facing bit at 45743 has never existed and could not have been
+  created by the pipeline.
+
+**The stale point in the record**: F-12 (MINOR, D3,
+`docs/d5-freight-delivery-v2-design-review-2026-11-01.md`) rests on the
+mitigation claim "`BuildRoadFull` builds both straight bits at span
+endpoints … which includes 45743"
+(`docs/handoff/2026-10-25/d4-corridor-op03-root-cause.md`). Span endpoints
+carry corridor-facing bits only — that same doc states perpendicular pairs
+do not carry facing bits — so the claim covers the corridor bits at 45743,
+not a depot-facing stub. The D4-era `depot_linked` probe was deliberately
+identity-only (`d4_corridor_package/main.nut:184-190`), so the depot-edge
+fact was never built and never measured until the v2 gate demanded it.
+
+**Stop.** E57 ends at diagnosis: no fix round, no general code review, no
+commit. Any correction (e.g. a fix round or a fresh candidate identity
+`D5-FREIGHT-4` with its own staging, review, Gate C signing and launch
+approval) is a separate operator-approved gate. Evidence index E57.
