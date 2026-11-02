@@ -709,3 +709,106 @@ Disclosed limitation: the fresh-context subagent review was unavailable this
 round (provider free-usage limit); the audit was performed in-session with
 independent machinery — a true fresh-context review remains an operator
 option. No launch/sign/claim; no candidate bytes mutated.
+
+## 2026-11-02 addendum — D5-BOX-CENSUS-1 Gate C Option-1 signing (E63, gated at one gate)
+
+In-session operator authorization covered exactly the Gate C signing gate, on
+the E61 staged bytes (seal `c4497053…e381` re-verified) after the E62
+read-only verification. The pipeline of record is the
+[key provisioning doc §1/§2/§4](docs/handoff/2026-10-17/operator-key-provisioning.md)
+Option-1 checklist (refusal gates → checked seed extraction → derived-key ≡
+pinned-anchor check → one `sign_authorization_record` run → signature verified
+under the pinned anchor before any write → `write_authorization_record` → seed
+cleared), as executed for the survey E48 and freight E55 records. One earlier
+invocation was interrupted by an auditor script compile error before any
+execution — no key read into Python, no signature produced, no write; state
+was confirmed clean read-only (23 files) and the complete checklist then
+executed exactly once from the refusal gates.
+
+Facts of record: canonical authorization payload sha256
+`cd124c9e0dcb92a9b27c7a18fa587677825f88217749a37f44c2162534f64147`;
+`AUTHORIZATION.json` sha256
+`b9b9c0f4871f77965096a1ac5aa1046919421725b2652a303e5d71d6d1d449f7`;
+`verify_authorization` PASS under the pinned anchor
+`sha256-ed25519-public-key:cbb63ff58f17f13df3e1be0735fad18497e3a0c6ad6b5dd55491d708ae40c614`
+binding attempt `D5-BOX-CENSUS-1` / milestone `D5-BOX-CENSUS` to seal
+`c4497053…e381` (payload includes `operation_schedule`, `plan_digest`, the
+exact budget table, the A1 `source_world` binding
+`3748e00c…5420bd`, and the exact approved execution command). `CLAIM.json` and
+`LAUNCH-CONSUMED.json` stay absent (created only at launch). Re-runnable
+read-only proofs, current outputs: `preflight` → `PREFLIGHT PASS` exit 0;
+`verify` → `AUTHORIZATION_UNVERIFIED`/`CLAIM_ABSENT` exit 1 by design
+(authorized, never consumed); the census `PRELAUNCH.json` re-digested
+unchanged `c4497053de7f2a28…` and the A1 prerequisite record byte-unchanged
+`404d42d9fa1e1135…`. The signature is binding only and is NOT launch approval:
+the final remaining gate is one separate explicit operator launch approval for
+exactly one native attempt, then replay + certified cleanup; nothing in this
+section signs again, claims, launches or consumes.
+
+## 2026-11-02 addendum — D5-BOX-CENSUS-1 native launch consumed (E64, terminal)
+
+One in-session operator launch approval ("Approved — run once, now") was
+consumed for exactly one native attempt on the E63-signed candidate (seal
+`c4497053…e381`, AUTHORIZATION `b9b9c0f4…49f7`, both byte-re-verified after
+launch). Commands and outputs of record:
+
+```
+.venv/bin/python -m app.simulation.openttd.proof.corridor_box_census_native \
+  run artifacts/experiments/d5-box-census-native-candidate-1
+# run-exit=1 (terminal on this candidate)
+```
+
+Verbatim verdict (`result.json`): `"status":
+"PHASE_HALTED_PREFIX_PRESERVED"`, `"verified": false`, phase verification
+`CENSUS_INCOMPLETE`, halt `"error": "ValueError: the census exchange dbox-00
+failed verification: census exchange dbox-00 ended UNSUPPORTED_NATIVE_FACT"`,
+label `dbox-00`; exchanges READY 7/10 (`radius-00`, `acc-00`, `acc-01`,
+`prod-00`, `pbox-00`, `pbox-01`, `pbox-02`), pending `dbox-00`/`dbox-01`/
+`dbox-02`; budgets `requests: 8`/32, `connections: 1`, `native_launches: 1`,
+`preflight: "PASS"`, `command_accepted: true`, `returncode: 0`,
+`state_changed: false`, `cleanup_complete: true`, funds £490257 constant,
+cost £0 — nothing dispatched. Measured facts: spot controls radius 3, `acc-00`
+(50351, 0), `acc-01` (50862, 8), prod 104; producer box 45748 measured
+exactly-1 (`exactly_one: true`, member `{a: 0, id: 0, p: 104, tile: 44983}`,
+pages `pbox-00` cursor 0 row_count 1 `more: false`, `pbox-01`/`pbox-02` empty,
+no overflow); delivery box 50862 not measured on halt (`dbox-00` response
+`"status": "UNSUPPORTED_NATIVE_FACT"`, `cost: 0`, `funds: 490257`,
+`max_cost: 0`; `count: null`, `rows: []`, `exactly_one: false`); branch8
+verdict `CENSUS_GATE_UNDECIDED_INCOMPLETE` ("an unevidenced role-filtered
+membership can decide nothing; this is a recorded fact, never a manufactured
+verdict").
+
+Independent official read-only replay of record:
+
+```
+.venv/bin/python -m app.simulation.openttd.proof.corridor_box_census_native \
+  verify artifacts/experiments/d5-box-census-native-candidate-1
+{"error": "census exchange dbox-00 ended UNSUPPORTED_NATIVE_FACT", "failed":
+ {"label": "dbox-00", "status": "UNSUPPORTED_NATIVE_FACT",
+  "world_state": "HALTED_BEFORE_MUTATION"}, "pending": ["dbox-01", "dbox-02"],
+ "result_status": "PHASE_HALTED_PREFIX_PRESERVED",
+ "verification": "PHASE_HALTED_EVIDENCE_PRESERVED"}
+# verify-exit=1
+```
+
+One-attempt conservation and cleanup: `CLAIM.json`
+`{"consumed": true, "launches_allowed": 1, "retries": 0}`,
+`LAUNCH-CONSUMED.json` schema `d5-native-launch-consumed`; further launch on
+this candidate is refused by the pre-existing `grant_launch` CLAIM gate
+(covered by the offline suite; no `run` re-execution attempted this round).
+`cleanup.json`: `credential_removed: true`, `listener_closed: true`,
+`process_reaped: true`, `remaining_processes: []`, `workspace_disposed: true`;
+welcome world matches the A1 after-save binding (rev 15.3, seed 17,
+start_day 712223, dedicated). Retained bytes: 32 files under the candidate,
+covered by `artifact-manifest.sha256`, including `session-before.sav`
+(sha256 prefix `1966b5c7e9e2c0d6`), `after-diagnostic.sav`
+(`b6731d399f4e46a3`) and the per-exchange request/response JSONs.
+
+Interpretation (E59 §8 outcome matrix): the "both boxes role-filtered exactly
+1" row is NOT met, so the next action is the **site-plan adaptation/design
+round first** (stop re-pin / pre-build acceptance), deliberately its own round
+per §10.4; neither an F-12-fix round nor `D5-FREIGHT-4` is opened from this
+record; measured facts and the refusal stand as recorded, never relabelled.
+Re-attempting the census on this candidate is impossible — any new attempt
+needs a fresh staging → review → Gate C cycle on a new candidate + seal and a
+fresh operator launch approval. No commit by the agent.

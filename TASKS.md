@@ -1760,3 +1760,82 @@ lines were auditor script artifacts, not candidate findings.
 
 **Stop.** No launch/sign/claim; no candidate bytes mutated; no commit by
 this round. Evidence index E62.
+
+### 2026-11-02 — D5-BOX-CENSUS-1 Gate C Option-1 signed (E63)
+
+In-session operator authorization covered exactly the Gate C signing gate,
+on the E61 staged bytes (seal re-verified) after the E62 read-only
+verification. `AUTHORIZATION.json` written exactly once from the clean
+refusal gates, per the [key provisioning doc §1/§2/§4]
+(docs/handoff/2026-10-17/operator-key-provisioning.md) Option-1 checklist:
+refusal gates (twice, rechecked immediately before signing) → checked
+seed extraction (captured in-shell, never printed/filed/arg-passed) →
+derived public ≡ pinned anchor `5063982b…880f` (identity
+`cbb63ff5…40c614`) → exactly one `sign_authorization_record` run →
+signature verified under the pinned anchor before any write →
+`write_authorization_record` → `verify_authorization` PASS on the written
+bytes → seed cleared.
+
+One earlier invocation was interrupted by an auditor script compile error
+before any execution (no key read into Python, no signature produced, no
+write); clean state confirmed read-only, then the checklist ran exactly
+once (interrupted-before-write precedent).
+
+Facts of record: payload sha256 `cd124c9e…4147` (attempt, milestone,
+schema, prelaunch seal binding, workspace, binary sha, source_world A1
+after-save binding `3748e00c…5420bd`, budget table, plan
+`operation_schedule`+`plan_digest`, exact `execution_command`);
+`AUTHORIZATION.json` sha256 `b9b9c0f4…49f7`; candidate 24 files;
+`CLAIM.json`/`LAUNCH-CONSUMED.json` absent. Post-state: `preflight` →
+`PREFLIGHT PASS`; `verify` → `AUTHORIZATION_UNVERIFIED`/`CLAIM_ABSENT`
+exit 1 by design (authorized, never consumed); census and A1 record bytes
+re-digested unchanged.
+
+**Stop.** Signature binding only and NOT launch approval: the final
+remaining gate is one separate explicit operator launch approval for
+exactly one native attempt; the `run` subcommand stays unused; nothing
+signs again, claims, launches or consumes; no commit by this round.
+Evidence index E63.
+
+### 2026-11-02 — D5-BOX-CENSUS-1 native launch consumed (E64)
+
+One in-session operator launch approval (question tool, “Approved — run once,
+now”) was consumed for exactly one attempt on the E63-signed candidate
+(seal and AUTHORIZATION bytes re-verified post-launch). The run of record
+(`... run artifacts/experiments/d5-box-census-native-candidate-1`) exited 1,
+terminal on this candidate: halt arm `UNSUPPORTED_NATIVE_FACT` on the first
+delivery-side census exchange `dbox-00`, result status
+`PHASE_HALTED_PREFIX_PRESERVED`, phase verification `CENSUS_INCOMPLETE`.
+
+Measured facts of record: 7/10 exchanges READY (radius-00, acc-00, acc-01,
+prod-00, pbox-00/01/02); spot controls radius 3, (50351, 0) accept, (50862, 8)
+accept, prod 104; producer box **45748 measured exactly-1** (`exactly_one:
+true`, member id 0 / tile 44983 / p 104 / a 0, pages 1+empty+empty, no
+overflow); delivery box **50862 not measured on halt** (dbox-00 ended
+`UNSUPPORTED_NATIVE_FACT`, `count: null`, rows [], cost 0, funds constant
+£490257 — nothing dispatched); budgets requests 8/32, connections 1,
+native_launches 1, preflight PASS, state_changed false, cleanup_complete true
+(`cleanup.json`: credential_removed, listener_closed, process_reaped,
+remaining_processes [], workspace_disposed); welcome world matches the A1
+after-save binding (rev 15.3, seed 17, start_day 712223, dedicated).
+Independent official read-only replay: `verify` →
+`PHASE_HALTED_EVIDENCE_PRESERVED` exit 1 from retained bytes, no forced
+relabel. 32 files retained under the candidate, covered by
+`artifact-manifest.sha256`; session saves and per-exchange request/response
+JSONs retained.
+
+**Interpretation (E59 §8 matrix):** both-boxes-exactly-1 is NOT met, so the
+next action is the **site-plan adaptation/design round first** (stop re-pin /
+pre-build acceptance; combine the “any box ≠ 1” adaptation branch with the
+refusal/halt row); branch8 verdict of record is
+`CENSUS_GATE_UNDECIDED_INCOMPLETE`. This is a producer-box exactly-1
+measurement made, never a manufactured verdict — the delivery-side refusal
+(`UNSUPPORTED_NATIVE_FACT`) needs the design round to decide what the
+census should measure instead before any F-12 fix round / `D5-FREIGHT-4`.
+
+**Stop.** E63 authorization consumed; `CLAIM.json` shows one attempt
+(`launches_allowed: 1`, `retries: 0`), terminal for this candidate; further
+launch on it is refused by the CLAIM gate (no `run` re-execution attempted);
+any census re-attempt requires a fresh staging → review → Gate C cycle on
+a new candidate + seal and a fresh operator launch approval. No commit by
+this round. Evidence index E64.
