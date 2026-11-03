@@ -331,7 +331,16 @@ class D5DepotMutationProof extends GSController {
                          * ops overwrite both funds and cost with the
                          * measured before/after arithmetic. */
                         r.funds = GSCompany.GetBankBalance(q.company)
-                        if (q.op == "observe") {
+                        /* The per-script road context every ScriptRoad probe
+                         * fail-closes on (15.3 script_storage initializes it
+                         * INVALID_ROADTYPE; E72 root cause): set + assert
+                         * before any probe, the D4/D5-v2 per-request pattern
+                         * verbatim. */
+                        GSRoad.SetCurrentRoadType(GSRoad.ROADTYPE_ROAD)
+                        if (GSRoad.GetCurrentRoadType() != 0 ||
+                            !GSRoad.IsRoadTypeAvailable(0)) {
+                            r.status = "UNSUPPORTED_NATIVE_FACT"
+                        } else if (q.op == "observe") {
                             this.DepotObserveOp(q, r)
                         } else if (q.op == "demolish") {
                             this.DepotDemolishOp(q, r)

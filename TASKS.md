@@ -2007,8 +2007,8 @@ launch approval consumed exactly once.
     `ottd/src/script/api/script_road.cpp:44-51`/`:111`/`:497-502`); the
     F-12 package is the only family member whose observe/gate dispatch
     never calls `SetCurrentRoadType` (its two call sites sit AFTER the
-    road/depot ops' STALE_PIN pre-checks; D4 `main.nut:661-663` and D5-v2
-    `main.nut:1683-1690` set+assert per request before ops).
+    road/depot ops' STALE_PIN pre-checks; D4 `main.nut:660-662` and D5-v2
+    `main.nut:1684-1690` set+assert per request before ops).
   - Verdict: no E58 world assumption was incorrect; the defect is
     bridge-layer, script-only.
 - Corrected design (F-12b, awaiting its own operator fix-round approval):
@@ -2023,3 +2023,39 @@ launch approval consumed exactly once.
   preserved for it unchanged.
 - Preserved: E68 `FAILED_CLEANUP` unchanged; no historical bytes touched;
   no commit or push.
+
+### 2026-11-03 — F-12b fix round implemented offline (E73)
+
+The E72 §6.1 correction implemented exactly as prescribed, offline only (no
+staging, no signing, no launch, no AdminPort, no `artifacts/` write, no
+commit). `D5-F12-DEPOT-1` and all historical evidence untouched; CONTEXT
+pin `36648f9c…cc29` intact.
+
+- Fix (`app/simulation/openttd/d5_depot_mutation_package/main.nut`):
+  `DepotHandle` dispatch entry, after the funds readback and before any
+  probe — `GSRoad.SetCurrentRoadType(GSRoad.ROADTYPE_ROAD)` + fail-closed
+  assert `GSRoad.GetCurrentRoadType() != 0 || !GSRoad.IsRoadTypeAvailable(0)`
+  → `UNSUPPORTED_NATIVE_FACT` (already a contract-legal refusal status).
+  The D4/v2 per-request pattern verbatim; in-op sets kept as idempotent
+  re-assertions. No runner, wire-contract, schedule, gate, budget or
+  E58 change.
+- Regression wall: the shared VM stub `GSRoad` now models the 15.3
+  fail-close faithfully — context initializes `INVALID_ROADTYPE = 63`
+  (`road_type.h:28`), depot/edge probes gate on the current road type
+  (`script_road.cpp:44-51`/`:111`/`:497-502`), set no-ops unavailable
+  types, `IsRoadTile` unguarded like the engine. Offline fidelity probe
+  (discarded): unset → `IsRoadDepotTile(45487) false`, after set → `true`
+  — the exact consumed-attempt reading. Two focused tests added:
+  `test_dispatch_establishes_the_native_road_context_before_probes` and
+  `test_dispatch_assert_refuses_when_the_road_type_is_unavailable`.
+- Validation exit 0: suites `29 + 10 + 36 = 75 passed`
+  (`test_corridor_depot_mutation.py` + `_vm` + `_native`), ruff
+  all-passed on the touched python paths + package dir, `uvx ty` clean,
+  `git diff --check` clean.
+- Tree: `main.nut` + the two test files modified, uncommitted (habitual
+  WIP discipline). Zero other behavior changed.
+- Remaining: the road-context fact is native-runtime behavior — the next
+  native proof is the `D5-F12-DEPOT-2` launch itself (expected before-00
+  read pinned at E72 §6.4). Staging approval for the fresh identity
+  `D5-F12-DEPOT-2` remains ungranted; `D5-FREIGHT-4` stays blocked until
+  verified F-12 completion + certified cleanup.

@@ -177,3 +177,36 @@ def test_handler_drops_foreign_shapes():
     expect_drop(vm, base_request(op="road", request_id="road-00", tile=45487))
     expect_drop(vm, base_request(op="road", request_id="road-00", tile=45487,
                                  front_tile=45487))  # the span API needs start != end
+
+
+def test_dispatch_establishes_the_native_road_context_before_probes():
+    """E72 regression (the D5-F12-DEPOT-1 before-00 false negative).
+
+    The 15.3 per-script current road type is INVALID_ROADTYPE (63) until a
+    script sets it and every ScriptRoad depot/edge probe fail-closes on it
+    (script_storage.hpp:67, script_road.cpp:44-51/:111/:497-502). The stub
+    models exactly that, so a before-00 observe through the real package
+    must read the world's depot facts — depot_present true / front 45743 /
+    owner 0 / identity-linked true — only through the dispatcher's own
+    set+assert, and the context must stay established afterwards."""
+    vm = build_vm()
+    assert vm_root(vm)["cur_road_type"] == 63
+    readback = drive(vm, make_request(0))
+    assert readback.status == "READY"
+    assert readback.depot_present is True
+    assert readback.front_read == 45743
+    assert readback.owner == 0
+    assert readback.depot_linked is True
+    assert vm_root(vm)["cur_road_type"] == 0
+
+
+def test_dispatch_assert_refuses_when_the_road_type_is_unavailable():
+    """E72 regression pair: the dispatch-entry assert (D4/D5-v2 pattern)
+    stops every probe before any op when the native road context cannot be
+    established — the reply stays a refusal with no unclaimed facts and the
+    context is never faked."""
+    vm = build_vm(road_type_ok=False)
+    readback = drive(vm, make_request(0))
+    assert readback.status == "UNSUPPORTED_NATIVE_FACT"
+    assert readback.depot_present is None
+    assert vm_root(vm)["cur_road_type"] == 63

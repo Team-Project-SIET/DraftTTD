@@ -102,7 +102,10 @@ WORLD = """
 ::second_company <- 1;
 ::mode_ok <- true;
 ::cur_company <- -1;
-::cur_road_type <- 0;
+/* 15.3 native per-script init (script_storage.hpp:67): the current road
+ * type is INVALID_ROADTYPE (road_type.h:28 = 63) until the script sets
+ * it; every ScriptRoad probe fail-closes on the unset context (E72). */
+::cur_road_type <- 63;
 ::road_type_ok <- true;
 ::demolish_ok <- true;
 ::road_ok <- true;
@@ -187,13 +190,27 @@ class GSTile {
 }
 class GSRoad {
     static ROADTYPE_ROAD = 0;
-    static function IsRoadTypeAvailable(_) { return ::road_type_ok; }
-    static function SetCurrentRoadType(t) { ::cur_road_type = t; }
+    /* The 15.3 native fail-close model (E72 root cause): probes gate on
+     * IsRoadTypeAvailable(GetCurrentRoadType()), the per-script current
+     * road type is INVALID_ROADTYPE (63) until set, and SetCurrentRoadType
+     * silently no-ops an unavailable type (script_road.cpp:44-51/:111/
+     * :497-502). IsRoadTile carries no such gate natively (:40-42) and
+     * stays unguarded here, like the engine. */
+    static ROADTYPE_INVALID = 63;
+    static function IsRoadTypeAvailable(t) {
+        return ::road_type_ok && t == GSRoad.ROADTYPE_ROAD;
+    }
+    static function SetCurrentRoadType(t) {
+        if (GSRoad.IsRoadTypeAvailable(t)) ::cur_road_type = t;
+    }
     static function GetCurrentRoadType() { return ::cur_road_type; }
     static function IsRoadTile(tile) { return tile in ::road_bits; }
-    static function IsRoadDepotTile(tile) { return tile in ::depots; }
+    static function IsRoadDepotTile(tile) {
+        return GSRoad.IsRoadTypeAvailable(GSRoad.GetCurrentRoadType()) &&
+            tile in ::depots;
+    }
     static function GetRoadDepotFrontTile(tile) {
-        return (tile in ::depots) ? ::depots[tile] : -1;
+        return GSRoad.IsRoadDepotTile(tile) ? ::depots[tile] : -1;
     }
     static function AreRoadTilesConnected(t1, t2) {
         if (typeof t1 != "integer" || typeof t2 != "integer" || t1 == t2) return false;
@@ -202,7 +219,8 @@ class GSRoad {
         local dy = (t2 / ::map_w) - (t1 / ::map_w);
         if ((dx != 0 && dy != 0) || (dx == 0 && dy == 0)) return false;
         if (dx < -1 || dx > 1 || dy < -1 || dy > 1) return false;
-        return facing_bit(t1, dx, dy) && facing_bit(t2, -dx, -dy);
+        return GSRoad.IsRoadTypeAvailable(GSRoad.GetCurrentRoadType()) &&
+            facing_bit(t1, dx, dy) && facing_bit(t2, -dx, -dy);
     }
     static function BuildRoad(start, end) {
         if (!::road_ok) return false;

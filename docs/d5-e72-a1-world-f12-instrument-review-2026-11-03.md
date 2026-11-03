@@ -140,13 +140,13 @@ world and the attempt's prefix preserved).
 The family established pattern is per-request context set + assert, inside
 company mode, BEFORE any probe:
 
-- D4 (`d4_corridor_package/main.nut:661-663`): sets
+- D4 (`d4_corridor_package/main.nut:660-662`): sets
   `GSRoad.SetCurrentRoadType(GSRoad.ROADTYPE_ROAD)`, then
   `if (GetCurrentRoadType() != 0 || !IsRoadTypeAvailable(0))` →
   `UNSUPPORTED_NATIVE_FACT`, and only then dispatches ops — which is why
   D4's protocol-4 `depot-06`/`confirm-06` natively measured
   `{"depot": true, "depot_front_id": 45743, "depot_linked": true}`.
-- D5-v2 (`d5_freight_v2_package/main.nut:1683-1690`): identical set+assert
+- D5-v2 (`d5_freight_v2_package/main.nut:1684-1690`): identical set+assert
   per request before `SiteOp` — which is why at E56 the sequential site
   refusal chain (`main.nut:620-635`: identity branch
   `!obs.depot.depot || obs.depot.owner != q.company ||
@@ -242,3 +242,83 @@ Git mutation, no rerun of any completed offline suite. The only writes are
 this document and the E72 ledger rows appended to `EVIDENCE_INDEX.md`,
 `TASKS.md` and `AI_HANDOFF.md`. `E68` and every historical verdict stand
 unchanged.
+
+## 9. F-12b fix round record (E73, 2026-11-03)
+
+Operator-approved fix round implementing §6 exactly as prescribed, offline
+only (no candidate staging, no signing, no launch, no AdminPort, no
+`artifacts/` write, no Git commit; `D5-F12-DEPOT-1` and all historical bytes
+untouched; `CONTEXT.md` pin `36648f9c…cc29` intact).
+
+### 9.1 The exact fix (script-only, no runner/contract change)
+
+`app/simulation/openttd/d5_depot_mutation_package/main.nut`, `DepotHandle`
+dispatch entry — after the funds readback and before the op switch, the
+D4/D5-v2 per-request pattern verbatim (E56-era `d4_corridor_package/
+main.nut:660-662`, `d5_freight_v2_package/main.nut:1684-1690`):
+
+```squirrel
+GSRoad.SetCurrentRoadType(GSRoad.ROADTYPE_ROAD)
+if (GSRoad.GetCurrentRoadType() != 0 ||
+    !GSRoad.IsRoadTypeAvailable(0)) {
+    r.status = "UNSUPPORTED_NATIVE_FACT"
+} else if (q.op == "observe") { ...
+```
+
+`UNSUPPORTED_NATIVE_FACT` is already a contract-legal refusal status
+(`corridor_depot_mutation.py:114`, refusal frames carry no observation set
+by contract). The existing in-op `SetCurrentRoadType` calls
+(`DepotRoadOp`/`DepotDepotOp`) are kept as idempotent re-assertions; no
+admission check, gate, budget, schedule, status ordering or funds chain
+changed; the six-exchange schedule and the E58 §2.1 prescription are
+untouched.
+
+### 9.2 Regression coverage (the true red-green wall)
+
+`tests/test_corridor_depot_mutation.py` — the shared VM stub `GSRoad` now
+models the 15.3 native fail-close faithfully (the canonical-VM precedent):
+the per-script context initializes to `INVALID_ROADTYPE = 63`
+(`road_type.h:28`, mirroring `script_storage.hpp:67`), every depot/edge
+probe gates on `IsRoadTypeAvailable(GetCurrentRoadType())`
+(`script_road.cpp:44-51`/`:111`/`:497-502`), `SetCurrentRoadType` silently
+no-ops an unavailable type, and `IsRoadTile` stays unguarded like the
+engine (`:40-42`). An offline fidelity probe confirms the model reproduces
+the consumed attempt's exact reading: unset context →
+`IsRoadDepotTile(45487) == false` → after set → `true` (discarded `/tmp`
+probe per the E60 precedent). With that model in place, if the dispatch-entry
+set were absent, `before-00` would again measure the depot absent and every
+schedule test would fail — the whole suite is the net.
+
+Two focused tests added (`tests/test_corridor_depot_mutation_vm.py`):
+
+- `test_dispatch_establishes_the_native_road_context_before_probes` —
+  fresh VM starts at context 63; a real before-00 observe reads `READY`
+  with `depot_present true / front_read 45743 / owner 0 / depot_linked
+  true` and the context stands at 0 afterwards.
+- `test_dispatch_assert_refuses_when_the_road_type_is_unavailable` — with
+  the road type unavailable, the dispatch assert fires
+  `UNSUPPORTED_NATIVE_FACT` before any probe (no unclaimed facts, context
+  never faked).
+
+### 9.3 Validation of record (each exit 0)
+
+Same commands of record as the E70 round (REPRODUCE.md): suites
+`29 + 10 + 36 = 75 passed` (was 73; the two E73 regression tests join the VM
+suite), `ruff` all-passed on the touched python paths + package dir, and
+`git diff --check` clean (whitespace); `uvx ty check` clean on the
+documented file set.
+
+### 9.4 Remaining risks and unchanged standing
+
+- The fix is validated offline only; the road-context fact is
+  native-runtime behavior, and the next native proof is the
+  `D5-F12-DEPOT-2` launch itself (its expected `before-00` read is pinned
+  in §6.4).
+- Cleanup certification machinery is unchanged (attempt-1's
+  `cleanup_failure: true` socket ambiguity stands preserved as reported).
+- Tree state after the round: `main.nut` + the two test files modified,
+  uncommitted (habitual WIP discipline); the staged `D5-F12-DEPOT-1`
+  candidate bytes retain their seal and stay consumed/terminal; the next
+  candidate is fresh identity `D5-F12-DEPOT-2` whose staging will re-derive
+  digests from the fixed package — staging approval not yet granted. Zero
+  other behavior changed; e.g., the census/freight packages are untouched.
