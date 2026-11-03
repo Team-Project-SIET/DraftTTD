@@ -1967,3 +1967,59 @@ Remaining ungranted operator gates (each separate, in order): staging
 approval for a fresh `D5-F12-DEPOT-1` candidate → independent review →
 Gate C signing → one explicit launch approval. REPRODUCE.md carries the
 commands of record.
+
+### 2026-11-03 — D5-F12-DEPOT-1 consumed (terminal halt) + E72 read-only A1 world evidence review
+
+The three D5-F12-DEPOT gates were granted as separate operator approvals and
+consumed in order: staging (`d5-corridor-depot-mutation-native-candidate-1`,
+`PRELAUNCH PASS`, seal `9b0e01417a3e5a8ae9584a6d86285c9ee0b7f89517f970b38331102938ae12fe`,
+plan schedule `49f5b510…1382` / mutation `8be74b2c…ccc18`), independent
+read-only verification (READY-FOR-GATE-C), Gate C Option-1 signing (auth
+record `73734487…463`; one prior invocation died before any write and was
+re-run once from the refusal gates per the interruption precedent), and one
+launch approval consumed exactly once.
+
+- Terminal state (preserved verbatim): first exchange `before-00` measured
+  `depot_present False / front_read −1 / owner −1 / depot_linked False`
+  against the E58 before-gate; the harness refused fail-closed `STALE_PIN`
+  before any dispatch — `exchanges []`, `mutated []`, 1 request,
+  `state_changed false`, run exit 1 `PHASE_HALTED_PREFIX_PRESERVED`. Claim
+  consumed once. Cleanup: reaped cleanly (returncode 0, no remaining
+  processes) but `cleanup_failure: true` on the live-or-ambiguous-endpoint
+  socket fact. Costs: 1 launch / 1 connection / 1 request of 32. The
+  attempt is terminal and byte-preserved; no retry, no relabel.
+- E72 read-only review (no source change, no candidate, no launch, no
+  AdminPort, no `artifacts/` write, no Git mutation; [design doc](docs/d5-e72-a1-world-f12-instrument-review-2026-11-03.md)):
+  - `44983` producer id 0/`p 104` — CENSUS_VERIFIED (`pbox-00` row +
+    `prod-00`, box exactly-one).
+  - `51116` acceptor id 1/`p −1`/`a 1` — CENSUS_VERIFIED (`dbox-00`;
+    `acc-01` acceptance 8 at 50862 r3).
+  - `45743` road tile + directed depot-edge false both ways —
+    RECEIPT_VERIFIED (D4 route read 23/23; E56 branch order + E57).
+  - `45487` depot EXISTS company-0/front `45743`/identity-linked —
+    RECEIPT_VERIFIED (D4 `depot-06` BUILT + `confirm-06` READ; A1 has no
+    demolish receipt; A1 `after.sav` re-digests
+    `3748e00ce57bcb076466f50cac3776c202b4fd130d6c6071935e9d43e45420bd`).
+  - The F-12 before-00 depot-absent measurement is CONTRADICTED — an
+    **instrument false negative**: the 15.3 script road probes fail closed
+    while the per-script current road type is unset
+    (`ottd/src/script/script_storage.hpp:67` initializes `INVALID_ROADTYPE`;
+    `ottd/src/script/api/script_road.cpp:44-51`/`:111`/`:497-502`); the
+    F-12 package is the only family member whose observe/gate dispatch
+    never calls `SetCurrentRoadType` (its two call sites sit AFTER the
+    road/depot ops' STALE_PIN pre-checks; D4 `main.nut:661-663` and D5-v2
+    `main.nut:1683-1690` set+assert per request before ops).
+  - Verdict: no E58 world assumption was incorrect; the defect is
+    bridge-layer, script-only.
+- Corrected design (F-12b, awaiting its own operator fix-round approval):
+  set+assert `GSRoad.ROADTYPE_ROAD` at `DepotHandle` dispatch entry before
+  any probe (D4/v2 pattern verbatim), keep the existing in-op sets, NO
+  runner/contract change; then stage a fresh `D5-F12-DEPOT-2` through the
+  full gate sequence (staging → independent verification → Gate C → one
+  launch approval). The consumed `D5-F12-DEPOT-1` remains terminal
+  `PHASE_HALTED_PREFIX_PRESERVED`.
+- `D5-FREIGHT-4` staging remains blocked until a verified F-12 completion
+  with certified cleanup; the E65 census facts and E53 budgets stay
+  preserved for it unchanged.
+- Preserved: E68 `FAILED_CLEANUP` unchanged; no historical bytes touched;
+  no commit or push.
