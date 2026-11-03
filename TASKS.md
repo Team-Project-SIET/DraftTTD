@@ -1928,3 +1928,42 @@ design-review decision on the retained evidence, not an automatic gate
 closure; re-running the census needs a fresh staging → review → Gate C
 + separate launch approval (this candidate terminal). No commit by this
 round.
+
+### 2026-11-02 — D5-F12-DEPOT depot-connectivity mutation protocol designed + offline-implemented (E69–E71)
+
+E58 §2.1 implemented as a dedicated one-shot native mutation workflow, offline
+only: new protocol-10 wire contract
+`app/simulation/openttd/corridor_depot_mutation.py`, GameScript package
+`app/simulation/openttd/d5_depot_mutation_package/`, native pipeline
+`app/simulation/openttd/proof/corridor_depot_mutation_native.py`, and the
+design record `docs/d5-f12-depot-mutation-protocol-2026-11-02.md`.
+
+- Six-exchange schedule of record: before-00 observe → demo-00 demolish 45487
+  → road-00 build pair 45743↔45487 → depot-00 rebuild 45487 (front 45743) →
+  after-00 observe → fleet-00 fleet. Plan/schedule digest
+  `8be74b2c651e…ccc18`; attempt `D5-F12-DEPOT-1`, milestone `D5-F12-DEPOT`;
+  schemas `d5-f12-depot-prelaunch-v1` / mutation profile / cross guard;
+  receipt `company-depot-mutation-receipt-v1`; max_cost 3000; funds chain
+  enforced verbatim 490257 → 490357 (−100 refund) → 490157 (+200) → 488957
+  (+1200) → 488957 → 488957.
+- Gates: before-00 reproduces the E57/E58 diagnosis verbatim (both
+  `AreRoadTilesConnected` directions false; any divergence halts
+  `STALE_PIN` before any mutation); after-00 demands the same identity with
+  both directions true; fleet-00 demands the zero fleet with per-vehicle
+  `in_depot` rows on any halt. Hypothesis state `RETAINED_E58_REBOUND`
+  re-binding the E58 doc sha `39b44853…d6b8` (absent doc →
+  `RETAINED_E58_ABSENT`).
+- Offline validation (E70): suites 29 + 8 + 36 = 73 passed exit 0
+  (`tests/test_corridor_depot_mutation.py` + `_vm` + `_native`); ruff clean
+  on all six touched paths; `uvx ty check` clean; `git diff --check` clean;
+  `CONTEXT.md` pin `36648f9c…cc29` intact. Disclosures: the preflight
+  plan-pin defect (demo-00's legitimate None front) found by the suite and
+  fixed; the synthetic-fixture funds chain corrected to post-depot 488957.
+- Preserved: all historical candidates and census results; `E68`'s
+  `FAILED_CLEANUP` verdict unchanged; no census or `D5-FREIGHT-3` rerun; no
+  `artifacts/` write; no commit or push.
+
+Remaining ungranted operator gates (each separate, in order): staging
+approval for a fresh `D5-F12-DEPOT-1` candidate → independent review →
+Gate C signing → one explicit launch approval. REPRODUCE.md carries the
+commands of record.

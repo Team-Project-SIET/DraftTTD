@@ -947,3 +947,76 @@ closure. Re-attempting the census needs a fresh staging → review → Gate C
 cycle on a new candidate + seal and a fresh operator launch approval; both
 consumed attempts (candidate-1, candidate-2) stay terminal. No commit by
 the agent.
+
+## 2026-11-02 addendum — D5-F12-DEPOT depot-connectivity mutation offline implementation (E69–E71, checked)
+
+The E58 §2.1 F-12 fix implemented as a dedicated one-shot native mutation
+workflow, offline only: new additive protocol-10 wire contract
+`app/simulation/openttd/corridor_depot_mutation.py`, composed GameScript
+package `app/simulation/openttd/d5_depot_mutation_package/`
+(`NetworkFreightProof extends D5DepotMutationProof`), staging pipeline
+`app/simulation/openttd/proof/corridor_depot_mutation_native.py` (prerequisite
+re-binds the consumed A1 candidate-3 after-save `3748e00c…5420bd` via the
+shared survey binding), design record
+`docs/d5-f12-depot-mutation-protocol-2026-11-02.md`, and the offline suites
+`tests/test_corridor_depot_mutation.py`,
+`tests/test_corridor_depot_mutation_vm.py` +
+`tests/test_corridor_depot_mutation_native.py`.
+Verification of record (one run each, exit 0):
+
+```bash
+.venv/bin/python -m pytest tests/test_corridor_depot_mutation.py \
+  tests/test_corridor_depot_mutation_vm.py tests/test_corridor_depot_mutation_native.py \
+  -q -p no:cacheprovider
+# → 29 + 8 + 36 = 73 passed
+```
+
+Suite layout = wire suite (29) importing the shared VM stubs for the package
+suite (8, real Squirrel), and the staging/replay suite (36).
+
+Static checks of record:
+
+```bash
+ruff check app/simulation/openttd/corridor_depot_mutation.py \
+  app/simulation/openttd/proof/corridor_depot_mutation_native.py \
+  app/simulation/openttd/d5_depot_mutation_package \
+  tests/test_corridor_depot_mutation.py tests/test_corridor_depot_mutation_vm.py \
+  tests/test_corridor_depot_mutation_native.py
+# → All checks passed!
+
+uvx ty check app/simulation/openttd/corridor_depot_mutation.py \
+  app/simulation/openttd/proof/corridor_depot_mutation_native.py \
+  tests/test_corridor_depot_mutation_native.py tests/test_corridor_depot_mutation_vm.py
+# → All checks passed!
+
+git diff --check
+sha256sum CONTEXT.md
+# → 36648f9c2fee4106efb35ae4ee8722983ebdfb482889e66ad53d759f6fa7cc29
+```
+
+Commands of record for the depot candidate lifecycle (each a separate
+operator gate after implementation; nothing was executed against any
+retained directory, so no line below has been run against `artifacts/`):
+
+```bash
+.venv/bin/python -m app.simulation.openttd.proof.corridor_depot_mutation_native \
+  prepare <staging-directory>
+#  → PRELAUNCH PASS <staging-directory>
+.venv/bin/python -m app.simulation.openttd.proof.corridor_depot_mutation_native \
+  preflight <staging-directory>
+#  → PREFLIGHT PASS
+.venv/bin/python -m app.simulation.openttd.proof.corridor_depot_mutation_native \
+  run <candidate-directory>          # launch-gated, never yet authorized
+.venv/bin/python -m app.simulation.openttd.proof.corridor_depot_mutation_native \
+  verify <candidate-directory>
+#  → F12_MUTATION_COMPLETION_VERIFIED (exit 0) or PHASE_HALTED_EVIDENCE_PRESERVED
+```
+
+`--prerequisite` defaults to the consumed A1 attempt directory
+`artifacts/experiments/d5-corridor-extension-native-candidate-3`
+(after-save `3748e00c…5420bd`), exactly as the survey and census pipelines
+bind it. Nothing is staged, signed, authorized, launched, claimed or
+consumed in this round: all four native gates (staging approval, independent
+review, Gate C signing, separate launch approval) remain ungranted operator
+approvals, each one attempt, no retry. The `run` line exists for a later
+approved round only.
