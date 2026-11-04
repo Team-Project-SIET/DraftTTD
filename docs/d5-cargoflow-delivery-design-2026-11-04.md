@@ -14,6 +14,16 @@ leaves every terminal verdict exactly as recorded, and never re-uses
 signing and launch each remain their own explicit operator approvals;
 nothing in this record executes natively on its own words.
 
+**Amended 2026-11-04 after operator review** (design-only; no bytes
+outside this document touched): §5.3 now pins the tail offsets,
+worst-case elapsed days, the dual 60-day-authority enforcement and the
+polling-versus-exchange budget split; new §3.4 separates the five
+cargo stages with independent observables and §7 re-types the
+consumption proof accordingly; §4 states the complete financial model
+— purchase, monthly interest staircase, station fee, running costs
+with exact fractional carry, the empty other-expenses set, and
+measured delivery income — under an exact zero-residual fence.
+
 ## 1. What E99 measured, and what it did not measure
 
 Measured natively (all on the loaded v3 depot-mutation world,
@@ -192,10 +202,21 @@ terminal and unlabeled-unchanged; nothing here relabels them.
   not set `Stopped` and does not change the charge; only an explicit
   stop (depot entry) does. `DAY_TICKS = 74`
   (`ottd/src/timer/timer_game_tick.h:75`).
-- **The census running cost of record** is 421 per economy year
-  (`ENGINE_CENSUS_V2`, `corridor_freight_v2.py:144-149`), so
-  `GetRunningCost()` = 421·256 = 107776 in 8.8 units; a full day
-  (running_ticks 74) charges `107776·74 / (365·74) = 295` in 8.8 units.
+- **The running-cost raw value is pinned natively, not derived.**
+  `RoadVehicle::GetRunningCost()` is a price-table product
+  (`GetPrice(PR_RUNNING_ROADVEH, cost_factor)`,
+  `ottd/src/roadveh_cmd.cpp:1644-1652`) whose inputs — the runtime
+  `_price`, the difficulty `vehicle_costs` multiplier, the engine
+  property — are not jointly pinnable offline; the census figure 421
+  is the per-economy-year **display** figure
+  (`GetDisplayRunningCost() = GetRunningCost() >> 8`,
+  `ottd/src/vehicle_base.h:566`). The new round's `engine-00` op
+  therefore reads `GSEngine.GetRunningCost(123)`
+  (`ottd/src/script/api/script_engine.cpp:139-143`) and pins the raw
+  value as the parameter of record, admitted fail-closed: a raw of 0,
+  or one inconsistent with the display figure and the E97 window
+  delta (funds 485221 → 485214 over a running window — a raw-421
+  misreading would charge ≈ 0 per day), refuses the admission.
 - **No other charges**: `economy.inflation` false,
   `economy.infrastructure_maintenance` false (defaults of record), and
   the negative-cash interest branch of `CompaniesPayInterest` cannot
@@ -205,56 +226,159 @@ terminal and unlabeled-unchanged; nothing here relabels them.
   `NeedsServicing` requires the interval elapsed
   (`ottd/src/vehicle.cpp:201+`), and the 55-day ladder ends long before
   day 150 after purchase.
+- **Command costs are whole-unit and fraction-free.** Command results
+  pay through `SubtractMoneyFromCompany`
+  (`ottd/src/command.cpp:193,384`) — the purchase debit of exactly
+  4429 never touches `money_fraction`.
+- **The Fract-path charge set is enumerable.** The only
+  `SubtractMoneyFromCompanyFract` call sites in the engine are the
+  four vehicle running-cost handlers (`ottd/src/aircraft_cmd.cpp:473`,
+  `ottd/src/roadveh_cmd.cpp:1741`, `ottd/src/ship_cmd.cpp:280`,
+  `ottd/src/train_cmd.cpp:4209`); this attempt owns exactly one road
+  vehicle, so the shared fraction state evolves solely under the
+  daily road-vehicle charge.
+- **The founding loan of record** is `INITIAL_LOAN = 100000`
+  (`ottd/src/economy_type.h:213`); with inflation disabled
+  `_economy.inflation_prices` stays 65536 (`economy.cpp:936`), so the
+  scaled founding loan is exactly 100000.
 
-## 4. The funds model of record (Section B)
+### 3.4 The five cargo stages and their independent observables
 
-The fence target moves from the static close-out level to the **modeled
-trajectory**. The exact-funds invariant is preserved, never weakened:
-comparison stays exact equality; any unexplained divergence halts the
-attempt fail-closed at that sample.
+The delivery proof splits into five stages. Each stage has its own
+observable family; no single number proves two stages, and a stage
+without its evidence is unproven, never assumed:
 
-Parameters, all pinned from the world and engine census of record:
+| Stage | Engine site | Independent observable of record |
+| --- | --- | --- |
+| S1 producer transport (industry → station) | `TransportIndustryGoods` books `p.history[THIS_MONTH].transported += am` (`industry_cmd.cpp:523-543`) | `trans_pickup > 0` at a post-boundary sample (`GSIndustry.GetLastMonthTransported`) — the engine's own monthly accounting |
+| S2 pickup queue (station storage) | `UpdateStationWaiting` appends into the goods entry (`station_cmd.cpp:4401-4415`) | `wait_pickup > 0` **and** `wait_pickup_from0 > 0` — the source-attributed form pins the cargo to industry 0 |
+| S3 vehicle loading | `LoadUnloadVehicle` at the pickup stop (also sets `last_speed`, `economy.cpp:1764`) | latched load event: `GSVehicle.GetCargoLoad > 0` at the pinned stop tile, plus a departure latch (location leaves the stop) with the load still > 0 |
+| S4 unloading at the bay | the unload path calls `DeliverGoods` (`economy.cpp:1220`) | latched load→0 transition at the bay stop tile, a positive income delta in that span, and the finance readback's delivered/last-accepted fields increased |
+| S5 industry consumption | `DeliverGoodsToIndustry` books `it->waiting += amount` on the accepted pile (`economy.cpp:1069`) | `stock_bay` measured rise (delivery received) **followed by** a later measured net decrease (the industry processing the pile) |
+
+S1 is engine accounting, S2 station storage, S3/S4 vehicle state, S5
+industry storage: four independent measurement surfaces. A `stock_bay`
+rise without a later decrease proves delivery received but leaves
+consumption unproven — typed honestly (§7), never folded into a
+success.
+
+## 4. The financial model of record (Section B)
+
+The fence target moves from the static close-out level to the
+**modeled trajectory**. The exact-funds invariant is preserved, never
+weakened: the reconciliation is zero-residual with no tolerance, and
+any unexplained divergence halts the attempt fail-closed at that
+exchange.
+
+### 4.1 Parameters, all pinned
 
 | Parameter | Value | Source of record |
 | --- | --- | --- |
 | start funds | 489650 | depot-mutation close-out pin |
 | purchase quote | 4429 | `ENGINE_CENSUS_V2["price"]` |
-| loan | 100000 | founding loan, inflation off |
+| founding loan | 100000 | `INITIAL_LOAN` (`economy_type.h:213`), inflation off |
 | interest rate | 2 | `difficulty.initial_interest` default |
-| station-value fee | 25 | `_price[PR_STATION_VALUE] >> 2`, base 100 |
-| running cost | 421/economy-year | `ENGINE_CENSUS_V2` |
+| station-value fee | 25 per month | `_price[PR_STATION_VALUE] >> 2`, pinned by the E99 cross-check (192 − 167) |
+| running cost raw | pinned natively at `engine-00` | `GSEngine.GetRunningCost(123)` (`script_engine.cpp:139-143`) |
 | capacity | 20 | `ENGINE_CENSUS_V2` |
 
-Model, evaluated at each sample's single observation instant:
+### 4.2 The complete charge set
+
+1. **Purchase** — −4429 exactly at `purchase-00`. Command results pay
+   through `SubtractMoneyFromCompany` (`command.cpp:193,384`): whole
+   units, fraction state untouched. The freight family verified
+   natively that funds move by exactly the recorded quote.
+2. **Monthly loan interest** — at each economy MONTH boundary, the
+   staircase installment `yearly·(m+1)/12 − yearly·m/12` on
+   `yearly = current_loan · rate / 100` (integer division), where `m`
+   is the new 0-based month index. `current_loan` stays 100000 for the
+   whole attempt (no loan commands in the schedule). Feb 1 (m=1):
+   333 − 166 = **167**; Mar 1 (m=2): 500 − 333 = **167**. Whole units,
+   fraction-free.
+3. **Station-value fee** — `_price[PR_STATION_VALUE] >> 2` = **25** at
+   every month boundary under `EXPENSES_OTHER`. The runtime price is
+   constant: with inflation disabled `RecomputePrices` never re-runs
+   (`economy.cpp:1972` sits inside the inflation branch), so the fee
+   is 25 at every boundary of the attempt. Pinned by the E99
+   cross-check: 192 − 167 = 25.
+4. **Vehicle running costs** — at each economy-day boundary, for the
+   previous day's `running_ticks`: the 8.8 fixed-point amount
+   `C256 = raw · rt / (365 · 74)` (integer division), paid through
+   `SubtractMoneyFromCompanyFract`. `rt = 74` for every economy day
+   the vehicle is started and not `Stopped` — driving and loading both
+   accrue (`roadveh_cmd.cpp:1662`), and breakdowns do not set
+   `Stopped`, so they move no money. The start day is partial: its
+   tick count is derived from the latched (day, tick) phase of record,
+   which the receipts' own day-ladder pairs pin. The vehicle never
+   enters a depot after `start-00` (the two-order loop has no depot
+   order), so no `Stopped` time exists.
+5. **Other expenses — none of record.** Inflation off (no
+   `RecomputePrices`), infrastructure maintenance off, no property
+   charges, no other vehicle classes. The charge set of record is
+   exactly {purchase, loan interest, station fee, road-vehicle running
+   cost}; any observed funds movement outside this set plus measured
+   income is divergence → halt.
+6. **Delivery income — measured, not modeled.** Every exchange from
+   `site-00` onward carries `GSCompany.GetQuarterlyIncome(company,
+   CURRENT_QUARTER)` at the same observation instant (the
+   `d5_freight_v2_package/main.nut:1031-1032` pattern), and the model
+   attributes per-span income deltas with quarter-reset handling (the
+   whole attempt sits inside Q1 1950, so no reset fires). Event
+   corroboration: every span containing a latched load>0 unload must
+   show a positive income delta, and no income delta may appear
+   without a latched unload. The per-delivery revenue formula
+   (`GetTransportedGoodsIncome`, `economy.cpp`) stays corroboration
+   depth, not the fence: income is read from the engine's own
+   accounting at the same instants, so it attributes movement instead
+   of absorbing it.
+
+### 4.3 The exact fractional carry
+
+`money_fraction` is a uint8 accumulator, 0 at founding. The complete
+`SubtractMoneyFromCompanyFract` site set is the four vehicle
+running-cost handlers (§3.3); this attempt owns one road vehicle, so
+the fraction evolves solely under the daily road-vehicle charge. Per
+charge, with fraction state `f` and 8.8 amount `C256`
+(`company_cmd.cpp:324-335`):
 
 ```
-funds(sample_k) == 489650
-  − 4429                                    (purchase-00, exact quote)
-  − Σ monthly charges                        (§3.3 staircase + fee, whole units)
-  − Σ running-cost deductions                (§3.3 Fract emulation)
-  + Σ measured income deltas                 (quarter-income reads per span)
+low   = C256 & 0xFF
+new_f = (f - low) mod 256
+whole = (C256 >> 8) + (1 if new_f > f else 0)
+funds -= whole ;  f = new_f
 ```
 
-- The monthly term is closed-form integer arithmetic on the pinned
-  parameters; the Feb 1 cross-check is 167 + 25 = 192, matching the
-  retained E99 echo exactly.
-- The running-cost term is an exact integer emulation of the Fract
-  accumulator: per economy day with the vehicle started and not
-  Stopped, `running_ticks = 74`; the charge lands at that day's
-  boundary for the previous day's ticks. The start day is partial: its
-  tick count follows from the (day, tick) phase of record, which the
-  receipts' own day-ladder pairs pin. E97 precedent for the mechanism:
-  funds 485221 → 485214 across a watch window.
-- The income term is **measured, not modeled**: each flow sample
-  carries the freight-family finance reads
-  (`GSCompany.GetQuarterlyIncome` / `GetQuarterlyCargoDelivered`,
-  `d5_freight_v2_package/main.nut:1031-1032` pattern), and the model
-  attributes per-span income deltas with quarter-reset handling. The
-  whole ladder sits inside Q1 1950, so no reset fires mid-ladder.
-- **Sampling-instant alignment (the §2 fix)**: the new package reads
-  funds **after** the in-package wait, at the same instant as the
-  day/tick and cargo observations. One response, one instant; the
-  funds echo and its labelled day can never disagree again.
+Purchase, interest and fee never touch `f`. A wrong `f` drifts the
+whole-unit deductions within days, so the fence catches it immediately.
+
+### 4.4 The zero-residual fence
+
+At every exchange from `site-00` onward (fixed ops, flow samples,
+tail), with the charge terms empty before `purchase-00`:
+
+```
+residual(e) = observed_funds(e)
+  − (489650 − 4429 − Σ_monthly(e) − Σ_running(e) + Σ_income(e))
+requirement: residual(e) == 0 exactly, at every exchange
+```
+
+- The income term is engine-read at the same instant as the funds
+  echo (§4.2 item 6), so every pound of movement is attributed to
+  either a modeled charge or an engine-read income delta — nothing
+  can hide in an unmodeled category.
+- The Feb 1 cross-check of record: modeled charge 167 + 25 = 192,
+  funds 489650 → 489458 — the retained E99 echo, exact.
+- The E97 running-cost precedent: funds 485221 → 485214 across a
+  watch window — the daily Fract emulation reproduces this class.
+- `residual ≠ 0` at any exchange halts the attempt
+  `CARGOFLOW2_FUNDS_DIVERGED`. The model is never loosened to pass.
+
+### 4.5 Sampling-instant alignment (the §2 fix)
+
+The new package reads funds **after** the in-package wait, at the same
+instant as the day/tick, cargo and income observations. One response,
+one instant; the funds echo and its labelled day can never disagree
+again.
 
 ## 5. The design (fresh identity `D5-CARGOFLOW-2`)
 
@@ -317,7 +441,7 @@ never receives cargo.
    observable**: it rises from 0 only after a loaded arrival is
    unloaded at the bay stop (§3.2 step 6).
 
-### 5.3 The schedule of record
+### 5.3 The schedule of record and its boundaries
 
 Fixed ops 11 + flow ladder 12 + tail 2 = **25 requests**, inside the
 32-request budget of record (`FREIGHT_REQUEST_BUDGET_V2`,
@@ -325,19 +449,51 @@ Fixed ops 11 + flow ladder 12 + tail 2 = **25 requests**, inside the
 
 - **Fixed 11**: `site-00`, `engine-00`, `purchase-00`, `vread-00`,
   `order-00`, `order-01`, `order-read-00`, `monitor-00`, `start-00`,
-  `vread-01`, `arrive-00`.
+  `vread-01`, `arrive-00`. The first ten are instant exchanges (no
+  in-package wait) and complete within the launch day in the expected
+  case; the authority enforcement below bounds them regardless.
+  `engine-00` additionally pins the raw running cost of record (§4.1).
+- **Arrival bound**: the launch day of record is L = 712228 (Jan 6,
+  1950 — the save's current date at load, pinned by E99's `sample-00`
+  anchor at tick 17). `arrive-00` waits at most 5 economy days
+  (timeout by day 712233); a timeout is a terminal `ARRIVE_TIMEOUT`,
+  never a retry. Its completion instant latches the ladder anchor A.
 - **Flow ladder 12**: `flow-00` … `flow-11`, offsets 0..55 step 5
-  (55-day span) relative to the anchor latched at `arrive-00`'s
-  completion; the day-ladder arithmetic of record carries over
-  (day − anchor == pinned offset, overshoot = WINDOW_EXHAUSTED).
-- **Tail 2**: `finance-00`, `finish-00` (the freight-family tail
-  vocabulary): the finance corroboration read and the certified
-  close-out.
-- **Authority**: the freight family's 60-day per-attempt day authority
-  is preserved; the arrival bound (≤ 5 days) plus the 55-day ladder
-  fits exactly, and the receipts must show `sampled_months` ≥ 2
-  distinct months. If the anchor lands too late for that, the attempt
-  halts fail-closed — the span is never stretched ad hoc.
+  relative to A; `flow-00` observes at the anchor instant itself
+  (offset 0, no wait). Day-ladder arithmetic of record carries over
+  (day − anchor == pinned offset; overshoot = WINDOW_EXHAUSTED).
+- **Tail offsets of record**: `finance-00` and `finish-00` execute
+  immediately after `flow-11`'s response, in the same economy day
+  (offset 55, no in-package wait). Their funds and income echoes are
+  covered by the same model (§4.4), so the reconciliation spans the
+  entire attempt with no unattributed gap.
+- **Worst-case elapsed days and the 60-day authority**: arrival
+  ≤ 5 days (A ≤ 712233) plus the 55-day ladder puts the last
+  observation day at ≤ A + 55 ≤ **712288 = L + 60**. The
+  60-economy-day attempt authority (`FREIGHT_DAY_BUDGET_V2`,
+  `corridor_freight_v2.py:171`) is enforced twice, independently: the
+  package refuses any ladder step whose target day exceeds the
+  authority, and the pipeline checks elapsed days before sending each
+  request — either check failing halts fail-closed.
+- **Month-boundary coverage**: the Feb 1 boundary (day 712254) is
+  inside the ladder for every admissible anchor (A ≤ 712233 < 712254 ≤
+  A + 55); the Mar 1 boundary (day 712282) is additionally inside iff
+  A ≥ 712227; `sampled_months` ≥ 2 distinct months holds for every
+  admissible anchor (the samples always reach past Feb 1). The funds
+  model covers every boundary that falls inside the span, and the
+  Feb 1 charge (192) is the E99-replicated cross-check of record. A
+  fast anchor reduces the number of exercised boundaries, never the
+  exactness of the model — and the span is never stretched ad hoc.
+- **Internal polling versus network budget**: the per-tick event
+  polling inside `arrive-00` and the flow waits is internal to the
+  package — it consumes game ticks and **zero** network exchanges;
+  the 25-request budget is the only exchange budget. Polling cost is
+  bounded by the per-tick GS instruction limit, within which the
+  freight v2 watch loops already operated across full 2048-tick
+  windows; every flow wait here spans 370 ticks (5 days), well inside
+  that precedent. A latch array that would overflow its response
+  budget refuses the exchange terminally — latches are never
+  truncated to fit.
 - **Cycle events are latched during the in-package waits** — no
   separate cycle-monitor exchanges. While a flow sample waits toward
   its offset day, the per-tick poll latches every arrival at either
@@ -352,7 +508,9 @@ waiting and planned families at both stops, monthly
 production/transported, date, tick) **plus** the funds echo at the
 post-wait instant (§4), the quarter-income/delivered reads, the
 vehicle state echo (location, load, in_depot, speed), and the cycle
-latches accumulated during the wait. Response schema
+latches accumulated during the wait (bounded; an overflow refuses the
+exchange terminally — latches are never truncated to fit). Response
+schema
 `cargo-flow2-sample-receipt-v1`; every exchange fail-closed
 (`D5_NATIVE_FACT` on any throw, E99 discipline).
 
@@ -361,13 +519,15 @@ latches accumulated during the wait. Response schema
 Terminal classifications typed at the attempt layer, none of which
 re-opens any other family:
 
-- `CARGOFLOW2_DELIVERY_VERIFIED` — all six acceptance criteria (§7)
+- `CARGOFLOW2_DELIVERY_VERIFIED` — all seven acceptance criteria (§7)
   hold on the retained receipts.
 - `CARGOFLOW2_QUEUE_NEVER_FILLED` — arrival witnessed, `wait_pickup`
   stayed 0 through the ladder: the drain side is implicated with the
   selector proven open, a stronger H1-class record than E99's.
-- `CARGOFLOW2_LOADED_NEVER_DELIVERED` — a load latched, no bay-side
-  consumption observed.
+- `CARGOFLOW2_LOADED_NEVER_DELIVERED` — a load latched, no bay
+  arrival/unload observed.
+- `CARGOFLOW2_CONSUMPTION_UNOBSERVED` — delivery received (`stock_bay`
+  rose) but no measured net drain within the ladder (§3.4 S5).
 - `CARGOFLOW2_FUNDS_DIVERGED` — the modeled-trajectory fence fired
   (fail-closed by construction).
 - `CARGOFLOW2_GATE_UNDECIDED_INCOMPLETE` — an unobserved or unfinished
@@ -380,9 +540,10 @@ The expected native ordering, each step independently evidenced:
 1. Launch on the reload chain; `site-00` re-pins the corridor identity
    (depot 45487, pickup stop sid 0 @ 45748, bay stop sid 2 @ 50862,
    industries 0 @ 44983 / 1 @ 51116, cargo 1 COAL, funds 489650).
-2. `engine-00` admits the pinned engine at census; `purchase-00`
-   realizes exactly −4429 (funds 485221); `vread-00` reads the vehicle
-   in the depot.
+2. `engine-00` admits the pinned engine at census and pins the raw
+   running cost of record (`GSEngine.GetRunningCost`, §4.1);
+   `purchase-00` realizes exactly −4429 (funds 485221); `vread-00`
+   reads the vehicle in the depot.
 3. `order-00`/`order-01` append the two orders; `order-read-00`
    verifies both (flags 0 / 128); `monitor-00` arms the cargo
    monitors; `start-00` starts the vehicle; `vread-01` reads it
@@ -397,36 +558,43 @@ The expected native ordering, each step independently evidenced:
 6. At the Feb 1 boundary the funds model predicts −192 (167 interest
    + 25 station value); every sample's funds echo equals the modeled
    trajectory exactly.
-7. `finance-00` corroborates the quarter income/delivered totals;
-   `finish-00` certifies cleanup; replay re-derives the verdict from
-   the receipts alone.
+7. `finance-00` corroborates the quarter income/delivered totals and
+   `finish-00` certifies cleanup — both in the `flow-11` economy day
+   (offset 55, §5.3); replay re-derives the verdict, including the
+   five-stage chain (§3.4), from the receipts alone.
 
 ## 7. Acceptance criteria (Section C)
 
-All six are measurable from the retained receipts alone:
+All seven are measurable from the retained receipts alone:
 
-1. **Queue positive**: `wait_pickup > 0` at ≥ 1 flow sample whose
-   labelled day is after the `arrive-00` arrival latch, with
+1. **Queue positive (S2)**: `wait_pickup > 0` at ≥ 1 flow sample whose
+   labelled day is after the `arrive-00` arrival latch — with
+   `wait_pickup_from0 > 0` attributing the cargo to industry 0 — and
    `stock_pickup` still exactly −1 on every sample.
-2. **Loads and departs**: a latched load event at the pickup stop with
-   `load > 0` and a subsequent departure latch (or state echo) showing
-   the vehicle left loaded.
-3. **Delivery received and consumed**: `stock_bay > 0` at ≥ 1 flow
-   sample after a loaded bay arrival, corroborated by the delivered
-   counter / `last_accepted`-class finance reads.
-4. **Industry transported history increases**: the pickup industry's
-   transported history of record rises above its anchor 0
-   (`trans_pickup > 0` at a sample after the first delivered drain,
-   or its month-boundary successor).
-5. **Financial reconciliation matches engine accounting**: every
-   sample's funds echo equals the §4 modeled trajectory exactly
-   (purchase, monthly staircase + fee, Fract running costs, measured
-   income); any unexplained divergence is a halt, never a tolerance.
-6. **Replay independently verifies ≥ 1 complete delivery cycle**: the
-   offline replay of the receipts reconstructs one full
-   pickup→delivery cycle (arrival, load > 0, departure, bay arrival,
-   unload, consumption) from the latched events without importing the
-   native session's own verdict.
+2. **Loads and departs (S3)**: a latched load event at the pickup stop
+   with `GSVehicle.GetCargoLoad > 0` and a departure latch (location
+   leaves the pinned stop tile) with the load still > 0.
+3. **Delivery received (S4→S5 handoff)**: a latched load→0 transition
+   at the bay stop tile, `stock_bay > 0` at ≥ 1 flow sample after that
+   arrival, and a positive income delta in the unloading span with the
+   finance readback's delivered/last-accepted fields increased.
+4. **Industry consumption (S5)**: a later measured net decrease of
+   `stock_bay` following its rise. A rise with no subsequent decrease
+   leaves this criterion unproven and types
+   `CARGOFLOW2_CONSUMPTION_UNOBSERVED` — never folded into a success.
+5. **Producer transport (S1)**: the pickup industry's transported
+   history of record rises above its anchor 0 (`trans_pickup > 0` at a
+   post-boundary sample) — the engine's own monthly accounting,
+   independent of the station- and vehicle-side observables.
+6. **Financial reconciliation matches engine accounting**: the §4.4
+   zero-residual fence holds at every exchange from `site-00` onward
+   (purchase, monthly staircase + fee, Fract running costs, the empty
+   other-expenses set, measured income); `residual ≠ 0` is a halt,
+   never a tolerance.
+7. **Replay independently verifies ≥ 1 complete delivery cycle**: the
+   offline replay of the receipts reconstructs one full cycle through
+   the five stages (§3.4) from the latched events without importing
+   the native session's own verdict.
 
 ## 8. Risks and mitigations
 
@@ -437,19 +605,23 @@ All six are measurable from the retained receipts alone:
 2. **Month-boundary count depends on the anchor** — `sampled_months
    ≥ 2` is a receipt property of record; an anchor too late for it
    halts fail-closed instead of stretching the span.
-3. **Bay-side temporary refusal** — `IndustryTemporarilyRefusesCargo`
-   (`ottd/src/economy.cpp:1055` area) can delay accepted-pile growth;
-   criterion 3 needs only one qualifying sample, refusals are recorded
-   as observations, never invented around.
+3. **Bay-side temporary refusal and consumption cadence** —
+   `IndustryTemporarilyRefusesCargo` (`ottd/src/economy.cpp:1055`
+   area) can delay accepted-pile growth, and a bay industry may
+   receive without draining inside the ladder; the former delays
+   criterion 3, the latter types `CARGOFLOW2_CONSUMPTION_UNOBSERVED`
+   honestly (§7 criterion 4). Refusals and plateaus are recorded as
+   observations, never invented around.
 4. **Bay catchment** — the accepted pile grows only for industries in
    the bay station's `industries_near`; the world of record was built
    with the bay stop serving industry 1, and `stock_bay` reading 0
    (not −1) at every E99 sample already proves acceptance; the
    behavioral proof of catchment is criterion 3 itself.
-5. **Funds-model exactness** — every parameter is pinned
-   (§4 table); the emulation replicates the Fract carry exactly; the
-   fence stays exact and fail-closed. The model never weakens the
-   invariant to pass.
+5. **Funds-model exactness** — every parameter is pinned (§4.1);
+   the running-cost raw is measured natively at `engine-00` rather
+   than derived from the price table; the emulation replicates the
+   Fract carry exactly (§4.3); the fence stays zero-residual and
+   fail-closed. The model is never loosened to pass.
 6. **Service diversion** — `servint_roadveh` default 150 days cannot
    fire inside a ≤ 60-day attempt; if one ever occurs it is latched
    and terminal-classified, never absorbed silently.
@@ -476,13 +648,19 @@ branch `devmodule2`.
 
 1. Approve the fresh identity `D5-CARGOFLOW-2` and the Protocol 11
    (`cargoflow-delivery`) scope, with Protocols 8/9/10 frozen.
-2. Approve the schedule arithmetic (§5.3): 25 requests, the 12-sample
-   55-day ladder, the 5-day arrival bound, the 60-day authority.
-3. Approve the funds model of record (§4) as the fence target,
-   replacing the static close-out pin, with the exact-funds invariant
-   preserved.
-4. Approve the six acceptance criteria (§7) as the round's gate, and
-   the outcome typing (§5.5) as terminal classifications.
+2. Approve the schedule arithmetic and boundaries (§5.3): 25 requests,
+   the 12-sample 55-day ladder, the 5-day arrival bound, the tail at
+   offset 55, the worst-case 60-day elapsed bound and its dual
+   enforcement, and the polling-versus-exchange budget split.
+3. Approve the complete financial model of record (§4) — purchase,
+   monthly interest staircase, station fee, running costs with exact
+   fractional carry, the empty other-expenses set, measured delivery
+   income, and the native `GSEngine.GetRunningCost` pin at
+   `engine-00` — as the zero-residual fence target, replacing the
+   static close-out pin.
+4. Approve the seven acceptance criteria (§7) — including the split
+   delivery-received / industry-consumption proof — as the round's
+   gate, and the outcome typing (§5.5) as terminal classifications.
 5. Approve the E100 disclosure (§1.1) as recorded: this round's
    evidence base is the committed 15.3 sources and the retained E99
    receipts, nothing else.
