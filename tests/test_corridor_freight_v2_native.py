@@ -7,11 +7,12 @@ payload reuse, preflight gates, freeze drift and the never-consumed fail-closed
 verdicts are exercised against explicitly controlled evidence directories
 only.
 
-The pinned retained A1 corridor-extension prerequisite (whose receipt-bound
-``after.sav`` is the authoritative corridor world) is read, never written. Its
-distinct diagnostic save is never an acceptable substitute. The prerequisite
-replay re-verifies the retained authorization under the real pinned operator
-anchor, so these tests substitute no synthetic identity anywhere.
+The pinned retained A1 corridor-extension and depot-mutation/reload chain
+candidates (whose receipt-bound saves carry the freight world of record) are
+read, never written. Their distinct diagnostic saves are never an acceptable
+substitute. The prerequisite replays re-verify the retained authorizations
+under the real pinned operator anchor, so these tests substitute no synthetic
+identity anywhere.
 """
 
 import asyncio
@@ -50,6 +51,7 @@ from app.simulation.openttd.corridor_freight_v2 import (
     FREIGHT_STALE_DELIVERY_TILE_V2,
     FREIGHT_WITNESS_LENGTH_V2,
     FUNDS_AT_A1_CLOSE,
+    FUNDS_AT_DEPOT_MUTATION_CLOSE,
     MAX_FREIGHT_REQUEST_BYTES_V2,
     MAX_FREIGHT_RESPONSE_BYTES_V2,
     MAX_FREIGHT_SEND_BYTES,
@@ -129,59 +131,79 @@ def _snapshot(root: Path) -> dict[str, str]:
 
 
 def test_prerequisite_binding_is_pinned_and_read_only():
-    """The A1 extension candidate-3 prerequisite re-verifies without being touched."""
-    before = _snapshot(d5v2.PINNED_PREREQUISITE)
+    """The depot-mutation world-of-record chain re-verifies without being touched."""
+    before = _snapshot(d5v2.DEPOT_PREREQUISITE)
+    before_a1 = _snapshot(d5v2.PINNED_PREREQUISITE)
+    before_reload = _snapshot(d5v2.RELOAD_PREREQUISITE)
     binding = d5v2.prerequisite_binding()
-    after = _snapshot(d5v2.PINNED_PREREQUISITE)
-    assert before == after
-    assert sha256(d5v2.PINNED_PREREQUISITE / "after.sav") == d5v2.PINNED_PREREQUISITE_AFTER_SAVE
+    assert _snapshot(d5v2.DEPOT_PREREQUISITE) == before
+    assert _snapshot(d5v2.PINNED_PREREQUISITE) == before_a1
+    assert _snapshot(d5v2.RELOAD_PREREQUISITE) == before_reload
+    assert sha256(d5v2.DEPOT_PREREQUISITE / "after.sav") == d5v2.DEPOT_PREREQUISITE_AFTER_SAVE
     assert binding == {
         "schema": d5v2.D5_FREIGHT_V2_PREREQUISITE_SCHEMA,
         "role": "PREREQUISITE_ATTEMPT",
-        "retained_directory": str(d5v2.PINNED_PREREQUISITE),
+        "world_pin_version": 3,
+        "retained_directory": str(d5v2.DEPOT_PREREQUISITE),
         "save": "after.sav",
-        "save_sha256": d5v2.PINNED_PREREQUISITE_AFTER_SAVE,
+        "save_sha256": d5v2.DEPOT_PREREQUISITE_AFTER_SAVE,
         "qualified_save_sha256": None,
-        "prelaunch_digest": sha256(d5v2.PINNED_PREREQUISITE / "PRELAUNCH.json"),
-        "attempt": d5v2.A1_PREREQUISITE_ATTEMPT,
-        "milestone": d5v2.A1_PREREQUISITE_MILESTONE,
+        "prelaunch_digest": sha256(d5v2.DEPOT_PREREQUISITE / "PRELAUNCH.json"),
+        "attempt": d5v2.depot_native.DEPOT_MUTATION_ATTEMPT,
+        "milestone": d5v2.depot_native.MILESTONE_DEPOT_MUTATION,
+        "funds_of_record": FUNDS_AT_DEPOT_MUTATION_CLOSE,
         "expected_welcome": retained_welcome(),
-        "verification": (
-            "full replay verification of the consumed A1 extension attempt "
-            "receipt (EXTENSION_COMPLETION_VERIFIED) plus the pinned "
-            "authoritative after-save digest"
-        ),
+        "verification": binding["verification"],
         "provenance": binding["provenance"],
     }
-    assert binding["provenance"]["after_save_sha256"] == d5v2.PINNED_PREREQUISITE_AFTER_SAVE
-    assert binding["provenance"]["attempt"] == d5v2.A1_PREREQUISITE_ATTEMPT
+    assert (
+        binding["provenance"]["a1_extension_lineage"]["after_save_sha256"]
+        == d5v2.PINNED_PREREQUISITE_AFTER_SAVE
+        == A1_AFTER_SAVE_SHA256_V2
+    )
+    assert (
+        binding["provenance"]["a1_extension_lineage"]["replay"] == "EXTENSION_COMPLETION_VERIFIED"
+    )
+    assert binding["provenance"]["depot_mutation_chain"]["replay"] == (
+        "F12_MUTATION_COMPLETION_VERIFIED"
+    )
+    assert binding["provenance"]["reload_chain"]["loaded_source_sha256"] == (
+        d5v2.DEPOT_PREREQUISITE_AFTER_SAVE
+    )
+    assert binding["provenance"]["reload_chain"]["replay"] == "DEPOT_RELOAD_FACTS_VERIFIED"
 
 
-def test_staged_candidate_binds_the_pinned_a1_prerequisite(staged):
+def test_staged_candidate_binds_the_pinned_world_of_record(staged):
     metadata = metadata_of(staged)
     assert metadata["schema"] == d5v2.D5_FREIGHT_V2_PRELAUNCH_SCHEMA
     assert metadata["milestone"] == d5v2.MILESTONE_FREIGHT
     assert metadata["kind"] == d5v2.KIND
     assert metadata["attempt"] == d5v2.FREIGHT_ATTEMPT_V2 == FREIGHT_ATTEMPT_V2
-    save_digest = sha256(d5v2.PINNED_PREREQUISITE / "after.sav")
-    assert save_digest == d5v2.PINNED_PREREQUISITE_AFTER_SAVE
-    assert save_digest == A1_AFTER_SAVE_SHA256_V2
+    save_digest = sha256(d5v2.DEPOT_PREREQUISITE / "after.sav")
+    assert save_digest == d5v2.DEPOT_PREREQUISITE_AFTER_SAVE
     prerequisite = metadata["prerequisite"]
     assert prerequisite == {
         "schema": d5v2.D5_FREIGHT_V2_PREREQUISITE_SCHEMA,
-        "attempt": d5v2.A1_PREREQUISITE_ATTEMPT,
-        "milestone": d5v2.A1_PREREQUISITE_MILESTONE,
-        "directory": str(d5v2.PINNED_PREREQUISITE),
-        "prelaunch_sha256": sha256(d5v2.PINNED_PREREQUISITE / "PRELAUNCH.json"),
+        "attempt": d5v2.depot_native.DEPOT_MUTATION_ATTEMPT,
+        "milestone": d5v2.depot_native.MILESTONE_DEPOT_MUTATION,
+        "directory": str(d5v2.DEPOT_PREREQUISITE),
+        "prelaunch_sha256": sha256(d5v2.DEPOT_PREREQUISITE / "PRELAUNCH.json"),
         "after_save_sha256": save_digest,
-        "verification": (
-            "full replay verification of the consumed A1 extension attempt "
-            "receipt (EXTENSION_COMPLETION_VERIFIED) plus the pinned "
-            "authoritative after-save digest"
-        ),
+        "verification": prerequisite["verification"],
     }
+    assert prerequisite["prelaunch_sha256"] == sha256(
+        d5v2.DEPOT_PREREQUISITE / "PRELAUNCH.json"
+    )
     assert (
-        metadata["prerequisite_provenance"]["prelaunch_sha256"] == prerequisite["prelaunch_sha256"]
+        metadata["prerequisite_provenance"]["a1_extension_lineage"]["prelaunch_sha256"]
+        == sha256(d5v2.PINNED_PREREQUISITE / "PRELAUNCH.json")
+    )
+    assert metadata["prerequisite_provenance"]["reload_chain"]["loaded_source_sha256"] == (
+        save_digest
+    )
+    assert (
+        metadata["prerequisite_provenance"]["a1_extension_lineage"]["replay"]
+        == "EXTENSION_COMPLETION_VERIFIED"
     )
     assert metadata["authorization"].startswith("PENDING")
     assert "no authorization file exists" in metadata["authorization"]
@@ -192,9 +214,9 @@ def test_staged_candidate_binds_the_pinned_a1_prerequisite(staged):
 def test_staging_refuses_any_unpinned_prerequisite(tmp_path):
     unrelated = tmp_path / "unrelated"
     unrelated.mkdir()
-    with pytest.raises(d5v2.FreightV2StagingError, match="pinned A1"):
+    with pytest.raises(d5v2.FreightV2StagingError, match="pinned depot"):
         d5v2.prepare_candidate(tmp_path / "candidate", prerequisite=unrelated)
-    with pytest.raises(d5v2.FreightV2StagingError, match="pinned A1"):
+    with pytest.raises(d5v2.FreightV2StagingError, match="pinned depot"):
         d5v2.prerequisite_binding(unrelated)
     assert not (tmp_path / "candidate").exists()
 
@@ -215,13 +237,14 @@ def test_staged_composition_carries_the_retained_save_identity(staged):
 
 def test_staged_source_save_is_the_pinned_verified_after_world(staged):
     root = staged.spec.workspace.root
-    assert sha256(root / "source.sav") == d5v2.PINNED_PREREQUISITE_AFTER_SAVE
-    assert sha256(root / "source.sav") == sha256(d5v2.PINNED_PREREQUISITE / "after.sav")
+    assert sha256(root / "source.sav") == d5v2.DEPOT_PREREQUISITE_AFTER_SAVE
+    assert sha256(root / "source.sav") == sha256(d5v2.DEPOT_PREREQUISITE / "after.sav")
+    assert sha256(d5v2.PINNED_PREREQUISITE / "after.sav") == d5v2.PINNED_PREREQUISITE_AFTER_SAVE
     world = metadata_of(staged)["world"]
     assert world["mode"] == "PREREQUISITE_ATTEMPT_SOURCE_SAVE_LOAD"
-    assert world["retained_directory"] == str(d5v2.PINNED_PREREQUISITE)
+    assert world["retained_directory"] == str(d5v2.DEPOT_PREREQUISITE)
     assert world["source_save"] == "after.sav"
-    assert world["save_sha256"] == d5v2.PINNED_PREREQUISITE_AFTER_SAVE
+    assert world["save_sha256"] == d5v2.DEPOT_PREREQUISITE_AFTER_SAVE
     assert world["qualified_save_sha256"] is None
     assert world["expected_welcome"] == retained_welcome()
     config = root.joinpath("openttd.cfg").read_text()
@@ -490,7 +513,7 @@ def test_preflight_rejects_a_staged_world_that_is_not_the_pinned_after_save(tmp_
         metadata["world"]["save_sha256"] = "0" * 64
         prelaunch.write_text(json.dumps(metadata, sort_keys=True, indent=2) + "\n")
         _restamp_prelaunch(directory)
-        with pytest.raises(ValueError, match="pinned A1 after-save"):
+        with pytest.raises(ValueError, match="pinned depot-mutation after-save"):
             d5v2.preflight(prepared)
         prelaunch.write_bytes(original)
         _restamp_prelaunch(directory)
@@ -502,17 +525,27 @@ def test_preflight_rejects_a_staged_world_that_is_not_the_pinned_after_save(tmp_
 # --- sealed freight facts, schedule, budgets and route scope -----------------
 
 
-def test_freight_facts_bind_the_sealed_a1_world():
+def test_freight_facts_bind_the_world_of_record_chain():
     facts = d5v2.freight_facts()
-    assert facts["attempt"] == d5v2.A1_PREREQUISITE_ATTEMPT
-    assert facts["milestone"] == d5v2.A1_PREREQUISITE_MILESTONE
+    assert facts["world_pin_version"] == 3
+    assert facts["attempt"] == d5v2.depot_native.DEPOT_MUTATION_ATTEMPT
+    assert facts["milestone"] == d5v2.depot_native.MILESTONE_DEPOT_MUTATION
     assert facts["save"] == "after.sav"
-    assert facts["save_sha256"] == d5v2.PINNED_PREREQUISITE_AFTER_SAVE
-    assert facts["save_sha256"] == A1_AFTER_SAVE_SHA256_V2
+    assert facts["save_sha256"] == d5v2.DEPOT_PREREQUISITE_AFTER_SAVE
     assert facts["qualified_save_sha256"] is None
-    assert facts["funds"] == FUNDS_AT_A1_CLOSE == 490257
+    assert facts["funds"] == FUNDS_AT_DEPOT_MUTATION_CLOSE == 489650
     assert facts["station_sids"] == {"existing": [0, 1], "new": 2}
     assert facts["expected_welcome"] == retained_welcome()
+    assert facts["depot_mutation"]["verification"] == "F12_MUTATION_COMPLETION_VERIFIED"
+    assert facts["depot_mutation"]["funds_at_close"] == 489650
+    assert facts["depot_mutation"]["after_save_sha256"] == facts["save_sha256"]
+    assert facts["reload"]["attempt"] == d5v2.depot_recheck_native.RECHECK_ATTEMPT
+    assert facts["reload"]["loaded_source_sha256"] == facts["save_sha256"]
+    assert facts["reload"]["verification"] == "DEPOT_RELOAD_FACTS_VERIFIED"
+    assert facts["a1_lineage"]["attempt"] == d5v2.A1_PREREQUISITE_ATTEMPT
+    assert facts["a1_lineage"]["save_sha256"] == d5v2.PINNED_PREREQUISITE_AFTER_SAVE
+    assert facts["a1_lineage"]["save_sha256"] == A1_AFTER_SAVE_SHA256_V2
+    assert facts["a1_lineage"]["funds_at_close"] == FUNDS_AT_A1_CLOSE == 490257
 
 
 def test_freight_schedule_is_the_fixed_thirty_exchange_cycle():
@@ -551,7 +584,7 @@ def test_freight_schedule_is_the_fixed_thirty_exchange_cycle():
     assert d5v2._scheduled_exchange_ids(schedule) == set(FREIGHT_EXCHANGE_IDS_V2)
 
 
-def test_freight_plan_rebinds_the_compiled_a1_pins():
+def test_freight_plan_rebinds_the_compiled_pins():
     plan = d5v2.freight_plan_v2()
     assert plan.company == 0
     assert plan.cargo == 1
@@ -569,7 +602,7 @@ def test_freight_plan_rebinds_the_compiled_a1_pins():
         45743,
     )
     assert (plan.pickup_industry, plan.delivery_industry) == (-1, -1)
-    assert plan.expected_funds == FUNDS_AT_A1_CLOSE == 490257
+    assert plan.expected_funds == FUNDS_AT_DEPOT_MUTATION_CLOSE == 489650
     assert plan.max_cost == FREIGHT_MAX_COST_V2 == 5000
     assert plan.witness == PINNED_WITNESS
     assert len(plan.witness) == FREIGHT_WITNESS_LENGTH_V2 == 31
@@ -629,14 +662,17 @@ def test_plan_policy_binds_schedule_world_and_wire_identity():
     world = plan_policy["world"]
     assert world["witness"] == list(plan.witness)
     assert world["vehicle_route"] == list(plan.vehicle_route)
-    assert world["expected_funds"] == FUNDS_AT_A1_CLOSE
+    assert world["expected_funds"] == FUNDS_AT_DEPOT_MUTATION_CLOSE
     assert world["expected_fleet"] == 0
     assert world["request_budget"] == FREIGHT_REQUEST_BUDGET_V2 == 32
     assert world["watch_ticks"] == WATCH_MAX_TICKS_V2
     assert world["window_day_cap"] == FREIGHT_CYCLE_DAY_CAP_V2
     assert world["running_cost_allowance"] == d5v2.FREIGHT_RUNNING_COST_ALLOWANCE_V2 == 12
-    assert plan_policy["prerequisite_world"]["schema"] == d5v2.D5_FREIGHT_V2_PREREQUISITE_SCHEMA
+    assert (
+        plan_policy["prerequisite_world"]["schema"] == d5v2.D5_FREIGHT_V2_PREREQUISITE_SCHEMA
+    )
     assert "truck stops" in plan_policy["prerequisite_world"]["statement"]
+    assert "D5-F12-DEPOT-3 after-save" in plan_policy["prerequisite_world"]["statement"]
 
 
 def test_budgets_match_the_staged_contract():
@@ -661,7 +697,7 @@ def test_budgets_match_the_staged_contract():
         "cycle_wall_cap_seconds": d5v2.FREIGHT_CYCLE_WALL_CAP_SECONDS_V2,
         "running_cost_allowance": 12,
         "max_cost": 5000,
-        "expected_funds": 490257,
+        "expected_funds": 489650,
     }
     assert d5v2.PLANNED_FREIGHT_REQUESTS == len(d5v2.freight_schedule()) == 30
     assert d5v2.FREIGHT_STAGED_REQUESTS_BUDGET == FREIGHT_REQUEST_BUDGET_V2 == 32
@@ -697,7 +733,7 @@ def test_expected_readback_policy_covers_every_phase():
 
 
 def test_attempt_name_binds_the_v2_scope():
-    assert d5v2.attempt_name() == FREIGHT_ATTEMPT_V2 == "D5-FREIGHT-3"
+    assert d5v2.attempt_name() == FREIGHT_ATTEMPT_V2 == "D5-FREIGHT-6"
 
 
 # --- authorization payload, planned exchanges and wire identities -------------
@@ -715,7 +751,7 @@ def test_authorization_payload_adds_the_ordered_exchange_scope(staged):
     assert payload["company"] == 0
     assert payload["max_cost"] == FREIGHT_MAX_COST_V2
     assert payload["source_world"]["source_save"] == "after.sav"
-    assert payload["source_world"]["save_sha256"] == d5v2.PINNED_PREREQUISITE_AFTER_SAVE
+    assert payload["source_world"]["save_sha256"] == d5v2.DEPOT_PREREQUISITE_AFTER_SAVE
     assert payload["source_world"]["qualified_save_sha256"] is None
     assert payload["budgets"] == d5v2.budgets()
     assert payload["operation_schedule"] == schedule
@@ -773,7 +809,7 @@ def _site_readback(request: FreightRequestV2) -> FreightReadbackV2:
         watch_ticks=request.watch_ticks,
         watch_days=request.watch_days,
         status="READY",
-        funds=FUNDS_AT_A1_CLOSE,
+        funds=FUNDS_AT_DEPOT_MUTATION_CLOSE,
         cost=0,
         paused=False,
         truck0=True,
@@ -837,7 +873,7 @@ def test_live_exchange_sends_the_site_request_under_the_named_bound(tmp_path):
     assert session.sent == [d5v2.encode_freight_request(raw)]
     assert (tmp_path / "site-00-request.json").read_bytes() == raw
     assert parsed.request_id == "site-00" and parsed.status == "READY"
-    assert parsed.funds == FUNDS_AT_A1_CLOSE
+    assert parsed.funds == FUNDS_AT_DEPOT_MUTATION_CLOSE
 
 
 def test_replay_parses_and_reencodes_the_site_request(tmp_path):
@@ -1036,7 +1072,7 @@ def _watch_request() -> tuple[FreightRequestV2, FreightReadbackV2]:
         watch_ticks=request.watch_ticks,
         watch_days=request.watch_days,
         status="LOADED",
-        funds=FUNDS_AT_A1_CLOSE - ENGINE_QUOTE_V2,
+        funds=FUNDS_AT_DEPOT_MUTATION_CLOSE - ENGINE_QUOTE_V2,
         cost=0,
         load=20,
         capacity=20,
@@ -1255,7 +1291,8 @@ def test_exchange_refuses_partial_reads_and_late_timeouts(tmp_path):
 # --- C1/H1/H3 + consumed-frame replay: synthetic packed attempt fixtures ----
 #
 # These fixtures are explicitly synthetic. They copy a freshly staged candidate
-# (whose prerequisite is the real pinned A1 attempt) and fabricate only the
+# (whose prerequisite is the real pinned depot-mutation world of record) and
+# fabricate only the
 # missing post-launch artifacts: thirty correlated protocol-8 frames, the
 # runtime welcome, cleanup certification and a receipt. No native process,
 # AdminPort session, candidate claim, signature or Gate C authorization is
@@ -1310,7 +1347,7 @@ def _consumed_freight_exchanges(
         site=None, engine=SimpleNamespace(engine=123, quote=ENGINE_QUOTE_V2), vehicle=-1
     )
     pair_total = len(plan.vehicle_route) - 1
-    funds = FUNDS_AT_A1_CLOSE
+    funds = FUNDS_AT_DEPOT_MUTATION_CLOSE
     income = 0
     delivered = 0
     tick = 100
@@ -1884,7 +1921,7 @@ def test_replay_fails_closed_on_wrong_source_save_digest(consumed_attempt, tmp_p
     (attempt / "PRELAUNCH.json").write_text(json.dumps(metadata, sort_keys=True, indent=2) + "\n")
     _reseal(attempt)
     _write_manifest(attempt)
-    with pytest.raises(ValueError, match="pinned prerequisite|pinned A1"):
+    with pytest.raises(ValueError, match="pinned prerequisite|pinned depot"):
         d5v2.verify_freight_attempt(attempt)
 
 

@@ -17,8 +17,11 @@ the pinned consumed A1 candidate-3) and fabricates only the missing
 post-launch artifacts — six correlated protocol-10 mutation frames over the
 pinned schedule (the stub cost chain of record: demolish refund -100, road
 200, depot 1200 over the A1 close-out funds 490257), the runtime welcome,
-cleanup certification and the flat retained receipt exactly as the
-execution writes it. The operator-authorization gate is the one seam
+cleanup certification, the flat retained receipt exactly as the execution
+writes it, and (Path A, E77/E78) the authoritative ``after.sav`` with its
+digest/size bound into the result and receipt records. The save-refusal
+arm is exercised on a second synthetic consumed directory whose strict
+save is recorded refused. The operator-authorization gate is the one seam
 monkeypatched (no authorized depot mutation run exists under the tests);
 every prerequisite, identity, digest, phase, funds-chain, frame and cleanup
 fact is otherwise verified by the production replay path.
@@ -35,6 +38,7 @@ import hashlib
 import json
 import re
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -220,7 +224,13 @@ def test_depot_schedule_is_the_pinned_six_exchange_mutation():
         for row in schedule
         if row["op"] in dm.DEPOT_MUTATING_OPS
     ] == [(45487, None), (45487, 45743), (45487, 45743)]
-    assert work.DEPOT_MUTATION_ATTEMPT == "D5-F12-DEPOT-1"
+    assert work.DEPOT_MUTATION_ATTEMPT == "D5-F12-DEPOT-3"
+    assert work.D5_DEPOT_MUTATION_PRELAUNCH_SCHEMA == "d5-f12-depot-prelaunch-v2"
+    assert work.DEPOT_AFTER_SAVE_NAME == "after.sav"
+    assert (
+        work.DEPOT_AFTER_SAVE_BINDING_SCHEMA == "d5-f12-depot-after-save-binding-v1"
+        and work.DEPOT_AFTER_SAVE_SAVED_AT == "fleet-00"
+    )
     assert work.KIND == "depot-mutation" and work.MILESTONE_DEPOT_MUTATION == "D5-F12-DEPOT"
     for foreign in ("site", "accept", "box", "truck", "order"):
         with pytest.raises(ValueError, match="foreign op"):
@@ -254,8 +264,8 @@ def test_depot_exchange_requests_carry_the_pinned_tiles_observation_none():
 def test_staged_candidate_binds_the_depot_lineage(staged):
     metadata = metadata_of(staged)
     assert metadata["schema"] == work.D5_DEPOT_MUTATION_PRELAUNCH_SCHEMA
-    assert metadata["schema"] == "d5-f12-depot-prelaunch-v1"
-    assert metadata["attempt"] == work.DEPOT_MUTATION_ATTEMPT == "D5-F12-DEPOT-1"
+    assert metadata["schema"] == "d5-f12-depot-prelaunch-v2"
+    assert metadata["attempt"] == work.DEPOT_MUTATION_ATTEMPT == "D5-F12-DEPOT-3"
     assert metadata["milestone"] == work.MILESTONE_DEPOT_MUTATION
     assert metadata["kind"] == work.KIND == "depot-mutation"
     assert metadata["budgets"]["max_cost"] == 3000
@@ -284,6 +294,13 @@ def test_staged_candidate_binds_the_depot_lineage(staged):
     )
     assert metadata["prerequisite"]["attempt"] == "D5-CORRIDOR-EXTENSION-3"
     assert metadata["world"]["save_sha256"] == work.PINNED_PREREQUISITE_AFTER_SAVE
+    # Path A save policy of record (E77/E78): the staged attempt binds the
+    # strict after-save emission duty and its terminal refusal arm.
+    assert (
+        "after.sav" in metadata["save_policy"]
+        and "PHASE_COMPLETE_SAVE_REFUSED" in metadata["save_policy"]
+    )
+    assert any("after.sav" in line for line in metadata["cleanup"])
 
 
 def test_no_consumed_attempt_or_lineage_name_in_the_staged_candidate(staged):
@@ -386,7 +403,7 @@ def test_depot_preflight_refuses_attempt_and_schema_drift(staged):
     seal_text = (target / "PRELAUNCH.sha256").read_text()
     for tampered_name, tampered_value in (
         ("attempt", "D5-F12-DEPOT-2"),
-        ("schema", "d5-f12-depot-prelaunch-v2"),
+        ("schema", "d5-f12-depot-prelaunch-v1"),
         ("kind", "census"),
         ("milestone", "D5-BOX-CENSUS"),
     ):
@@ -714,7 +731,7 @@ def test_identity_pairs_the_record_with_the_depot_plan_only(staged):
     metadata = metadata_of(staged)
     assert work.verify_depot_attempt_identity(metadata, plan=work.depot_plan())
     for tampered_name, tampered_value in (
-        ("schema", "d5-f12-depot-prelaunch-v2"),
+        ("schema", "d5-f12-depot-prelaunch-v1"),
         ("kind", "census"),
     ):
         crossed = json.loads(json.dumps(metadata))
@@ -782,16 +799,30 @@ def test_depot_exit_status_zero_only_for_the_verified_completion():
             cleanup_complete=True,
             state_changed=True,
         ),
+        dict(
+            verified=False,
+            status="PHASE_COMPLETE_SAVE_REFUSED",
+            cleanup_complete=True,
+            state_changed=True,
+        ),
+        dict(
+            verified=False,
+            status="PHASE_COMPLETE_SAVE_REFUSED",
+            cleanup_complete=False,
+            state_changed=True,
+        ),
         dict(verified=False, status="FAILED", cleanup_complete=True, state_changed=True),
     ):
         assert work.depot_exit_status(bad) == 1
     assert work.depot_verdict_exit_status(
         dict(verification="F12_MUTATION_COMPLETION_VERIFIED")
     ) == 0
-    assert (
-        work.depot_verdict_exit_status(dict(verification="PHASE_HALTED_EVIDENCE_PRESERVED"))
-        == 1
-    )
+    for bad_verdict in (
+        dict(verification="PHASE_HALTED_EVIDENCE_PRESERVED"),
+        dict(verification="PHASE_COMPLETE_SAVE_REFUSED"),
+        dict(verification="ATTEMPT_FAILED_EVIDENCE_PRESERVED"),
+    ):
+        assert work.depot_verdict_exit_status(bad_verdict) == 1
 
 
 # --- the synthetic consumed depot attempt -------------------------------------
@@ -846,32 +877,55 @@ def _wire_of(readback) -> bytes:
     ).encode()
 
 
-@pytest.fixture(scope="module")
-def consumed_depot_attempt(tmp_path_factory):
-    prepared = work.prepare_depot_mutation_candidate(
-        tmp_path_factory.mktemp("depot-consumed") / "candidate"
+def _fabricate_after_save(directory: Path) -> tuple[str, int]:
+    """The synthetic authoritative post-mutation save of record (Path A).
+
+    Any fixed non-empty byte stream stands in for the native save bytes;
+    what the replay checks is the digest/size triple binding, so the bytes
+    are written first and digested exactly as the run binds them.
+    """
+    payload = (
+        b"synthetic authoritative depot after.sav of the test fixture world\n"
+        + b"\x00" * 31
     )
-    directory = prepared.directory
-    seal = sha256(directory / "PRELAUNCH.json")
+    (directory / "after.sav").write_bytes(payload)
+    return hashlib.sha256(payload).hexdigest(), len(payload)
+
+
+def _fabricate_consumed_depot_records(
+    directory: Path,
+    exchanges,
+    seal: str,
+    phase: dict,
+    *,
+    save_error: str | None,
+) -> None:
+    """Write the post-launch depot records exactly as the run arms them.
+
+    With ``save_error`` the strictly armed authoritative after-save was
+    refused on the complete path (terminal PHASE_COMPLETE_SAVE_REFUSED);
+    with ``None`` the completion binds the retained save and its digest/size.
+    """
     metadata = json.loads((directory / "PRELAUNCH.json").read_text())
-    exchanges, plan = _consumed_depot_exchanges(seal, metadata["plan_policy"]["schedule"])
-    frames = []
-    for request, readback in exchanges:
-        wire = _wire_of(readback)
-        (directory / (request.request_id + "-request.json")).write_bytes(request.to_bytes())
-        (directory / (request.request_id + "-response.json")).write_bytes(wire)
-        frames.append(["outbound", work.encode_depot_request(request.to_bytes()).hex()])
-        frames.append(["inbound", _admin_frame(wire + b"\0").hex()])
-    (directory / "frames.json").write_text(json.dumps(frames))
-    phase = dm.depot_phase_outcome(exchanges, prelaunch_digest=seal, plan=plan)
-    assert phase["verification"] == "DEPOT_MUTATION_COMPLETE"
-    assert phase["gate"]["verdict"] == "DEPOT_MUTATION_GATE_PASSES"
     (directory / "session-before-identity.json").write_text(
         json.dumps(dict(sha256="9" * 64), sort_keys=True) + "\n"
     )
+    if save_error is None:
+        after_digest, after_size = _fabricate_after_save(directory)
+        receipt_after = dict(
+            after_save_sha256=after_digest, after_save_size_bytes=after_size
+        )
+        status = "NATIVE_DEPOT_MUTATION_COMPLETE"
+        verified = True
+    else:
+        receipt_after = dict(save_error=save_error)
+        after_digest = None
+        after_size = None
+        status = "PHASE_COMPLETE_SAVE_REFUSED"
+        verified = False
     (directory / "receipt.json").write_text(
         json.dumps(
-            dict(phase, before_save_sha256="9" * 64),
+            dict(phase, before_save_sha256="9" * 64, **receipt_after),
             sort_keys=True,
             indent=2,
         )
@@ -917,30 +971,58 @@ def consumed_depot_attempt(tmp_path_factory):
         )
         + "\n"
     )
+    result: dict[str, Any] = dict(
+        preflight="PASS",
+        native_launches=1,
+        connections=1,
+        requests=6,
+        exchanges=[request.request_id for request, _ in exchanges],
+        mutated=["demo-00", "road-00", "depot-00"],
+        last_status="READY",
+        command_accepted=True,
+        state_changed=True,
+        verified=verified,
+        status=status,
+        halt=None,
+        returncode=0,
+        cleanup_complete=True,
+    )
+    if save_error is None:
+        result["after_save_sha256"] = after_digest
+        result["after_save_size_bytes"] = after_size
+    else:
+        result["save_error"] = save_error
     (directory / "result.json").write_text(
-        json.dumps(
-            dict(
-                preflight="PASS",
-                native_launches=1,
-                connections=1,
-                requests=6,
-                exchanges=[request.request_id for request, _ in exchanges],
-                mutated=["demo-00", "road-00", "depot-00"],
-                last_status="READY",
-                command_accepted=True,
-                state_changed=True,
-                verified=True,
-                status="NATIVE_DEPOT_MUTATION_COMPLETE",
-                halt=None,
-                returncode=0,
-                cleanup_complete=True,
-            ),
-            sort_keys=True,
-            indent=2,
-        )
-        + "\n"
+        json.dumps(result, sort_keys=True, indent=2) + "\n"
     )
     (directory / "artifact-manifest.sha256").write_text(manifest(directory))
+
+
+def _fabricate_consumed_depot_frames(directory: Path, exchanges) -> None:
+    frames = []
+    for request, readback in exchanges:
+        wire = _wire_of(readback)
+        (directory / (request.request_id + "-request.json")).write_bytes(request.to_bytes())
+        (directory / (request.request_id + "-response.json")).write_bytes(wire)
+        frames.append(["outbound", work.encode_depot_request(request.to_bytes()).hex()])
+        frames.append(["inbound", _admin_frame(wire + b"\0").hex()])
+    (directory / "frames.json").write_text(json.dumps(frames))
+
+
+@pytest.fixture(scope="module")
+def consumed_depot_attempt(tmp_path_factory):
+    prepared = work.prepare_depot_mutation_candidate(
+        tmp_path_factory.mktemp("depot-consumed") / "candidate"
+    )
+    directory = prepared.directory
+    seal = sha256(directory / "PRELAUNCH.json")
+    metadata = json.loads((directory / "PRELAUNCH.json").read_text())
+    exchanges, plan = _consumed_depot_exchanges(seal, metadata["plan_policy"]["schedule"])
+    _fabricate_consumed_depot_frames(directory, exchanges)
+    phase = dm.depot_phase_outcome(exchanges, prelaunch_digest=seal, plan=plan)
+    assert phase["verification"] == "DEPOT_MUTATION_COMPLETE"
+    assert phase["gate"]["verdict"] == "DEPOT_MUTATION_GATE_PASSES"
+    _fabricate_consumed_depot_records(directory, exchanges, seal, phase, save_error=None)
     yield directory, exchanges, seal, plan
     prepared.spec.workspace.close()
 
@@ -1031,7 +1113,255 @@ def test_replay_fails_closed_on_a_result_label_the_evidence_contradicts(
     (directory / "artifact-manifest.sha256").write_text(manifest(directory))
 
 
-# --- the wire-to-Nut pin binding: the Python schedule can never drift ---------
+# --- Path A of record: the authoritative after-save world binding -------------
+
+
+def _restore_bytes(path: Path, saved: bytes | None) -> None:
+    if saved is None:
+        if path.exists():
+            path.unlink()
+    else:
+        path.write_bytes(saved)
+
+
+def _tamper_json(path: Path, mutate) -> None:
+    path.write_text(
+        json.dumps(mutate(json.loads(path.read_text())), sort_keys=True, indent=2) + "\n"
+    )
+
+
+def test_replay_verifies_and_rederives_the_after_save_world_binding(
+    consumed_depot_attempt, monkeypatch
+):
+    """The verified completion's after.sav is bound three ways (result
+    record, retained receipt, retained save) and the replay derives the
+    binding of record byte-exactly and idempotently."""
+    directory, _, seal, _ = consumed_depot_attempt
+    monkeypatch.setattr(work, "replay_authorization_state", lambda *a, **k: None)
+    verdict = work.verify_depot_mutation_attempt(directory)
+    assert verdict["verification"] == "F12_MUTATION_COMPLETION_VERIFIED"
+    assert verdict["receipt"]["after_save_sha256"]
+    binding_path = directory / work.DEPOT_AFTER_SAVE_BINDING_NAME
+    binding_bytes = binding_path.read_bytes()
+    binding = json.loads(binding_bytes)
+    assert binding["schema"] == "d5-f12-depot-after-save-binding-v1"
+    assert binding["attempt"] == "D5-F12-DEPOT-3"
+    assert binding["prelaunch_sha256"] == seal
+    saved = directory / "after.sav"
+    assert (
+        binding["after_save_sha256"]
+        == verdict["receipt"]["after_save_sha256"]
+        == hashlib.sha256(saved.read_bytes()).hexdigest()
+    )
+    assert binding["save_size_bytes"] == saved.stat().st_size > 0
+    assert binding["saved_at_fleet_exchange"] == "fleet-00"
+    assert binding["source_world"] == work.PINNED_PREREQUISITE_AFTER_SAVE
+    assert binding["funds_at_close"] == FUNDS - 1300
+    after_facts = binding["edge_facts"]
+    assert (
+        after_facts["connected_front_to_depot"],
+        after_facts["connected_depot_to_front"],
+    ) == (True, True)
+    assert binding["fleet_count"] == 0
+    # Idempotent: a second verified replay re-derives the same bytes.
+    again = work.verify_depot_mutation_attempt(directory)
+    assert again["verification"] == "F12_MUTATION_COMPLETION_VERIFIED"
+    assert binding_path.read_bytes() == binding_bytes
+
+
+def test_replay_fails_closed_on_a_tampered_after_save_binding(
+    consumed_depot_attempt, monkeypatch
+):
+    directory, _, _, _ = consumed_depot_attempt
+    monkeypatch.setattr(work, "replay_authorization_state", lambda *a, **k: None)
+    binding_path = directory / work.DEPOT_AFTER_SAVE_BINDING_NAME
+    if not binding_path.is_file():
+        pytest.skip("the binding of record is first derived by its own test")
+    before = binding_path.read_bytes()
+    before_manifest = directory / "artifact-manifest.sha256"
+    manifest_ok = before_manifest.read_text()
+    tampered = json.loads(before)
+    tampered["edge_facts"]["front_read"] = 45999
+    binding_path.write_text(json.dumps(tampered, sort_keys=True, indent=2) + "\n")
+    try:
+        before_manifest.write_text(manifest(directory))
+        with pytest.raises(ValueError, match="after-save binding drifted"):
+            work.verify_depot_mutation_attempt(directory)
+    finally:
+        binding_path.write_bytes(before)
+        before_manifest.write_text(manifest_ok)
+
+
+def test_replay_fails_closed_on_a_forced_complete_without_the_authoritative_after_save(
+    consumed_depot_attempt, monkeypatch
+):
+    """A completion label that lacks its authoritative after-save triple —
+    no digest, no retained save, a drifted digest or a drifted size — can
+    never verify."""
+    directory, _, _, _ = consumed_depot_attempt
+    monkeypatch.setattr(work, "replay_authorization_state", lambda *a, **k: None)
+    saved_path = directory / "after.sav"
+    binding_path = directory / work.DEPOT_AFTER_SAVE_BINDING_NAME
+    receipt_path = directory / "receipt.json"
+    result_path = directory / "result.json"
+    manifest_path = directory / "artifact-manifest.sha256"
+    saved_bytes = saved_path.read_bytes()
+    receipt_ok = receipt_path.read_bytes()
+    result_ok = result_path.read_bytes()
+    binding_backup = binding_path.read_bytes() if binding_path.is_file() else None
+    actual_digest = hashlib.sha256(saved_bytes).hexdigest()
+    actual_size = len(saved_bytes)
+    result_stripped = {
+        name: value
+        for name, value in json.loads(result_ok).items()
+        if not name.startswith("after_save")
+    }
+    receipt_stripped = {
+        name: value
+        for name, value in json.loads(receipt_ok).items()
+        if not name.startswith("after_save")
+    }
+    try:
+        def _resign():
+            manifest_path.write_text(manifest(directory))
+
+        # (1) the label never bound the world of record and the save is gone
+        saved_path.unlink()
+        _tamper_json(receipt_path, lambda m: receipt_stripped)
+        _tamper_json(result_path, lambda m: result_stripped)
+        _resign()
+        with pytest.raises(ValueError, match="authoritative after-save digest"):
+            work.verify_depot_mutation_attempt(directory)
+        # (2) the digest and size are claimed but the retained save is gone
+        _tamper_json(
+            result_path,
+            lambda m: dict(
+                m,
+                after_save_sha256=actual_digest,
+                after_save_size_bytes=actual_size,
+            ),
+        )
+        _resign()
+        with pytest.raises(ValueError, match="retained authoritative after.sav"):
+            work.verify_depot_mutation_attempt(directory)
+        # (3) the save is retained but the digest drifted
+        saved_path.write_bytes(saved_bytes)
+        _tamper_json(result_path, lambda m: dict(m, after_save_sha256="e" * 64))
+        _resign()
+        with pytest.raises(ValueError, match="after-save digest drifted"):
+            work.verify_depot_mutation_attempt(directory)
+        # (4) the digest matches but the size drifted
+        _tamper_json(
+            result_path,
+            lambda m: dict(
+                m, after_save_sha256=actual_digest, after_save_size_bytes=actual_size + 1
+            ),
+        )
+        _resign()
+        with pytest.raises(ValueError, match="after-save size"):
+            work.verify_depot_mutation_attempt(directory)
+        # (5) the exact fabrication above restores to the verified verdict
+        _restore_bytes(receipt_path, receipt_ok)
+        _restore_bytes(result_path, result_ok)
+        _restore_bytes(saved_path, saved_bytes)
+        _restore_bytes(binding_path, binding_backup)
+        _resign()
+        verdict = work.verify_depot_mutation_attempt(directory)
+        assert verdict["verification"] == "F12_MUTATION_COMPLETION_VERIFIED"
+    finally:
+        _restore_bytes(receipt_path, receipt_ok)
+        _restore_bytes(result_path, result_ok)
+        _restore_bytes(saved_path, saved_bytes)
+        _restore_bytes(binding_path, binding_backup)
+        manifest_path.write_text(manifest(directory))
+
+
+@pytest.fixture(scope="module")
+def refused_depot_directory(tmp_path_factory):
+    """A second synthetic consumed directory whose strict save was refused
+    on the complete path: the six exchanges completed natively, then the
+    terminal PHASE_COMPLETE_SAVE_REFUSED result as the run writes it."""
+    prepared = work.prepare_depot_mutation_candidate(
+        tmp_path_factory.mktemp("depot-refused") / "candidate"
+    )
+    directory = prepared.directory
+    seal = sha256(directory / "PRELAUNCH.json")
+    metadata = json.loads((directory / "PRELAUNCH.json").read_text())
+    exchanges, plan = _consumed_depot_exchanges(seal, metadata["plan_policy"]["schedule"])
+    _fabricate_consumed_depot_frames(directory, exchanges)
+    phase = dm.depot_phase_outcome(exchanges, prelaunch_digest=seal, plan=plan)
+    assert phase["verification"] == "DEPOT_MUTATION_COMPLETE"
+    _fabricate_consumed_depot_records(
+        directory,
+        exchanges,
+        seal,
+        phase,
+        save_error="TimeoutError: owned native save completion missing",
+    )
+    yield directory
+    prepared.spec.workspace.close()
+
+
+def test_replay_marks_the_save_refusal_terminal_and_preserved(
+    refused_depot_directory, monkeypatch
+):
+    directory = refused_depot_directory
+    monkeypatch.setattr(work, "replay_authorization_state", lambda *a, **k: None)
+    result = json.loads((directory / "result.json").read_text())
+    assert result["verified"] is False
+    assert result["status"] == "PHASE_COMPLETE_SAVE_REFUSED"
+    verdict = work.verify_depot_mutation_attempt(directory)
+    assert verdict["verification"] == "PHASE_COMPLETE_SAVE_REFUSED"
+    assert verdict["result_status"] == "PHASE_COMPLETE_SAVE_REFUSED"
+    assert (
+        verdict["result_save_error"]
+        == "TimeoutError: owned native save completion missing"
+    )
+    assert verdict["funds_close"] == FUNDS - 1300
+    assert verdict["exchanges"] == list(EXCHANGES)
+    assert verdict["mutated"] == ["demo-00", "road-00", "depot-00"]
+    assert work.depot_verdict_exit_status(verdict) == 1
+    assert not (directory / work.DEPOT_AFTER_SAVE_BINDING_NAME).is_file()
+    assert not (directory / "after.sav").is_file()
+
+
+def test_replay_fails_closed_on_a_save_refusal_contradiction(
+    refused_depot_directory, monkeypatch
+):
+    directory = refused_depot_directory
+    monkeypatch.setattr(work, "replay_authorization_state", lambda *a, **k: None)
+    result_path = directory / "result.json"
+    result_ok = result_path.read_bytes()
+    manifest_path = directory / "artifact-manifest.sha256"
+    try:
+        # (1) a refusal without its recorded native save error cannot verify
+        _tamper_json(result_path, lambda m: dict(m, save_error="  "))
+        manifest_path.write_text(manifest(directory))
+        with pytest.raises(ValueError, match="lacks its recorded native save error"):
+            work.verify_depot_mutation_attempt(directory)
+        # (2) a refusal claiming the authoritative after-save cannot verify
+        _tamper_json(
+            result_path,
+            lambda m: dict(
+                m,
+                save_error="TimeoutError: owned native save completion missing",
+                after_save_sha256="a" * 64,
+            ),
+        )
+        manifest_path.write_text(manifest(directory))
+        with pytest.raises(
+            ValueError, match="cannot carry the authoritative after-save"
+        ):
+            work.verify_depot_mutation_attempt(directory)
+        # (3) a refusal verified against its own label's phase evidence stands
+        _restore_bytes(result_path, result_ok)
+        manifest_path.write_text(manifest(directory))
+        verdict = work.verify_depot_mutation_attempt(directory)
+        assert verdict["verification"] == "PHASE_COMPLETE_SAVE_REFUSED"
+    finally:
+        _restore_bytes(result_path, result_ok)
+        manifest_path.write_text(manifest(directory))
+
 
 
 def test_nut_pin_table_binds_to_the_python_depot_schedule():

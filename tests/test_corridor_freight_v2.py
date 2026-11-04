@@ -1,7 +1,8 @@
 """Controlled offline tests for the D5 v2 native corridor-freight wire contract.
 
 The shipped ``d5_freight_v2_package/main.nut`` runs inside the real Squirrel VM
-against a stub freight world that reproduces the A1 close-out lifecycle
+against a stub freight world that reproduces the post-mutation close-out
+lifecycle
 semantics (census-tested quotes, BuildVehicle, tile-destination order appends
 with the real 15.x flag values, per-industry GSCargoMonitor
 arming/consumption, quarterly finance reads and the directed depot-edge and
@@ -53,7 +54,7 @@ EXCHANGES = list(cfv.FREIGHT_EXCHANGE_IDS_V2)
 ENGINE_QUOTE = 4429  # the fixed-demo census quote, within the £5,000 ceiling
 ENGINE_CAPACITY = 20  # the stub engine's one vehicle capacity slot
 ENGINE_MAX_SPEED = 48  # the census speed the reply echoes
-FUNDS = 490257  # the pinned A1 close-out funds the stub world carries
+FUNDS = 489650  # the pinned post-mutation close-out funds the stub world carries
 PICKUP = cfv.A1_PICKUP_STOP_TILE_V2
 PICKUP_FRONT = cfv.A1_PICKUP_FRONT_TILE_V2
 DELIVERY = cfv.A1_DELIVERY_STOP_TILE_V2
@@ -86,7 +87,7 @@ WORLD = """
 ::industry_of_tile <- {};
 ::tests <- {};
 ::account <- 0;
-::funds <- 490257;
+::funds <- 489650;
 ::quote_cost <- 4429;
 ::exec_cost <- 4429;
 ::engine_price <- 4429;
@@ -392,18 +393,20 @@ class GSOrder {
         return (flags == GSOrder.OF_NONE || flags == 128) && (dest in ::stops);
     }
     static function AppendOrder(id, dest, flags) {
-        /* N1: the 15.x append takes the stop TILE; the stop's station id is
-         * stored (the resolution the readbacks verify against the latches). */
+        /* N1 (15.3, E92): the append takes the stop TILE and stores the
+         * resolved station (MakeGoToStation of GetStationIndex(dest))
+         * alongside; the readback returns the canonical stop tile by
+         * resolution — never the StationID. */
         ::append_calls.append([dest, flags]);
         if (!(id in ::vehicles) || !(dest in ::stops)) return false;
-        ::orders[id].append({d = ::stops[dest].sid, f = flags});
+        ::orders[id].append({d = dest, sid = ::stops[dest].sid, f = flags});
         return true;
     }
     static function GetOrderCount(id) { return (id in ::orders) ? ::orders[id].len() : 0; }
     static function GetOrderDestination(id, i) { return ::orders[id][i].d; }
     static function GetOrderFlags(id, i) { return ::orders[id][i].f; }
     static function IsGotoStationOrder(id, i) {
-        return ::orders[id][i].d in ::station_types;
+        return ::orders[id][i].sid in ::station_types;
     }
 }
 class GSCargoMonitor {
@@ -1968,7 +1971,7 @@ def test_python_level_site_admission_refuses_defects():
     for update, match in (
         ({"pickup_industry_count": 0}, "exactly one cargo industry"),
         ({"pickup_industry_count": 2}, "exactly one cargo industry"),
-        ({"funds": FUNDS + 1}, "A1 close-out"),
+        ({"funds": FUNDS + 1}, "close-out level"),
         ({"accept": 7}, "pinned full 8/8"),
         ({"depot_edge": False}, "F-12"),
         ({"pickup_industry": DELIVERY_INDUSTRY}, "must stay distinct"),
@@ -2042,14 +2045,18 @@ def test_stub_appends_carry_tile_destinations_and_real_flags():
     # OF_FULL_LOAD is documented forbidden: no order carriage ever ships it.
     assert cfv.OF_FULL_LOAD_FORBIDDEN_V2 == 64
     assert cfv.OF_FULL_LOAD_FORBIDDEN_V2 not in appended_flags
-    # The stored orders resolve to the latched station ids behind the tiles.
+    # The stored orders keep the tile-form destination and the resolved
+    # station id (N1, 15.3, E92): d is the appended stop tile, sid is the
+    # MakeGoToStation resolution; flags round-trip verbatim.
     vm.execute(
         "::sniffer.o0 <- ::orders[1][0];"
         " ::sniffer.o1 <- ::orders[1][1];"
     )
     orders = vm_root(vm)["sniffer"]
-    assert (orders["o0"]["d"], orders["o0"]["f"]) == (0, cfv.OF_NONE_V2)
-    assert (orders["o1"]["d"], orders["o1"]["f"]) == (2, cfv.OF_NO_LOAD_V2)
+    assert (orders["o0"]["d"], orders["o0"]["f"]) == (PICKUP, cfv.OF_NONE_V2)
+    assert orders["o0"]["sid"] == 0
+    assert (orders["o1"]["d"], orders["o1"]["f"]) == (DELIVERY, cfv.OF_NO_LOAD_V2)
+    assert orders["o1"]["sid"] == 2
 
 
 def _order_readback(*, op: str, order_index: int, **extra: Any) -> FreightReadbackV2:
@@ -2164,7 +2171,7 @@ def test_package_planned_schedule_equals_the_wire_contract():
 
 
 def test_package_pinned_constants_match_the_frozen_module():
-    """The package's world pins equal the compiled A1 close-out constants."""
+    """The package's world pins equal the compiled world constants."""
     text = (PACKAGE / "main.nut").read_text()
     for constant, value in (
         ("PICKUP", PICKUP),

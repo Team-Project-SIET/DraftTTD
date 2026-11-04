@@ -2059,3 +2059,1102 @@ pin `36648f9c…cc29` intact.
   read pinned at E72 §6.4). Staging approval for the fresh identity
   `D5-F12-DEPOT-2` remains ungranted; `D5-FREIGHT-4` stays blocked until
   verified F-12 completion + certified cleanup.
+
+### 2026-11-03 — D5-F12-DEPOT-2 lifecycle + verified world binding
+
+Operator blanket approval ("agree Stage D5-F12-DEPOT-2 allow and agree all")
+consumed as the chain authorization for this one attempt: staging,
+read-only verification, Gate C signing, one native launch. Per the standing
+convention the chain authorization covers nothing else:
+`D5-FREIGHT-4` staging remains its own approval ask.
+
+- Identity bump (E24 precedent): `DEPOT_MUTATION_ATTEMPT`
+  `"D5-F12-DEPOT-1"` → `"D5-F12-DEPOT-2"` in
+  `app/simulation/openttd/proof/corridor_depot_mutation_native.py` (E72/E73
+  lineage recorded in the comment; consumed attempt-1 stays terminal
+  `PHASE_HALTED_PREFIX_PRESERVED`); two attempt pins in
+  `tests/test_corridor_depot_mutation_native.py` updated and the drift-tamper
+  foreign value moved to `"D5-F12-DEPOT-3"` so the refusal test keeps its
+  intent. Suites 75 dots exit 0; `uvx ruff`/`uvx ty` clean;
+  `git diff --check` clean.
+- Staged fresh (one first-attempt run):
+  `prepare artifacts/experiments/d5-corridor-depot-mutation-native-candidate-2`
+  → `PRELAUNCH PASS` exit 0. Seal
+  `16592103df23669ab46210d956d337344722b3dc9c61877ba0417e743fd8544a`;
+  plan digest `49f5b510…1382` + plan model `8be74b2c…ccc18` unchanged vs
+  candidate-1; 3496-entry frozen closure re-derived 0 mismatch; staged
+  `game/RoadFreightProof/main.nut` (workspace `openttd-15.3-y687ctzl`)
+  ≡ live fixed package `e00eeecb…5d67`; gate files absent at staging;
+  `preflight` PASS exit 0; `verify` refusal
+  `AUTHORIZATION_UNVERIFIED`/`CLAIM_ABSENT` exit 1 (pre-auth shape).
+- Gate C (E75): Option-1 checklist, single invocation, first-try success —
+  payload sha `1957e2dc…3171`, record sha `9628bcb5…450b`, key identity
+  `cbb63ff5…40c614` (production anchor unchanged), signature verified under
+  the pinned anchor over the exact canonical bytes before write,
+  `binds_seal true`; seed env-only, cleared in both python and shell, never
+  printed/filed/arg-passed.
+- Launch (one approved attempt, env digests re-verified against pins
+  pre-launch): run **exit 0** `NATIVE_DEPOT_MUTATION_COMPLETE`, `verified
+  true` — 1 launch, 1 connection, 6/6 exchanges READY:
+  `before-00` measured exactly the E72 §6.4 pinned expected read
+  (`depot_present true / front_read 45743 / owner 0 / depot_linked true /
+  both directions false`) — the F-12b dispatch-context fix proven natively,
+  E72's instrument false negative closed at its native gate;
+  `demo-00` £60 → `road-00` £142 (front 45743) → `depot-00` £405
+  (front 45743), funds chain 490257→490197→490055→489650→489650→489650
+  enforced verbatim; `after-00` both `AreRoadTilesConnected` directions true
+  with identical identity facts; `fleet-00` zero fleet;
+  `DEPOT_MUTATION_GATE_PASSES` (vacuous `in_depot` clause satisfied),
+  `state_changed true`, receipts carry seal `16592103…544a` + plan digest
+  `8be74b2c…ccc18`.
+- Independent replay `verify` → **`F12_MUTATION_COMPLETION_VERIFIED` exit 0**
+  with `before_save_sha256` `34903af7ed6c7c75df91ace8ad0a51eeffaf88432aba61e
+  286c1e259a1c802bc`. World binding of record: the depot milestone issues no
+  authoritative new save — its binding stays the pinned A1 prerequisite
+  after-save `3748e00c…5420bd`, re-digested intact on disk post-run; the
+  candidate's own saves are retained `session-before.sav` (`34903af7…2bc`)
+  and diagnostic-only `after-diagnostic.sav` (`d18caff4…7d0b`).
+- Cleanup certified complete: process reaped (pid 38112, returncode 0),
+  credential removed, workspace disposed, sockets closed, reservation
+  released, `remaining_processes []`; one client-side socket
+  `127.0.0.1:37226 → admin 40873` kernel row `TIME_WAIT (inode 0)` — the
+  policy-required state (`cleanup_complete: true`; the E68 `TCP_CLOSING`
+  refusal does not recur), preserved verbatim. Post-run `preflight` cannot
+  reopen the disposed workspace (`FileNotFoundError` on
+  `isolated/openttd-15.3-y687ctzl`) — terminal-expected consume-once shape,
+  recorded verbatim; `preflight` is a pre-launch gate of record.
+- Artifact manifest audit 28/28 match (attempt-1's 16/16 unchanged).
+  Attempt-2 terminal COMPLETE; attempt-1 stays terminal
+  `PHASE_HALTED_PREFIX_PRESERVED`; E68 stays `FAILED_CLEANUP`; no commit;
+  `CONTEXT.md` pin intact.
+- Next: `D5-FREIGHT-4` staging is unblocked by verified F-12 completion +
+  certified cleanup; fresh staging → review → Gate C → separate launch
+  approval all remain its own future gates per the E58 sequencing.
+
+### 2026-11-03 — D5-FREIGHT-4 staged at the approved boundary (E76)
+
+Separate staging approval only ("Approve staging"): prepare + read-only
+gates, stopped before review/sign/launch.
+
+- Identity bump (E54 precedent): `FREIGHT_ATTEMPT_V2` `"D5-FREIGHT-3"` →
+  `"D5-FREIGHT-4"` in `app/simulation/openttd/corridor_freight_v2.py`
+  (attempt-3 stays terminal with its E56 `site-00` `INVALID_SITE` halt
+  verbatim); proof docstring + one test pin updated. Suites 128 passed
+  exit 0; `uvx ruff` clean; `uvx ty` = the five tolerated pre-existing
+  diagnostics (`bf6cc0b` baseline); `git diff --check` clean.
+- `prepare artifacts/experiments/d5-corridor-freight-native-candidate-4`
+  → `PRELAUNCH PASS` exit 0. Seal `82effd43…5540`; plan digest
+  `ed5bad82…b1ff4` byte-exact; fresh plan-model digest `885d9200…a7ff`
+  (identity feeds the model); route/witness unchanged; frozen closure
+  3497 entries (v2 GameScript `6704aa6e…952d` == live package); prereq =
+  A1 after-save `3748e00c…5420bd` (E75-established binding — the depot
+  milestone issued no authoritative save); binary `276d5b69…1904c`; gate
+  files absent.
+- Read-only: `preflight` PASS exit 0; `verify` →
+  `AUTHORIZATION_UNVERIFIED`/`CLAIM_ABSENT` exit 1. STOP — no signing, no
+  launch. Independent review → Gate C → separate launch approval remain
+  ungranted future gates.
+
+### 2026-11-03 — D5-FREIGHT-4 review PASS / world-lineage BLOCKED before Gate C (E77)
+
+The operator six-step workflow consumed steps 1–2 read-only, then stopped
+per its own STOP rule. No signature, no launch, nothing consumed.
+
+- Step 1 (independent review, no general code review) — PASS: frozen
+  closure 3497/0/0; composed GameScript
+  `isolated/openttd-15.3-gvspt11o/game/RoadFreightProof/main.nut` ≡ live
+  package `6704aa6e…952d`; seal ≡ `PRELAUNCH.sha256`; plan `ed5bad82…b1ff4`
+  / model `885d9200…a7ff` / route `b2f80f46…7131` / witness
+  `f1f00e13…686c` / budgets as staged; gate files absent; historical bytes
+  untouched.
+- Step 2 (world-lineage verification) — NEGATIVE on measured evidence:
+  the freight runtime world is the A1 after-save `3748e00c…5420bd`
+  (`PREREQUISITE_ATTEMPT_SOURCE_SAVE_LOAD`), and the F-12-DEPOT-2 run
+  measured that same world's `before-00` gate: `connected_depot_to_front
+  false / connected_front_to_depot false` before mutating its own disposed
+  copy. No authoritative post-fix save exists (depot pipeline emits none by
+  design; `after-diagnostic.sav d18caff4…7d0b` has zero on-disk consumers)
+  and the freight contract/package/runner carry no mutation ops.
+  `site-00` demands `depot_edge is True` (`corridor_freight_v2.py:1276`
+  -1278) and would read false: a foreknown single-exchange refusal
+  (E56 `INVALID_SITE` shape) that would consume the one launch budget.
+- Classification: design-level lineage gap between the E58 sequencing
+  ("census → F-12 fix candidate (post-fix after-save) → fresh
+  `D5-FREIGHT-4`") and the implemented depot-mutation pipeline
+  (consume-once isolation, no authoritative save emission). Not a runtime
+  defect, not a world mismatch, nothing relabeled.
+- STOP honored at step 2: no Gate C signing, no launch. Candidate-4 stays
+  staged-only (gate files absent). Future unblocking paths (NOT executed):
+  (a) a depot-mutation variant that emits + retains an authoritative
+  post-fix after-save for the freight lineage, (b) a freight schedule
+  carrying the prescribed mutation itself, (c) an evidence-driven change
+  to branch-4 strictness — each needs its own design record + full gate
+  sequence.
+- Verdict of the workflow: **BLOCKED** (at step 2, before any approval
+  gate was requested); consumed candidates 1/2/3 and attempt-1/.-2
+  terminals stay verbatim; `CONTEXT.md` pin intact.
+
+### 2026-11-03 — Path A design record (E78, design only)
+
+Wrote `docs/d5-authoritative-post-mutation-save-pipeline-2026-11-03.md`:
+the authoritative post-mutation save pipeline closing the E77 lineage gap.
+No source change, nothing staged/signed/launched/consumed.
+
+- R2 `D5-F12-DEPOT-3`: strict post-gate save emission on the
+  `DEPOT_MUTATION_COMPLETE` branch; `after_save_sha256` bound into
+  receipt/result/binding; terminal `PHASE_COMPLETE_SAVE_REFUSED` arm.
+- R3 `D5-F12-DEPOT-RELOAD-1`: observe-only 1-exchange recheck over a fresh
+  copy of the R2 after.sav; facts of record (edge TRUE both directions,
+  front 45743, owner 0, funds 489650, fleet 0) via
+  `DEPOT_RELOAD_FACTS_VERIFIED`.
+- R4 `D5-FREIGHT-5`: additive freight v3 world-pin (`WORLD_PIN_VERSION = 3`,
+  schema `d5-freight2-prelaunch-v2`); freight family requires the
+  consumed-extension receipts AND the R2+R3 chain; source world is a fresh
+  copy of R2/after.sav. Branch-4 strictness preserved — `site-00` keeps
+  `depot_edge is True`, satisfiable in runtime now.
+- Every round: offline implementation first, then its own gate sequence,
+  every gate asked explicitly. STOP for operator review before R2.
+
+### 2026-11-03 — Path A R2 offline implementation (approved; no staging/signing/launch)
+
+Implemented and verified offline per docs/
+d5-authoritative-post-mutation-save-pipeline-2026-11-03.md Round 2:
+
+- `DEPOT_MUTATION_ATTEMPT` bump to `D5-F12-DEPOT-3` (consumed -1/-2
+  histories recorded; identities never reused); prelaunch schema
+  `d5-f12-depot-prelaunch-v2`; new Path A constants
+  (`DEPOT_AFTER_SAVE_NAME`/`BINDING_NAME`/`BINDING_SCHEMA`/`SAVED_AT`).
+- `depot_prerequisite_binding()` refuses staging / preflight on a
+  prerequisite whose pinned after-save is not a retained regular file with
+  its recorded digest (retention check; read-only).
+- `execute_depot_mutation_attempt()`: on the verified
+  `DEPOT_MUTATION_COMPLETE` branch the strict (never diagnostic)
+  `save(backend, prepared, "after")` writes the authoritative
+  `directory/after.sav`; digest + size bind into `result.json` and
+  `receipt.json`; save failure on the complete path is terminal
+  `PHASE_COMPLETE_SAVE_REFUSED` (save_error bound verbatim; never a
+  diagnostic fallback, never a claim).
+- `verify_depot_mutation_attempt()`: a completion without its hard
+  result/receipt/retained-after.sav digest+size triple refuses; the
+  verified replay derives (or byte-exactly re-derives)
+  `after-save-binding.json`
+  (`d5-f12-depot-after-save-binding-v1`: attempt, milestone, directory,
+  prelaunch seal, digest, size, saved_at fleet-00, source_world =
+  pinned A1 after-save, funds_at_close from the measured funds chain,
+  after-00 edge facts, zero fleet); a manifest may carry the binding
+  (re-rendered) or stand without it; any other unmanifested file refuses.
+  A `PHASE_COMPLETE_SAVE_REFUSED` result is a terminal verdict arm with
+  its own contradiction checks; it never writes a binding.
+- `tests/test_corridor_depot_mutation_native.py`: pins bumped; consumed
+  fixture fabrication decomposed (`_fabricate_consumed_depot_frames`,
+  `_fabricate_consumed_depot_records`); the authoritative save triple and
+  binding idempotency, refusal terminal/contradiction arms, and
+  digest/size/save drift all replay-tested against the production paths.
+- Verification: 41/41 native suite + companion wire-contract/VM suites
+  green; `ruff check` clean on touched paths; `uvx ty check` clean;
+  `git diff --check` clean. No OpenTTD launch, no claim, no staging of a
+  candidate, no signature, nothing consumed; `D5-F12-DEPOT-1`/`-2` and
+  `D5-FREIGHT-4` stay byte-verbatim; `CONTEXT.md` pin
+  `36648f9c2fee4106` intact.
+
+STOPPED at the natural gate sequence: staging approval → read-only review
+→ Gate C (one signing) → one launch approval must each be asked explicitly
+before the staged `D5-F12-DEPOT-3` candidate exists or runs.
+
+### 2026-11-03 — D5-F12-DEPOT-3 staged + review PASS (E79/E80)
+
+- Staging approval consumed as its own gate: one `prepare` → `PRELAUNCH
+  PASS`; seal `4df12e1fbc15e164…`; schema v2; A1 prereq after-save
+  retention check passing; frozen 3496/0; composed GameScript ≡ live
+  `e00eeecb…`; gate files + binding absent; re-run `PREFLIGHT PASS`;
+  `verify` → CLAIM_ABSENT exit 1 pre-auth (E79).
+- Independent in-session review (read-only, no candidate writes): 35-axis
+  audit PASS — READY-FOR-GATE-C (E80). Full digests on disk at the
+  candidate's own PRELAUNCH.json; nothing signed, nothing launched.
+- NEXT: Gate C (one signing approval) → one separate launch approval.
+
+### 2026-11-03 — D5-F12-DEPOT-3 Gate C signed (E81)
+
+Option-1 checklist executed exactly once under the explicit operator
+signing approval: refusal gates clean + re-checked; payload digest
+`14f6dc92…90822` over the canonical bytes; seed env-only (never
+printed/filed/arg-passed), shape-checked; anchor cross-check
+`5063982b…4880f` BEFORE signing; one `sign_authorization_record` call;
+signature verified under the pinned anchor BEFORE any write;
+`AUTHORIZATION.json` written once — record sha `2d318dbe…accf2`,
+operator_key_identity `cbb63ff5…40c614` unchanged; seed cleared
+afterwards (empty verified). Post-write: `PREFLIGHT PASS`,
+`verify` CLAIM_ABSENT exit 1 pre-consumption; CLAIM/LAUNCH-CONSUMED
+absent. Signature is NOT launch approval — one separate explicit
+operator launch approval remains.
+
+### 2026-11-03 — D5-F12-DEPOT-3 launched once: COMPLETE + authoritative after.sav (E82)
+
+One operator launch approval (separate from Gate C); one run, terminal:
+
+- Pre-launch digest gates: binary `276d5b69…1904c`, OpenGFX
+  `43a0c1da…03be`, process exclusivity, CLAIM absent, after.sav absent.
+- Run exit 0 `NATIVE_DEPOT_MUTATION_COMPLETE` verified=true; 6 exchanges;
+  before-00 = E58 diagnosis verbatim; after-00 both directions TRUE;
+  fleet 0; funds `490257→490197→490055→489650→489650→489650`;
+  `DEPOT_MUTATION_GATE_PASSES`; halt null.
+- Path A strict save emitted: after.sav 61992 bytes, digest
+  `183b20273a54ebe1a2cd9306145a9ea820bbd6114b1608c42079b4e1b1efe6a6`
+  triple-bound (result == receipt == retained file);
+  `PHASE_COMPLETE_SAVE_REFUSED` did not occur.
+- Replay `verify` → `F12_MUTATION_COMPLETION_VERIFIED` exit 0;
+  `after-save-binding.json` derived byte-exactly (schema
+  `d5-f12-depot-after-save-binding-v1`, source_world = A1 pin
+  `3748e00c…5420bd`, funds_at_close 489650, edge_facts both-TRUE, fleet 0)
+  and idempotent on re-verify; cleanup certified; manifest 29/29 with
+  after.sav covered; diagnostic save stands diagnostic-only.
+- Candidate is terminal COMPLETE and consumed; the world of record for
+  R3/R4 is candidate-3/after.sav. STOPPED before R3 (its own approval).
+
+### 2026-11-03 — R3 `D5-F12-DEPOT-RELOAD-1` observe-only reload implemented offline (E83)
+
+Per the Path A design record `docs/d5-authoritative-post-mutation-save-pipeline-2026-11-03.md`
+(R3 at L88–96, L257–264). Implementation round only — no staging, no
+signing, no launch, nothing consumed:
+
+- Observe-only GameScript package `app/simulation/openttd/d5_depot_recheck_package/main.nut`
+  (additive, 324 lines): marker `D5_F12_DEPOT_RECHECK_READY`, bridge
+  `class NetworkFreightProof extends D5DepotRecheckProof` (retained
+  save-restore identity name), one planned exchange `reload-00` over the
+  depot observe subset (protocol 10): `IsRoadDepotTile` /
+  `GetRoadDepotFrontTile` / `GetOwner` / `IsRoadTile` /
+  `AreRoadTilesConnected` at depot 45487 / front 45743; zero
+  spend, zero tile echo, zero fleet rows, no game command, no save of any
+  kind; the E72 dispatch-entry set+assert of the native road context
+  carried over verbatim; wire `max_cost` echo stays 3000 (contract
+  forced) while the attempt ceiling is 0; the one-shot 32-request budget
+  and duplicate drop guard mirrored.
+- Pipeline `app/simulation/openttd/proof/corridor_depot_recheck_native.py`
+  (additive, 2122 lines): KIND `depot-recheck`, attempt
+  `D5-F12-DEPOT-RELOAD-1`, milestone `D5-F12-DEPOT-RELOAD`, prelaunch
+  schema `d5-f12-depot-reload-prelaunch-v1`, prerequisite schema
+  `d5-native-prerequisite-attempt-v1`, receipt
+  `after-reload-receipt.json` / `d5-f12-depot-reload-receipt-v1` (nested
+  phase of record), launch-consumed schema `d5-native-launch-consumed`;
+  schedules the one pinned observe exchange with zero-mutation markers
+  (`mutated`/`state_changed` structurally empty/false), arms
+  `DEPOT_RELOAD_OBSERVED`/`DEPOT_RELOAD_INCOMPLETE`, gate
+  `DEPOT_RELOAD_GATE_PASSES`/`DIVERGED`/`UNDECIDED_INCOMPLETE`, verify
+  arm `DEPOT_RELOAD_FACTS_VERIFIED` (+ preserved/halt/unresolved
+  evidence arms), welcome floor `start_day >= 712223`, budgets
+  1/1/1/512/512/0s; prerequisite binding = a pinned copy of the consumed
+  `D5-F12-DEPOT-3` after-save `183b2027…6a6` (E82) re-verifying the
+  round-2 facts of record (both directions TRUE, front 45743, owner 0,
+  depot_linked TRUE, funds 489650, fleet 0) through the consumed depot
+  attempt's own binding; zero-save discipline enforced post-run
+  (`after.sav`/`session-before.sav`/`after-diagnostic.sav`/
+  `session-before-identity.json`/`receipt.json` all forbidden in the
+  candidate); loaded-source binding three-way (staged record == run
+  record == retained depot save). Reuses the depot wire contract
+  observe subset and shared frame machinery; no frozen file modified.
+- Suites: `tests/test_d5_depot_recheck_package_vm.py` 12 passed (VM,
+  imported depot scaffolding), `tests/test_corridor_depot_recheck_native.py`
+  28 passed (constants/schedule/request gates, session write policy,
+  phase arms, prerequisite binding + fake-dir refusals, staging,
+  composition `RoadFreightProof` identity, freeze closure, preflight
+  tamper refusals, synthetic consumed replay +
+  `AUTHORIZATION_UNVERIFIED`/funds-drift/fact-divergence/receipt-drift/
+  zero-save-artifact-refusal/halt-preservation arms); companion depot
+  suites re-run green 39 + 41. All offline, exit 0.
+- Gates of record: `.venv/bin/ruff` clean on the touched paths;
+  `uvx ty check` (`All checks passed!` on the three .py paths; `.nut`
+  files out of scope by tooling); `git diff --check` clean; ws-clean —
+  `workspace/` clean, `artifacts/` byte-untouched (candidate-3 after.sav
+  re-digests `183b2027…6a6` and its binding re-digests `0d7fc617…7b95`),
+  `CONTEXT.md` pin `36648f9c2fee4106` intact, root `--version` intact.
+- Suite-caught defects fixed in round: a real `NameError` in
+  `verify_depot_recheck_attempt` (`outbound` destructured as `_outbound`);
+  the dead local `schedule = recheck_schedule()` removed from staging;
+  receipt written nested-first (schema/attempt/milestone before phase);
+  the verify halted-collection guard now requires the request file
+  before claiming the exchange's evidence; `.nut` tile-guard corrected to
+  a type-shaped guard (typed observe carries NO tile keys — drop only
+  non-null tile/front_tile echoes); depot-session cross-arm corrected
+  (protocol-10 observe IS accepted by the depot session — the session
+  guard is protocol/op-set level, not label).
+- `artifacts/` never written; historical candidates byte-verbatim; no
+  commit. NEXT: R3 staging approval for `D5-F12-DEPOT-RELOAD-1`
+  (prepare + read-only gates only), then read-only review → Gate C →
+  one launch, each an explicit operator ask. Evidence index E83.
+
+### 2026-11-03 — D5-F12-DEPOT-RELOAD-1 staged (E84)
+
+One operator staging approval consumed (PRELAUNCH only; no review, no
+Gate C, no launch):
+
+- Refusal gates clean (no prior recheck candidate on disk); ONE
+  first-attempt `prepare artifacts/experiments/d5-corridor-depot-recheck-native-candidate-1`
+  → `PRELAUNCH PASS` exit 0.
+- Seal `0093577a7c84df352190df096245dd5e990e63e0c95d99b8b9630a526522c2e6`
+  == `PRELAUNCH.sha256`; attempt `D5-F12-DEPOT-RELOAD-1`, schema
+  `d5-f12-depot-reload-prelaunch-v1`, kind `depot-recheck`, milestone
+  `D5-F12-DEPOT-RELOAD`.
+- Prerequisite = the consumed `D5-F12-DEPOT-3` after-save
+  `183b2027…6a6` (staged `world.save_sha256` equal) with the retention
+  check passing; binary `276d5b69…1904c` == pin, no other openttd
+  process; fresh session key `b02eea77…` (not the anchor); frozen
+  closure 3497/0; budgets 1/1/1 / max_cost 0; schedule = `reload-00`.
+- Composed GameScript `isolated/openttd-15.3-ncjrhz4i/game/RoadFreightProof/main.nut`
+  ≡ live recheck package `5e2ee281…a243` byte-exact, bridge
+  `… extends D5DepotRecheckProof`; AUTHORIZATION/CLAIM/LAUNCH-CONSUMED
+  absent.
+- Read-only gates: re-run `preflight` → `PREFLIGHT PASS` exit 0;
+  `verify` → `AUTHORIZATION_UNVERIFIED`/`CLAIM_ABSENT` exit 1 (pre-auth
+  by design).
+
+NEXT GATES (each its own explicit operator approval): independent
+read-only review → Gate C signing → one launch. STOPPED before review.
+
+### 2026-11-03 — D5-F12-DEPOT-RELOAD-1 review PASS (E85)
+
+One operator review approval consumed (read-only; no signing, no launch):
+
+- 38-check in-session audit: ALL PASS. Seal `0093577a…c2e6` ≡
+  `PRELAUNCH.sha256`; identity exact; binary `276d5b69…1904c` == pin.
+- The module's own prerequisite re-derivation exact
+  (`staged_prerequisite == _recheck_prerequisite_record(binding())`):
+  pinned copy of the consumed `D5-F12-DEPOT-3` after-save
+  `183b2027…6a6`, retention check regular-file digest PASS, depot
+  binding `source_world` = A1 pin `3748e00c…5420bd`, round-2 facts of
+  record both-TRUE, funds 489650, fleet 0; staged `source.sav`
+  digest-verified; welcome floor 712223.
+- Plan policy: single `reload-00` observe exchange; plan digest
+  re-derives; plan model `8be74b2c…`; budgets 1/1/1/max_cost 0; profile
+  `permitted_ops ["observe"]` / `mutating_ops []`; wire echo 3000;
+  zero-save `save_policy`.
+- Composition: `isolated/openttd-15.3-ncjrhz4i/game/RoadFreightProof/main.nut`
+  ≡ live package `5e2ee281…a243`; OpenGFX `43a0c1da…03be` == pin;
+  frozen closure 3497/0; fresh session key `b02eea77…` (not the anchor).
+- Refusal gates: AUTHORIZATION/CLAIM/LAUNCH-CONSUMED and every
+  zero-save artifact name absent; candidate files exactly 3; re-run
+  `preflight` → `PREFLIGHT PASS` exit 0; `verify` →
+  `AUTHORIZATION_UNVERIFIED`/`CLAIM_ABSENT` exit 1.
+- Historical bytes untouched: depot manifests 29/29 + 28/28 + 16/16,
+  census manifests 36/36 + 31/31, D5-FREIGHT-4 seal `82effd43…5540`
+  byte-exact; `CONTEXT.md` pin intact; `git diff --check` clean.
+- Disclosures: two first-script audit bugs (wrong key path
+  `provenance["source_world"]`; a `json.load`/`read_text` slip) re-ran
+  PASS — no staging defect; in-session machinery per E62/E80 precedent.
+
+READY-FOR-GATE-C. NEXT: Gate C signing (one explicit operator approval,
+Option-1 checklist, verify under the pinned anchor before write, seed
+env-only) → one separate launch approval. STOPPED before Gate C.
+
+### 2026-11-03 — D5-F12-DEPOT-RELOAD-1 Gate C signed (E86)
+
+One operator Gate C approval consumed (Option-1 checklist; one write,
+signature only — NOT launch approval):
+
+- Refusal gates re-checked: seal `0093577a…c2e6` re-verified,
+  AUTHORIZATION/CLAIM/LAUNCH-CONSUMED absent.
+- Seed env-only (PEM → 32-byte RFC 8032 hex into `SEED_HEX`; never
+  printed/filed/arg-passed; pipefail + shape `^[0-9a-f]{64}$` checks);
+  seed-derived public key == pinned anchor `5063982b…4880f` BEFORE
+  signing.
+- Signed once over the canonical payload bytes (payload digest
+  `002f336dcc786324ffee03db4d59415dfe647f68184b48835a8877fc3c3c6856`
+  — full binding set incl. `operation_schedule` `reload-00`,
+  `plan_digest`, budgets, the pinned `183b2027…6a6` source world and
+  the exact `execution_command`).
+- Signature verified under the pinned anchor BEFORE any write;
+  `AUTHORIZATION.json` written exactly once — record sha
+  `e2b5ebb04e4afeb362c0207af6f395f9fbbf6cc4596ea89a683e971d4f914864`;
+  `verify_authorization` PASS binding `D5-F12-DEPOT-RELOAD-1` to seal;
+  `operator_key_identity` `sha256-ed25519-public-key:cbb63ff5…40c614`
+  (unchanged production anchor); seed cleared (unset, empty verified).
+- Post-write read-only gates: `preflight` → `PREFLIGHT PASS`;
+  `verify` → `AUTHORIZATION_UNVERIFIED`/`CLAIM_ABSENT` exit 1
+  (authorized, never consumed); CLAIM/LAUNCH-CONSUMED absent;
+  candidate files 5.
+
+FINAL REMAINING GATE: one separate explicit operator launch approval
+(both outcomes terminal, no retry), then post-run read-only replay
+gates. STOPPED before launch.
+
+### 2026-11-03 — D5-F12-DEPOT-RELOAD-1 launched once: COMPLETE + FACTS VERIFIED (E87)
+
+One operator launch approval consumed; one run, terminal:
+
+- Pre-launch env-of-record: binary re-digest `276d5b69…1904c` == pin,
+  OpenGFX `43a0c1da…03be` == pin, no other openttd process.
+- Run exit 0 `NATIVE_DEPOT_RELOAD_COMPLETE` verified=true; 1 launch /
+  1 connection / 1 request; `reload-00` READY measuring the round-2
+  facts of record verbatim (both directions TRUE, front 45743, owner 0,
+  depot_linked true, depot_present true); funds 489650 constant; cost 0;
+  `mutated []`; `state_changed false`; `halt null`;
+  `DEPOT_RELOAD_GATE_PASSES`; `loaded_source_sha256 183b2027…6a6`
+  three-way (staged == run == retained depot after-save).
+- Zero save of any kind emitted; the world of record stays
+  candidate-3/after.sav.
+- Replay `verify` → `DEPOT_RELOAD_FACTS_VERIFIED` exit 0;
+  `after-reload-receipt.json` (`d5-f12-depot-reload-receipt-v1`) bound
+  to the seal and the loaded source, funds 489650, fleet 0, phase
+  `DEPOT_RELOAD_OBSERVED`; claim consumed once; cleanup certified
+  (pid 75588 reaped rc 0, TIME_WAIT + closed sockets, workspace
+  disposed, credential removed); manifest 15/15 exactly balanced; A1
+  prerequisite after-save re-digested byte-exact; `CONTEXT.md` pin
+  intact.
+
+Candidate terminal COMPLETE; never re-launch. R3 outcome: the round-2
+world survives its own re-measure. NEXT: R4 (freight v3 world-pin
+version `WORLD_PIN_VERSION 3`, identity `D5-FREIGHT-5`, R2+R3 receipts
+required in `freight_facts()`, source world = fresh copy of R2
+after.sav) — offline implementation is its own round, its own explicit
+operator approvals.
+
+### 2026-11-03 — R4 Path A freight v3 offline implemented (E88)
+
+The operator approved R4 for exactly: additive freight v3 world-pin
+version `WORLD_PIN_VERSION 3`, schema `d5-freight2-prelaunch-v2`,
+identity `D5-FREIGHT-5` (D5-FREIGHT-4 staged-once name never reused),
+R2+R3 receipts required in `freight_facts()`, source world = fresh copy
+of the consumed D5-F12-DEPOT-3 after-save, site gate
+`corridor_freight_v2.py:1277-1278` (`depot_edge is True`) untouched.
+
+Implementation delivered:
+
+- Wire module `corridor_freight_v2.py`: header/docstrings re-pointed to
+  the post-mutation world of record (`183b2027…6a6` at £489,650);
+  `FREIGHT_ATTEMPT_V2 = "D5-FREIGHT-5"` (the once-staged never-consumed
+  D5-FREIGHT-4 stays byte-verbatim stale-by-construction);
+  `FUNDS_AT_DEPOT_MUTATION_CLOSE = 489650` beside the kept
+  `FUNDS_AT_A1_CLOSE = 490257`; plan validator + site refusals bind the
+  depot-mutation close-out funds exactly. Package bytes untouched.
+- Native pipeline `proof/corridor_freight_v2_native.py`:
+  `WORLD_PIN_VERSION = 3`; schema bump; pins `DEPOT_PREREQUISITE`
+  (candidate-3) / `DEPOT_PREREQUISITE_AFTER_SAVE 183b2027…6a6` /
+  `RELOAD_PREREQUISITE` (recheck candidate-1); `freight_facts()` now
+  runs the full chain — A1 candidate-3 lineage unchanged, depot chain
+  (`F12_MUTATION_COMPLETION_VERIFIED`, both-TRUE edge facts, front
+  45743, owner 0, funds 489650, fleet 0, saved-at fleet-00), reload
+  chain (receipt three-way `loaded_source_sha256` binding +
+  `DEPOT_RELOAD_FACTS_VERIFIED`); `prerequisite_binding()` carries
+  nested provenance (`a1_extension_lineage` / `depot_mutation_chain` /
+  `reload_chain`) with flat `world_pin_version` + `funds_of_record`;
+  plan/budgets/policy/staging/preflight/replay guards all re-pointed.
+  Plan model digest fresh `1acaa75d4ae2b00e…`; schedule digest policy
+  unchanged.
+- Suites: `tests/test_corridor_freight_v2.py` 61 passed (stub funds
+  489650) and `tests/test_corridor_freight_v2_native.py` 67 passed —
+  128 total exit 0. Live offline verification: `freight_facts()` executed
+  in-session, both prerequisite replays green, three-way chain binds.
+- Gates: ruff clean on the four touched files (one I001 import-order
+  repair), ty 5 diagnostics all pre-existing baseline in untouched
+  regions, `git diff --check` clean, ws-clean byte-untouched
+  (candidate-3 `after.sav` `183b2027…6a6`, binding `0d7fc617f058b12b…`,
+  D5-FREIGHT-4 seal `82effd43…5540`, `CONTEXT.md` pin `36648f9c2fee4106`
+  intact, root `--version` preserved).
+
+Mid-suite fixes were test-file only (payload `source_world` pin, world
+`expected_funds` assert, provenance flat-key KeyError → per-directory
+seal compares). No production revert; zero `artifacts/` writes; zero
+native runs. NEXT: the R4 staging gate for `D5-FREIGHT-5` (one prepare
+run + read-only preflight/verify only) is an explicit operator ask,
+then independent review → Gate C → one launch, each its own approval.
+
+### 2026-11-03 — R4 staging: D5-FREIGHT-5 staged (E89)
+
+Operator approved the staging gate as exactly one prepare run plus
+read-only preflight/verify. First invocation refused fail-closed before
+any write (CLI `--prerequisite` default still A1-pinned; one-line
+default fix in the module; ruff + both suites re-run green post-fix).
+No bytes written by the refusal — the approved attempt is the first.
+
+- `prepare d5-corridor-freight-native-candidate-5` → `PRELAUNCH PASS`
+  exit 0; seal `57e37573f46ffa57…6bf9`; attempt `D5-FREIGHT-5`, schema
+  `d5-freight2-prelaunch-v2`; plan digest `ed5bad82…` byte-identical to
+  candidate-4's (schedule policy unchanged), plan model fresh
+  `1acaa75d4ae2b00e…`; prerequisite = consumed `D5-F12-DEPOT-3`
+  (candidate-3, after-save `183b2027…6a6`); provenance
+  `world_pin_version 3`; staged `source.sav` == depot pin (fresh COPY);
+  gate files absent.
+- Read-only: `preflight` → `PREFLIGHT PASS` exit 0; `verify` →
+  `AUTHORIZATION_UNVERIFIED`/`CLAIM_ABSENT` exit 1 (pre-auth by design).
+- ws-clean: candidate-3 `after.sav` + binding byte-untouched,
+  D5-FREIGHT-4 seal historic, `CONTEXT.md` pin intact, root
+  `--version` preserved; `git diff --check` clean.
+
+Candidate staged-only, byte-frozen. NEXT: independent read-only review
+→ Gate C signing → one launch, each its own explicit operator ask.
+
+### 2026-11-03 — R4 review: D5-FREIGHT-5 READY-FOR-GATE-C (E90)
+
+Operator approved the in-session read-only review (E80/E85 precedent).
+26-axis audit re-derived every staged fact from its sources of record:
+- Full `freight_facts()` replay run with before/after byte snapshots:
+  depot after-save/binding, reload receipt and every prelaunch digest
+  identical across the run — replay is read-only, chain verified
+  (`F12_MUTATION_COMPLETION_VERIFIED` + `DEPOT_RELOAD_FACTS_VERIFIED` +
+  A1 lineage unchanged).
+- Staged `prerequisite` + `prerequisite_provenance` byte-equal to the
+  live `prerequisite_binding()` re-derivation (`world_pin_version 3`);
+  staged `source.sav` == depot pin `183b2027…e6a6` (fresh COPY).
+- Plan digest byte-identical to candidate-4's (schedule policy
+  unchanged); plan model fresh `1acaa75d4ae2b00e…`; budgets funds
+  489650; composed GameScript ≡ live package `6704aa6e…952d`; frozen
+  closure 3498 entries, 8 sampled re-hashes exact.
+- Re-run gates: `preflight` → `PREFLIGHT PASS`; `verify` →
+  `AUTHORIZATION_UNVERIFIED`/`CLAIM_ABSENT` exit 1 (pre-auth by design).
+- Disclosures: two audit-script bugs rerun PASS (flat-dict mis-read of
+  the frozen block; dict slicing); the old binding-digest shorthand
+  `…7b95` corrected — the full file digest is
+  `0d7fc617f058b12b…9b95`, head stable across every check.
+
+No writes, no signing, no launch, nothing consumed. NEXT: Gate C
+signing (one explicit operator approval, Option-1, seed env-only) →
+one separate launch approval.
+
+### 2026-11-03 — R4 Gate C: D5-FREIGHT-5 signed (E91)
+
+Operator Gate C approval consumed in-session, Option-1 checklist,
+exactly one authorization-record write, signature only (NOT launch
+approval):
+- Refusal gates re-checked first: gate files absent; live seal
+  re-digested `57e37573f46ffa57…6bf9` == `PRELAUNCH.sha256` == the
+  reviewed record.
+- Seed env-only via the operator-held PEM, never printed, filed or
+  arg-passed; seed-derived public key == pinned anchor
+  `5063982b…4880f` BEFORE signing; key identity
+  `sha256-ed25519-public-key:cbb63ff5…40c614` unchanged.
+- Canonical payload digest `cdd11859…5276` binding attempt
+  `D5-FREIGHT-5`, schema `d5-freight2-prelaunch-v2`, the reviewed seal,
+  source world `183b2027…6a6`, `operation_schedule` (30 exchanges) and
+  `plan_digest` `ed5bad8237dd6898…`.
+- 64-byte RFC 8032 signature verified under the pinned anchor BEFORE
+  any write; `AUTHORIZATION.json` written exactly once — record sha256
+  `83ca881e7cebd3d903889c83b5e9ebb6b09b3ce189fb85d80c8332f6c65c3a68`;
+  `verify_authorization` PASS binding D5-FREIGHT-5 to the seal; seed
+  cleared (unset, empty verified).
+- Disclosures: two earlier gate-script invocations exited 94
+  (seed-extractor off-by-one — `range(len(der) - 32)` excludes the
+  final 32-byte window of the 48-byte PKCS#8 DER) and died before any
+  write; seed never rested on disk across either (captured extraction
+  file deleted before the re-run); the fixed standalone extractor
+  (`len(der) - 31`, validated by `public_from_seed` == pinned anchor)
+  was re-pointed into the gate script and consumed in the single
+  successful invocation. No candidate defect; seed not visible in any
+  output.
+- Post-write read-only gates: `preflight` → `PREFLIGHT PASS` exit 0;
+  `verify` → `AUTHORIZATION_UNVERIFIED`/`CLAIM_ABSENT` exit 1
+  (authorized, never consumed — pre-launch state shape of
+  E67/E81/E86); CLAIM/LAUNCH-CONSUMED/receipt absent; candidate root =
+  5 entries (4 staged + AUTHORIZATION.json); staged seal re-digested
+  byte-exact.
+- ws-clean: depot after.sav `183b2027…6a6`, binding
+  `0d7fc617f058b12b…9b95`, D5-FREIGHT-4 seal `82effd43…5540`,
+  `CONTEXT.md` pin `36648f9c2fee4106`, root `--version` preserved;
+  `git diff --check` clean.
+
+Signature binding only — NOT launch approval. FINAL REMAINING GATE:
+one separate explicit operator launch approval (both outcomes
+terminal, no retry), then post-run replay verification + cleanup
+certification + manifest audit.
+
+### 2026-11-03 — R4 launch: D5-FREIGHT-5 terminal halt at order-00 (E92)
+
+The operator launch approval was consumed for exactly one run. Outcome:
+terminal `PHASE_HALTED_PREFIX_PRESERVED`, exit 1, verified=false —
+never retried, never relabeled.
+
+- Pre-launch gates PASS: seal == reviewed record; binary
+  `276d5b69…904c` == pin == disk; OpenGFX `43a0c1da…03be` == pin;
+  process exclusivity; authorization record present (CLAIM absent);
+  `verify_authorization` PASS under the pinned anchor `cbb63ff5…40c614`;
+  budget 1 launch / 1 connection / 0 retries.
+- Run: 1 launch / 1 connection / 5 requests, returncode 0,
+  `state_changed true`. Prefix preserved exactly:
+  - `site-00` SITE_ADMITTED — accept 8, production 104,
+    `pickup_sid 0`, `delivery_sid 2`, **`depot_edge true`**: the site
+    gate of record passes natively on the v3 depot-mutation world.
+  - `engine-00` ENGINE_ADMITTED (pin 123, quote 4429).
+  - `purchase-00` BUILT (cost 4429, funds 489650 → 485221, vehicle 1).
+  - `vread-00` READ (NATIVE_STATE_CHANGED).
+  - Halt at `order-00`: `status READBACK_MISMATCH`, cost 0,
+    `world_state UNCERTAIN_AFTER_FAILED_COMMAND`, 0 cycles completed.
+- Replay `verify` → `PHASE_HALTED_EVIDENCE_PRESERVED` exit 1.
+- Attempt terminal; claim consumed once (CLAIM.json + LAUNCH-CONSUMED.json
+  both bind authorization record `83ca881e…`).
+- Certified cleanup: reaped rc 0, graceful, credential removed,
+  workspace disposed, socket state `TIME_WAIT (inode 0)` (the policy
+  state of record), `remaining_processes []`, `cleanup_error []`,
+  `cleanup_complete true`.
+- Manifest 25/25 entries exact; diagnostic-only save `fa32868b…`
+  digest-bound in result.json — no authoritative new save.
+
+#### Root cause (read-only, source-level): instrument defect, E72 class
+
+The 15.3 script order API is natively TILE-based both directions:
+
+- `AppendOrder(vehicle, tile, flags)` stores
+  `MakeGoToStation(GetStationIndex(tile))`
+  (`ottd/src/script/api/script_order.cpp:455-500`).
+- `GetOrderDestination` returns, for a goto-station order, the
+  station's canonical TILE (`st->truck_stops->xy`;
+  `script_order.cpp:241, 267-284`) — never a StationID.
+
+The package order readback compares the readback value against the
+site-latched StationIDs (latch: `GSStation.GetStationID` →
+`pickup_sid 0` / `delivery_sid 2`; comparison `main.nut:937-939`,
+order-read `:978-980`; the N1 comment `:897-900` assumed a sid-form
+readback). The offline stub shares the conflation
+(`tests/support/canonical_protocol_vm.nut:94` — `GetStationID` returns
+the tile-as-id; `:112` — `GetOrderDestination` returns
+`orders[n].tile`), so both suites stayed green while the native trip is
+statically certain: tile-form value (≈45748-class) is never equal to
+station id 0/2, and `d != expected_sid` short-circuits first.
+AppendOrder itself returned true; the pick stop may well be stored.
+
+The family had NEVER natively measured `order-00`: historical
+candidates 1 and 3 halted at `site-00` and candidate-4 never launched —
+candidate-5 is the first family member past the site gate and the first
+producer of this readback observation. NOT a world defect (the site
+facts re-measured verbatim on the loaded v3 world) and NOT a
+staging/signing defect.
+
+#### Post-run state
+
+Staged bytes unchanged (seal + sidecar + AUTHORIZATION record re-digested
+byte-exact); historical bytes untouched (depot after.sav `183b2027…6a6`,
+binding `0d7fc617…9b95`, reload receipt `abf6a79e…151d`, D5-FREIGHT-4
+seal `82effd43…5540`); `CONTEXT.md` pin `36648f9c2fee4106` intact;
+root `--version` preserved; `git diff --check` clean.
+
+NEXT: fresh design round required for the instrument fix — 15.3
+tile-form-faithful order readback (`d == pinned stop tile &&
+GSStation.GetStationID(d) == latched sid && f == flags && g == true`,
+mirrored in order-read) plus faithful stub modeling, under a fresh
+freight identity (`D5-FREIGHT-6`) with its own design record and
+explicit operator approvals end-to-end. Nothing slated in-session.
+
+### 2026-11-03 — Fix round: order-readback implemented offline (E93)
+
+Three explicit operator gates consumed — design-record approval
+("record as written", sha `538065fd89ea5ea3…03a6`), implementation
+approval, and the disclosed scope-correction approval (first battery
+run 100 passed / 28 failed — fail-closed on the wire suite's own
+embedded `GSOrder` fixture, then corrected under approval). No
+staging, no signing, no launch, nothing consumed.
+
+- Design record: `docs/d5-order-readback-tile-form-2026-11-03.md`
+  (gate sha `538065fd89ea5ea3…03a6`; §3.4 amended one paragraph
+  naming the actual fixture file → `e3897c8d8494b560…7b160`).
+- Package (`d5_freight_v2_package/main.nut`): both readback condition
+  blocks re-modelled — OrderOp (lines 939-942) and OrderReadOp
+  (lines 983-990) compare the readback destination against the
+  pinned stop tiles and deepen with
+  `GSStation.GetStationID(d) == latched sid` (stricter instrument);
+  N1 comments re-state the 15.3 two-way tile model with the E92
+  citations.
+- `tests/support/canonical_protocol_vm.nut`: `GetOrderDestination`
+  membership edit; parse-verified via the embedded 15.3 Squirrel
+  `compile` (the standalone validator's prepared engine tree is
+  absent in this VM — never a recorded gate here; disclosed).
+- Identity: `FREIGHT_ATTEMPT_V2 → "D5-FREIGHT-6"` (attempt-5 spent,
+  never re-used); the native suite's pin test literal moved with the
+  bump (E74 precedent).
+- Wire fixture correction (scope-corrected, operator-approved):
+  `tests/test_corridor_freight_v2.py` embedded `GSOrder` now stores
+  `{d = appended stop tile, sid = resolved sid, f = flags}`
+  (append-call audit unchanged), `IsGotoStationOrder` reads the
+  stored sid, and `test_stub_appends_carry_tile_destinations_and_real_flags`
+  asserts the stored shape (d == pinned tiles, sid == 0/2).
+- Battery: pytest 61 wire + 67 native = **128 passed, exit 0**
+  (second run); scoped `ruff check` (REPRODUCE.md touched paths)
+  clean; `uvx ty check` = exactly the 5 recorded baseline
+  diagnostics (untouched regions); `git diff --check` clean.
+- ws-clean: depot after.sav `183b2027…6a6`, binding, reload receipt
+  `abf6a79e…151d`, D5-FREIGHT-4 seal `82effd43…5540`, candidate-5
+  seal + AUTHORIZATION `83ca881e…` byte-exact (consumed-side evidence
+  untouched), `CONTEXT.md` pin `36648f9c2fee4106`, root `--version`.
+  Full-tree lint/type health stays UNKNOWN beyond the recorded
+  checks (REPRODUCE.md:46 discipline) — the 15 full-tree ruff hits
+  sit in files no round edit ever touched.
+
+NEXT GATES (each its own explicit operator approval): staging for
+`D5-FREIGHT-6` (prepare + read-only preflight/verify) → independent
+read-only review (composed GameScript digest re-derived against the
+new package bytes) → Gate C → one launch.
+
+### 2026-11-03 — Fix round: D5-FREIGHT-6 staged (E94)
+
+Operator staging approval, ONE prepare invocation, first-attempt
+success (`PRELAUNCH PASS
+artifacts/experiments/d5-corridor-freight-native-candidate-6` exit 0).
+- Seal `b2ff1b40471810f52586a8051eeb62bd7849fd17691b4d55780058f8afccd639`
+  == `PRELAUNCH.sha256`; attempt `D5-FREIGHT-6`, schema
+  `d5-freight2-prelaunch-v2`, kind `freight`; provenance
+  `world_pin_version 3`.
+- Plan digest `ed5bad8237dd6898…` byte-identical (schedule digest
+  policy unchanged); plan model fresh `da576ae59527aa53…`.
+- Prerequisites = the consumed chain of record; staged `source.sav`
+  == depot pin `183b2027…6a6` (fresh COPY verified, single file);
+  budgets funds 489650; fresh session key `3600fd62…` (not the
+  anchor); gate files absent; root = 4 entries.
+- Composed GameScript
+  `isolated/openttd-15.3-g1gbthgk/game/RoadFreightProof/main.nut`
+  ≡ live fixed package `e8c603d5be1a41d6…` byte-exact — the new
+  package digest after the order-readback fix; the retired E76
+  constant `6704aa6e…952d` lives only in the historical candidates.
+- Read-only gates: `preflight` → `PREFLIGHT PASS` exit 0; `verify` →
+  `AUTHORIZATION_UNVERIFIED`/`CLAIM_ABSENT` exit 1 (authorized, never
+  consumed).
+- ws-clean all pins hold (depot after.sav/binding, reload receipt
+  `abf6a79e…151d`, D5-FREIGHT-4 seal `82effd43…5540`, candidate-5
+  seal + AUTHORIZATION `83ca881e…` byte-exact — consumed-side
+  evidence untouched); `CONTEXT.md` pin `36648f9c2fee4106`; root
+  `--version`; `git diff --check` clean.
+
+NEXT: independent read-only review → Gate C signing → one launch,
+each its own explicit operator approval.
+
+### 2026-11-03 — Fix round: candidate-6 independent review PASS (E95)
+
+Operator review approval consumed in-session (read-only, per the
+E80/E85/E90 precedent). The audit script
+`/tmp/opencode/r5_review_c6.py` ran 20 axes → **20 PASS / 0 FAIL,
+exit 0 on the FIRST invocation** (no rerun, nothing disclosed).
+
+- Identity: seal `b2ff1b40471810f5…d639` == sidecar; attempt
+  `D5-FREIGHT-6` / schema `d5-freight2-prelaunch-v2` / kind
+  `freight` == module re-derivations; binary pin `276d5b69…904c`
+  == staged == disk; process exclusivity; staged key `3600fd62…`
+  ≠ anchor; root exactly the 4-entry staged set; gate files absent.
+- Full prerequisite replay read-only; snapshot set before == after
+  across all 9 pins byte-identical (depot after.sav `183b2027…6a6`,
+  binding `0d7fc617…9b95`, reload receipt `abf6a79e…151d`,
+  depot/reload prelaunch `4df12e1f…`/`0093577a…`, A1 after
+  `3748e00c…5420bd` + prelaunch `404d42d9…6acd8`, candidate-5 seal
+  `57e37573…6bf9` + AUTHORIZATION `83ca881e…3a68`) — nothing
+  retained mutated.
+- Facts re-derived: wpv3, save == depot pin, funds 489650,
+  `F12_MUTATION_COMPLETION_VERIFIED` + `DEPOT_RELOAD_FACTS_VERIFIED`,
+  A1 funds-at-close 490257, retained welcome `start_day 712223`;
+  prerequisite binding == staged per key incl. provenance; staged
+  `source.sav` == pin (fresh COPY); schedule v2 / 30 exchanges /
+  planned ids / 6 cycles; plan digest `ed5bad8237dd6898…`
+  byte-identical, plan model fresh `da576ae59527aa53…`; budgets
+  funds 489650 / max_cost 5000 / gsadmin 1450 / connection 1 /
+  retries 0; engine pin 123, target 45748, company 0.
+- **The fix verified inside the staged record**: the live package
+  carries the approved tile-form conditions verbatim (OrderOp
+  `expected_tile` + `GSStation.GetStationID(d) != expected_sid`;
+  OrderReadOp `GetStationID(d0)`, `GetStationID(d1)` identity
+  deepening), and the composed GameScript ≡ live package byte-exact
+  at the NEW digest `e8c603d5be1a41d6…` (retired `6704aa6e…` absent
+  from the live record); OpenGFX pin in graphics identity; frozen
+  closure 3498 entries / 8 sampled re-hashes exact; candidate-5
+  consumed evidence immutable (snapshot tail).
+- The review wrote nothing under `artifacts/` (script lived in
+  /tmp); ws-clean unchanged.
+
+NEXT: Gate C signing — one explicit operator approval, Option-1
+checklist re-derived for candidate-6 (attempt `D5-FREIGHT-6`, seal
+`b2ff1b40…d639`, source world `183b2027…6a6`, `operation_schedule`
+30 + `plan_digest` `ed5bad82…` in the payload; seed env-only via the
+fixed extractor, anchor-verified before any write, unset after) —
+then ONE separate launch approval.
+
+### 2026-11-03 — R4c Gate C: D5-FREIGHT-6 signed (E96)
+
+Operator Gate C approval consumed in-session, Option-1 checklist,
+exactly one authorization-record write, signature only (NOT launch
+approval):
+
+- Gate scripts RE-DERIVED for candidate-6 before any invocation
+  (fresh `/tmp/opencode/r5_gate_c.sh` + `/tmp/opencode/r5_sign_gate_c.py`;
+  the candidate-5-bound `r4_*` pair never invoked). Constants from
+  the reviewed record: attempt `D5-FREIGHT-6`, schema
+  `d5-freight2-prelaunch-v2`, seal `b2ff1b40…d639`, source world
+  `183b2027…6a6`, `operation_schedule` 30 + `plan_digest`
+  `ed5bad82…`.
+- Refusal gates re-checked immediately pre-sign: gate files absent;
+  live seal re-digested == `PRELAUNCH.sha256` == the E94/E95
+  reviewed record.
+- Seed env-only via the operator-held PEM through the fixed
+  extractor, never printed, filed or arg-passed; seed-derived
+  public key == pinned anchor `5063982b…4880f` BEFORE signing; key
+  identity `sha256-ed25519-public-key:cbb63ff5…40c614` unchanged.
+- Canonical payload digest
+  `9b11f2c6af4d2269c1b3e994eec77b1e7dd78850fd566b14d5299a40987d3084`;
+  64-byte RFC 8032 signature verified under the pinned anchor
+  BEFORE any write; `AUTHORIZATION.json` written exactly once —
+  record sha256
+  `2701cd8703266d35754446216d75d4fe31ba1d29c3053bef0710df2073d5eef2`;
+  `verify_authorization` PASS binding D5-FREIGHT-6 to the seal;
+  seed cleared (unset, empty verified).
+- Exit 0 FIRST invocation — no refusal, no extractor incident to
+  disclose (E91's off-by-one already fixed and surviving).
+- Post-write read-only gates: `preflight` → `PREFLIGHT PASS` exit 0;
+  `verify` → `AUTHORIZATION_UNVERIFIED`/`CLAIM_ABSENT` exit 1
+  (authorized, never consumed); CLAIM/LAUNCH-CONSUMED/receipt
+  absent; candidate root = 5 entries (4 staged +
+  AUTHORIZATION.json); staged seal re-digested byte-exact.
+- ws-clean: depot after.sav `183b2027…6a6`, binding
+  `0d7fc617…9b95`, reload receipt `abf6a79e…151d`, candidate-5 seal
+  + AUTHORIZATION `83ca881e…` byte-exact, `CONTEXT.md` pin
+  `36648f9c2fee4106`, root `--version`; `git diff --check` clean.
+
+Signature binding only — NOT launch approval. FINAL REMAINING GATE:
+one separate explicit operator launch approval (both outcomes
+terminal, no retry), then post-run replay verification + cleanup
+certification + manifest audit.
+
+### 2026-11-03 — R4c launch: D5-FREIGHT-6 terminal halt at transit-00 after the order fix verified natively (E97)
+
+The operator launch approval was consumed for exactly one run. Outcome:
+terminal `PHASE_HALTED_PREFIX_PRESERVED`, exit 1, verified=false —
+never retried, never relabeled. **The round's fix was measured by the
+run itself: the family's FIRST native order-set verification.**
+
+- Pre-launch gates PASS: seal == reviewed record; binary `276d5b69…904c`
+  == pin == disk; OpenGFX `43a0c1da…03be` == pin; process exclusivity;
+  AUTHORIZATION present (CLAIM absent); `verify_authorization` PASS
+  under the pinned anchor `cbb63ff5…40c614`; budget 1 launch / 1
+  connection / 0 retries / 0 reconnects.
+- Run: 1 launch / 1 connection / **12 requests**, returncode 0,
+  `state_changed true`. Preserved prefix, eleven completed exchanges:
+  - `site-00` SITE_ADMITTED — accept 8, production 104, sids 0+2,
+    `depot_edge true` (the v3 world gate of record passes again).
+  - `engine-00` ENGINE_ADMITTED (pin 123, quote 4429); `purchase-00`
+    BUILT (cost 4429, funds 489650 → 485221, vehicle 1); `vread-00`
+    VAN `IN_DEPOT` speed 0 `in_depot true` (frame evidence,
+    `frames.json`).
+  - **The fix of record verified natively**: `order-00` ORDERED
+    (`dest 45748 stop_tile`, flags 0, goto true), `order-01` ORDERED
+    (`dest 50862 stop_tile`, flags 128, goto true), `order-read-00`
+    `NATIVE_ORDER_SET_VERIFIED` with the tile-form inventory — the
+    E92 `READBACK_MISMATCH` never recurred.
+  - `monitor-00` NATIVE_MONITOR_ARMED (baselines 0); `start-00`
+    NATIVE_STATE_CHANGED; `vread-01` VAN **`RUNNING` speed 2
+    `in_depot false`** — the vehicle departed the depot (45487).
+  - `load-00` day 712234 tick 485: `load 0`, `pickup_amount 0` →
+    typed `ZERO_DEPARTED` (F-11, `NATIVE_ZERO_DEPARTED` verification),
+    watch budget 10 days / 2048 ticks.
+  - Halt at `transit-00` day 712244 tick 1158: second full window,
+    `WINDOW_EXHAUSTED`, funds 485221 → 485214 (running costs),
+    `world_state INCONCLUSIVE_WINDOW`, `zero_seen false`,
+    0 completed cycles, `PARTIAL_EXECUTION_EVIDENCE`.
+- Replay `verify` → `PHASE_HALTED_EVIDENCE_PRESERVED` exit 1.
+- Attempt terminal; claim consumed once (CLAIM.json + LAUNCH-CONSUMED.json
+  bind the signed record `2701cd87…eef2` and seal `b2ff1b40…d639`;
+  `launches_allowed 1`, `consumed true`, `retries 0`; operator id
+  ≡ anchor-derived).
+- Certified cleanup: reaped rc 0, graceful, credential removed,
+  workspace disposed, kernel socket `TIME_WAIT (inode 0)` (the
+  policy state of record), `remaining_processes []`,
+  `cleanup_error []`, `cleanup_complete true`.
+- Manifest **39/39 entries exact**; diagnostic-only save `2f6ba84a…`
+  digest-bound in result.json — no authoritative new save.
+
+#### Diagnosis boundary (read-only)
+
+NOT an instrument defect: the tile-form + station-identity readback
+instrument of record verified the order set NATIVELY at both stops
+with exact flags and goto-station, and the E92-halt exchange never
+re-triggered. NOT a staging/signing defect (plan/policy receipts
+consistent under the signed record binding). The halt of record is a
+**world-behavior observation**: the started RUNNING vehicle never
+took cargo — zero dispatch flow measured into the pickup stop across
+two full typed watch windows (≈ 2 × 10 days / 2048 ticks after a
+712223 start-day clock). The family's ZERO_DEPARTED/F-11 typed-class
+machinery was measured first-hand; departure-to-delivery mechanics in
+this loaded-pin v3 world remain unproven — industrial cargo
+distribution to the fixed pickup station is the next design round's
+investigation subject. Nothing slated in-session.
+
+#### Post-run state
+
+Staged + signed bytes unchanged (seal + sidecar + AUTHORIZATION
+re-digested byte-exact); historical zones untouched (depot after.sav
+`183b2027…6a6`, binding `0d7fc617…9b95`, reload receipt
+`abf6a79e…151d`, candidate-5 zone incl. AUTHORIZATION `83ca881e…`);
+`CONTEXT.md` pin `36648f9c2fee4106` intact; root `--version`
+preserved; `git diff --check` clean.
+
+NEXT: fresh design round required for the departure/cargo-flow
+investigation (its own design record + explicit operator approvals
+end-to-end). Nothing slated in-session.
+
+### 2026-11-04 — R5 implementation: D5-CARGOFLOW-1 cargo-dispatch probe implemented offline (E98)
+
+The operator-approved design record
+([`docs/d5-cargo-dispatch-probe-2026-11-04.md`](docs/d5-cargo-dispatch-probe-2026-11-04.md),
+sha `d7dab83c939b5966…ecdc`, plan digest `d7bf746676d0ee0d…0fb7`) was
+implemented strictly offline. Probe scope of record: **read-only observation
+only** — zero company commands, no freight relaunch; consumed `D5-FREIGHT-6`
+stays terminal; probe verdicts can never re-open a freight attempt. No
+staging, no review, no Gate C, no launch, nothing consumed.
+
+- **Wire contract** `app/simulation/openttd/corridor_cargoflow.py`
+  (`ce15bbd4c898a3bf…4445ecc`): Protocol 10; identity `D5-CARGOFLOW-1`, kind
+  `cargoflow`, milestone `D5-CARGOFLOW`, prelaunch schema
+  `d5-cargoflow-prelaunch-v1`, read-only schema `d5-cargoflow-readonly-v1`,
+  ready marker `D5_CARGOFLOW_READY`, receipt verification
+  `CARGOFLOW_SAMPLE_MEASURED`, phases
+  `CARGOFLOW_COMPLETE`/`CARGOFLOW_INCOMPLETE`, result
+  `NATIVE_CARGOFLOW_COMPLETE`, replay `CARGOFLOW_COMPLETION_VERIFIED`; 14
+  samples `sample-00`…`sample-13`, offsets 0..65 step 5.
+  - Window echo class `_CARGOFLOW_WINDOW_ECHO_STATUS` =
+    {`WINDOW_EXHAUSTED`, `CLOCK_STALLED`} carrying exactly
+    {`anchor`, `tick`, `day`} (`_CARGOFLOW_WINDOW_ECHO_FIELDS`), mirroring
+    the freight-v2 inconclusive family; every other refusal carries zero
+    observation fields.
+  - E65 `-1` fact family extended to `prod_*`/`trans_*` (`ge=-1`); waits,
+    planned and counts stay non-negative; stockpiles uint16-capped.
+  - Fail-closed phase verifier + offline verdict: three terminal observations
+    (`DISPATCH_OBSERVED_LATE` / `DISPATCH_REFUSED_AT_SELECTOR` /
+    `DISPATCH_STOCKPILE_STATIC`), `CARGOFLOW_GATE_UNDECIDED_INCOMPLETE` never
+    manufactures success; `pending` semantics = census precedent (the halted
+    label leaves pending, `EXCHANGES[1:]` after a sample-00 halt).
+  - Measured bytes: request-00 210 B canonical (pinned), request-13 211 B,
+    window echo 302 B, `CLOCK_STALLED` 298 B, worst-case READY 833 B
+    (prod/trans maxed 2147483647, never -1), realistic READY 664 B; ladder
+    months `[[1951,4],[1951,5],[1951,6]]`; request budget 32 one-shot.
+- **GameScript package** `app/simulation/openttd/d5_cargoflow_package/`
+  (`main.nut` `7826b8ff74f5bb85…d5f52b`, `info.nut`
+  `ee670075c3cecef4…9e0dd`): read-only sample handler, bridge
+  `class NetworkFreightProof extends D5CargoFlowProof` (frozen save-restore
+  identity intact), 14 planned rows with exact offsets, bank balance echoed
+  per exchange (never changed), one-shot 32-id budget, halt discipline =
+  census precedent byte-identically (any on-ladder exchange with terminal
+  status ≠ planned READY permanently halts prefix-preservingly);
+  compile-verified in the real Squirrel VM. Three suite-caught handler
+  defects fixed in round:
+  1. `CargoFlowPlannedIndex` matched the offset column against `q.op` — no
+     row ever matched (every request `OUT_OF_ORDER`); fixed to `q.offset`.
+  2. `CargoFlowGuard` refused its own measured `prod_*`/`trans_*` = -1; the
+     E65 `-1` allowance extended to those families.
+  3. the `catch` path typing `UNSUPPORTED_NATIVE_FACT` now deletes the
+     partial observation prelude — a half-read sample's echo prelude is
+     data, never echo language (no census contradiction: the census echo
+     class is request echoes `tile`/`cursor`).
+- **Native pipeline**
+  `app/simulation/openttd/proof/corridor_cargoflow_native.py`
+  (`b76dc20cf70b4372…04685`): staging/preflight/session/exchange/execute/
+  replay/verify/exit-status/main. Prerequisite =
+  `freight_v2_native.prerequisite_binding` imported (never re-derived),
+  wrapped as `CargoflowStagingError(FreightV2StagingError)` — the consumed
+  depot-mutation attempt of record `D5-F12-DEPOT-3` (dir
+  `d5-corridor-depot-mutation-native-candidate-3`, after-save
+  `183b2027…6a6`, welcome `start_day 712223`); verification names
+  `F12_MUTATION_COMPLETION_VERIFIED` + a probe-scoped statement; budgets
+  requests 32 / 512-1400 B / 900 s / funds 489650 / max_cost 0; probe
+  hypotheses `RETAINED_CENSUS_REBOUND` re-bound from the retained census
+  receipt `d5-box-census-native-candidate-2` exactly-one members (producer
+  {`a`:0,`id`:0,`p`:104,`tile`:44983}; acceptor
+  {`a`:1,`id`:1,`p`:-1,`tile`:51116}) with `RETAINED_CENSUS_ABSENT` refusal
+  and `HYPOTHESIS` kind always.
+- **Suites** (all offline, exit 0): probe trio 42 + 8 + 35 = **85 passed**;
+  touched-path neighbors re-run green: census trio, freight wire pair, and
+  the native neighbor battery — freight_native (55) + freight_v2_native
+  (67) + depot_mutation (29) + depot_mutation_vm (10) + depot_mutation_native
+  (41) + depot_recheck_native (28) = **230 passed exit 0**.
+- **Gates**: scoped `ruff` clean on the 5 touched paths; `uvx ty check` on
+  the 5 touched paths = exactly one diagnostic (the frozen-mirror `connect`
+  LSP override, byte-identical to the census native-suite baseline);
+  `git diff --check` clean; standalone SQVM compile pass of the edited
+  package.
+- **Disclosures**: `pending` test expectations corrected to the census
+  precedent (implementation kept); full-tree lint/type health stays UNKNOWN
+  by design; pre-existing E96/E97 lineage edits in the tree untouched — E98
+  touched exactly 7 new files (the digests listed above); `artifacts/`
+  byte-untouched; `CONTEXT.md` pin `36648f9c2fee4106` intact; root
+  `--version` preserved; no commit.
+
+NEXT GATES (each its own explicit operator ask — STOP before each): probe
+staging = ONE `prepare` + read-only `preflight`/`verify` for
+`D5-CARGOFLOW-1`; then independent read-only review; then Gate C (fresh
+re-derived signer for the probe attempt); then ONE launch approval.
+
+Evidence index E98.
+
+### 2026-11-04 — R5b probe consumption: D5-CARGOFLOW-1 staged → reviewed → Gate C-signed → launched once → terminal halt `PHASE_HALTED_PREFIX_PRESERVED` at `sample-07` (E99)
+
+The E98 probe was consumed in one operator round. This round's single
+blanket operator approval ("agrees all approval all") was consumed per the
+E74 precedent as a **chain authorization**: probe staging → read-only gates
+→ independent review → Gate C → ONE launch, executed in that order, with
+the first refusal stopping everything. One attempt consumed, no retry, no
+relaunch; R4c `D5-FREIGHT-6` stays terminal; probe verdicts can never
+re-open a freight attempt.
+
+- **Staging** (ONE `prepare`, first attempt): candidate of record
+  `artifacts/experiments/d5-corridor-cargoflow-native-candidate-1` →
+  `PRELAUNCH PASS`; prelaunch seal `41ca61c4bdd4e33d…ba60` ≡
+  `PRELAUNCH.sha256`; root = 4 staged entries, no gate files; read-only
+  `preflight` PASS exit 0; pre-auth `verify` →
+  `AUTHORIZATION_UNVERIFIED`/`CLAIM_ABSENT` exit 1.
+- **Independent review** (read-only, in-session): `/tmp/opencode/e98_review_c1.py`
+  re-derived fresh — 30/30 checks PASS exit 0, READY-FOR-GATE-C (identity,
+  root shape, prerequisite duplicate of `D5-F12-DEPOT-3`, welcome floor
+  712223, 14-sample ladder, plan digest, policy pins, budgets, hypothesis
+  rows == live module output, composed package == live `main.nut`, OpenGFX
+  pin, historical zones re-digested intact, `CONTEXT.md` pin);
+  production preflight/verify re-derived inside the audit. Disclosed: two
+  audit-script incidents, zero staged defects, zero staging rewrites
+  (invocation-1 died pre-write on an unimported `CARGOFLOW_EXCHANGE_IDS`;
+  invocation-2 alias mismatches re-verified against the real rows —
+  `hypotheses-rows` exact-dict omitted the `centre` field; binding keys
+  `after_save_sha256`/`source_world`/`funds_at_close`/`fleet_count`/
+  `saved_at_fleet_exchange`; recheck receipt carries `funds_of_record`,
+  not `depot_facts`).
+- **Gate C** (fresh signer `/tmp/opencode/e98_gate_c.sh`, refusal gates
+  pre-write): operator seed env-only (`CARGOFLOW_GATE_SEED`), never
+  printed/filed/argument-passed, unset + printenv-empty verified after;
+  disclosed pre-write refusal — invocation-1 aborted at the seed→anchor
+  assertion because E91's recorded `len(der) - 31` window does not fit this
+  host's 48-byte PKCS#8 DER (measured seed window = final 32 bytes,
+  `len(der) - 32`), no write in the refusing invocation; signed exit 0 —
+  canonical payload sha256 `c114e185…d7d53`, record `AUTHORIZATION.json`
+  sha256 `523ace64…ad0eb`, operator identity unchanged
+  `sha256-ed25519-public-key:cbb63ff5…40c614`; post-write preflight PASS,
+  verify still `CLAIM_ABSENT`, seal byte-equal.
+- **ONE launch** (binary `276d5b69…904c` + OpenGFX `43a0c1da…03be`
+  pre-verified, no other openttd process): terminal halt
+  `PHASE_HALTED_PREFIX_PRESERVED` at `sample-07` on the funds-fence refusal
+  `cargo-flow funds must equal the close-out level exactly`; preserved
+  prefix = 7 completed MEASURED exchanges `sample-00`…`sample-06`
+  (offsets 0–30, days 712228–712258), 8 requests, 1 launch/1 connection,
+  returncode 0, `state_changed false`, `verified false`; **run of record =
+  appended `/tmp/opencode/probe_run.log` line `run exit=1`** (an
+  interactive chained-`$?` echo printed `run exit=0`, not a verdict).
+- **Post-run**: replay `verify` → `PHASE_HALTED_EVIDENCE_PRESERVED` exit 1,
+  no relabel, prefix untouched; claim consumed once (`CLAIM.json` +
+  `LAUNCH-CONSUMED.json` bind record `523ace64…ad0eb` + seal
+  `41ca61c4…ba60`, `launches_allowed 1`); cleanup certified (pid 22584
+  reaped rc 0, TIME_WAIT inode-0 socket state, `remaining_processes []`,
+  `cleanup_complete true`); manifest 31/31 exact; `after-diagnostic.sav`
+  diagnostic-only, no consumers.
+- **Measured facts of record**: prefix `stock_pickup [-1 ×7]`,
+  `stock_bay [0 ×7]`, waits all 0, funds constant 489650 through samples
+  00–06 (days 712228–712258, spanning the February rollover),
+  `prod_pickup [104,104,104,104,104,104,117]` (rose at the rollover),
+  `sampled_months [[1950,1],[1950,2]]`; partial verdict
+  `DISPATCH_STOCKPILE_STATIC` ("no measured stockpile nor pickup waiting
+  ever rose above its anchor sample: the production-to-stockpile path
+  itself stayed closed across the sampled span (H1)").
+- **Halt diagnosis boundary** (not a probe defect): `sample-07` measured
+  READY, observation intact (stockpiles/waits zero, `prod_pickup 117`,
+  cost 0), funds `489458` vs the funds-of-record 489650 — the zero-fleet,
+  zero-command observe-only world self-drained 192 in the sampled-gap span
+  between the last clean funds reading (day 712258) and the halt reading
+  (day 712263; round shorthand `(712259, 712263]`) with zero vehicles,
+  zero commands, zero cost. Mechanism not established, not troubleshooted;
+  not month-start infrastructure maintenance (funds unchanged across
+  Feb 1 = day 712254; still 489650 at day 712258). The funds fence refused
+  fail-closed exactly as designed and preserves the halt evidence.
+- **Status**: attempt terminal and consumed; `sample-07` left pending with
+  suffix samples `sample-08`…`sample-13`; no relaunch, no further candidate
+  work beyond `d5-corridor-cargoflow-native-candidate-1`; a dedicated
+  observe-only funds-telemetry probe (its own design record + explicit
+  operator approvals) is the recorded next-round subject; funds-drain
+  hypothesis NOT confirmed this round and never reused as a finding.
+  E98's per-gate NEXT-GATES plan was consumed this round as ONE blanket
+  chain approval, recorded here as this round's authorization shape.
+
+Evidence index E99.

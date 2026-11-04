@@ -900,9 +900,10 @@ class D5FreightV2Proof extends GSController {
             r.status = "STALE_ADMISSION"
             return
         }
-        /* N1: the 15.x append takes the stop TILE, not the station id; the
-         * pinned stop tiles resolve to their stations natively and the
-         * readback verifies that resolution against the site-latched sids. */
+        /* N1 (15.3, E92): the append takes the stop TILE and stores the
+         * station the tile resolves to (GetStationIndex of the tile); the
+         * readback returns that station's canonical stop tile
+         * (truck_stops->xy), never the StationID. */
         local dest = q.order_index == 0 ? this.pickup : this.delivery
         /* N2: the real 15.x flag values. The pickup stop order carries
          * OF_NONE (no load policy), the delivery bay's OF_NO_LOAD (never
@@ -930,12 +931,16 @@ class D5FreightV2Proof extends GSController {
             local d = GSOrder.GetOrderDestination(this.vehicle_id, q.order_index)
             local f = GSOrder.GetOrderFlags(this.vehicle_id, q.order_index)
             local g = GSOrder.IsGotoStationOrder(this.vehicle_id, q.order_index)
-            /* The stored destination must be the station the stop tile
-             * resolves to (N1: tile in, station stored), the stored flags
-             * must equal the appended policy exactly, and the order must be
-             * goto-station. */
+            /* N1/N2 (15.3, E92): the readback is tile-form — it must equal
+             * the appended stop tile — and is deepened with the station
+             * identity: the resolved tile must read back the same
+             * site-latched station. The flags must equal the appended
+             * policy exactly and the order must be goto-station. */
+            local expected_tile = q.order_index == 0 ? this.pickup : this.delivery
             local expected_sid = q.order_index == 0 ? this.site_sid0 : this.site_sid1
-            if (d != expected_sid || f != flags || g != true) {
+            if (d != expected_tile ||
+                GSStation.GetStationID(d) != expected_sid ||
+                f != flags || g != true) {
                 r.status = "READBACK_MISMATCH"
                 return
             }
@@ -971,12 +976,17 @@ class D5FreightV2Proof extends GSController {
             local d1 = GSOrder.GetOrderDestination(this.vehicle_id, 1)
             local f1 = GSOrder.GetOrderFlags(this.vehicle_id, 1)
             local g1 = GSOrder.IsGotoStationOrder(this.vehicle_id, 1)
-            /* N1/N2 of the inventory: the stored destinations are the
-             * site-latched station ids the stop tiles resolve to, the stored
-             * flags are the real appended values (OF_NONE then OF_NO_LOAD),
-             * both goto-station. */
-            if (d0 != this.site_sid0 || f0 != this.OF_NONE || g0 != true ||
-                d1 != this.site_sid1 || f1 != this.OF_NO_LOAD || g1 != true) {
+            /* N1 (15.3, E92): the inventory readback is tile-form — the
+             * destinations must equal the pinned stop tiles, deepened with
+             * the station identity (each tile resolves to its site-latched
+             * station); the flags are the real appended values (OF_NONE
+             * then OF_NO_LOAD), both goto-station. */
+            if (d0 != this.pickup ||
+                GSStation.GetStationID(d0) != this.site_sid0 ||
+                f0 != this.OF_NONE || g0 != true ||
+                d1 != this.delivery ||
+                GSStation.GetStationID(d1) != this.site_sid1 ||
+                f1 != this.OF_NO_LOAD || g1 != true) {
                 r.status = "READBACK_MISMATCH"
                 return
             }

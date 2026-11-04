@@ -1020,3 +1020,116 @@ consumed in this round: all four native gates (staging approval, independent
 review, Gate C signing, separate launch approval) remain ungranted operator
 approvals, each one attempt, no retry. The `run` line exists for a later
 approved round only.
+
+### Executed lifecycle (2026-11-03, E74/E75)
+
+The gates above were granted and consumed exactly once for attempt
+`D5-F12-DEPOT-2` on
+`artifacts/experiments/d5-corridor-depot-mutation-native-candidate-2`
+under one operator chain approval ("agree Stage D5-F12-DEPOT-2 allow and
+agree all"): `prepare` → `PRELAUNCH PASS` (seal `16592103…544a`), read-only
+audit (frozen closure 3496/0, staged package ≡ live fixed package
+`e00eeecb…5d67`), gate-C `PREFLIGHT PASS` + pre-auth
+`AUTHORIZATION_UNVERIFIED`/`CLAIM_ABSENT`, Option-1 signing (record sha
+`9628bcb5…450b`, anchor `cbb63ff5…40c614`), one launch — run exit 0
+`NATIVE_DEPOT_MUTATION_COMPLETE` with the before gate measuring the E72
+§6.4 pinned expected read — replay `verify` →
+`F12_MUTATION_COMPLETION_VERIFIED` exit 0, certified cleanup complete
+(`cleanup_complete: true`; client-side `TIME_WAIT (inode 0)` preserved
+as-is), artifact manifest 28/28. The depot milestone issues no
+authoritative new save: its world binding stays the pinned A1
+prerequisite after-save `3748e00c…5420bd`, verified intact post-run. The
+attempt is terminal COMPLETE; consumed-candidate `run`/launch gates must
+never be re-executed, and post-run `preflight` cannot reopen the disposed
+workspace (expected consume-once shape). Caveat of record: these
+executed-gate lines are the already-consumed attempt of record — do not
+rerun them against any consumed candidate; a future attempt needs a fresh
+staging under a new identity.
+
+## 2026-11-03 addendum — D5-FREIGHT-4 staged (E76)
+
+Separate operator staging approval covered exactly: the FREIGHT-4 identity
+step (`FREIGHT_ATTEMPT_V2` → `D5-FREIGHT-4` in `corridor_freight_v2.py`,
+consumed terminal attempt-3 preserved), suites check (freight v2 + native,
+128 passed, exit 0), and one `prepare` run — exit 0
+`PRELAUNCH PASS artifacts/experiments/d5-corridor-freight-native-candidate-4`
+with read-only `preflight` PASS and pre-auth
+`AUTHORIZATION_UNVERIFIED`/`CLAIM_ABSENT` (exit 1). Stopped at the
+approved boundary: the review, Gate C signing and launch gates for this
+candidate remain ungranted; do not sign, launch or consume from this
+section — those each need their own explicit future operator approval
+recorded as its own addendum.
+
+## 2026-11-03 addendum — D5-FREIGHT-4 BLOCKED before Gate C (E77)
+
+The six-step workflow above consumed its read-only steps 1-2 and stopped by
+its own STOP rule: no signature exists, no launch, nothing consumed.
+Blocking fact of record (measured): the freight runtime world is the A1
+after-save `3748e00c…5420bd` loaded verbatim, and the F-12-DEPOT-2 run
+measured that same loaded world reading `connected_depot_to_front false` /
+`connected_front_to_depot false` at `before-00` before mutating its own
+disposed copy — no authoritative post-fix save exists anywhere and the
+freight family carries no mutation ops, so this candidate's `site-00`
+admission (`depot_edge is True`, `corridor_freight_v2.py:1276-1278`) can
+only read false. Do NOT sign, launch or consume
+`artifacts/experiments/d5-corridor-freight-native-candidate-4` from this
+section; closing the lineage gap is a design round of its own (three paths
+recorded at E77), each needing a fresh staging under a fresh identity.
+
+## 2026-11-03 addendum — Path A R2: D5-F12-DEPOT-3 staged (E78/E79)
+
+The strict after-save emission round is implemented offline (R2, approved)
+and one candidate exists: `artifacts/experiments/
+d5-corridor-depot-mutation-native-candidate-3`, attempt `D5-F12-DEPOT-3`,
+schema `d5-f12-depot-prelaunch-v2`, seal `4df12e1fbc15e164…`. Its flow of
+record (no signature, no claim, no launch on its own):
+
+    .venv/bin/python -m app.simulation.openttd.proof.\
+        corridor_depot_mutation_native prepare \
+        artifacts/experiments/d5-corridor-depot-mutation-native-candidate-3
+    # → PRELAUNCH PASS;  then the read-only gates:
+    .venv/bin/python -m app.simulation.openttd.proof.\
+        corridor_depot_mutation_native preflight \
+        artifacts/experiments/d5-corridor-depot-mutation-native-candidate-3
+    .venv/bin/python -m app.simulation.openttd.proof.\
+        corridor_depot_mutation_native verify \
+        artifacts/experiments/d5-corridor-depot-mutation-native-candidate-3
+    # verify exits 1 pre-authorization (CLAIM_ABSENT) by design.
+
+On a launch, the verified completion MUST emit the authoritative
+`after.sav` (strict save; digest/size bound into receipt.json/result.json
+and re-derived into `after-save-binding.json`); a strict save refusal on
+the complete path is terminal `PHASE_COMPLETE_SAVE_REFUSED` and is never
+retried or relabeled. Do not treat the diagnostic-only `after-diagnostic.sav`
+as the world of record; it was never an authoritative artifact.
+
+### Executed launch (2026-11-03, E82) — terminal, do not rerun
+
+Under one explicit operator launch approval (separate from Gate C), the
+signed candidate ran exactly once with the env-of-record paths set before
+Python started:
+
+```bash
+export OPENTTD_BINARY="/home/fed/Downloads/openttd-15.3-linux-generic-amd64/openttd"
+export OPENTTD_OPENGFX_ARCHIVE="/home/fed/codes/softdev2/artifacts/runtime/verified-assets/opengfx-8.0-all.zip"
+.venv/bin/python -m app.simulation.openttd.proof.corridor_depot_mutation_native run \
+    artifacts/experiments/d5-corridor-depot-mutation-native-candidate-3
+```
+
+Outcome of record: exit 0 `NATIVE_DEPOT_MUTATION_COMPLETE` verified=true;
+before-00 reproduced the E58 diagnosis verbatim (both directions false);
+after-00 measured both directions TRUE (front 45743, owner 0); fleet 0;
+funds `490257→490197→490055→489650→489650→489650`; the strict save emitted
+the authoritative `after.sav` — 61992 bytes, digest
+`183b20273a54ebe1a2cd9306145a9ea820bbd6114b1608c42079b4e1b1efe6a6` bound
+three-way (result.json == receipt.json == retained file) — and replay
+`verify` → `F12_MUTATION_COMPLETION_VERIFIED` exit 0 with
+`after-save-binding.json` derived byte-exactly (source_world = the pinned
+A1 after-save `3748e00c…5420bd`, funds_at_close 489650, edge_facts
+both-TRUE, fleet 0). Cleanup certified; artifact manifest 29/29 including
+after.sav (only the replay-derived binding stands outside it, by the
+manifest-balance rule); `after-diagnostic.sav` remains diagnostic-only.
+This attempt is terminal COMPLETE and consumed: never re-run `run` on
+this candidate. The authoritative post-mutation world of record for the
+downstream freight lineage (R3 reload + R4 freight v3) is
+`artifacts/experiments/d5-corridor-depot-mutation-native-candidate-3/after.sav`.

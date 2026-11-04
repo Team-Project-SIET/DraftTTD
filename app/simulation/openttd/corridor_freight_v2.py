@@ -2,10 +2,12 @@
 
 Protocol 8 is a NEW protocol alongside the frozen protocol-5 chain. Protocol
 5 and its GameScript package (``d5_freight_package``) are byte-preserved:
-this module re-derives the v2 attempt from the A1 close-out world instead —
-the consumed ``d5-corridor-extension-native-candidate-3`` after-save
-``3748e00ce57bcb076466f50cac3776c202b4fd130d6c6071935e9d43e45420bd`` at
-£490,257 — under the resolved design-review conditions
+this module re-derives the freight attempt from the authoritative post-
+depot-mutation world of record instead — the consumed
+``d5-corridor-depot-mutation-native-candidate-3`` after-save
+``183b20273a54ebe1a2cd9306145a9ea820bbd6114b1608c42079b4e1b1efe6a6`` at
+£489,650 (Path A, docs/d5-authoritative-post-mutation-save-pipeline-2026-11-03)
+— under the resolved design-review conditions
 (``docs/d5-freight-delivery-v2-design-review-2026-11-01.md``):
 
 - F-2 (route): the physical 31-tile construction witness is bound verbatim
@@ -31,7 +33,7 @@ the consumed ``d5-corridor-extension-native-candidate-3`` after-save
   ``load == 0``, both monitor deltas equal the departure load, and the
   consume-with-recheck re-arms both monitors at zero.
 - F-6 (funds): equation of record
-  ``funds(final) == 490257 - purchase_quote + sum(income deltas from the
+  ``funds(final) == 489650 - purchase_quote + sum(income deltas from the
   per-exchange quarter-income reads) + sum(running-cost entries)``, where
   each exchange span's running-cost attribution
   (``deltaFfunds - deltaIncome``) is non-positive in magnitude, bounded
@@ -107,17 +109,26 @@ FREIGHT_MAP_WIDTH = 256
 FREIGHT_MAP_HEIGHT = 256
 FREIGHT_MAX_TILE_ID = FREIGHT_MAP_WIDTH * FREIGHT_MAP_HEIGHT - 1
 FREIGHT_SCHEDULE_VERSION = 2
-# Attempt identity of record: E53's fix round leaves the once-staged
-# D5-FREIGHT-2 name on its (stale-by-drift, never consumed) candidate; a
-# fresh candidate derives a fresh identity instead of reusing it.
-FREIGHT_ATTEMPT_V2 = "D5-FREIGHT-3"
+# Attempt identity of record: the consumed D5-FREIGHT-3 (E56: site-00
+# INVALID_SITE halt, terminal), the E73 fix round (F-12b dispatch-context
+# fix, natively proven by D5-F12-DEPOT-2) and the once-staged never-consumed
+# D5-FREIGHT-4 (byte-verbatim stale-by-construction: its A1 world predates
+# the authoritative depot-mutation after-save) mean a fresh candidate derives
+# a fresh identity instead of reusing a consumed or stale one (E54 lineage
+# precedent; Path A E78 design record).
+FREIGHT_ATTEMPT_V2 = "D5-FREIGHT-6"
 FREIGHT_COMPANY = 0
 FREIGHT_CARGO_ID = 1
-# World pins of record (E41-E44): the A1 close-out after-save and its funds.
+# World-pin history of record: the A1 close-out after-save (E41-E44), whose
+# close-out funds stay the A1 provenance pin, and the Path A authoritative
+# post-depot-mutation after-save world (design record L110-111, E82) whose
+# closing funds pin below — the funds world pin moved with the save: the
+# depot build spent exactly the recorded quote deltas in the world of record.
 A1_AFTER_SAVE_SHA256_V2 = (
     "3748e00ce57bcb076466f50cac3776c202b4fd130d6c6071935e9d43e45420bd"
 )
 FUNDS_AT_A1_CLOSE = 490257
+FUNDS_AT_DEPOT_MUTATION_CLOSE = 489650
 # Per-op cost ceiling of record: the quote-first purchase stays at or below
 # £5,000 (locked engine decision; the census price £4,429 fits).
 FREIGHT_MAX_COST_V2 = 5000
@@ -1070,11 +1081,11 @@ def _adjacent_v2(a: int, b: int) -> bool:
 class FreightPlanV2(Contract):
     """The geometry, identities and schedule of one v2 attempt.
 
-    Schema 1 binds the A1 close-out geometry: the physical 31-tile
-    construction witness verbatim, the 29-tile vehicle route derived from
-    it, the new delivery bay 50862 (station 2), the company depot 45487
-    with its single adjacent front 45743, and the A1 close-out funds
-    £490,257. The delivery and pickup industry ids are NEVER pinned (F-3):
+    Schema 1 binds the post-depot-mutation close-out geometry: the physical
+    31-tile construction witness verbatim, the 29-tile vehicle route derived
+    from it, the new delivery bay 50862 (station 2), the company depot 45487
+    with its single adjacent front 45743, and the depot-mutation close-out
+    funds £489,650. The delivery and pickup industry ids are NEVER pinned (F-3):
     they are discovered natively and latched at site admission. The
     pinned engine is the provisional census pin (F-1/F-10 Option B). The
     schedule of record is the cycle-looped thirty-exchange plan fixed by
@@ -1156,8 +1167,8 @@ class FreightPlanV2(Contract):
                 raise ValueError("each stop pins a directly adjacent front")
         if self.pickup_industry != -1 or self.delivery_industry != -1:
             raise ValueError("industry ids are discovered natively and never pinned")
-        if self.expected_funds != FUNDS_AT_A1_CLOSE:
-            raise ValueError("the plan binds the A1 close-out funds exactly")
+        if self.expected_funds != FUNDS_AT_DEPOT_MUTATION_CLOSE:
+            raise ValueError("the plan binds the depot-mutation close-out funds exactly")
         if self.max_cost != FREIGHT_MAX_COST_V2:
             raise ValueError("the plan binds the v2 per-op cost ceiling exactly")
         if self.cycles != PLANNED_FREIGHT_CYCLES_V2:
@@ -1236,7 +1247,7 @@ def admit_freight_site_v2(
     cargo-producing industry in the pickup stop's stop-radius and exactly
     one cargo-accepting industry in the delivery bay's stop-radius (the
     F-3 unique-cargo-industry discovery — ids latched here, never pinned),
-    the A1 close-out funds exactly, and zero pre-existing vehicles.
+    the depot-mutation close-out funds exactly, and zero pre-existing vehicles.
     """
     if (
         readback.op != "site"
@@ -1257,7 +1268,7 @@ def admit_freight_site_v2(
     if readback.paused is not False:
         raise ValueError("site admission requires an unpaused world")
     if readback.funds != plan.expected_funds:
-        raise ValueError("site funds must equal the A1 close-out level exactly")
+        raise ValueError("site funds must equal the depot-mutation close-out level exactly")
     if readback.vehicles is None or readback.vehicles != 0:
         raise ValueError("site admission requires a company with zero vehicles")
     if readback.road_ready is not True:
@@ -2289,7 +2300,8 @@ def _freight_verify_step_v2(
         state["day_used"] = span
     previous_income = state["income"]
     if state["funds"] is None:
-        # The first span runs from the pinned A1 close-out funds on, so the
+        # The first span runs from the plan's pinned post-mutation close-out
+        # funds on, so the
         # earliest covered window is expected to move nothing (zero
         # construction before the first exchange); a silent pre-exchange
         # drift surfaces here and is attributed by the equation.

@@ -5,9 +5,9 @@ entered nor anchor a return-capable route: its front tile 45743 carries
 E+W+S road bits and no N bit. E58 §2.1 prescribed the minimal world fix of
 record — demolish the depot, lay the 2-tile road pair 45743 <-> 45487, then
 rebuild the depot at 45487 against its pinned front — and this pipeline
-stages that fix as the one attempt of record (``D5-F12-DEPOT-1``) over the
-authoritative A1 close-out world, exactly as the census pipeline does for
-its read-only schedule. The protocol-10 wire contract
+stages that fix as the one attempt of record over the authoritative A1
+close-out world, exactly as the census pipeline does for its read-only
+schedule. The protocol-10 wire contract
 (``app.simulation.openttd.corridor_depot_mutation``) plus its GameScript
 handler in ``d5_depot_mutation_package`` carry the pinned six-exchange
 schedule; the staging/claim machinery in ``corridor_freight_native`` and
@@ -39,7 +39,14 @@ the one command (STALE_PIN on drift, before any command), funds are
 chained per exchange (``funds_after == funds_before - cost``, cost
 signed), the attempt-level ``max_cost`` ceiling is 3000, the before/after
 observe gates encode the E58 diagnosis and its prescribed resolution, and
-the fleet gate demands the retained zero fleet. Nothing here launches
+the fleet gate demands the retained zero fleet. On the verified completion
+the attempt emits the Path A world of record (E77/E78): the strict — never
+diagnostic — native save writes the authoritative post-mutation
+``after.sav`` into the candidate directory, its digest and size bind into
+``receipt.json`` and ``result.json``, and the replay derives the after-save
+binding of record; a strict save refused on the complete path is terminal
+``PHASE_COMPLETE_SAVE_REFUSED``, never a claimed completion and never a
+diagnostic-only fallback. Nothing here launches
 OpenTTD, connects to a port, writes a claim or mutates any world or
 retained artifact.
 """
@@ -147,11 +154,26 @@ DEPOT_MUTATION_CLOSURE_ROOT = "app.simulation.openttd.proof.corridor_depot_mutat
 
 KIND = "depot-mutation"
 MILESTONE_DEPOT_MUTATION = "D5-F12-DEPOT"
-# Single attempt identity of record. D5-F12-DEPOT-1 carries the E58 §2.1
-# prescribed fix verbatim: one attempt, one prelaunch schema; a re-run
-# attempt of the lineage needs its own design record first.
-DEPOT_MUTATION_ATTEMPT = "D5-F12-DEPOT-1"
-D5_DEPOT_MUTATION_PRELAUNCH_SCHEMA = "d5-f12-depot-prelaunch-v1"
+# Single attempt identity of record. Identities are never reused: the
+# consumed D5-F12-DEPOT-1 stays terminal (E72: instrument false negative,
+# PHASE_HALTED_PREFIX_PRESERVED) and the consumed D5-F12-DEPOT-2 stays
+# terminal (E74/E75: F12_MUTATION_COMPLETION_VERIFIED, the E73 fix round
+# proven natively). Neither emitted an authoritative post-mutation
+# after-save (E77: the diagnostic-only ``after-diagnostic.sav`` binds
+# nothing, so no freight lineage can consume their worlds), and the Path A
+# design record
+# (docs/d5-authoritative-post-mutation-save-pipeline-2026-11-03.md, E78)
+# adds that strict save emission on the complete path. The fresh identity
+# of record is:
+DEPOT_MUTATION_ATTEMPT = "D5-F12-DEPOT-3"
+D5_DEPOT_MUTATION_PRELAUNCH_SCHEMA = "d5-f12-depot-prelaunch-v2"
+# The Path A authoritative world of record: the verified completion's
+# strict native save lands here in the candidate directory, and the replay
+# derives the binding of record downstream consumers pin.
+DEPOT_AFTER_SAVE_NAME = "after.sav"
+DEPOT_AFTER_SAVE_BINDING_NAME = "after-save-binding.json"
+DEPOT_AFTER_SAVE_BINDING_SCHEMA = "d5-f12-depot-after-save-binding-v1"
+DEPOT_AFTER_SAVE_SAVED_AT = "fleet-00"
 # The depot-mutation candidate keeps the shared native consumed-launch
 # marker family and the shared prerequisite lineage schema
 # (`d5-native-prerequisite-attempt-v1`) — the same shared schemas the
@@ -555,6 +577,20 @@ def depot_prerequisite_binding(prerequisite: Path | None = None) -> dict:
         raise DepotMutationStagingError(
             "the depot prerequisite binding is not the pinned retained attempt"
         )
+    # Path A prerequisite retention check (E77/E78): a prerequisite whose
+    # authoritative after-save is not retained as a regular file with its
+    # recorded digest cannot stage a downstream world at all. The retained
+    # save is only ever read here — never opened for writing, moved or
+    # rewritten.
+    retained_save = Path(binding["retained_directory"]) / binding["save"]
+    if retained_save.is_symlink() or not retained_save.is_file():
+        raise DepotMutationStagingError(
+            "the pinned prerequisite after-save is not a retained regular file"
+        )
+    if sha256(retained_save) != binding["save_sha256"]:
+        raise DepotMutationStagingError(
+            "the retained prerequisite after-save digest drifted from its binding"
+        )
     return dict(
         binding,
         verification=(
@@ -736,10 +772,14 @@ def prepare_depot_mutation_candidate(
                 ),
             ),
             save_policy=(
-                "owned session-before.sav and after-diagnostic.sav only; the "
-                "authoritative source save, the prerequisite attempt record "
-                "and every historical artifact stay untouched; the depot "
-                "mutation saves nothing itself"
+                "owned session-before.sav, the one strict authoritative "
+                "after.sav bound on the verified completion (Path A of "
+                "record), and the diagnostic-only after-diagnostic.sav "
+                "outside the complete path; the authoritative source save, "
+                "the prerequisite attempt record and every historical "
+                "artifact stay untouched; a completed mutation without its "
+                "strict after-save is PHASE_COMPLETE_SAVE_REFUSED, never a "
+                "claimed completion"
             ),
             plan_policy=policy,
             expected_readback=depot_expected_readback_policy(),
@@ -757,6 +797,8 @@ def prepare_depot_mutation_candidate(
                 "quit and reap process",
                 "verify endpoints",
                 "retain session logs and the pre-mutation save",
+                "retain the authoritative after.sav bound to its run-time "
+                "digest and size (Path A world of record)",
                 "remove credential",
                 "dispose owned workspace",
                 "never modify the retained save or any historical artifact",
@@ -776,7 +818,10 @@ def prepare_depot_mutation_candidate(
                     "binary; the pinned six-exchange schedule is the "
                     "contract module's own guarded derivation and the "
                     "before/after gates are the E58 §2.1 prescription bound "
-                    "by path and sha256"
+                    "by path and sha256; the verified completion emits the "
+                    "authoritative post-mutation after.sav as the Path A "
+                    "world of record for the downstream freight lineage "
+                    "(E77/E78)"
                 ),
             ),
             environment=freight_native.launch_environment(prepared),
@@ -1121,8 +1166,10 @@ async def execute_depot_mutation_attempt(prepared: PreparedProof, backend) -> di
     state by the production ``depot_phase_outcome``; the first verification
     failure halts the phase prefix-preservingly (the fixed-fact gate
     divergence and the per-exchange precondition drift both surface as
-    STALE_PIN halt records with their raw values legible), and cleanup is
-    certified before any completion verdict can stand.
+    STALE_PIN halt records with their raw values legible), the verified
+    completion emits the strict authoritative after-save (Path A, E77/E78)
+    or is refused terminal, and cleanup is certified before any completion
+    verdict can stand.
     """
     directory = prepared.directory
     depot_preflight(prepared)
@@ -1263,15 +1310,44 @@ async def execute_depot_mutation_attempt(prepared: PreparedProof, backend) -> di
                     raise ValueError(
                         "the depot completion reported zero state change it must own"
                     )
-                write_json(
-                    directory / "receipt.json",
-                    dict(
-                        phase,
-                        before_save_sha256=before_save,
-                    ),
-                )
-                result["verified"] = True
-                result["status"] = "NATIVE_DEPOT_MUTATION_COMPLETE"
+                # Path A of record (E77/E78): the only authoritative save is
+                # the strict native one on this complete path; a refused
+                # strict save is terminal PHASE_COMPLETE_SAVE_REFUSED — the
+                # mutation is evidenced but the world of record never
+                # materialized, nothing is relabeled, and the finally arm
+                # below keeps its diagnostic-only (never completing) role.
+                save_error = None
+                after_save: str | None = None
+                try:
+                    after_save = await save(backend, prepared, "after")
+                except Exception as error:
+                    save_error = type(error).__name__ + ": " + str(error)
+                if save_error is None:
+                    after_save_path = directory / DEPOT_AFTER_SAVE_NAME
+                    result["verified"] = True
+                    result["status"] = "NATIVE_DEPOT_MUTATION_COMPLETE"
+                    result["after_save_sha256"] = after_save
+                    result["after_save_size_bytes"] = after_save_path.stat().st_size
+                    write_json(
+                        directory / "receipt.json",
+                        dict(
+                            phase,
+                            before_save_sha256=before_save,
+                            after_save_sha256=after_save,
+                            after_save_size_bytes=result["after_save_size_bytes"],
+                        ),
+                    )
+                else:
+                    result["save_error"] = save_error
+                    result["status"] = "PHASE_COMPLETE_SAVE_REFUSED"
+                    write_json(
+                        directory / "receipt.json",
+                        dict(
+                            phase,
+                            before_save_sha256=before_save,
+                            save_error=save_error,
+                        ),
+                    )
             else:
                 result["status"] = "PHASE_HALTED_PREFIX_PRESERVED"
     except Exception as error:
@@ -1499,7 +1575,13 @@ def verify_depot_mutation_attempt(directory: Path) -> dict:
     and the certified-cleanup gate. A forced or invented
     ``NATIVE_DEPOT_MUTATION_COMPLETE`` label alone can never verify; a
     refused, missing, malformed, stale, divergent, out-of-budget or halting
-    exchange always leaves the verdict incomplete.
+    exchange always leaves the verdict incomplete. A verified completion
+    additionally binds its authoritative post-mutation world (Path A,
+    E77/E78): the hard result/receipt/retained-``after.sav`` digest and
+    size triple with the derived after-save binding of record, and a strict
+    save refusal on the complete path is terminal
+    ``PHASE_COMPLETE_SAVE_REFUSED`` — never a claimed completion, never a
+    relabel and never a diagnostic-only fallback.
     """
     directory = directory.resolve()
     metadata = read_prelaunch(directory)
@@ -1530,7 +1612,13 @@ def verify_depot_mutation_attempt(directory: Path) -> dict:
         for path in directory.iterdir()
         if path.is_file() and path.name != "artifact-manifest.sha256"
     }
-    if present_names != manifest_names:
+    # The after-save binding of record is derived by this replay itself
+    # (Path A, E78): a prior verified replay's binding may stand outside
+    # the runner's own manifest or inside a re-rendered one — both are
+    # legitimate, and its contents are re-derived and compared below. Any
+    # other unmanifested file is refused.
+    unmanifested = present_names - manifest_names
+    if unmanifested - {DEPOT_AFTER_SAVE_BINDING_NAME}:
         raise ValueError("the artifact manifest is not exhaustive")
     if metadata.get("schema") != D5_DEPOT_MUTATION_PRELAUNCH_SCHEMA:
         return dict(
@@ -1702,23 +1790,105 @@ def verify_depot_mutation_attempt(directory: Path) -> dict:
             raise ValueError("the verified completion lacks its funds chain")
         if result.get("cleanup_failure") is not None or result.get("verified") is not True:
             raise ValueError("the verified completion label contradicts its own result flags")
+        # Path A of record (E77/E78): a verified completion claims the
+        # authoritative post-mutation world binding — the hard result,
+        # receipt and retained-after.sav digest/size triple — and the
+        # replay derives (or re-derives, byte-exact) the after-save binding
+        # of record. Nothing here manufactures save bytes or relaxes a
+        # field: absence, drift or a symlink refusal is a contradiction of
+        # the completion claim itself.
+        after_save = result.get("after_save_sha256")
+        if (
+            not isinstance(after_save, str)
+            or len(after_save) != 64
+            or any(digit not in "0123456789abcdef" for digit in after_save)
+        ):
+            raise ValueError(
+                "the verified depot completion lacks its authoritative "
+                "after-save digest"
+            )
+        after_save_size = result.get("after_save_size_bytes")
+        if not isinstance(after_save_size, int) or after_save_size <= 0:
+            raise ValueError(
+                "the verified depot completion lacks its authoritative "
+                "after-save size record"
+            )
+        after_save_path = directory / DEPOT_AFTER_SAVE_NAME
+        if after_save_path.is_symlink() or not after_save_path.is_file():
+            raise ValueError(
+                "the verified depot completion lacks its retained "
+                "authoritative after.sav"
+            )
+        if sha256(after_save_path) != after_save:
+            raise ValueError(
+                "the retained authoritative after-save digest drifted from "
+                "its result record"
+            )
+        if after_save_path.stat().st_size != after_save_size:
+            raise ValueError(
+                "the retained authoritative after-save size drifted from "
+                "its result record"
+            )
         receipt_path = directory / "receipt.json"
-        if receipt_path.is_file():
-            retained_receipt = json.loads(receipt_path.read_text())
-            replay_phase = json.loads(json.dumps(phase)) if phase is not None else None
-            # The run writes the phase fields flat together with its
-            # before-save digest; the replay must read exactly that shape
-            # and shrink nothing.
-            if any(
-                name not in retained_receipt or retained_receipt[name] != replay_phase[name]
-                for name in replay_phase
-            ):
-                raise ValueError("the retained depot receipt replay mismatch")
-            session_before = json.loads(
-                (directory / "session-before-identity.json").read_text()
-            ).get("sha256")
-            if retained_receipt.get("before_save_sha256") != session_before:
-                raise ValueError("the retained depot receipt replay mismatch")
+        if not receipt_path.is_file():
+            raise ValueError("the verified depot completion lacks its retained receipt")
+        retained_receipt = json.loads(receipt_path.read_text())
+        replay_phase = json.loads(json.dumps(phase)) if phase is not None else None
+        # The run writes the phase fields flat together with its before- and
+        # after-save records; the replay must read exactly that shape and
+        # shrink nothing.
+        if any(
+            name not in retained_receipt or retained_receipt[name] != replay_phase[name]
+            for name in replay_phase
+        ):
+            raise ValueError("the retained depot receipt replay mismatch")
+        session_before = json.loads(
+            (directory / "session-before-identity.json").read_text()
+        ).get("sha256")
+        if retained_receipt.get("before_save_sha256") != session_before:
+            raise ValueError("the retained depot receipt replay mismatch")
+        if retained_receipt.get("after_save_sha256") != result["after_save_sha256"]:
+            raise ValueError(
+                "the retained depot receipt after-save digest drifted from "
+                "its result record"
+            )
+        if retained_receipt.get("after_save_size_bytes") != after_save_size:
+            raise ValueError(
+                "the retained depot receipt after-save size drifted from "
+                "its result record"
+            )
+        after_save_binding = dict(
+            schema=DEPOT_AFTER_SAVE_BINDING_SCHEMA,
+            attempt=DEPOT_MUTATION_ATTEMPT,
+            milestone=MILESTONE_DEPOT_MUTATION,
+            directory=str(directory),
+            prelaunch_sha256=seal,
+            after_save_sha256=after_save,
+            save_size_bytes=after_save_size,
+            saved_at_fleet_exchange=DEPOT_AFTER_SAVE_SAVED_AT,
+            source_world=PINNED_PREREQUISITE_AFTER_SAVE,
+            funds_at_close=phase["funds_chain"][-1]["funds_after"],
+            edge_facts=dict(phase["observations"]["after-00"]["facts"]),
+            fleet_count=phase["fleet"]["count"],
+            statement=(
+                "the authoritative post-mutation world of record (Path A, "
+                "E77/E78): the retained after.sav digest equals the "
+                "run-time binding in result.json and receipt.json, its "
+                "source world is the pinned A1 close-out after-save, and "
+                "its measured facts are the after-00 gate and the zero "
+                "fleet; the downstream freight prerequisite lineage of "
+                "record binds exactly these bytes"
+            ),
+        )
+        binding_path = directory / DEPOT_AFTER_SAVE_BINDING_NAME
+        if binding_path.is_file():
+            if json.loads(binding_path.read_text()) != after_save_binding:
+                raise ValueError(
+                    "the retained after-save binding drifted from its "
+                    "verified re-derivation"
+                )
+        else:
+            write_json(binding_path, after_save_binding)
         return dict(
             verification="F12_MUTATION_COMPLETION_VERIFIED",
             receipt=dict(
@@ -1726,6 +1896,69 @@ def verify_depot_mutation_attempt(directory: Path) -> dict:
                 before_save_sha256=json.loads(
                     (directory / "session-before-identity.json").read_text()
                 ).get("sha256"),
+                after_save_sha256=after_save,
+            ),
+        )
+    if result["status"] == "PHASE_COMPLETE_SAVE_REFUSED":
+        # Path A of record (E77/E78): the strict save refusal on the
+        # complete path is terminal, ticket-preserving evidence — the phase
+        # itself completed natively but no authoritative world of record
+        # ever materialized, and nothing may relabel this as an incomplete
+        # phase or a soft failure.
+        if phase["verification"] != "DEPOT_MUTATION_COMPLETE":
+            raise ValueError("the depot save refusal contradicts its depot phase outcome")
+        if result.get("halt") is not None or result.get("command_accepted") is not True:
+            raise ValueError("the depot save refusal contradicts its retained attempt record")
+        if (
+            len(result.get("exchanges", [])) != len(plan.schedule)
+            or not cleanup_complete
+        ):
+            raise ValueError(
+                "the depot save refusal's cleanup or exchange inventory incomplete"
+            )
+        if (
+            not isinstance(result.get("save_error"), str)
+            or not result["save_error"].strip()
+        ):
+            raise ValueError("the depot save refusal lacks its recorded native save error")
+        if result.get("after_save_sha256") is not None or result.get("verified") is True:
+            raise ValueError(
+                "a save-refused depot attempt cannot carry the authoritative "
+                "after-save"
+            )
+        if (directory / DEPOT_AFTER_SAVE_BINDING_NAME).is_file():
+            raise ValueError(
+                "a save-refused depot attempt cannot carry the after-save "
+                "binding of record"
+            )
+        refused_receipt_path = directory / "receipt.json"
+        if not refused_receipt_path.is_file():
+            raise ValueError("the save-refused depot attempt lacks its retained receipt")
+        refused_receipt = json.loads(refused_receipt_path.read_text())
+        if refused_receipt.get("save_error") != result["save_error"]:
+            raise ValueError(
+                "the retained depot receipt save-refusal drifted from its "
+                "result record"
+            )
+        if refused_receipt.get("after_save_sha256") is not None:
+            raise ValueError(
+                "a save-refused depot receipt cannot carry the authoritative "
+                "after-save"
+            )
+        return dict(
+            verification="PHASE_COMPLETE_SAVE_REFUSED",
+            result_status="PHASE_COMPLETE_SAVE_REFUSED",
+            exchanges=result.get("exchanges", []),
+            mutated=result.get("mutated", []),
+            funds_close=(phase["funds_chain"] or [{}])[-1].get("funds_after"),
+            result_save_error=result["save_error"],
+            statement=(
+                "the six scheduled exchanges all carried their native "
+                "readbacks (phase DEPOT_MUTATION_COMPLETE) but the strict "
+                "authoritative post-mutation save was refused on the "
+                "complete path; the attempt is terminal evidence, the "
+                "retained diagnostic record is not the world of record, and "
+                "nothing is relabeled"
             ),
         )
     if result["status"] == "FAILED_CLEANUP":

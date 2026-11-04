@@ -8,14 +8,19 @@ security framework is introduced; the shared machinery is parameterized at
 call time (closure root, prerequisite lineage, sealed freight pins) so the
 consumed v1 freight ceremony is untouched.
 
-The staged candidate ``D5-FREIGHT-3`` binds the A1 close-out lineage
+The staged candidate ``D5-FREIGHT-5`` (Path A design record, world-pin
+version 3) binds the authoritative post-depot-mutation world of record
 byte-exactly:
 
 1. Its source world is the replay-verified retained ``after.sav`` of the
-   consumed A1 corridor-extension candidate (``D5-CORRIDOR-EXTENSION-3``) —
-   the route-receipt bound new delivery bay, corridor stops, depot and
-   company road at the verified extension close-out, with the pinned
-   authoritative after-save digest.
+   consumed depot-mutation attempt of record (``D5-F12-DEPOT-3``) — the A1
+   extension close-out world with the company road depot joined natively to
+   its pinned front at the pinned authoritative after-save digest — while
+   the consumed A1 corridor-extension receipts (``D5-CORRIDOR-EXTENSION-3``)
+   stay verified exactly as before as that depot chain's own source world,
+   and the consumed observe-only reload attempt (``D5-F12-DEPOT-RELOAD-1``)
+   re-measured the loaded world fresh, binding its loaded-source digest
+   three ways (retained file == reload record == new pin).
 2. Its vehicle route is derived from the actual pinned 31-tile construction
    witness (the A1 extension's built route): the ordered 29-tile subsequence
    that removes the stale D4 delivery bay and the backtracked repeat of its
@@ -86,6 +91,7 @@ from app.simulation.openttd.corridor_freight_v2 import (
     FREIGHT_STALE_DELIVERY_TILE_V2,
     FREIGHT_WITNESS_LENGTH_V2,
     FUNDS_AT_A1_CLOSE,
+    FUNDS_AT_DEPOT_MUTATION_CLOSE,
     MAX_FREIGHT_REQUEST_BYTES_V2,
     MAX_FREIGHT_RESPONSE_BYTES_V2,
     MAX_FREIGHT_SEND_BYTES,
@@ -112,6 +118,12 @@ from app.simulation.openttd.gamescript_transport import (
     encode_gamescript,
     gamescript_subscription,
 )
+from app.simulation.openttd.proof import (
+    corridor_depot_mutation_native as depot_native,
+)
+from app.simulation.openttd.proof import (
+    corridor_depot_recheck_native as depot_recheck_native,
+)
 from app.simulation.openttd.proof.classification_capture import script_log_health_findings
 from app.simulation.openttd.proof.corridor_accept_survey_native import (
     A1_PREREQUISITE_ATTEMPT,
@@ -122,6 +134,12 @@ from app.simulation.openttd.proof.corridor_accept_survey_native import (
 from app.simulation.openttd.proof.corridor_construction_native import (
     source_save_path,
     stage_world,
+)
+from app.simulation.openttd.proof.corridor_depot_mutation_native import (
+    verify_depot_mutation_attempt,
+)
+from app.simulation.openttd.proof.corridor_depot_recheck_native import (
+    verify_depot_recheck_attempt,
 )
 from app.simulation.openttd.proof.corridor_extension_native import (
     ACCEPTANCE_RECHECK_STATEMENT,
@@ -203,12 +221,21 @@ KIND = "freight"
 MILESTONE_FREIGHT = "D5-FREIGHT"
 FREIGHT_ATTEMPT = FREIGHT_ATTEMPT_V2
 
+# The world-pin version of record (Path A design record R4): version 3 pins
+# the depot-mutation after-save as the freight world of record. Every
+# consumer of the world binding re-runs the chain below, so a drift refuses
+# before any staging.
+WORLD_PIN_VERSION = 3
+
 # Versioned prelaunch evidence for the freight v2 candidate (additive sister
 # record of the shared prelaunch machinery; the claim, launch boundary, freeze
 # and replay gates are the shared D2 implementations parameterized at call
 # time). The prerequisite schema stays the shared native family the v1 freight
 # candidate binds; the consumed-launch marker stays the shared native family.
-D5_FREIGHT_V2_PRELAUNCH_SCHEMA = "d5-freight2-prelaunch-v1"
+# The sibling record carries the v3 world-pin version (the once-staged
+# D5-FREIGHT-4 candidate keeps its byte-verbatim v1 record stale-by-
+# construction; a staged schema version is never silently re-labeled).
+D5_FREIGHT_V2_PRELAUNCH_SCHEMA = "d5-freight2-prelaunch-v2"
 D5_FREIGHT_V2_PREREQUISITE_SCHEMA = D5_FREIGHT_PREREQUISITE_SCHEMA
 D5_FREIGHT_V2_LAUNCH_CONSUMED_SCHEMA = D5_FREIGHT_LAUNCH_CONSUMED_SCHEMA
 
@@ -219,6 +246,22 @@ D5_FREIGHT_V2_LAUNCH_CONSUMED_SCHEMA = D5_FREIGHT_LAUNCH_CONSUMED_SCHEMA
 # never equal its own resolved prerequisite.
 if PINNED_PREREQUISITE_AFTER_SAVE != A1_AFTER_SAVE_SHA256_V2:
     raise RuntimeError("the A1 prerequisite after-save digest drifted from the v2 pin")
+
+# The R4 chain of record (Path A E78; launches E82/E87): the consumed
+# depot-mutation attempt whose authoritative after-save is the freight world
+# of record, and the consumed observe-only reload attempt whose receipt
+# re-measured that loaded world fresh. The three-way chain (retained depot
+# file digest == reload loaded-source digest == new world pin) is re-verified
+# inside ``freight_facts()``; a drift refuses staging before any run.
+DEPOT_PREREQUISITE = (
+    PROJECT / "artifacts/experiments/d5-corridor-depot-mutation-native-candidate-3"
+).resolve()
+DEPOT_PREREQUISITE_AFTER_SAVE = (
+    "183b20273a54ebe1a2cd9306145a9ea820bbd6114b1608c42079b4e1b1efe6a6"
+)
+RELOAD_PREREQUISITE = (
+    PROJECT / "artifacts/experiments/d5-corridor-depot-recheck-native-candidate-1"
+).resolve()
 
 # The staged running GameScript announces its own readiness marker (identical
 # to the D2/D3/D4 staged machinery).
@@ -278,22 +321,26 @@ def staged_composition() -> tuple[dict[str, bytes], str, int]:
     )
 
 
-# --- The pinned A1 close-out freight world (sealed, deterministic) ------------
+# --- The pinned freight chain of record (sealed, deterministic) ---------------
 
 
 @lru_cache(maxsize=1)
 def freight_facts() -> dict:
-    """Derive the staged freight v2 world's pins from the pinned A1 close-out.
+    """Derive the staged freight v2 world's pins from the post-mutation record.
 
-    The prerequisite must be the replay-verified consumed A1 corridor
-    extension attempt (``D5-CORRIDOR-EXTENSION-2`` succeeded nothing; the
-    extension attempt of record is ``D5-CORRIDOR-EXTENSION-3``): its
-    receipt-bound ``after.sav`` is the authoritative source world, its
-    route receipt names the A1 close-out funds exactly, and its station
-    receipt proves the new delivery bay is a distinct station beside the
-    retained corridor stops. Every freight v2 world pin is compared with
-    the compiled A1 evidence here, so a drift refuses staging before any
-    run.
+    The world of record is the replay-verified consumed depot-mutation
+    attempt's authoritative after-save (``D5-F12-DEPOT-3``), re-measured
+    fresh by the consumed observe-only reload attempt
+    (``D5-F12-DEPOT-RELOAD-1``) whose receipt binds the loaded-source digest
+    three ways (Path A design record E78; runs E82/E87). That world's own
+    source is the replay-verified consumed A1 corridor extension attempt
+    (``D5-CORRIDOR-EXTENSION-2`` succeeded nothing; the extension attempt of
+    record is ``D5-CORRIDOR-EXTENSION-3``): its receipts stay verified
+    exactly as before — the route receipt names the A1 close-out funds, and
+    its station receipt proves the new delivery bay is a distinct station
+    beside the retained corridor stops. Every freight v2 world pin is
+    compared with the compiled chain evidence here, so a drift refuses
+    staging before any run.
     """
     prerequisite = PINNED_PREREQUISITE
     metadata = read_prelaunch(prerequisite)
@@ -371,29 +418,181 @@ def freight_facts() -> dict:
     expected_welcome = metadata["world"]["expected_welcome"]
     if expected_welcome != retained_welcome():
         raise FreightV2StagingError("the A1 welcome is not the retained world identity")
+
+    # --- the depot-mutation world of record (Path A) --------------------------
+    depot = DEPOT_PREREQUISITE
+    depot_replay = verify_depot_mutation_attempt(depot)
+    if depot_replay.get("verification") != "F12_MUTATION_COMPLETION_VERIFIED":
+        raise FreightV2StagingError(
+            "the depot prerequisite replay is not a verified depot-mutation "
+            f"completion: {depot_replay.get('verification')}"
+        )
+    depot_metadata = read_prelaunch(depot)
+    if depot_metadata.get("schema") != depot_native.D5_DEPOT_MUTATION_PRELAUNCH_SCHEMA:
+        raise FreightV2StagingError(
+            "the depot prerequisite is not the depot-mutation lineage"
+        )
+    if (
+        depot_metadata.get("attempt") != depot_native.DEPOT_MUTATION_ATTEMPT
+        or depot_metadata.get("milestone") != depot_native.MILESTONE_DEPOT_MUTATION
+    ):
+        raise FreightV2StagingError(
+            "the depot prerequisite attempt identity drifted from the depot of record"
+        )
+    depot_seal = sha256(depot / "PRELAUNCH.json")
+    if (depot / "PRELAUNCH.sha256").read_text().strip() != depot_seal:
+        raise FreightV2StagingError("depot prerequisite prelaunch seal mismatch")
+    depot_claim_path = depot / "CLAIM.json"
+    if not depot_claim_path.is_file():
+        raise FreightV2StagingError("the depot prerequisite attempt was never consumed")
+    depot_claim = json.loads(depot_claim_path.read_text())
+    if depot_claim.get("prelaunch_digest") != depot_seal or depot_claim.get(
+        "consumed"
+    ) is not True:
+        raise FreightV2StagingError("the depot prerequisite attempt claim is incomplete")
+    depot_after_save = depot / depot_native.DEPOT_AFTER_SAVE_NAME
+    if not depot_after_save.is_file():
+        raise FreightV2StagingError("the depot prerequisite attempt retained no after world")
+    depot_digest = sha256(depot_after_save)
+    if depot_digest != DEPOT_PREREQUISITE_AFTER_SAVE:
+        raise FreightV2StagingError(
+            "the depot after-save digest is not the pinned authoritative world"
+        )
+    binding_path = depot / depot_native.DEPOT_AFTER_SAVE_BINDING_NAME
+    if not binding_path.is_file():
+        raise FreightV2StagingError("the depot prerequisite carries no after-save binding")
+    depot_binding = json.loads(binding_path.read_text())
+    if (
+        depot_binding.get("schema") != depot_native.DEPOT_AFTER_SAVE_BINDING_SCHEMA
+        or depot_binding.get("attempt") != depot_native.DEPOT_MUTATION_ATTEMPT
+        or depot_binding.get("milestone") != depot_native.MILESTONE_DEPOT_MUTATION
+        or depot_binding.get("prelaunch_sha256") != depot_seal
+        or depot_binding.get("after_save_sha256") != depot_digest
+    ):
+        raise FreightV2StagingError("the depot after-save binding identity drifted")
+    if depot_binding.get("source_world") != A1_AFTER_SAVE_SHA256_V2:
+        raise FreightV2StagingError(
+            "the depot after-save does not descend from the pinned A1 close-out world"
+        )
+    edge_facts = depot_binding.get("edge_facts")
+    if not isinstance(edge_facts, dict) or (
+        edge_facts.get("connected_front_to_depot") is not True
+        or edge_facts.get("connected_depot_to_front") is not True
+        or edge_facts.get("depot_linked") is not True
+        or edge_facts.get("front_read") != int(A1_DEPOT_FRONT_TILE_V2)
+        or edge_facts.get("owner") != FREIGHT_COMPANY
+    ):
+        raise FreightV2StagingError(
+            "the depot after-save edge facts drifted from the both-directions "
+            "TRUE record (F-12 of record: front 45743, owner 0)"
+        )
+    if (
+        depot_binding.get("funds_at_close") != FUNDS_AT_DEPOT_MUTATION_CLOSE
+        or depot_binding.get("fleet_count") != 0
+        or depot_binding.get("saved_at_fleet_exchange")
+        != depot_native.DEPOT_AFTER_SAVE_SAVED_AT
+    ):
+        raise FreightV2StagingError("the depot after-save close facts drifted")
+    depot_welcome = depot_metadata["world"]["expected_welcome"]
+    if depot_welcome != retained_welcome():
+        raise FreightV2StagingError(
+            "the depot prerequisite welcome is not the retained identity"
+        )
+
+    # --- the reload receipt of record (Path A round 3) ------------------------
+    reload_dir = RELOAD_PREREQUISITE
+    reload_metadata = read_prelaunch(reload_dir)
+    if reload_metadata.get("schema") != depot_recheck_native.D5_DEPOT_RECHECK_PRELAUNCH_SCHEMA:
+        raise FreightV2StagingError("the reload prerequisite is not the depot-reload lineage")
+    reload_seal = sha256(reload_dir / "PRELAUNCH.json")
+    if (reload_dir / "PRELAUNCH.sha256").read_text().strip() != reload_seal:
+        raise FreightV2StagingError("reload prerequisite prelaunch seal mismatch")
+    reload_claim_path = reload_dir / "CLAIM.json"
+    if not reload_claim_path.is_file():
+        raise FreightV2StagingError("the reload prerequisite attempt was never consumed")
+    reload_claim = json.loads(reload_claim_path.read_text())
+    if reload_claim.get("prelaunch_digest") != reload_seal or reload_claim.get(
+        "consumed"
+    ) is not True:
+        raise FreightV2StagingError("the reload prerequisite attempt claim is incomplete")
+    reload_receipt_path = reload_dir / depot_recheck_native.RECHECK_AFTER_RECEIPT_NAME
+    if not reload_receipt_path.is_file():
+        raise FreightV2StagingError("the reload prerequisite retained no reload receipt")
+    reload_receipt = json.loads(reload_receipt_path.read_text())
+    if (
+        reload_receipt.get("schema") != depot_recheck_native.RECHECK_AFTER_RECEIPT_SCHEMA
+        or reload_receipt.get("attempt") != depot_recheck_native.RECHECK_ATTEMPT
+        or reload_receipt.get("prelaunch_sha256") != reload_seal
+        or reload_receipt.get("loaded_source_sha256") != depot_digest
+        or reload_receipt.get("funds_of_record") != FUNDS_AT_DEPOT_MUTATION_CLOSE
+        or reload_receipt.get("fleet_of_record") != 0
+        or reload_receipt.get("phase", {}).get("verification") != "DEPOT_RELOAD_OBSERVED"
+    ):
+        raise FreightV2StagingError(
+            "the reload receipt does not bind the loaded world of record "
+            "three ways (retained depot file == reload record == new pin)"
+        )
+    reload_replay = verify_depot_recheck_attempt(reload_dir)
+    if reload_replay.get("verification") != "DEPOT_RELOAD_FACTS_VERIFIED":
+        raise FreightV2StagingError(
+            "the reload prerequisite replay is not a verified reload: "
+            f"{reload_replay.get('verification')}"
+        )
+
     return dict(
-        attempt=A1_PREREQUISITE_ATTEMPT,
-        milestone=A1_PREREQUISITE_MILESTONE,
-        directory=str(prerequisite),
-        prelaunch_digest=seal,
-        save="after.sav",
-        save_sha256=after_digest,
-        qualified_save_sha256=metadata["world"].get("qualified_save_sha256"),
+        world_pin_version=WORLD_PIN_VERSION,
+        attempt=depot_native.DEPOT_MUTATION_ATTEMPT,
+        milestone=depot_native.MILESTONE_DEPOT_MUTATION,
+        directory=str(depot),
+        prelaunch_digest=depot_seal,
+        save=depot_native.DEPOT_AFTER_SAVE_NAME,
+        save_sha256=depot_digest,
+        qualified_save_sha256=depot_metadata["world"].get("qualified_save_sha256"),
         station_sids=dict(existing=list(station_receipt["existing_sids"]), new=2),
-        funds=FUNDS_AT_A1_CLOSE,
-        expected_welcome=expected_welcome,
+        funds=FUNDS_AT_DEPOT_MUTATION_CLOSE,
+        expected_welcome=depot_welcome,
+        a1_lineage=dict(
+            attempt=A1_PREREQUISITE_ATTEMPT,
+            milestone=A1_PREREQUISITE_MILESTONE,
+            directory=str(prerequisite),
+            prelaunch_digest=seal,
+            save="after.sav",
+            save_sha256=after_digest,
+            funds_at_close=FUNDS_AT_A1_CLOSE,
+            expected_welcome=expected_welcome,
+        ),
+        depot_mutation=dict(
+            attempt=depot_native.DEPOT_MUTATION_ATTEMPT,
+            milestone=depot_native.MILESTONE_DEPOT_MUTATION,
+            directory=str(depot),
+            prelaunch_digest=depot_seal,
+            after_save_sha256=depot_digest,
+            funds_at_close=FUNDS_AT_DEPOT_MUTATION_CLOSE,
+            verification="F12_MUTATION_COMPLETION_VERIFIED",
+        ),
+        reload=dict(
+            attempt=depot_recheck_native.RECHECK_ATTEMPT,
+            milestone=depot_recheck_native.MILESTONE_DEPOT_RECHECK,
+            directory=str(reload_dir),
+            prelaunch_digest=reload_seal,
+            receipt=depot_recheck_native.RECHECK_AFTER_RECEIPT_NAME,
+            loaded_source_sha256=depot_digest,
+            funds_of_record=FUNDS_AT_DEPOT_MUTATION_CLOSE,
+            fleet_of_record=0,
+            verification="DEPOT_RELOAD_FACTS_VERIFIED",
+        ),
     )
 
 
 def freight_plan_v2() -> FreightPlanV2:
-    """The staged freight v2 plan the A1 close-out candidate drives.
+    """The staged freight v2 plan the post-mutation world of record drives.
 
     The plan derives entirely from the module's own pins of record: the
-    pinned witness and its derived vehicle route, the A1 corridor stops,
-    depot and funds, and the provisional census engine pin. The industry
-    ids are never pinned (F-3); no optimizer is re-run — the extension
-    construction already proved the geometry, so the witness derivation is
-    the route authority of record.
+    pinned witness and its derived vehicle route, the corridor stops and
+    depot of record, the post-mutation close-out funds, and the provisional
+    census engine pin. The industry ids are never pinned (F-3); no
+    optimizer is re-run — the extension construction already proved the
+    geometry, so the witness derivation is the route authority of record.
     """
     return FreightPlanV2(
         attempt=FREIGHT_ATTEMPT_V2,
@@ -408,7 +607,7 @@ def freight_plan_v2() -> FreightPlanV2:
         depot_front=A1_DEPOT_FRONT_TILE_V2,
         pickup_industry=-1,
         delivery_industry=-1,
-        expected_funds=FUNDS_AT_A1_CLOSE,
+        expected_funds=FUNDS_AT_DEPOT_MUTATION_CLOSE,
         max_cost=FREIGHT_MAX_COST_V2,
         witness=PINNED_WITNESS,
         vehicle_route=FREIGHT_ROUTE_V2,
@@ -457,29 +656,36 @@ def _scheduled_exchange_ids(schedule: list[dict]) -> set[str]:
 # --- Prerequisite-attempt source world (A1 extension candidate-3) --------------
 
 
-def prerequisite_binding(prerequisite: Path = PINNED_PREREQUISITE) -> dict:
-    """The fail-closed binding of the A1 extension attempt's after-save.
+def prerequisite_binding(prerequisite: Path = DEPOT_PREREQUISITE) -> dict:
+    """The fail-closed binding of the depot-mutation attempt's after-save.
 
-    The prerequisite must be the pinned, consumed, fully replay-verified A1
-    corridor-extension attempt of record: its prelaunch seal integrity, its
-    consumed one-shot claim, its retained ``after.sav`` at the pinned
-    authoritative digest, its receipt binding the save with the acceptance
-    recheck and the distinct-new-station verdict, its full extension replay
-    verdict and the retained world welcome. The A1 lineage record is
-    embedded as provenance; no historical D3/D4 chain walk is re-opened.
+    The prerequisite must be the pinned, consumed, fully replay-verified
+    depot-mutation attempt of record (``D5-F12-DEPOT-3``): its prelaunch
+    seal integrity, its consumed one-shot claim, its retained authoritative
+    ``after.sav`` at the pinned digest, its after-save binding (the A1
+    source world, the both-directions edge facts, the closing funds and
+    the zero fleet), the full depot replay verdict and the retained world
+    welcome. The A1 extension lineage receipts and the observe-only reload
+    receipt of record are embedded as provenance; no historical chain walk
+    is re-opened.
     """
     prerequisite = Path(prerequisite).resolve()
-    if prerequisite != PINNED_PREREQUISITE:
-        raise FreightV2StagingError("the staged world requires the pinned A1 prerequisite")
+    if prerequisite != DEPOT_PREREQUISITE:
+        raise FreightV2StagingError(
+            "the staged world requires the pinned depot-mutation prerequisite"
+        )
     if not prerequisite.is_dir() or any(part == ".." for part in prerequisite.parts):
         raise FreightV2StagingError("prerequisite attempt directory is not a real directory")
     facts = freight_facts()
     metadata = read_prelaunch(prerequisite)
     if metadata["world"].get("expected_welcome") != retained_welcome():
-        raise FreightV2StagingError("the A1 prerequisite welcome is not the retained identity")
+        raise FreightV2StagingError(
+            "the depot-mutation prerequisite welcome is not the retained identity"
+        )
     return dict(
         schema=D5_FREIGHT_V2_PREREQUISITE_SCHEMA,
         role="PREREQUISITE_ATTEMPT",
+        world_pin_version=WORLD_PIN_VERSION,
         retained_directory=str(prerequisite),
         save=facts["save"],
         save_sha256=facts["save_sha256"],
@@ -487,26 +693,62 @@ def prerequisite_binding(prerequisite: Path = PINNED_PREREQUISITE) -> dict:
         prelaunch_digest=facts["prelaunch_digest"],
         attempt=facts["attempt"],
         milestone=facts["milestone"],
+        funds_of_record=facts["funds"],
         expected_welcome=facts["expected_welcome"],
         verification=(
-            "full replay verification of the consumed A1 extension attempt "
-            "receipt (EXTENSION_COMPLETION_VERIFIED) plus the pinned "
-            "authoritative after-save digest"
+            "the depot-mutation completion verified with its authoritative "
+            "after-save (F12_MUTATION_COMPLETION_VERIFIED), the observe-only "
+            "reload's three-way re-measure (DEPOT_RELOAD_FACTS_VERIFIED), and "
+            "the A1 extension lineage receipts re-verified unchanged from the "
+            "pinned candidate-3"
         ),
         provenance=dict(
-            schema=D5_EXTENSION_PRELAUNCH_SCHEMA,
-            attempt=facts["attempt"],
-            milestone=facts["milestone"],
-            prelaunch_sha256=facts["prelaunch_digest"],
-            after_save_sha256=facts["save_sha256"],
-            replay="EXTENSION_COMPLETION_VERIFIED",
+            world_pin_version=WORLD_PIN_VERSION,
             station_sids=facts["station_sids"],
-            acceptance_recheck=ACCEPTANCE_RECHECK_STATEMENT,
-            statement=(
-                "the staged freight v2 source world is the consumed A1 "
-                "corridor-extension candidate's receipt-bound close-out save; "
-                "the candidate-3 lineage record is embedded as provenance, "
-                "never as a re-opened chain walk"
+            a1_extension_lineage=dict(
+                schema=D5_EXTENSION_PRELAUNCH_SCHEMA,
+                attempt=facts["a1_lineage"]["attempt"],
+                milestone=facts["a1_lineage"]["milestone"],
+                prelaunch_sha256=facts["a1_lineage"]["prelaunch_digest"],
+                after_save_sha256=facts["a1_lineage"]["save_sha256"],
+                replay="EXTENSION_COMPLETION_VERIFIED",
+                acceptance_recheck=ACCEPTANCE_RECHECK_STATEMENT,
+                statement=(
+                    "the A1 corridor-extension lineage receipts stay verified "
+                    "from the pinned A1 candidate-3; the depot-mutation world "
+                    "of record descends from that close-out save (its "
+                    "after-save binding names it as source world)"
+                ),
+            ),
+            depot_mutation_chain=dict(
+                schema=depot_native.DEPOT_AFTER_SAVE_BINDING_SCHEMA,
+                attempt=facts["depot_mutation"]["attempt"],
+                milestone=facts["depot_mutation"]["milestone"],
+                prelaunch_sha256=facts["depot_mutation"]["prelaunch_digest"],
+                after_save_sha256=facts["depot_mutation"]["after_save_sha256"],
+                replay="F12_MUTATION_COMPLETION_VERIFIED",
+                funds_at_close=facts["depot_mutation"]["funds_at_close"],
+                source_world=facts["a1_lineage"]["save_sha256"],
+                statement=(
+                    "the staged freight v2 source world is the consumed "
+                    "depot-mutation candidate's authoritative post-mutation save"
+                ),
+            ),
+            reload_chain=dict(
+                schema=depot_recheck_native.RECHECK_AFTER_RECEIPT_SCHEMA,
+                attempt=facts["reload"]["attempt"],
+                milestone=facts["reload"]["milestone"],
+                receipt=facts["reload"]["receipt"],
+                prelaunch_sha256=facts["reload"]["prelaunch_digest"],
+                loaded_source_sha256=facts["reload"]["loaded_source_sha256"],
+                funds_of_record=facts["reload"]["funds_of_record"],
+                fleet_of_record=facts["reload"]["fleet_of_record"],
+                replay="DEPOT_RELOAD_FACTS_VERIFIED",
+                statement=(
+                    "the consumed observe-only reload re-measured the loaded "
+                    "world of record fresh; its loaded-source digest binds "
+                    "three ways with the retained depot file and the new pin"
+                ),
             ),
         ),
     )
@@ -639,9 +881,11 @@ def plan_policy() -> dict:
             expected_fleet=0,
             running_cost_allowance=FREIGHT_RUNNING_COST_ALLOWANCE_V2,
             statement=(
-                "the staged freight v2 world is the A1 corridor-extension "
-                "close-out: route-receipt-bound corridor stops with the new "
-                "delivery bay, the company depot joined to its pinned front, "
+                "the staged freight v3 world is the consumed depot-mutation "
+                "attempt's authoritative after-save: route-receipt-bound "
+                "corridor stops with the delivery bay, the company depot "
+                "joined to its pinned front with the directed road edge "
+                "present natively (F-12, re-measured by the reload receipt), "
                 "one planned cycle vehicle on road fuel, and the industry "
                 "ids to be discovered natively (F-3)"
             ),
@@ -649,13 +893,14 @@ def plan_policy() -> dict:
         prerequisite_world=dict(
             schema=D5_FREIGHT_V2_PREREQUISITE_SCHEMA,
             statement=(
-                "the freight v2 candidate's source world is the A1 "
-                "corridor-extension close-out: both stops must read company "
+                "the freight v2 candidate's source world is the consumed "
+                "D5-F12-DEPOT-3 after-save: both stops must read company "
                 "truck stops with their pinned fronts, the directed "
-                "front-to-depot road edge must be present, the vehicle "
-                "route's 28 directed adjacent pairs must re-check connected "
-                "on the company's own road, and an unpaused company with "
-                "zero vehicles at exact close-out funds at native admission "
+                "front-to-depot road edge must be present (natively "
+                "re-measured, F-12), the vehicle route's 28 directed "
+                "adjacent pairs must re-check connected on the company's "
+                "own road, and an unpaused company with zero vehicles at "
+                "exact post-mutation close-out funds at native admission "
                 "time"
             ),
         ),
@@ -694,7 +939,7 @@ def budgets() -> dict:
         cycle_wall_cap_seconds=FREIGHT_CYCLE_WALL_CAP_SECONDS_V2,
         running_cost_allowance=FREIGHT_RUNNING_COST_ALLOWANCE_V2,
         max_cost=FREIGHT_MAX_COST_V2,
-        expected_funds=FUNDS_AT_A1_CLOSE,
+        expected_funds=FUNDS_AT_DEPOT_MUTATION_CLOSE,
     )
 
 
@@ -709,7 +954,7 @@ def expected_readback_policy() -> dict:
             "the pinned 8/8 bound, the recorded production/waiting levels, "
             "the F-3 unique-cargo-industry discoveries latched (producing "
             "pickup, accepting delivery), a company with zero vehicles and "
-            "the A1 close-out funds exactly"
+            "the depot-mutation close-out funds exactly"
         ),
         engine=(
             "the engine exchange returns READY with the pinned engine id "
@@ -777,12 +1022,14 @@ def attempt_name() -> str:
 
 
 def prepare_candidate(
-    directory: Path, *, prerequisite: Path = PINNED_PREREQUISITE
+    directory: Path, *, prerequisite: Path = DEPOT_PREREQUISITE
 ) -> PreparedProof:
     """Stage the fresh save-load composition; no process or connection."""
     prerequisite = Path(prerequisite).resolve()
-    if prerequisite != PINNED_PREREQUISITE:
-        raise FreightV2StagingError("the staged world requires the pinned A1 prerequisite")
+    if prerequisite != DEPOT_PREREQUISITE:
+        raise FreightV2StagingError(
+            "the staged world requires the pinned depot-mutation prerequisite"
+        )
     schedule = freight_schedule()
     if (
         len(schedule) != PLANNED_FREIGHT_EXCHANGES_V2
@@ -877,8 +1124,8 @@ def prepare_candidate(
             }
         )
         # The exact runtime closure of the freight v2 execution path (the
-        # wire contract, the v2 ceremony module and the A1 lineage modules
-        # they import) and the exact installed dependency bytes join the
+        # wire contract, the v2 ceremony module and the lineage/chain
+        # modules they import) and the exact installed dependency bytes join the
         # shared source_freeze() contract through the same parameterized D2
         # machinery — never weakening it.
         frozen.update(d2_source_closure(D5_V2_CLOSURE_ROOT))
@@ -1084,8 +1331,8 @@ def preflight(prepared: PreparedProof) -> dict:
         or world_block.get("save_sha256") != binding["save_sha256"]
         or world_block.get("qualified_save_sha256") != binding.get("qualified_save_sha256")
     ):
-        raise ValueError("the staged world is not the pinned A1 after-save")
-    if world_block["save_sha256"] != A1_AFTER_SAVE_SHA256_V2:
+        raise ValueError("the staged world is not the pinned depot-mutation after-save")
+    if world_block["save_sha256"] != DEPOT_PREREQUISITE_AFTER_SAVE:
         raise ValueError("the staged world save digest is not the pinned authoritative world")
     if world_block["expected_welcome"] != retained_welcome():
         raise ValueError("retained world identity requirements drifted")
@@ -1658,14 +1905,15 @@ def _parse_v2_phase_frames(directory: Path):
 
 
 def verify_attempt_identity(metadata: dict, *, plan: FreightPlanV2) -> dict:
-    """Re-bind one retained attempt to its pinned prerequisite and plan.
+    """Re-bind one retained attempt to its pinned world-of-record chain.
 
-    Replay must not trust the staged record's own declarations: the pinned A1
-    prerequisite is re-verified from its retained receipt, the staged world's
-    source-save digest must equal that prerequisite's receipt-bound after-save
-    digest, the full retained welcome must match, and every plan/route/
-    witness digest is re-derived. Returns the independently derived
-    prerequisite binding for callers that need its provenance.
+    Replay must not trust the staged record's own declarations: the pinned
+    depot-mutation world of record is re-verified from its retained receipts
+    (the depot chain plus the A1 lineage), the staged world's source-save
+    digest must equal that chain's receipt-bound after-save digest, the
+    full retained welcome must match, and every plan/route/witness digest
+    is re-derived. Returns the independently derived prerequisite binding
+    for callers that need its provenance.
     """
     if metadata.get("attempt") != attempt_name():
         raise ValueError("retained attempt identity drifted from the staged scope")
@@ -1689,7 +1937,7 @@ def verify_attempt_identity(metadata: dict, *, plan: FreightPlanV2) -> dict:
         verification=binding["verification"],
     )
     if staged_prerequisite != expected_prerequisite:
-        raise ValueError("retained prerequisite binding drifted from the pinned A1 attempt")
+        raise ValueError("retained prerequisite binding drifted from the pinned depot attempt")
     world = metadata.get("world")
     if not isinstance(world, dict):
         raise ValueError("retained attempt lacks its world binding")
@@ -1702,8 +1950,8 @@ def verify_attempt_identity(metadata: dict, *, plan: FreightPlanV2) -> dict:
     for name, expected in expected_world_binding.items():
         if world.get(name) != expected:
             raise ValueError(f"retained world {name} drifted from the pinned prerequisite")
-    if world.get("save_sha256") != A1_AFTER_SAVE_SHA256_V2:
-        raise ValueError("retained world is not the pinned A1 after-save")
+    if world.get("save_sha256") != DEPOT_PREREQUISITE_AFTER_SAVE:
+        raise ValueError("retained world is not the pinned depot-mutation after-save")
     expected_welcome = world.get("expected_welcome")
     if expected_welcome != binding["expected_welcome"] or expected_welcome != retained_welcome():
         raise ValueError("retained world welcome drifted from the pinned identity")
@@ -2040,7 +2288,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("command", choices=("prepare", "preflight", "run", "verify"))
     parser.add_argument("directory", type=Path)
-    parser.add_argument("--prerequisite", type=Path, default=PINNED_PREREQUISITE)
+    parser.add_argument("--prerequisite", type=Path, default=DEPOT_PREREQUISITE)
     args = parser.parse_args()
     directory = args.directory.resolve()
     if args.command == "prepare":
