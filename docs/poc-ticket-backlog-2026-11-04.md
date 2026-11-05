@@ -2219,3 +2219,74 @@ readiness, outside this round's PoC definition.
   `OPENTTD_OPENGFX_ARCHIVE` environment set before Python starts and an
   explicit in-session native-run approval; one attempt, no retry, no
   reconnect).
+- 2026-11-05 — T-004/round-6 ONE LAUNCH (launch approval in-session, one
+  action) executed and booked — the single native launch of the signed
+  round-6 candidate-6 via the production pipeline CLI, ONE attempt, first
+  invocation, no retry, no reconnect, rc 0
+  `NATIVE_CARGOFLOW2_COMPLETE` (`"verified": true, "returncode": 0,
+  "cleanup_complete": true, "state_changed": true, "halt": null, 1 launch /
+  1 connection / 25 requests`; phase verification `CARGOFLOW2_COMPLETE`;
+  phase seal == `e929d7b2…ec49`, plan digest
+  `98d055c4e826296f79a8e7d70275be14256229732637fc6cdf547dca47f506ca`).
+  **Binary resolution correction of record**: no env export at all — the
+  cargo-flow-2 pipeline resolves the binary from the harness filesystem pin
+  (`/home/fed/Downloads/openttd-15.3-linux-generic-amd64/openttd`, sha
+  re-verified == the runtime pin
+  `276d5b698a6b706154f3af588f6f885b3aebe518f4ecc8f869abf71383b1904c` at
+  run start with the no-processes pre-check; the round-5 ticket's
+  `OPENTTD_BINARY`-export note belonged to other entrypoints). The run
+  minted `CLAIM.json` bound `prelaunch_digest e929d7b2…ec49` /
+  `authorization_sha256 e938eb62…c7e5c` / operator identity
+  `cbb63ff5…40c614` (`consumed=true / launches_allowed=1 / retries=0`),
+  wrote `LAUNCH-CONSUMED.json` sha
+  `329334b7d887037797ed29b9d39238c676cf8094a0e8939da7b0e4b717b02f02`, and
+  executed the 25/25 exchange ladder with zero halt: site-00 READY (tick 15,
+  funds 489650), engine-00 READY (E111 census fix live-true, running_cost
+  421), purchase-00 BUILT (quote 4429 exact, funds 485221), vread-00 READ,
+  order-00/order-01 ORDERED, order-read-00 ORDER_SET_VERIFIED, monitor-00
+  ARMED, start-00 STARTED, vread-01 READ, **arrive-00 ANCHORED** at
+  (712232, 292) funds 485217 — the round-5 `CARGOFLOW2_FUNDS_DIVERGED`
+  halt class did NOT recur — flow-00..flow-11 READY with the native
+  observed funds series [485217, 485212, 485206, 485201, 485195, 484997,
+  484991, 484986, 484980, 484974, 484776, 484770], finance-00
+  FINANCE_VERIFIED (day 712287, funds 484769, income 0, delivered 0),
+  finish-00 PHASE_STOPPED. **Delivery verdict of record:
+  `CARGOFLOW2_LOADED_NEVER_DELIVERED`** ("a load was latched, but no
+  unloaded amount reached the bay acceptance chain inside the ladder") —
+  the corridor's empty bay arrival 712251 (flow-04), pickup arrival 712270
+  (flow-08), loads 5/10/15 at 712271 + 20 at 712272, loaded departure 20 t
+  at 712274 (flow-09), the delivery leg in transit at finish (location
+  50095, RUNNING) with `unloadings: []`, and the ladder's last stop
+  (finance-00, 712287 = anchor 712232 + 55) preceding the delivery leg's
+  return. **E114 cross-reality booked UNKNOWN for ticket 06**: the
+  production fences of record all passed as recorded (arrive-00 anchored
+  exactly on the E114-recorded walk level 485217 == 485217; finance-00
+  FINANCE_VERIFIED), but the E114 probe/VM twin's later walk-of-record
+  levels (flow-01 485217 → flow-06 484996 → flow-11 484775) differ from
+  the native observed series (flow-01 485212 → last flow 484770, finance
+  484769) — the twin-vs-native reconciliation is UNRESOLVED ledger
+  material, never reconciled by hand. Post-run evidence complete: root
+  68 entries, 25 receipt pairs + frames/receipt/result/cleanup/runtime
+  identity + session-before + after-diagnostic sav, manifest
+  `artifact-manifest.sha256` re-validated 66/66 OK 0 non-OK, seal
+  byte-equal after the run, `isolated/` disposed empty shell; post-consume
+  `verify` exit 0 (completion verified by the module's exit rule);
+  certified cleanup all-true (`reaped/sockets_closed/workspace_disposed/
+  credential_removed` all true, `remaining_processes: []`, endpoint
+  checks `connection_closed=true`, game 36457 / admin 58297); no openttd
+  process remains. Integrity close: `git diff --check` clean,
+  `CONTEXT.md` pin == authority-manifest current
+  `847d710abe87e2ed211a72d6455f3f1326b1476eca1711ab8be900080ec2984d`,
+  candidates 1–6 seals re-digested == sidecars (candidate-5 stays consumed
+  terminal history, round-5 verdicts unrelabeled). Run transcript of
+  record `/tmp/opencode/t6_run_output.txt` (candidate-6's retained
+  `result.json` / `receipt.json` / `cleanup.json` /
+  `artifact-manifest.sha256` carry the bytes) outside the repo. Books:
+  ticket `04-round6-one-launch.md` + this row + E116 evidence row +
+  AI_HANDOFF terminal block, one commit. The candidate-6 authorization is
+  consumed terminal history (identities never relabeled/re-launched); NEXT
+  FRONTIER — ticket 06 delivered-class reconciliation, whose adjudication
+  now needs the operator: the round-6 outcome class is COMPLETE-not-
+  delivered (`CARGOFLOW2_LOADED_NEVER_DELIVERED`), a class ticket 06's
+  current text does not yet spell out; downstream tickets 08–13 unchanged
+  blocked.
