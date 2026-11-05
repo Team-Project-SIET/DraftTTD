@@ -1802,3 +1802,302 @@ def test_retained_probe_rebound_hypotheses():
         assert row["wait_bay"] == 0
     assert "§5.2 item 3" in hyp["statement"]
 
+
+# --- Ticket 07: the route-binding parameterization ---------------------------
+#
+# The corridor attempt contract is parameterized over the corridor route of
+# record as its DEFAULT versioned binding instance (family versioning
+# precedent — the schedule-version selector with per-version plan pins).
+# This block binds the parameterization's external behavior: the recorded
+# digests, pin rows and funds vector of the default binding stay byte-equal
+# (the invariance locks of record), a non-default route binding derives its
+# own consistent composition, and cross-version composition drift fails
+# closed. Nothing here mutates native state; the only module state touched
+# is a synthetic non-default binding registration, restored via monkeypatch.
+
+
+_SCHEDULE_DIGEST_OF_RECORD = "5c0998f2d164198e2545ebd9709b2ae32afdbc3d4ef4dc8a7188a202e3f0bf2d"
+
+# The default binding's pin rows of record — exactly the values the shipped
+# attempt package's pin table carries for the route-sourced pins (the
+# pin-table binding test binds the shipped table to the same values).
+_DEFAULT_PIN_TABLE_OF_RECORD = {
+    "pickup": 45748,
+    "delivery": 50862,
+    "depot_tile": 45487,
+    "PICKUP_SID": 0,
+    "BAY_SID": 2,
+    "PICKUP_IND": 0,
+    "BAY_IND": 1,
+    "CARGOFLOW2_COMPANY": 0,
+    "CARGOFLOW2_CARGO": 1,
+    "ENGINE_PIN": 123,
+    "ENGINE_QUOTE": 4429,
+    "ENGINE_MAX_COST": 5000,
+    "CAPACITY_PIN": 20,
+    "SPEED_PIN": 48,
+    "RUNNING_DISPLAY_PIN": 421,
+    "OF_NONE": 0,
+    "OF_NO_LOAD": 128,
+    "LAUNCH_DAY": 712228,
+    "ARRIVE_MAX_DAYS": 5,
+    "ARRIVE_DEADLINE": 712233,
+    "AUTHORITY_LAST_DAY": 712288,
+}
+
+# The §4 funds acquisition vector of record, walked whole (the exact
+# purchase debit, the start-day partial, the two crossed 1950 boundaries,
+# the income-free ladder).
+_ACQUISITION_VECTOR_OF_RECORD = {
+    "site-00": 489650,
+    "engine-00": 489650,
+    "purchase-00": 485221,
+    "vread-00": 485221,
+    "order-00": 485221,
+    "order-01": 485221,
+    "order-read-00": 485221,
+    "monitor-00": 485221,
+    "start-00": 485221,
+    "vread-01": 485221,
+    "arrive-00": 485221,
+    "flow-00": 485221,
+    "flow-01": 485215,
+    "flow-02": 485209,
+    "flow-03": 485204,
+    "flow-04": 485198,
+    "flow-05": 485192,
+    "flow-06": 484994,
+    "flow-07": 484989,
+    "flow-08": 484983,
+    "flow-09": 484977,
+    "flow-10": 484971,
+    "flow-11": 484774,
+    "finance-00": 484774,
+    "finish-00": 484774,
+}
+
+
+def test_default_binding_digests_pins_and_funds_vector_of_record():
+    """The pinned-value locks of the parameterization: the corridor route of
+    record's plan digest, staged schedule digest, pin rows and funds vector
+    equal today's recorded values (zero semantic drift, whatever the
+    parameterization adds)."""
+    plan = cf.cargoflow2_plan()
+    assert plan.digest == PLAN.digest == REQUEST_PLAN_DIGEST
+    assert work.plan_digest_of(list(work.cargoflow2_schedule())) == _SCHEDULE_DIGEST_OF_RECORD
+    pin_rows = {
+        "pickup": cf.CARGOFLOW2_PICKUP_TILE,
+        "delivery": cf.CARGOFLOW2_BAY_TILE,
+        "depot_tile": cf.CARGOFLOW2_DEPOT_TILE,
+        "PICKUP_SID": cf.CARGOFLOW2_PICKUP_SID,
+        "BAY_SID": cf.CARGOFLOW2_BAY_SID,
+        "PICKUP_IND": cf.CARGOFLOW2_PICKUP_IND,
+        "BAY_IND": cf.CARGOFLOW2_BAY_IND,
+        "CARGOFLOW2_COMPANY": cf.CARGOFLOW2_COMPANY,
+        "CARGOFLOW2_CARGO": cf.CARGOFLOW2_CARGO,
+        "ENGINE_PIN": cf.CARGOFLOW2_ENGINE,
+        "ENGINE_QUOTE": cf.CARGOFLOW2_PURCHASE_QUOTE,
+        "ENGINE_MAX_COST": cf.CARGOFLOW2_ENGINE_MAX_COST,
+        "CAPACITY_PIN": cf.CARGOFLOW2_CAPACITY,
+        "SPEED_PIN": cf.CARGOFLOW2_MAX_SPEED,
+        "RUNNING_DISPLAY_PIN": cf.CARGOFLOW2_RUNNING_DISPLAY,
+        "OF_NONE": cf.CARGOFLOW2_ORDER_PICKUP_FLAGS,
+        "OF_NO_LOAD": cf.CARGOFLOW2_ORDER_DELIVERY_FLAGS,
+        "LAUNCH_DAY": cf.CARGOFLOW2_LAUNCH_DAY,
+        "ARRIVE_MAX_DAYS": cf.CARGOFLOW2_ARRIVE_MAX_DAYS,
+        "ARRIVE_DEADLINE": cf.CARGOFLOW2_LAUNCH_DAY + cf.CARGOFLOW2_ARRIVE_MAX_DAYS,
+        "AUTHORITY_LAST_DAY": cf.CARGOFLOW2_LAUNCH_DAY + cf.CARGOFLOW2_DAY_BUDGET,
+    }
+    assert pin_rows == _DEFAULT_PIN_TABLE_OF_RECORD
+    observed, model = funds_walk({})
+    assert observed == _ACQUISITION_VECTOR_OF_RECORD
+    assert model.purchase_paid and model.started == (ANCHOR, TICK_OF_RECORD)
+
+
+def _route_two() -> cf.Cargoflow2RouteBinding:
+    """The parameterization's synthetic non-default binding: a second,
+    internally-consistent route instance of the same contract family (its
+    own bay station, engine census and close-out funds) — never a binding
+    of this world of record, and registered only inside these tests."""
+    return cf.Cargoflow2RouteBinding(
+        route_version=2,
+        company=0,
+        cargo=1,
+        pickup=45748,
+        pickup_front=45747,
+        pickup_sid=0,
+        pickup_industry=0,
+        delivery=51119,
+        delivery_front=51118,
+        bay_sid=3,
+        bay_industry=1,
+        depot=45487,
+        depot_front=45743,
+        engine=124,
+        engine_max_cost=5000,
+        purchase_quote=4700,
+        engine_running_display=500,
+        engine_capacity=30,
+        engine_max_speed=40,
+        order_pickup_flags=0,
+        order_delivery_flags=128,
+        start_funds=475000,
+        founding_loan=100000,
+        interest_rate=2,
+        station_fee=25,
+        launch_day=712228,
+        arrive_max_days=5,
+        flow_span_days=55,
+    )
+
+
+@pytest.fixture
+def route_two(monkeypatch: pytest.MonkeyPatch) -> cf.Cargoflow2RouteBinding:
+    """Register the synthetic non-default binding; restored on teardown."""
+    binding = _route_two()
+    monkeypatch.setitem(cf.CARGOFLOW2_ROUTE_BINDINGS, binding.route_version, binding)
+    return binding
+
+
+def test_route_binding_selector_and_map_of_record():
+    """The version selector and the versioned binding map live in the
+    contract module; the route of record is the map's only pre-registered
+    default, and a foreign binding id refuses (no invented instance)."""
+    binding = cf.cargoflow2_route_binding()
+    assert cf.CARGOFLOW2_SCHEDULE_VERSION == 1
+    assert binding is cf.CARGOFLOW2_ROUTE_BINDINGS[1]
+    assert len(cf.CARGOFLOW2_ROUTE_BINDINGS) == 1
+    assert binding.route_version == 1
+    assert (binding.pickup, binding.pickup_front, binding.pickup_sid, binding.pickup_industry) == (
+        45748, 45747, 0, 0,
+    )
+    assert (binding.delivery, binding.delivery_front, binding.bay_sid, binding.bay_industry) == (
+        50862, 50863, 2, 1,
+    )
+    assert (binding.depot, binding.depot_front) == (45487, 45743)
+    assert (binding.company, binding.cargo, binding.engine) == (0, 1, 123)
+    with pytest.raises(ValueError, match="no registered corridor route binding"):
+        cf.cargoflow2_route_binding(2)
+
+
+def test_route_binding_registration_fail_closed(route_two: cf.Cargoflow2RouteBinding):
+    """The admission seam registers one versioned binding instance and
+    refuses re-registration of an occupied binding id."""
+    assert cf.cargoflow2_route_binding(2) is route_two
+    with pytest.raises(ValueError, match="already registered"):
+        cf.cargoflow2_register_route_binding(route_two)
+    with pytest.raises(ValueError, match="already registered"):
+        cf.cargoflow2_register_route_binding(cf.CARGOFLOW2_ROUTE_OF_RECORD)
+    assert set(cf.CARGOFLOW2_ROUTE_BINDINGS) == {1, 2}
+
+
+def test_nondefault_route_binding_derives_its_own_schedule_plan_and_pin_table(
+    route_two: cf.Cargoflow2RouteBinding,
+):
+    """A non-default binding derives its OWN consistent composition: the
+    ladder instrument rows, a plan whose digest carries its own pins, and
+    its own pin-table rows; the default binding derives the same rows and
+    exactly today's recorded digests. The ladder ids are the binding-
+    independent instrument of record — the route identity lives in the
+    plan's pins, never in a relabeled schedule."""
+    default = cf.cargoflow2_route_binding(1)
+    default_rows = cf.cargoflow2_schedule_rows(default)
+    assert default_rows == list(work.cargoflow2_schedule())
+    assert work.plan_digest_of(default_rows) == _SCHEDULE_DIGEST_OF_RECORD
+    assert cf.cargoflow2_plan(binding=default).digest == REQUEST_PLAN_DIGEST
+
+    plan_two = cf.cargoflow2_plan(binding=route_two)
+    assert plan_two.schema_version == 2
+    assert plan_two.schedule == cf.CARGOFLOW2_EXCHANGE_IDS
+    assert (plan_two.pickup, plan_two.pickup_front) == (
+        route_two.pickup, route_two.pickup_front,
+    )
+    assert (plan_two.delivery, plan_two.delivery_front) == (
+        route_two.delivery, route_two.delivery_front,
+    )
+    assert (plan_two.pickup_sid, plan_two.bay_sid) == (route_two.pickup_sid, route_two.bay_sid)
+    assert (plan_two.pickup_industry, plan_two.bay_industry) == (
+        route_two.pickup_industry, route_two.bay_industry,
+    )
+    assert plan_two.engine == route_two.engine == 124
+    assert plan_two.start_funds == route_two.start_funds == 475000
+    # deterministic, and never aliased onto the recorded composition
+    assert cf.cargoflow2_plan(binding=route_two).digest == plan_two.digest
+    assert plan_two.digest != REQUEST_PLAN_DIGEST
+
+    rows_two = cf.cargoflow2_schedule_rows(route_two)
+    assert rows_two == default_rows
+    assert work.plan_digest_of(rows_two) == _SCHEDULE_DIGEST_OF_RECORD
+
+    table_one = cf.cargoflow2_pin_table(default)
+    table_two = cf.cargoflow2_pin_table(route_two)
+    assert table_one == _DEFAULT_PIN_TABLE_OF_RECORD
+    assert table_two != table_one
+    assert table_two["ENGINE_PIN"] == 124
+    assert table_two["ENGINE_QUOTE"] == 4700
+    assert table_two["RUNNING_DISPLAY_PIN"] == 500
+    assert (table_two["BAY_SID"], table_two["BAY_IND"]) == (3, 1)
+    assert table_two["delivery"] == 51119
+    assert (table_two["LAUNCH_DAY"], table_two["ARRIVE_MAX_DAYS"]) == \
+        (route_two.launch_day, route_two.arrive_max_days)
+    for name, value in (
+        ("PICKUP_SID", 0),
+        ("CARGOFLOW2_COMPANY", 0),
+        ("OF_NONE", 0),
+        ("OF_NO_LOAD", 128),
+        ("ARRIVE_DEADLINE", 712233),
+    ):
+        assert table_two[name] == value, name
+
+
+def test_cross_version_plan_composition_drift_refused(route_two: cf.Cargoflow2RouteBinding):
+    """Mixing a schedule from one version with pins/digests of another
+    fails closed at the plan gate: a plan cannot carry one binding's pins
+    under another binding's version label, in either direction."""
+    plan_two = cf.cargoflow2_plan(binding=route_two)
+    mixed_forward = plan_two.model_dump(mode="json")
+    mixed_forward["schedule"] = tuple(mixed_forward["schedule"])
+    mixed_forward["schema_version"] = 1
+    with pytest.raises(
+        ValidationError,
+        match="bay pins drifted from the depot-chain corridor",
+    ):
+        cf.Cargoflow2Plan.model_validate(mixed_forward)
+    mixed_back = PLAN.model_dump(mode="json")
+    mixed_back["schedule"] = tuple(mixed_back["schedule"])
+    mixed_back["schema_version"] = 2
+    with pytest.raises(
+        ValidationError,
+        match="bay pins drifted from the depot-chain corridor",
+    ):
+        cf.Cargoflow2Plan.model_validate(mixed_back)
+
+
+def test_funds_model_wiring_follows_its_own_binding(route_two: cf.Cargoflow2RouteBinding):
+    """The funds-model wiring of record is parameterized too: a model built
+    for one binding carries that binding's own founding pins and admits
+    only its own census display figure — a foreign binding's display figure
+    (a cross-version wiring mix) refuses, in either direction."""
+    model_two = cf.cargoflow2_funds_model(route_two)
+    assert model_two.funds == route_two.start_funds == 475000
+    assert model_two.purchase_quote == route_two.purchase_quote == 4700
+    assert model_two.running_cost is None and model_two.fraction == 0
+    assert not model_two.purchase_paid and model_two.income_deltas == []
+    model_two.admit_running_cost(route_two.engine_running_display)  # its own census
+    with pytest.raises(ValueError, match="inconsistent with its display figure"):
+        cf.cargoflow2_funds_model(route_two).admit_running_cost(
+            cf.CARGOFLOW2_RUNNING_DISPLAY
+        )
+
+    model_one = cf.cargoflow2_funds_model(cf.cargoflow2_route_binding())
+    assert model_one.funds == cf.CARGOFLOW2_START_FUNDS == 489650
+    assert model_one.purchase_quote == cf.CARGOFLOW2_PURCHASE_QUOTE == 4429
+    model_one.admit_running_cost(cf.CARGOFLOW2_RUNNING_DISPLAY)  # its own census
+    with pytest.raises(ValueError, match="inconsistent with its display figure"):
+        cf.cargoflow2_funds_model(cf.cargoflow2_route_binding()).admit_running_cost(
+            route_two.engine_running_display
+        )
+    # The default derivation is byte-equal to the model of record: the
+    # recorded walk rides the default-wired model's display figure.
+    assert model_one.funds == funds_walk({})[0]["site-00"] - model_one.purchase_quote * 0
+

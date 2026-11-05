@@ -34,6 +34,21 @@ loan-interest staircase + 25 station fee at each economy-month boundary,
 per-economy-day running costs through the exact 8.8 fixed-point fraction
 carry (§4.3), delivery income read from the engine's own quarter accounting
 at every observation instant, and an empty other-expenses set.
+
+The corridor attempt contract is parameterized over the corridor route of
+record (family versioning precedent — the ``EXTENSION_SCHEDULE_VERSION`` /
+``SURVEY_SCHEDULE_VERSION`` selector with per-version plan pins): one
+version selector plus a versioned binding map keyed by route binding id
+live here, beside the plan contract, and every derivation of record
+(plan, staged ladder rows, pin table, funds-model wiring) takes one
+``Cargoflow2RouteBinding``. The corridor route of record (v1: pickup tile
+45748 with front 45747 and station sid 0, delivery bay tile 50862 with
+front 50863 and station sid 2, depot tile 45487 with front 45743,
+industries 0/1, cargo 1, engine 123) is the DEFAULT instance chosen at
+composition time, byte-equal to the pins of record; a binding naming an
+unregistered version, and any cross-version composition mixing (a
+version-1-labelled plan carrying another binding's pins, or a funds model
+admitting another binding's census figures), fails closed here.
 """
 
 import hashlib
@@ -405,6 +420,333 @@ Cargoflow2LatchKind = Literal[
 ]
 
 
+class Cargoflow2RouteBinding(Contract):
+    """One versioned corridor route binding: the pinned route identity and
+    attempt-clock parameters one admitted route's composition derives from.
+
+    A binding owns every route-derived pin of record — the corridor stops
+    with their fronts, the pinned station and industry identities, the
+    depot, the engine census and authority pins, the order flags, the
+    financial pins and the launch clock with its two boundary figures — and
+    nothing of the ladder instrument (the exchange ids, ops, offsets and
+    the staged ladder rows stay the module's derivation of record, riding
+    the pinned flow ladder the shipped package carries). Version 1 is the
+    corridor route of record and the DEFAULT instance; a second admitted
+    route registers the next id and composes the same way. Cohesion fails
+    closed: a binding whose stops share a station or industry identity,
+    whose quote escapes its own authority, whose clock escapes the
+    60-economy-day authority, the equality-gated ladder of record or the
+    pinned 1950 boundary enumeration refuses at construction — so no
+    registered binding can ever compose a plan or a funds model whose pins
+    disagree with the binding itself.
+    """
+
+    route_version: Literal[1, 2]
+    company: CompanyID
+    cargo: Annotated[StrictInt, Field(ge=0, le=63)]
+    pickup: TileID
+    pickup_front: TileID
+    pickup_sid: Annotated[StrictInt, Field(ge=0, le=65535)]
+    pickup_industry: Annotated[StrictInt, Field(ge=0, le=65535)]
+    delivery: TileID
+    delivery_front: TileID
+    bay_sid: Annotated[StrictInt, Field(ge=0, le=65535)]
+    bay_industry: Annotated[StrictInt, Field(ge=0, le=65535)]
+    depot: TileID
+    depot_front: TileID
+    engine: Cargoflow2ActorId
+    engine_max_cost: Money
+    purchase_quote: Money
+    engine_running_display: Annotated[StrictInt, Field(ge=1, le=2147483647)]
+    engine_capacity: Annotated[StrictInt, Field(ge=1, le=65535)]
+    engine_max_speed: Annotated[StrictInt, Field(ge=0, le=2147483647)]
+    order_pickup_flags: Annotated[StrictInt, Field(ge=0, le=255)]
+    order_delivery_flags: Annotated[StrictInt, Field(ge=0, le=255)]
+    start_funds: Money
+    founding_loan: Money
+    interest_rate: Annotated[StrictInt, Field(ge=0, le=100)]
+    station_fee: Money
+    launch_day: Cargoflow2Clock
+    arrive_max_days: Annotated[StrictInt, Field(ge=1, le=CARGOFLOW2_DAY_BUDGET)]
+    flow_span_days: Annotated[StrictInt, Field(ge=1, le=CARGOFLOW2_DAY_BUDGET)]
+
+    @property
+    def digest(self) -> str:
+        return hashlib.sha256(canonical_bytes(self)).hexdigest()
+
+    @model_validator(mode="after")
+    def coherent(self) -> Cargoflow2RouteBinding:
+        if self.pickup_sid == self.bay_sid:
+            raise ValueError("the bound stops must carry distinct station ids")
+        if self.pickup_industry == self.bay_industry:
+            raise ValueError("the bound stops must observe distinct industries")
+        if self.purchase_quote > self.engine_max_cost:
+            raise ValueError("the purchase quote escaped the binding's own authority")
+        if self.arrive_max_days + self.flow_span_days != CARGOFLOW2_DAY_BUDGET:
+            raise ValueError(
+                "the binding's arrival bound plus flow span must equal the "
+                "60-economy-day attempt authority (the equality-gated ladder)"
+            )
+        if self.flow_span_days != CARGOFLOW2_FLOW_OFFSETS[-1]:
+            raise ValueError(
+                "a route binding rides the pinned 12-sample flow ladder of record"
+            )
+        if self.launch_day <= _CALENDAR_BASE_DAY or (
+            self.launch_day + CARGOFLOW2_DAY_BUDGET
+            > _CALENDAR_BASE_DAY + sum(DAYS_IN_MONTH_1950)
+        ):
+            raise ValueError(
+                "the binding's attempt clock escapes the pinned 1950 "
+                "boundary enumeration of record"
+            )
+        return self
+
+
+# The route-version selector of record, named after the family precedent
+# (``EXTENSION_SCHEDULE_VERSION`` / ``SURVEY_SCHEDULE_VERSION``): it selects
+# the DEFAULT route binding at composition time, and the plan contract
+# resolves every schema_version against its own registered binding below.
+CARGOFLOW2_SCHEDULE_VERSION = 1
+
+# The corridor route of record (v1): built exactly from this module's
+# pinned route constants — the corridor pickup tile 45748 (front 45747,
+# station sid 0), the delivery bay tile 50862 (front 50863, station sid 2),
+# the depot tile 45487 (front 45743), industries 0/1, cargo 1, engine 123 —
+# so the default plan derivation stays byte-equal to the plan of record.
+CARGOFLOW2_ROUTE_OF_RECORD = Cargoflow2RouteBinding(
+    route_version=1,
+    company=CARGOFLOW2_COMPANY,
+    cargo=CARGOFLOW2_CARGO,
+    pickup=CARGOFLOW2_PICKUP_TILE,
+    pickup_front=CARGOFLOW2_PICKUP_FRONT_TILE,
+    pickup_sid=CARGOFLOW2_PICKUP_SID,
+    pickup_industry=CARGOFLOW2_PICKUP_IND,
+    delivery=CARGOFLOW2_BAY_TILE,
+    delivery_front=CARGOFLOW2_BAY_FRONT_TILE,
+    bay_sid=CARGOFLOW2_BAY_SID,
+    bay_industry=CARGOFLOW2_BAY_IND,
+    depot=CARGOFLOW2_DEPOT_TILE,
+    depot_front=CARGOFLOW2_DEPOT_FRONT_TILE,
+    engine=CARGOFLOW2_ENGINE,
+    engine_max_cost=CARGOFLOW2_ENGINE_MAX_COST,
+    purchase_quote=CARGOFLOW2_PURCHASE_QUOTE,
+    engine_running_display=CARGOFLOW2_RUNNING_DISPLAY,
+    engine_capacity=CARGOFLOW2_CAPACITY,
+    engine_max_speed=CARGOFLOW2_MAX_SPEED,
+    order_pickup_flags=CARGOFLOW2_ORDER_PICKUP_FLAGS,
+    order_delivery_flags=CARGOFLOW2_ORDER_DELIVERY_FLAGS,
+    start_funds=CARGOFLOW2_START_FUNDS,
+    founding_loan=CARGOFLOW2_FOUNDING_LOAN,
+    interest_rate=CARGOFLOW2_INTEREST_RATE,
+    station_fee=CARGOFLOW2_STATION_FEE,
+    launch_day=CARGOFLOW2_LAUNCH_DAY,
+    arrive_max_days=CARGOFLOW2_ARRIVE_MAX_DAYS,
+    flow_span_days=CARGOFLOW2_SPAN_DAYS,
+)
+
+# The versioned binding map of record, keyed by route binding id. The map
+# is the contract's own route registry: the plan gate and every derivation
+# resolve through it, so an id never present here is an unknown route
+# version everywhere, and no binding can be registered under an occupied
+# id (a second admitted route takes the next id).
+CARGOFLOW2_ROUTE_BINDINGS: dict[int, Cargoflow2RouteBinding] = {
+    CARGOFLOW2_SCHEDULE_VERSION: CARGOFLOW2_ROUTE_OF_RECORD,
+}
+
+if (
+    CARGOFLOW2_SCHEDULE_VERSION != 1
+    or len(CARGOFLOW2_ROUTE_BINDINGS) != 1
+    or CARGOFLOW2_ROUTE_BINDINGS[1] is not CARGOFLOW2_ROUTE_OF_RECORD
+    or CARGOFLOW2_ROUTE_OF_RECORD.route_version != 1
+    or (CARGOFLOW2_ROUTE_OF_RECORD.company, CARGOFLOW2_ROUTE_OF_RECORD.cargo)
+    != (CARGOFLOW2_COMPANY, CARGOFLOW2_CARGO)
+    or (
+        CARGOFLOW2_ROUTE_OF_RECORD.pickup,
+        CARGOFLOW2_ROUTE_OF_RECORD.pickup_front,
+        CARGOFLOW2_ROUTE_OF_RECORD.pickup_sid,
+        CARGOFLOW2_ROUTE_OF_RECORD.pickup_industry,
+    )
+    != (
+        CARGOFLOW2_PICKUP_TILE,
+        CARGOFLOW2_PICKUP_FRONT_TILE,
+        CARGOFLOW2_PICKUP_SID,
+        CARGOFLOW2_PICKUP_IND,
+    )
+    or (
+        CARGOFLOW2_ROUTE_OF_RECORD.delivery,
+        CARGOFLOW2_ROUTE_OF_RECORD.delivery_front,
+        CARGOFLOW2_ROUTE_OF_RECORD.bay_sid,
+        CARGOFLOW2_ROUTE_OF_RECORD.bay_industry,
+    )
+    != (CARGOFLOW2_BAY_TILE, CARGOFLOW2_BAY_FRONT_TILE, CARGOFLOW2_BAY_SID, CARGOFLOW2_BAY_IND)
+    or (CARGOFLOW2_ROUTE_OF_RECORD.depot, CARGOFLOW2_ROUTE_OF_RECORD.depot_front)
+    != (CARGOFLOW2_DEPOT_TILE, CARGOFLOW2_DEPOT_FRONT_TILE)
+    or (
+        CARGOFLOW2_ROUTE_OF_RECORD.engine,
+        CARGOFLOW2_ROUTE_OF_RECORD.engine_max_cost,
+        CARGOFLOW2_ROUTE_OF_RECORD.purchase_quote,
+        CARGOFLOW2_ROUTE_OF_RECORD.engine_running_display,
+        CARGOFLOW2_ROUTE_OF_RECORD.engine_capacity,
+        CARGOFLOW2_ROUTE_OF_RECORD.engine_max_speed,
+    )
+    != (
+        CARGOFLOW2_ENGINE,
+        CARGOFLOW2_ENGINE_MAX_COST,
+        CARGOFLOW2_PURCHASE_QUOTE,
+        CARGOFLOW2_RUNNING_DISPLAY,
+        CARGOFLOW2_CAPACITY,
+        CARGOFLOW2_MAX_SPEED,
+    )
+    or (
+        CARGOFLOW2_ROUTE_OF_RECORD.order_pickup_flags,
+        CARGOFLOW2_ROUTE_OF_RECORD.order_delivery_flags,
+    )
+    != (CARGOFLOW2_ORDER_PICKUP_FLAGS, CARGOFLOW2_ORDER_DELIVERY_FLAGS)
+    or (
+        CARGOFLOW2_ROUTE_OF_RECORD.start_funds,
+        CARGOFLOW2_ROUTE_OF_RECORD.founding_loan,
+        CARGOFLOW2_ROUTE_OF_RECORD.interest_rate,
+        CARGOFLOW2_ROUTE_OF_RECORD.station_fee,
+    )
+    != (
+        CARGOFLOW2_START_FUNDS,
+        CARGOFLOW2_FOUNDING_LOAN,
+        CARGOFLOW2_INTEREST_RATE,
+        CARGOFLOW2_STATION_FEE,
+    )
+    or (
+        CARGOFLOW2_ROUTE_OF_RECORD.launch_day,
+        CARGOFLOW2_ROUTE_OF_RECORD.arrive_max_days,
+        CARGOFLOW2_ROUTE_OF_RECORD.flow_span_days,
+    )
+    != (CARGOFLOW2_LAUNCH_DAY, CARGOFLOW2_ARRIVE_MAX_DAYS, CARGOFLOW2_SPAN_DAYS)
+):
+    raise RuntimeError(
+        "the corridor route-binding parameterization drifted from the route of record"
+    )
+
+
+def cargoflow2_route_binding(
+    route_version: int = CARGOFLOW2_SCHEDULE_VERSION,
+) -> Cargoflow2RouteBinding:
+    """The registered route binding of one binding id; a foreign id refuses.
+
+    The route of record (v1) is the DEFAULT: a derivation built with no
+    binding argument resolves this selector, and its plan, schedule, pin
+    table and funds model are byte-equal to the recorded composition.
+    """
+    if route_version not in CARGOFLOW2_ROUTE_BINDINGS:
+        raise ValueError(
+            f"no registered corridor route binding carries route binding id "
+            f"{route_version}"
+        )
+    return CARGOFLOW2_ROUTE_BINDINGS[route_version]
+
+
+def cargoflow2_register_route_binding(binding: Cargoflow2RouteBinding) -> None:
+    """Register one versioned route binding instance under its own id.
+
+    The admission seam of the parameterization: a second admitted route
+    takes the next unoccupied binding id and composes exactly like the
+    route of record. An occupied id refuses — a registered route binding is
+    history of record once present, and a re-registration can never
+    relabel it.
+    """
+    if binding.route_version in CARGOFLOW2_ROUTE_BINDINGS:
+        raise ValueError(
+            f"the corridor route binding id {binding.route_version} is "
+            f"already registered"
+        )
+    CARGOFLOW2_ROUTE_BINDINGS[binding.route_version] = binding
+
+
+def cargoflow2_schedule_rows(binding: Cargoflow2RouteBinding) -> list[dict]:
+    """The staged ladder rows of one route binding (design record §5.3).
+
+    The fixed freight-family instrument chain runs first (``site-00`` …
+    ``arrive-00``), then the twelve flow rows at their exact pinned ladder
+    offsets 0..55, then the two tail rows in the binding's own flow-11
+    economy day. The rows derive the same equality-gated ladder geometry
+    for every binding — ids, ops and offsets are the shared instrument of
+    record — while the watch bound and the tail economy day come from the
+    binding itself; a binding that does not ride the pinned ladder
+    refuses, so a route's schedule can never be mixed with another
+    binding's boundaries.
+    """
+    if (
+        binding.flow_span_days != CARGOFLOW2_FLOW_OFFSETS[-1]
+        or binding.arrive_max_days + binding.flow_span_days != CARGOFLOW2_DAY_BUDGET
+    ):
+        raise ValueError(
+            "the route binding does not ride the equality-gated ladder of record"
+        )
+    schedule: list[dict] = []
+    for exchange in CARGOFLOW2_EXCHANGE_IDS:
+        op = _CARGOFLOW2_OP_BY_ID[exchange]
+        row = dict(exchange=exchange, op=op, offset=-1)
+        if op == "flow":
+            row["offset"] = int(CARGOFLOW2_FLOW_OFFSETS[int(exchange.rsplit("-", 1)[1])])
+        elif op in ("finance", "finish"):
+            row["offset"] = int(binding.flow_span_days)
+        elif op == "order":
+            row["order_index"] = 0 if exchange == "order-00" else 1
+        elif op == "arrive-watch":
+            row["watch_days"] = int(binding.arrive_max_days)
+        schedule.append(row)
+    if (
+        [row["exchange"] for row in schedule] != list(CARGOFLOW2_EXCHANGE_IDS)
+        or len(schedule) != PLANNED_CARGOFLOW2_EXCHANGES
+        or [row["offset"] for row in schedule if row["op"] == "flow"]
+        != list(CARGOFLOW2_FLOW_OFFSETS)
+        or [row["offset"] for row in schedule if row["op"] in ("finance", "finish")]
+        != [int(binding.flow_span_days)] * 2
+        or [row["order_index"] for row in schedule if row["op"] == "order"] != [0, 1]
+        or [row["watch_days"] for row in schedule if row["op"] == "arrive-watch"]
+        != [int(binding.arrive_max_days)]
+        or any(row["op"] not in CARGOFLOW2_OPS for row in schedule)
+    ):
+        raise RuntimeError(
+            "the route binding's staged schedule drifted from the ladder of record"
+        )
+    return schedule
+
+
+def cargoflow2_pin_table(binding: Cargoflow2RouteBinding) -> dict[str, int]:
+    """The binding-sourced pin rows of one route binding.
+
+    Exactly the pin-table members the shipped attempt GameScript composes
+    from route identity (the pin-table binding test of record binds the
+    shipped table to the default binding's rows): the corridor stop/depot
+    tiles, the station and industry identities, the company/cargo/engine
+    census and authority pins, the order flags, and the clock pins with
+    their two derived boundaries. A different binding derives its own
+    values; nothing here re-derives a foreign binding's pins.
+    """
+    return dict(
+        pickup=int(binding.pickup),
+        delivery=int(binding.delivery),
+        depot_tile=int(binding.depot),
+        PICKUP_SID=int(binding.pickup_sid),
+        BAY_SID=int(binding.bay_sid),
+        PICKUP_IND=int(binding.pickup_industry),
+        BAY_IND=int(binding.bay_industry),
+        CARGOFLOW2_COMPANY=int(binding.company),
+        CARGOFLOW2_CARGO=int(binding.cargo),
+        ENGINE_PIN=int(binding.engine),
+        ENGINE_QUOTE=int(binding.purchase_quote),
+        ENGINE_MAX_COST=int(binding.engine_max_cost),
+        CAPACITY_PIN=int(binding.engine_capacity),
+        SPEED_PIN=int(binding.engine_max_speed),
+        RUNNING_DISPLAY_PIN=int(binding.engine_running_display),
+        OF_NONE=int(binding.order_pickup_flags),
+        OF_NO_LOAD=int(binding.order_delivery_flags),
+        LAUNCH_DAY=int(binding.launch_day),
+        ARRIVE_MAX_DAYS=int(binding.arrive_max_days),
+        ARRIVE_DEADLINE=int(binding.launch_day) + int(binding.arrive_max_days),
+        AUTHORITY_LAST_DAY=int(binding.launch_day) + CARGOFLOW2_DAY_BUDGET,
+    )
+
+
 class Cargoflow2Latch(Contract):
     """One latched cycle event of record with its own (day, tick) instant."""
 
@@ -420,10 +762,15 @@ class Cargoflow2Plan(Contract):
     The plan binds the depot-chain world of record exactly as the dispatch
     probe's plan does, plus this round's fixed instrument chain, the twelve
     flow samples, the two tail exchanges, and the financial-model pins the
-    zero-residual fence reconciles against (§4.1).
+    zero-residual fence reconciles against (§4.1). The version field
+    selects one registered route binding (the route of record is v1, the
+    DEFAULT): every route-derived pin validates against that binding's own
+    values, so a plan carrying one binding's pins under another binding's
+    version label refuses here — cross-version composition drift fails
+    closed before any derived value can lean on it.
     """
 
-    schema_version: Literal[1] = 1
+    schema_version: Literal[1, 2] = 1
     company: CompanyID
     cargo: Annotated[StrictInt, Field(ge=0, le=63)]
     pickup: TileID
@@ -459,46 +806,43 @@ class Cargoflow2Plan(Contract):
 
     @model_validator(mode="after")
     def coherent(self) -> Cargoflow2Plan:
-        if self.company != CARGOFLOW2_COMPANY or self.cargo != CARGOFLOW2_CARGO:
+        binding = CARGOFLOW2_ROUTE_BINDINGS.get(self.schema_version)
+        if binding is None:
+            raise ValueError(
+                f"no registered corridor route binding carries plan version "
+                f"{self.schema_version}"
+            )
+        if self.company != binding.company or self.cargo != binding.cargo:
             raise ValueError("the delivery attempt observes company 0 with cargo 1")
-        if (self.pickup, self.pickup_front) != (
-            CARGOFLOW2_PICKUP_TILE,
-            CARGOFLOW2_PICKUP_FRONT_TILE,
-        ):
+        if (self.pickup, self.pickup_front) != (binding.pickup, binding.pickup_front):
             raise ValueError("pickup pins drifted from the depot-chain corridor")
-        if (self.delivery, self.delivery_front) != (
-            CARGOFLOW2_BAY_TILE,
-            CARGOFLOW2_BAY_FRONT_TILE,
-        ):
+        if (self.delivery, self.delivery_front) != (binding.delivery, binding.delivery_front):
             raise ValueError("bay pins drifted from the depot-chain corridor")
-        if (self.depot, self.depot_front) != (
-            CARGOFLOW2_DEPOT_TILE,
-            CARGOFLOW2_DEPOT_FRONT_TILE,
-        ):
+        if (self.depot, self.depot_front) != (binding.depot, binding.depot_front):
             raise ValueError("depot pins drifted from the depot-chain corridor")
-        if self.pickup_sid != CARGOFLOW2_PICKUP_SID or self.bay_sid != CARGOFLOW2_BAY_SID:
+        if self.pickup_sid != binding.pickup_sid or self.bay_sid != binding.bay_sid:
             raise ValueError("station identities drifted from the pinned record sids")
         if (
-            self.pickup_industry != CARGOFLOW2_PICKUP_IND
-            or self.bay_industry != CARGOFLOW2_BAY_IND
+            self.pickup_industry != binding.pickup_industry
+            or self.bay_industry != binding.bay_industry
         ):
             raise ValueError("industry identities drifted from the census receipt rows")
-        if self.engine != CARGOFLOW2_ENGINE:
+        if self.engine != binding.engine:
             raise ValueError("the plan binds the provisional engine pin exactly")
-        if self.start_funds != CARGOFLOW2_START_FUNDS:
+        if self.start_funds != binding.start_funds:
             raise ValueError("start funds drifted from the depot-mutation close pin")
         if (
-            self.purchase_quote != CARGOFLOW2_PURCHASE_QUOTE
-            or self.founding_loan != CARGOFLOW2_FOUNDING_LOAN
-            or self.interest_rate != CARGOFLOW2_INTEREST_RATE
-            or self.station_fee != CARGOFLOW2_STATION_FEE
+            self.purchase_quote != binding.purchase_quote
+            or self.founding_loan != binding.founding_loan
+            or self.interest_rate != binding.interest_rate
+            or self.station_fee != binding.station_fee
         ):
             raise ValueError("financial-model pins drifted from the §4.1 table")
-        if self.launch_day != CARGOFLOW2_LAUNCH_DAY:
+        if self.launch_day != binding.launch_day:
             raise ValueError("launch day drifted from the pinned clock of record")
-        if self.arrive_max_days != CARGOFLOW2_ARRIVE_MAX_DAYS:
+        if self.arrive_max_days != binding.arrive_max_days:
             raise ValueError("the arrival bound drifted from its pinned 5 days")
-        if self.flow_span_days != CARGOFLOW2_SPAN_DAYS:
+        if self.flow_span_days != binding.flow_span_days:
             raise ValueError("flow span drifted from the pinned 55-day ladder")
         if self.schedule != CARGOFLOW2_EXCHANGE_IDS:
             raise ValueError("schedule drifted from the planned 25 exchanges")
@@ -513,30 +857,40 @@ class Cargoflow2Plan(Contract):
         return self
 
 
-def cargoflow2_plan() -> Cargoflow2Plan:
-    """The pinned D5-CARGOFLOW-2 plan derived from the module's own pins."""
+def cargoflow2_plan(
+    binding: Cargoflow2RouteBinding | None = None,
+) -> Cargoflow2Plan:
+    """The pinned D5-CARGOFLOW-2 plan of one corridor route binding.
+
+    The DEFAULT (no binding named) derives from the route of record, whose
+    binding is built from this module's own pins — byte-equal to the plan
+    of record. Any registered binding derives its own versioned plan; an
+    unregistered binding id refuses at the map lookup.
+    """
+    resolved = binding if binding is not None else cargoflow2_route_binding()
     return Cargoflow2Plan(
-        company=CARGOFLOW2_COMPANY,
-        cargo=CARGOFLOW2_CARGO,
-        pickup=CARGOFLOW2_PICKUP_TILE,
-        pickup_front=CARGOFLOW2_PICKUP_FRONT_TILE,
-        delivery=CARGOFLOW2_BAY_TILE,
-        delivery_front=CARGOFLOW2_BAY_FRONT_TILE,
-        depot=CARGOFLOW2_DEPOT_TILE,
-        depot_front=CARGOFLOW2_DEPOT_FRONT_TILE,
-        pickup_sid=CARGOFLOW2_PICKUP_SID,
-        bay_sid=CARGOFLOW2_BAY_SID,
-        pickup_industry=CARGOFLOW2_PICKUP_IND,
-        bay_industry=CARGOFLOW2_BAY_IND,
-        engine=CARGOFLOW2_ENGINE,
-        start_funds=CARGOFLOW2_START_FUNDS,
-        purchase_quote=CARGOFLOW2_PURCHASE_QUOTE,
-        founding_loan=CARGOFLOW2_FOUNDING_LOAN,
-        interest_rate=CARGOFLOW2_INTEREST_RATE,
-        station_fee=CARGOFLOW2_STATION_FEE,
-        launch_day=CARGOFLOW2_LAUNCH_DAY,
-        arrive_max_days=CARGOFLOW2_ARRIVE_MAX_DAYS,
-        flow_span_days=CARGOFLOW2_SPAN_DAYS,
+        schema_version=resolved.route_version,
+        company=resolved.company,
+        cargo=resolved.cargo,
+        pickup=resolved.pickup,
+        pickup_front=resolved.pickup_front,
+        delivery=resolved.delivery,
+        delivery_front=resolved.delivery_front,
+        depot=resolved.depot,
+        depot_front=resolved.depot_front,
+        pickup_sid=resolved.pickup_sid,
+        bay_sid=resolved.bay_sid,
+        pickup_industry=resolved.pickup_industry,
+        bay_industry=resolved.bay_industry,
+        engine=resolved.engine,
+        start_funds=resolved.start_funds,
+        purchase_quote=resolved.purchase_quote,
+        founding_loan=resolved.founding_loan,
+        interest_rate=resolved.interest_rate,
+        station_fee=resolved.station_fee,
+        launch_day=resolved.launch_day,
+        arrive_max_days=resolved.arrive_max_days,
+        flow_span_days=resolved.flow_span_days,
         schedule=CARGOFLOW2_EXCHANGE_IDS,
     )
 
@@ -1137,9 +1491,16 @@ class Cargoflow2FundsModel:
     loosened to pass (§8 item 5).
     """
 
-    def __init__(self, *, start_funds: int, purchase_quote: int) -> None:
+    def __init__(
+        self,
+        *,
+        start_funds: int,
+        purchase_quote: int,
+        running_display: int = CARGOFLOW2_RUNNING_DISPLAY,
+    ) -> None:
         self.start_funds = start_funds
         self.purchase_quote = purchase_quote
+        self.running_display = running_display
         self.funds = start_funds
         self.fraction = 0
         self.running_cost: int | None = None
@@ -1152,10 +1513,12 @@ class Cargoflow2FundsModel:
 
     def admit_running_cost(self, display: int) -> None:
         """§4.1 (the E111 correction): the display pin arrives natively and
-        is admitted fail-closed — a 256-scaled raw is script-unreachable."""
+        is admitted fail-closed — a 256-scaled raw is script-unreachable.
+        The admitted figure is the model's own binding's census display
+        (a cross-version wiring mix refuses, in either direction)."""
         if self.running_cost is not None:
             raise ValueError("the running cost was already pinned at its exchange")
-        if display != CARGOFLOW2_RUNNING_DISPLAY:
+        if display != self.running_display:
             raise ValueError(
                 "the running cost is inconsistent with its display figure"
             )
@@ -1265,6 +1628,18 @@ def _latch_rows(latches) -> list[dict]:
         dict(kind=latch.kind, day=latch.day, tick=latch.tick, cargo=latch.cargo)
         for latch in latches
     ]
+
+
+def cargoflow2_funds_model(binding: Cargoflow2RouteBinding) -> Cargoflow2FundsModel:
+    """The funds-model wiring of record is binding-parameterized: a model
+    of one route-family member carries that binding's own founding pins and
+    its own census display figure — its admissions and its fence are its
+    own version's, never another binding's."""
+    return Cargoflow2FundsModel(
+        start_funds=binding.start_funds,
+        purchase_quote=binding.purchase_quote,
+        running_display=binding.engine_running_display,
+    )
 
 
 def _cargoflow2_state() -> dict[str, Any]:
