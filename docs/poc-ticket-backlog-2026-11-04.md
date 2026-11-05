@@ -1722,3 +1722,27 @@ readiness, outside this round's PoC definition.
   of record; no push (agent side). NEXT: round-5 independent review
   (fresh-context, ticket 02's method), then Gate C signing, then the ONE
   launch — each its own explicit operator approval.
+- 2026-11-05 — T-002 round-5 INDEPENDENT REVIEW: verdict
+  `READY-FOR-GATE-C` — **50/50 checks PASS, zero failures, zero
+  reconciliation debt, exit 0**; fresh-context read-only audit cloning
+  ticket-02's round-3 method (classes A identity/seal, B staged
+  correspondence + fix-carry, C binary/opengfx/world lineage, D
+  pins/budgets/plan re-derivation, E pipeline re-execution, F env/ports,
+  G no-leftovers + predecessor immutability) re-pinned to candidate-5
+  facts, plus new H class (authority-of-record); script
+  `/tmp/opencode/t002_r5_review_cargoflow2_c5.py`, full transcript
+  `/tmp/opencode/t002_r5_review_output.txt`; preflight re-execution PASS
+  with **0 of 3502 frozen-inventory mismatches** (check 37); candidates
+  1–4 seals re-digested byte-identical (checks 44–47); candidate-5 seal
+  unchanged after the audit (check 48); authority-of-record re-asserted
+  (checks 49–50: supersession record binds the `b94b9664…` historical
+  anchor → `343daad2…caf` current, live `CONTEXT.md` digest == the
+  recorded current). INFO lineage fact of record: the staged
+  `d5_cargoflow2_package/main.nut` digest
+  `948f3b483e2b705b78cc775c1e75966654a4aa4854bea78b811566fb705d571b` is
+  byte-equal across candidates 3–4–5 — the ticket-07 default-binding
+  composition equality held through two staging rounds. Ticket of
+  record: `.scratch/d5-corridor-poc-tail/issues/02-round5-independent-review.md`.
+  Nothing written inside the repo by the reviewer; nothing signed,
+  claimed or launched. NEXT: Gate C signing (operator PEM) in a separate
+  explicit approval, then the ONE launch in its own approval.
