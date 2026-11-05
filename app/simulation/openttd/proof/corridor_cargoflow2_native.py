@@ -177,11 +177,11 @@ D5_CARGOFLOW2_PRELAUNCH_SCHEMA = "d5-cargoflow2-prelaunch-v1"
 D5_CARGOFLOW2_LAUNCH_CONSUMED_SCHEMA = freight_native.D5_FREIGHT_LAUNCH_CONSUMED_SCHEMA
 D5_CARGOFLOW2_PREREQUISITE_SCHEMA = freight_v2_native.D5_FREIGHT_V2_PREREQUISITE_SCHEMA
 
-# Candidate directory of record (fresh round, candidate-2 of the T-007
+# Candidate directory of record (fresh round, candidate-3 of the T-009
 # fix cycle; the naming pattern of record of the corridor native
-# families with the new round identity; candidate-1 is sealed consumed
-# history and can never be reused).
-CARGOFLOW2_CANDIDATE_DIRECTORY = "d5-corridor-cargoflow2-native-candidate-2"
+# families with the new round identity; candidates 1–2 are sealed
+# consumed history and can never be reused).
+CARGOFLOW2_CANDIDATE_DIRECTORY = "d5-corridor-cargoflow2-native-candidate-3"
 
 # Prerequisite lineage of record: the pinned, consumed, replay-verified
 # depot-mutation attempt (D5-F12-DEPOT-3 after-save, world-pin version 3),

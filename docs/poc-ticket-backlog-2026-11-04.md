@@ -1491,3 +1491,81 @@ readiness, outside this round's PoC definition.
   the execution view. Every ticket re-states the standing operator gates it
   must never bypass; no commit/push inside any ticket (commit authority is
   a separate staging-allowlist decision, DG-10).
+- 2026-11-05 — T-002 round 3 STAGED (ticket 01 of `.scratch/
+  d5-corridor-poc-tail/issues/01-round3-staging.md`, explicit operator
+  staging approval in-session, one `prepare` first attempt):
+  pipeline round-identity advance of record — `CARGOFLOW2_CANDIDATE_DIRECTORY`
+  advanced `candidate-2` → `candidate-3` (comment of record: the T-009 fix
+  cycle; candidates 1–2 sealed consumed history, never reused); that one
+  constant is the ONLY pipeline edit; focused suites on the edited module
+  re-run green (wire 77 + VM 11 + native 38 = **126 passed**, exit 0);
+  `ruff check` clean; `uvx ty check` on the module → only the pre-existing
+  disclosed `invalid-method-override` at `connect` (line 1176, untouched).
+  ONE `prepare` (env of record: `OPENTTD_BINARY` + `OPENTTD_OPENGFX_ARCHIVE`
+  exported before Python start) → `PRELAUNCH PASS` exit 0 first attempt:
+  candidate of record `artifacts/experiments/d5-corridor-cargoflow2-
+  native-candidate-3`, seal (`PRELAUNCH.json` sha256)
+  `42f6bbafc19b12a059ff40d18a1e39e7232f525e909ccb179a1a6966e048e41d`
+  — differs from both consumed predecessors (`c7a1c5d5…333b`,
+  `f991a440…55d4e`); schema `d5-cargoflow2-prelaunch-v1`, kind `cargoflow2`,
+  attempt `D5-CARGOFLOW-2`, milestone `D5-CARGOFLOW`; binary pin
+  `276d5b69…904c`; ports game 48895 / admin 53133 (fresh allocation);
+  workspace `isolated/openttd-15.3-i529afe4`; plan digest `5c0998f2…bf2d`
+  (the corridor route of record unchanged); world block pinned on the
+  depot-mutation-3 after-save `183b2027…6a6`
+  (PREREQUISITE_ATTEMPT_SOURCE_SAVE_LOAD lineage); budgets byte-identical
+  the round-2 plan (requests 32 / launches 1 / retries 0 / reconnects 0 /
+  funds 489,650 / max_cost 5,000 / 25 planned exchanges / 60-day authority).
+  `FIX-CARRY PROOF:` the staged
+  `isolated/openttd-15.3-i529afe4/game/RoadFreightProof/main.nut`
+  is byte-equal the live shipped package source, contains the T-007
+  `SetCurrentRoadType` re-pin AND the T-009 `display !=
+  this.RUNNING_DISPLAY_PIN` census join, and contains no `(raw >> 8)` —
+  a genuinely new composition, not a relabel. Read-only gates of record:
+  standalone `preflight` → `PREFLIGHT PASS` exit 0; pre-auth `verify` →
+  `{"authorization_state": "CLAIM_ABSENT", "verification":
+  "AUTHORIZATION_UNVERIFIED"}` exit 1 by design. Candidates 1–2 seals
+  re-digested byte-identical after the round; no `artifacts/` byte changed
+  anywhere else; writes confined to the fresh candidate-3 directory; root
+  exactly the pre-gate family shape (4 entries). Nothing signed, claimed
+  or launched beyond the books-commit of record (`ad59821`). NEXT: ticket
+  02 independent read-only review (operator approval), then Gate C (03)
+  and the ONE launch (04), each its own explicit operator approval;
+  nothing scheduled.
+- 2026-11-05 — T-009-cycle ticket 07 DONE (route-admission contract
+  parameterization, expand-only; ticket `.scratch/d5-corridor-poc-tail/
+  issues/07-route-admission-contract-prefactor.md`): the corridor attempt
+  contract (`app/simulation/openttd/corridor_cargoflow2.py`) now carries the
+  versioned route-binding family of record — `Cargoflow2RouteBinding`
+  (versioned id `1|2`, fail-closed self-coherence), `CARGOFLOW2_ROUTE_
+  BINDINGS` map + `cargoflow2_route_binding()` selector (v1 = the corridor
+  route of record, DEFAULT) + `cargoflow2_register_route_binding()` (an
+  occupied id refuses; a registered binding is history of record) — with
+  binding-derived `cargoflow2_schedule_rows()` (equality-gated ladder of
+  record), `cargoflow2_pin_table()` (the binding's own pins, byte-equal at
+  v1: RUNNING_DISPLAY_PIN 421 et al.), `cargoflow2_plan(binding=)` (v1
+  digest-of-record `5c0998f2…bf2d` unchanged; cross-version composition
+  drift refuses fail-closed), and the funds-model wiring parameterized
+  (`cargoflow2_funds_model(binding)`: a model carries its binding's own
+  founding pins and admits only its own census display figure 421 / its
+  binding's own — a cross-version wiring mix refuses, in either direction;
+  the §4.3 8.8 carry arithmetic is untouched, the E111 display-pin-in /
+  `(raw >> 8)`-out fence stays byte-locked). IMPLEMENTATION RECOVERY NOTE:
+  the implementer subagent died on a provider free-usage limit mid-flight;
+  its uncommitted worktree work was recovered inline and completed in-session
+  (factory + per-instance display pin + `route_version` Literal typing,
+  UP037 unquote on 3.14 deferred annotations, ty `--python` env resolution
+  in the worktree). Tests insert-only, no existing test edited: wire +6,
+  native +1 → **133 passed** (83 wire + 11 VM + 39 native, exit 0);
+  `ruff check` clean; `uvx ty check` clean. Git of record: one commit on
+  branch `route-contract-prefactor` (`e177d03`, the commit was made
+  branchless on a detached worktree HEAD and the branch was named after —
+  no history rewritten), merged `--no-ff` into `miles/fright-delivery` as
+  `26568af`; no push. Post-merge mainline verification: 133/133 exit 0,
+  ruff clean, ty clean; `git diff --check` clean; `CONTEXT.md` pin
+  `36648f9c2fee4106` intact. No candidate lifecycle action of any kind in
+  this ticket; no artifacts write; the round-3 stamped pipeline constant
+  and candidate-3 staging state are untouched. NEXT unblocked: ticket 08
+  (second-route admission) is machinery-unblocked by this prefactor but
+  remains gated behind the round-3 ladder (02 review → 03 Gate C → 04
+  launch → 05 halt-class → 06 delivered class) in dependency order.

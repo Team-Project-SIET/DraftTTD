@@ -14,20 +14,21 @@ route admission itself belongs to ticket 08.
 **Blocked by:** None (can start immediately; independent of the round-3
 ladder tickets, so it can run in parallel with tickets 01–06).
 
-**Status:** ready-for-agent
+**Status:** done (2026-11-05; commit `e177d03`, merged to
+`miles/fright-delivery` by `26568af`)
 
-- [ ] The parameterized contract exposes the corridor route of record as the
+- [x] The parameterized contract exposes the corridor route of record as the
       versioned default (v1 bytes and digests of record unchanged when built
       with the default binding)
-- [ ] Expansion follows the family versioning precedent: version selector in
+- [x] Expansion follows the family versioning precedent: version selector in
       the contract module, versioned schedule/plan derivations, prior
       versions byte-preserved and still replay-verified
-- [ ] Every existing suite passes without semantic edits — the default
+- [x] Every existing suite passes without semantic edits — the default
       composition digest and schedule digests reproduce exactly
-- [ ] New suite coverage asserts re-binding: a non-default route binding
+- [x] New suite coverage asserts re-binding: a non-default route binding
       derives its own consistent schedule, plan digests, pin table and
       funds-model wiring, and refuses cross-version composition drift
-- [ ] No candidate lifecycle action of any kind inside this ticket: no
+- [x] No candidate lifecycle action of any kind inside this ticket: no
       staging, no signing, no claim, no launch, no artifacts write
-- [ ] `git diff --check` clean; `CONTEXT.md` pin intact; focused-suites +
+- [x] `git diff --check` clean; `CONTEXT.md` pin intact; focused-suites +
       lint/type results recorded in the row; no commit/push
