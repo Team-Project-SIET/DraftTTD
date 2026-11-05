@@ -2345,3 +2345,56 @@ readiness, outside this round's PoC definition.
   next frontier — ticket 08 (second-route admission; 07 done at
   `e177d03`) — needs its own explicit operator approval gates, none
   granted by this round; tickets 09–13 unchanged blocked.
+- 2026-11-06 — T-008 round: SECOND-ROUTE ADMISSION (offline round granted
+  2026-11-05 in-session; the binding-v2 admission granted on its
+  presented outcome; the ledger/books commit covered by the same grant,
+  none of push / native launch / claim / signature / staging performed).
+  The offline admission round (`T08 ADMISSION-AUDIT PASS`, rc 0, driver
+  `/tmp/opencode/c6_t08_admit.py`, transcript
+  `/tmp/opencode/c6_t08_admit_output.txt`) re-verified the facts of
+  record (31-tile A1 witness == retained D4 route-read prefix; 30 unique
+  road tiles; 29 cardinal traversed edges; the only unmeasured road
+  adjacency of record = the corner pair (50351, 50352); funds gates of
+  record hold: quote 4429 ≤ ceiling 5000 ≤ funds 489650 via the
+  optimizer's own `_validated_input`), then enumerated: at the
+  optimizer's own 3..24 instance bound `_candidate_routes` refuses with
+  `RouteOptimizationError` (the delivered 29-tile class escapes that
+  bound — recorded, not stretched); at the freight-v2 3..32 bound class
+  (`_bounded_paths`, limit 256) the completed search returns exactly two
+  distinct simple paths between the pinned stops, both 29 tiles and both
+  passing `_validate_freight_route_v2`: the delivered route of record
+  (digest `b2f80f46…1f7131` == `FREIGHT_ROUTE_DIGEST_V2` — refused as the
+  second route on the descriptive-duplicate rule) and the second
+  candidate `witness[:23] + (50351, 50352) + witness[27:]` (distinct
+  digest `d14587b2…c4dd482`; the enumeration is exhaustive under the
+  road-of-record tile set — any simple road path there has at most its
+  30 tiles, all inside the 2..47/3..32 standing bound classes). The
+  corner edge 50351↔50352 rides as a typed open precondition (never
+  traversed in any retained witness of record; the stale D4 bay's
+  drive-through axis unmeasured offline; its native connectivity
+  resolvable only by a later native route-read probe under its own
+  explicit operator approval — none granted by this round). Landed
+  through ticket 07's parameterization on the operator's explicit
+  binding-v2 grant: `CARGOFLOW2_ROUTE_SECOND_ADMISSION` (route_version 2,
+  pins pin-for-pin equal to the route of record — the candidate's
+  physical tile path lives in the derived evidence, never in the binding
+  contract) registered in `CARGOFLOW2_ROUTE_BINDINGS`; module import
+  guard widened to the {1, 2} map of record; the two ticket-07 v1-only
+  tests advanced truthfully to the new registry of record plus a new
+  composition-of-record test over the real pair; every v1 digest
+  assertion untouched (`REQUEST_PLAN_DIGEST` `98d055c4…f506ca`
+  byte-equal; native pipeline stays v1-locked,
+  `proof/corridor_cargoflow2_native.py` untouched). Digests of record:
+  binding v2 `26408e77…6b274`, binding v1 `9a4a0778…93e45e` (unchanged),
+  plan v2 `e1cafb23…c08b0`, plan v1 `98d055c4…f506ca` (byte-equal).
+  Suite of record: 135 passed (85 wire + 11 VM + 39 native); `ruff
+  check` + `uvx ty check` clean on both touched paths (`ruff format
+  --check` is not a gate for these files — HEAD fails it identically);
+  `git diff --check` clean; `CONTEXT.md` pin `847d710a…984d` intact;
+  evidence zone untouched. E36 stays open: a competing route carries no
+  native receipts yet — that closes only per the spec's finding rule
+  (ticket 10's ground). Books: ticket 08 flipped done + this row + the
+  E118 ledger row + AI_HANDOFF frontier row, one commit. Next frontier —
+  ticket 09 (selection of record, M8 part 2; blocked by 08 which is now
+  satisfied) — needs its own explicit operator approval gates, none
+  granted by this round; tickets 10–13 unchanged blocked.

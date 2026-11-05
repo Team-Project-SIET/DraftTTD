@@ -452,7 +452,10 @@ class Cargoflow2RouteBinding(Contract):
     60-economy-day authority, the equality-gated ladder of record or the
     pinned 1950 boundary enumeration refuses at construction — so no
     registered binding can ever compose a plan or a funds model whose pins
-    disagree with the binding itself.
+    disagree with the binding itself. Version 1 is the corridor route of
+    record and the DEFAULT instance; version 2 is the ticket-08 second
+    admission of record (the same pinned identities, admitted through the
+    same checks) and composes the same way.
     """
 
     route_version: Literal[1, 2]
@@ -558,19 +561,71 @@ CARGOFLOW2_ROUTE_OF_RECORD = Cargoflow2RouteBinding(
     flow_span_days=CARGOFLOW2_SPAN_DAYS,
 )
 
+# The second admission of record (v2, ticket 08 of the D5 corridor PoC
+# tail): the bounded planning pipeline's competing candidate on the pinned
+# corridor facts of record — the corner-swap route
+# ``witness[:23] + (50351, 50352) + witness[27:]`` (29 tiles, ordered digest
+# ``d14587b2f2973e1ed8da31d03e00f66863ce2cf3b13ef7f20d2f2a1f0c4dd482``,
+# distinct from ``freight_route_digest_v2(FREIGHT_ROUTE_V2)`` — the delivered
+# route's descriptive duplicate is refused as such), enumerated by the
+# corridor route optimizer's bounded k-shortest machinery at the
+# freight-route-v2 bound class and admitted through the same offline checks
+# the delivered route passed, with the funds gates of record (evidence index
+# E118). The candidate differs from the delivered route ONLY in the physical
+# tile path, which the binding contract never encodes (the route identity
+# lives in the plan's versioned digest and the derived evidence ledger), so
+# a pin-for-pin equal binding under its own route_version is the honest
+# representation. Typed open precondition riding this admission: the corner
+# edge 50351<->50352 was never traversed in any retained witness of record
+# and the stale bay's drive-through axis is unmeasured offline — its native
+# connectivity resolves only under a later native route-read probe under
+# its own explicit operator approval.
+CARGOFLOW2_ROUTE_SECOND_ADMISSION = Cargoflow2RouteBinding(
+    route_version=2,
+    company=CARGOFLOW2_COMPANY,
+    cargo=CARGOFLOW2_CARGO,
+    pickup=CARGOFLOW2_PICKUP_TILE,
+    pickup_front=CARGOFLOW2_PICKUP_FRONT_TILE,
+    pickup_sid=CARGOFLOW2_PICKUP_SID,
+    pickup_industry=CARGOFLOW2_PICKUP_IND,
+    delivery=CARGOFLOW2_BAY_TILE,
+    delivery_front=CARGOFLOW2_BAY_FRONT_TILE,
+    bay_sid=CARGOFLOW2_BAY_SID,
+    bay_industry=CARGOFLOW2_BAY_IND,
+    depot=CARGOFLOW2_DEPOT_TILE,
+    depot_front=CARGOFLOW2_DEPOT_FRONT_TILE,
+    engine=CARGOFLOW2_ENGINE,
+    engine_max_cost=CARGOFLOW2_ENGINE_MAX_COST,
+    purchase_quote=CARGOFLOW2_PURCHASE_QUOTE,
+    engine_running_display=CARGOFLOW2_RUNNING_DISPLAY,
+    engine_capacity=CARGOFLOW2_CAPACITY,
+    engine_max_speed=CARGOFLOW2_MAX_SPEED,
+    order_pickup_flags=CARGOFLOW2_ORDER_PICKUP_FLAGS,
+    order_delivery_flags=CARGOFLOW2_ORDER_DELIVERY_FLAGS,
+    start_funds=CARGOFLOW2_START_FUNDS,
+    founding_loan=CARGOFLOW2_FOUNDING_LOAN,
+    interest_rate=CARGOFLOW2_INTEREST_RATE,
+    station_fee=CARGOFLOW2_STATION_FEE,
+    launch_day=CARGOFLOW2_LAUNCH_DAY,
+    arrive_max_days=CARGOFLOW2_ARRIVE_MAX_DAYS,
+    flow_span_days=CARGOFLOW2_SPAN_DAYS,
+)
+
 # The versioned binding map of record, keyed by route binding id. The map
 # is the contract's own route registry: the plan gate and every derivation
 # resolve through it, so an id never present here is an unknown route
 # version everywhere, and no binding can be registered under an occupied
-# id (a second admitted route takes the next id).
+# id (a third admitted route takes the next id).
 CARGOFLOW2_ROUTE_BINDINGS: dict[int, Cargoflow2RouteBinding] = {
     CARGOFLOW2_SCHEDULE_VERSION: CARGOFLOW2_ROUTE_OF_RECORD,
+    CARGOFLOW2_ROUTE_SECOND_ADMISSION.route_version: CARGOFLOW2_ROUTE_SECOND_ADMISSION,
 }
 
 if (
     CARGOFLOW2_SCHEDULE_VERSION != 1
-    or len(CARGOFLOW2_ROUTE_BINDINGS) != 1
+    or set(CARGOFLOW2_ROUTE_BINDINGS) != {1, 2}
     or CARGOFLOW2_ROUTE_BINDINGS[1] is not CARGOFLOW2_ROUTE_OF_RECORD
+    or CARGOFLOW2_ROUTE_BINDINGS[2] is not CARGOFLOW2_ROUTE_SECOND_ADMISSION
     or CARGOFLOW2_ROUTE_OF_RECORD.route_version != 1
     or (CARGOFLOW2_ROUTE_OF_RECORD.company, CARGOFLOW2_ROUTE_OF_RECORD.cargo)
     != (CARGOFLOW2_COMPANY, CARGOFLOW2_CARGO)
@@ -634,6 +689,14 @@ if (
         CARGOFLOW2_ROUTE_OF_RECORD.flow_span_days,
     )
     != (CARGOFLOW2_LAUNCH_DAY, CARGOFLOW2_ARRIVE_MAX_DAYS, CARGOFLOW2_SPAN_DAYS)
+    or CARGOFLOW2_ROUTE_SECOND_ADMISSION.route_version != 2
+    or (
+        # The second admission carries the route of record's pinned
+        # identities with only the binding id advanced (the candidate's
+        # physical tile path lives in the derived evidence, never here).
+        CARGOFLOW2_ROUTE_SECOND_ADMISSION.model_dump(exclude={"route_version"})
+        != CARGOFLOW2_ROUTE_OF_RECORD.model_dump(exclude={"route_version"})
+    )
 ):
     raise RuntimeError(
         "the corridor route-binding parameterization drifted from the route of record"

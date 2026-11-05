@@ -2043,7 +2043,10 @@ def _route_two() -> cf.Cargoflow2RouteBinding:
     """The parameterization's synthetic non-default binding: a second,
     internally-consistent route instance of the same contract family (its
     own bay station, engine census and close-out funds) — never a binding
-    of this world of record, and registered only inside these tests."""
+    of this world of record. It shadows the real second admission's id 2
+    only inside these tests (monkeypatched into the map, restored on
+    teardown), proving the composition wiring follows an arbitrary
+    registered instance rather than the module's real pair."""
     return cf.Cargoflow2RouteBinding(
         route_version=2,
         company=0,
@@ -2086,12 +2089,14 @@ def route_two(monkeypatch: pytest.MonkeyPatch) -> cf.Cargoflow2RouteBinding:
 
 def test_route_binding_selector_and_map_of_record():
     """The version selector and the versioned binding map live in the
-    contract module; the route of record is the map's only pre-registered
-    default, and a foreign binding id refuses (no invented instance)."""
+    contract module; the route of record is the map's registered DEFAULT,
+    the ticket-08 second admission is the map's registered id 2, and a
+    foreign binding id refuses (no invented instance)."""
     binding = cf.cargoflow2_route_binding()
     assert cf.CARGOFLOW2_SCHEDULE_VERSION == 1
     assert binding is cf.CARGOFLOW2_ROUTE_BINDINGS[1]
-    assert len(cf.CARGOFLOW2_ROUTE_BINDINGS) == 1
+    assert set(cf.CARGOFLOW2_ROUTE_BINDINGS) == {1, 2}
+    assert cf.CARGOFLOW2_ROUTE_BINDINGS[2] is cf.CARGOFLOW2_ROUTE_SECOND_ADMISSION
     assert binding.route_version == 1
     assert (binding.pickup, binding.pickup_front, binding.pickup_sid, binding.pickup_industry) == (
         45748, 45747, 0, 0,
@@ -2101,19 +2106,69 @@ def test_route_binding_selector_and_map_of_record():
     )
     assert (binding.depot, binding.depot_front) == (45487, 45743)
     assert (binding.company, binding.cargo, binding.engine) == (0, 1, 123)
+    second = cf.cargoflow2_route_binding(2)
+    assert second.route_version == 2
+    # The second admission carries the route of record's pinned identities
+    # with only the binding id advanced (its candidate's physical tile
+    # path lives in the derived evidence, never the contract).
+    assert second.model_dump(exclude={"route_version"}) == (
+        binding.model_dump(exclude={"route_version"})
+    )
+    assert second.digest != binding.digest
     with pytest.raises(ValueError, match="no registered corridor route binding"):
-        cf.cargoflow2_route_binding(2)
+        cf.cargoflow2_route_binding(3)
 
 
-def test_route_binding_registration_fail_closed(route_two: cf.Cargoflow2RouteBinding):
-    """The admission seam registers one versioned binding instance and
-    refuses re-registration of an occupied binding id."""
-    assert cf.cargoflow2_route_binding(2) is route_two
+def test_route_binding_registration_fail_closed():
+    """The admission seam refuses re-registration of an occupied binding
+    id — each registered instance is history of record once present:
+    re-registering the second admission under its own occupied id, or the
+    route of record under its own, refuses without relabeling anything."""
+    second = cf.cargoflow2_route_binding(2)
+    assert second is cf.CARGOFLOW2_ROUTE_SECOND_ADMISSION
     with pytest.raises(ValueError, match="already registered"):
-        cf.cargoflow2_register_route_binding(route_two)
+        cf.cargoflow2_register_route_binding(second)
     with pytest.raises(ValueError, match="already registered"):
         cf.cargoflow2_register_route_binding(cf.CARGOFLOW2_ROUTE_OF_RECORD)
     assert set(cf.CARGOFLOW2_ROUTE_BINDINGS) == {1, 2}
+
+
+def test_second_admission_composition_of_record():
+    """The registered second admission (ticket 08) composes like the route
+    of record with only its binding id advanced: pin-for-pin equal plans
+    distinguishable by the version label alone, its own distinct binding
+    and plan digests, the same ladder instrument rows and pin table, and
+    the same funds-model pins admitting its own census figure — while the
+    DEFAULT derivation still resolves the route of record byte-equal."""
+    two = cf.cargoflow2_route_binding(2)
+    plan_two = cf.cargoflow2_plan(binding=two)
+    assert plan_two.schema_version == 2
+    assert plan_two.schedule == cf.CARGOFLOW2_EXCHANGE_IDS
+    assert plan_two.digest != REQUEST_PLAN_DIGEST
+    assert plan_two.digest == cf.cargoflow2_plan(binding=two).digest
+    # pin-equal: flipping the version label back reproduces the plan of
+    # record's payload exactly (the version is the only difference).
+    payload_two = plan_two.model_dump(mode="json")
+    payload_flipped = dict(payload_two)
+    payload_flipped["schema_version"] = 1
+    payload_one = PLAN.model_dump(mode="json")
+    assert payload_flipped == payload_one
+    assert payload_two != payload_one
+
+    rows_two = cf.cargoflow2_schedule_rows(two)
+    assert rows_two == list(work.cargoflow2_schedule())
+    assert work.plan_digest_of(rows_two) == _SCHEDULE_DIGEST_OF_RECORD
+
+    table_two = cf.cargoflow2_pin_table(two)
+    assert table_two == _DEFAULT_PIN_TABLE_OF_RECORD
+
+    model_two = cf.cargoflow2_funds_model(two)
+    assert model_two.funds == cf.CARGOFLOW2_START_FUNDS == 489650
+    assert model_two.purchase_quote == cf.CARGOFLOW2_PURCHASE_QUOTE == 4429
+    model_two.admit_running_cost(cf.CARGOFLOW2_RUNNING_DISPLAY)  # its own census
+
+    # The default derivation is untouched by the second admission.
+    assert cf.cargoflow2_plan().digest == REQUEST_PLAN_DIGEST
 
 
 def test_nondefault_route_binding_derives_its_own_schedule_plan_and_pin_table(
@@ -2222,6 +2277,13 @@ def test_funds_model_wiring_follows_its_own_binding(route_two: cf.Cargoflow2Rout
         cf.cargoflow2_funds_model(cf.cargoflow2_route_binding()).admit_running_cost(
             route_two.engine_running_display
         )
+    # The real second admission (pin-equal with the route of record) wires
+    # its own identical founding pins and its own census figure: each
+    # registered instance's model carries that instance's values.
+    model_real_two = cf.cargoflow2_funds_model(cf.CARGOFLOW2_ROUTE_SECOND_ADMISSION)
+    assert model_real_two.funds == cf.CARGOFLOW2_START_FUNDS == 489650
+    assert model_real_two.purchase_quote == cf.CARGOFLOW2_PURCHASE_QUOTE == 4429
+    model_real_two.admit_running_cost(cf.CARGOFLOW2_RUNNING_DISPLAY)  # its own census
     # The default derivation is byte-equal to the model of record: the
     # recorded walk rides the default-wired model's display figure.
     assert model_one.funds == funds_walk({})[0]["site-00"] - model_one.purchase_quote * 0
