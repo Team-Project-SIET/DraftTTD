@@ -2398,3 +2398,50 @@ readiness, outside this round's PoC definition.
   ticket 09 (selection of record, M8 part 2; blocked by 08 which is now
   satisfied) — needs its own explicit operator approval gates, none
   granted by this round; tickets 10–13 unchanged blocked.
+- 2026-11-06 — T-009 round: SELECTION OF RECORD (M8 part 2) (offline round
+  granted in-session covering derivation + reproducibility + refused-arm
+  documentation + ledger/books and one commit; no push, no staging, no
+  signing, no claim, no launch, no repo code touched). The selection
+  round (`T09 SELECTION-AUDIT PASS`, rc 0, driver
+  `/tmp/opencode/c6_t09_select.py`, transcript
+  `/tmp/opencode/c6_t09_select_output.txt`, 13 PASS / 0 FAIL) froze the
+  input set of record (the two ticket-08 admitted bindings plus the
+  corridor facts surface plus ONE frozen enumeration of record — both
+  29-tile candidates re-validated through `_validate_freight_route_v2`),
+  drove the selection layer of record (`_scenario` → P05
+  `optimize_candidate_network` under its standing boundedness) with the
+  exact `optimize_corridor_route` validation checks byte-equal — the
+  route-tile bound moved to the freight-v2 3..32 class (the module's own
+  3..24 instance bound refuses both admitted candidates;
+  property-recorded, not stretched) — and selected **the delivered route
+  of record (v1 arm)**: candidate id `corridor-b2f80f46513436a102005f10`,
+  route digest == `FREIGHT_ROUTE_DIGEST_V2` `b2f80f46…1f7131`, 29 tiles,
+  depot 45487 front 45743, endpoints exact; the refused arm is the v2
+  corner-swap (digest `d14587b2…c4dd482`) — still ticket-08-admitted,
+  never de-admitted, never relabeled. Reproducibility 5/5 selection runs
+  identical (selected action ids + route tiles + solver plan hash
+  `313294ab…47fd93`). Solver-reported metrics of record: plan hash
+  `313294ab4163364724f3b994514a902b8c1da38b467c962229f8f1110118fd93`,
+  estimator `candidate-network-optimizer` v1, assumptions digest
+  `8801de2c…9ef5e`, infrastructure spend £55 (the admitted set is
+  capex-equal — 2·27+1 road pieces each — and the deterministic machinery
+  resolves it), vehicle purchase £4429, horizon 1, GBP. Post-selection
+  re-validation: the selected v1 binding's plan digest `98d055c4…f506ca`
+  byte-equal, ladder rows byte-equal, funds pins 489650/4429; fresh
+  wire+VM run 96 passed; native suite untouched (39 at commit
+  `81a59b5` — no repo code changed this round). The typed infeasibility
+  arm (OptimizerFailure verbatim → recorded refusal, no soft default) is
+  wired in the driver but was not exercised — the machinery returned a
+  selection. Integrity close: `git diff --check` clean, `CONTEXT.md` pin
+  `847d710a…984d` intact, evidence zone untouched, no push. Books:
+  ticket 09 closed + this row + the E119 ledger row + AI_HANDOFF
+  frontier row, one commit. M8-tail reading typed, not stretched: the
+  selection of record carries the delivered route — ticket 10's
+  selected-route attempt proceeds per the spec's optimizer sentence (its
+  own fresh candidate round + gate ladder, each gate its own approval);
+  the corner-swap v2 stays admitted-but-unselected; E36 still closes only
+  per its own rule. Next frontier — ticket 10 (selected-route attempt;
+  blocked by 09, now satisfied) — needs its own explicit operator
+  approval gates (a fresh round identity + the full stage/review/sign/
+  launch ladder), none granted by this round; tickets 11–13 unchanged
+  blocked.
