@@ -2290,3 +2290,18 @@ readiness, outside this round's PoC definition.
   delivered (`CARGOFLOW2_LOADED_NEVER_DELIVERED`), a class ticket 06's
   current text does not yet spell out; downstream tickets 08–13 unchanged
   blocked.
+- 2026-11-05 — T-006 reframed by explicit operator decision ("Reframe 06
+  now") — the delivered-class reconciliation ticket now admits TWO
+  outcome classes and completes on either: (a) a delivered launch
+  (delivery receipts inside the ladder) or (b) a COMPLETE-not-delivered
+  run — `NATIVE_CARGOFLOW2_COMPLETE` with the attempt's own delivery
+  verdict of record — whose ledger row records the load-latched-never-
+  unloaded fact, the production fences that passed as recorded, and the
+  E114-twin-vs-native funds cross-reality UNKNOWN carried verbatim. A
+  terminal halt still routes through ticket 05. Blocked-by updated: 04's
+  terminal COMPLETE receipt of record (round-6 candidate-6, `rc 0
+  NATIVE_CARGOFLOW2_COMPLETE`, verdict `CARGOFLOW2_LOADED_NEVER_DELIVERED`,
+  E116) satisfies it. The reframe grants nothing further: the ticket's
+  read-only reconciliation loop (verdict replay + funds fence native-side
+  check + ledger row + integrity close) executes only under its own
+  explicit operator approval; tickets 08–13 unchanged blocked.
