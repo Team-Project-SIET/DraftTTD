@@ -1746,3 +1746,52 @@ readiness, outside this round's PoC definition.
   Nothing written inside the repo by the reviewer; nothing signed,
   claimed or launched. NEXT: Gate C signing (operator PEM) in a separate
   explicit approval, then the ONE launch in its own approval.
+- 2026-11-05 — T-004 round-5 Gate C Option-1 signing executed under
+  explicit operator approval (signing only; ONE signing operation +
+  read-only verification; stop before T-005; no claim, no launch, no
+  reconnection, no consumption, no historical evidence modification, no
+  Git mutations):
+  - Pre-write identity + seal re-verification of record (the fresh
+    round-5 signer script `/tmp/opencode/t004_gate_c_cargoflow2_c5.sh`,
+    transcript `/tmp/opencode/t004_gate_c_cargoflow2_c5_output.txt`,
+    per-round re-derivation on the E109/E99 signer precedent; the
+    candidate-1/2-bound scripts never reused): gate surface absent
+    (AUTHORIZATION.json/CLAIM.json/LAUNCH-CONSUMED.json/receipt.json/
+    result.json/runtime-identity.json), live seal == sidecar == the
+    operator-approved seal of record
+    `d4715fd3b2d0a9f5be831dfcd9f80188a87ef6460173a55763a2ee2457537741`
+    (hard-asserted twice in the script, incl. the exact candidate-5
+    approval constant).
+  - Seed mechanics identical to E109/E99: memory-only extraction from
+    the operator-held PEM outside the repository (48-byte PKCS#8 DER,
+    final-32-bytes window of record), env-only `CARGOFLOW_GATE_SEED`,
+    never printed/filed/argument-passed; pre-write identity asserted
+    (`public_from_seed(seed)` == pinned anchor
+    `5063982bd28d…880f`); env unset + printenv-empty verified after.
+    Operator PEM contents never read beyond the DER-body parse.
+  - Production signing surface only: `authorization_payload(metadata,
+    seal)` + `canonical_authorization_bytes` + `sign_authorization_record`
+    + `write_authorization_record` + `verify_authorization`; payload
+    digest of record
+    `aa936f19498971f549e6906a30d852882e0b8a5ea9c5da13a5a6257b4e518d25`
+    cross-checked == production
+    `staged_cargoflow2_authorization_payload_digest(candidate-5)`;
+    `AUTHORIZATION.json` record digest
+    `57284ae0fd812f20e0152bc175f486230ba0f02b9c7c8df8acc8ff931382b01e`;
+    operator identity unchanged
+    `sha256-ed25519-public-key:cbb63ff58f17f13df3e1be0735fad18497e3a0c6ad6b5dd55491d708ae40c614`.
+  - Post-write read-only state of record: root = 5 entries
+    (`AUTHORIZATION.json` joins `PRELAUNCH.json`/`PRELAUNCH.sha256`/
+    `graphics-identity.json`/`isolated/`; no CLAIM.json, no
+    LAUNCH-CONSUMED.json); seal `d4715fd3…41ad` byte-equal after the
+    write; `preflight` PASS with the authorization present; standalone
+    pre-launch `verify` → `AUTHORIZATION_UNVERIFIED` / `CLAIM_ABSENT`
+    exit 1 as designed.
+  - Zero staged defects, zero re-writes: the signing completed first
+    invocation with no auxiliary incident; candidates 1–4 re-digested
+    byte-identical; no candidate bytes beyond AUTHORIZATION.json
+    touched; the PRELAUNCH seal re-verified post-write.
+  - NEXT (T-005 round 5, needs its own explicit operator approval): ONE
+    launch of the signed candidate-5 at the pinned binary/OpenGFX
+    versions + read-only replay + integrity sweep + certified cleanup;
+    nothing scheduled, nothing relaunched.
