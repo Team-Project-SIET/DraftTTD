@@ -38,3 +38,17 @@ Single Python package `app/` (no monorepo). Pipeline: CLI → isolated OpenTTD r
 - Native demo entrypoint: `python -m app.openttd_demo`, needing `OPENTTD_BINARY` and `OPENTTD_OPENGFX_ARCHIVE` set before Python starts; binary/graphics SHA-256s are pinned, other versions unsupported. Offline-only: `plan`, `check`, `report`, `compare`.
 - `OpenTTD-Knowledge/` are reference documentation for study, not part of the app.
 - Work happens on branch `devmodule2`; the tree habitually contains uncommitted WIP — check `git status` for what you actually have locally.
+
+## Agent skills
+
+### Issue tracker
+
+Issues live as files under `.scratch/<feature-slug>/issues/`; specs of record live in `docs/specs/`. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five default triage roles, as `Status:` label strings on each ticket file. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `CONTEXT.md` at the root (prepend-only, authority-pinned) plus ADRs created lazily under `docs/adr/`. See `docs/agents/domain.md`.

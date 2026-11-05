@@ -3,9 +3,9 @@
 	"path": "CONTEXT.md",
 	"historical_sha256": "b94b96649b466e73e25c9df9409bd745e311b84273bedfd9a111792869e3b7b3",
 	"historical_bytes_retained": false,
-	"current_sha256": "36648f9c2fee4106efb35ae4ee8722983ebdfb482889e66ad53d759f6fa7cc29",
-	"recorded": "2026-10-25",
-	"authority": "Explicit operator authorization, session 2026-10-25",
+	"current_sha256": "343daad2de19d44364c51fcf2665088c24d2734a521955845953821580ba7caf",
+	"recorded": "2026-11-05",
+	"authority": "Explicit operator authorization, session 2026-11-05 (appended-option Q3, grilling round 1)",
 	"decision": "ADR-014",
-	"reason": "The 2026-10-08 pin refers to bytes that are not retained in Git history or repository artifacts. The retained manifests remain frozen and unmodified; this record scopes a byte-exact transition from the historical pin to the current canonical CONTEXT.md so every other protected entry can still be validated without weakening historical evidence."
+	"reason": "Second sanctioned transition to the current canonical CONTEXT.md, keeping the original 2026-10-08 capture (b94b9664…) as the record's historical anchor. Evolution of record: b94b9664… → 36648f9c2fee…cc29 (sanctioned 2026-10-25, ADR-014) → 343daad2de19…caf (2026-11-05): six corridor-vocabulary terms (route binding, expand-only parameterization, staged candidate, freeze pin, seal, reconciliation debt) appended to the prepend-only shared-language zone with zero earlier bytes changed. The predecessor byte states remain reachable as git-tracked history, not as retained re-capture files; all historical freeze manifests remain frozen and unmodified."
 }

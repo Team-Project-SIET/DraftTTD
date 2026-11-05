@@ -646,11 +646,12 @@ def cargoflow2_route_binding(
 def cargoflow2_register_route_binding(binding: Cargoflow2RouteBinding) -> None:
     """Register one versioned route binding instance under its own id.
 
-    The admission seam of the parameterization: a second admitted route
-    takes the next unoccupied binding id and composes exactly like the
-    route of record. An occupied id refuses — a registered route binding is
-    history of record once present, and a re-registration can never
-    relabel it.
+    The admission seam of the parameterization: a new admitted route
+    binding takes the next unoccupied binding id that the plan version
+    set spans (today 1 and 2; widening the set is a one-site change to
+    that set, shared with the plan model). An occupied id refuses — a
+    registered route binding is history of record once present, and a
+    re-registration can never relabel it.
     """
     if binding.route_version in CARGOFLOW2_ROUTE_BINDINGS:
         raise ValueError(

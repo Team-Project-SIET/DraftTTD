@@ -1569,3 +1569,130 @@ readiness, outside this round's PoC definition.
   (second-route admission) is machinery-unblocked by this prefactor but
   remains gated behind the round-3 ladder (02 review → 03 Gate C → 04
   launch → 05 halt-class → 06 delivered class) in dependency order.
+- 2026-11-05 — T-002-cycle ticket 02 REVIEWED — verdict **REVIEW-FINDINGS**
+  (45/46 re-derivation checks PASS, 1 FAIL, exits 0; ticket
+  `.scratch/d5-corridor-poc-tail/issues/02-round3-independent-review.md`),
+  fresh-context audit per the round-2 review-of-record method (the old
+  candidate-bound script never reused): fresh script
+  `/tmp/opencode/t002_r3_review_cargoflow2_c3.py`, transcript
+  `/tmp/opencode/t002_r3_review_output.txt` (both outside the repo tree;
+  reads only; no write inside the repo; no staging rerun; no signing; no
+  claim; no launch). CLASSES: A identity/seal/structure — seal
+  `42f6bbaf…e41d` == sidecar == books, 4-entry root, PENDING authorization,
+  workspace `openttd-15.3-i529afe4` (checks 1–8 PASS); B correspondence —
+  staged `main.nut` == live T-007+T-009 source bytes, the fix-carry class
+  (single re-pin once, the T-009 census join `display !=
+  this.RUNNING_DISPLAY_PIN` sited after its read, `RUNNING_DISPLAY_PIN`
+  exactly 2, NO second shift), `info.nut` == frozen zip, staged AI ==
+  package bytes, inventory main digest == staged bytes, staged main digest
+  differs from BOTH sealed predecessor main digests, no run residue
+  (checks 9–15 PASS); C lineage — binary pin, argv pins, no openttd
+  process, `source.sav` == depot-3 after-save `183b2027…6a6`, world
+  lineage, welcome identity, OpenGFX identity, save-restore GS identity
+  (16–23 PASS); D pins/plan re-derivation — budgets byte-equal round-2,
+  pin table, schedule of record 25, ladder schema, hypotheses bound to
+  consumed probe receipt + recomputed digest, funds pins, plan digest
+  re-derived == recorded `5c0998f2…bf2d`, plan model digest re-derived
+  through the ticket-07 parameterized composition guard, guard protocol
+  11, secret excluded + mode 0600 (24–36 PASS); E re-execution —
+  verify pre-auth `CLAIM_ABSENT` exit 1 still exact (38–39 PASS);
+  37 FAIL (finding below); F environment/ports (40–41 PASS); G
+  immutability — no run leftovers, no post-run shape, candidate-1 AND
+  candidate-2 AND candidate-3 seals re-digested byte-identical at the
+  audit's end (42–46 PASS — the candidate of record is untouched).
+  **FINDING (check 37, the reconciliation debt of record):** the
+  production freeze gate refuses preflight re-execution — the staged
+  frozen inventory pins
+  `app/simulation/openttd/corridor_cargoflow2.py` at its staging-time
+  bytes `d72d1762…7c2`, while the merged ticket-07 parameterization
+  changed the live file to `477732f0…06f`; the mismatch set is exactly
+  ONE of 3502 entries. Root class: a sequencing artifact — candidate-3
+  was composed from pre-07 source (ticket 01 staging ran before the
+  ticket-07 merge in the same round), and ticket 07's later merge moved
+  the live contract bytes; preflight refusal is the by-design fail-closed
+  gate doing its job. Consequence: candidate-3 cannot be Gate-C-signed in
+  this state; Gate C and launch on candidate-3 are OFF the menu. Script
+  side incidents, self-caught and disclosed: audit check 12 went through
+  two iteration fixes (name-set assertion shape) — no staged defect
+  (staged AI bytes verified directly byte-equal live in the diagnostic);
+  the merged script's final run is the transcript of record. Verdict
+  RECONCILIATION-DEBT: a fresh T-002 round must stage a new candidate
+  (fresh identity, composed from the post-07 source — ticket-07's own
+  same-digest guarantee was proven live: plan digest re-derivation checks
+  32–33 reconcile byte-equal against the recorded `5c0998f2…bf2d`), then
+  that candidate re-reviews (this ticket's method), then Gate C, then the
+  ONE launch. Operator decision pending.
+- 2026-11-05 — T-002 round 4 STAGED (the reconciliation round of record;
+  ticket `01-round4-restage.md` in `.scratch/d5-corridor-poc-tail/issues/`,
+  explicit operator re-stage approval in-session, one `prepare` first
+  attempt): round identity advanced `candidate-3` → `candidate-4`
+  (comment of record: reconciliation of the round-3 review finding —
+  candidates 1–3 sealed consumed/unfulfillable history, never reused);
+  that one constant is the ONLY pipeline edit; focused suites re-run
+  green (83 + 11 + 39 = **133 passed**, exit 0), `ruff check` clean. ONE
+  `prepare` → `PRELAUNCH PASS` exit 0 first attempt. **RECONCILIATION
+  PROOF:** candidate-4's frozen inventory pins
+  `app/simulation/openttd/corridor_cargoflow2.py` at the post-07 live
+  bytes `477732f0…06f` — the exact single entry that refused the round-3
+  candidate; all 3502 entries reconcile on the live tree; the round-3
+  debt is discharged by construction. Candidate of record
+  `artifacts/experiments/d5-corridor-cargoflow2-native-candidate-4`,
+  seal (PRELAUNCH.json sha256)
+  `325910c3a4df325408fbb859b251a587232638d9abac73312bd502c793377c9f`
+  — differs from all three predecessors (`c7a1c5d5…333b`,
+  `f991a440…55d4e`, `42f6bbaf…e41d`); schema `d5-cargoflow2-prelaunch-v1`,
+  kind `cargoflow2`, attempt `D5-CARGOFLOW-2`, milestone `D5-CARGOFLOW`;
+  plan digest `5c0998f2…bf2d` UNCHANGED of the corridor route of record
+  (ticket-07 default-binding invariance held end-to-end through the
+  parameterized composition), plan model digest `98d055c4…96f`, schedule
+  version 1, ladder grid `d5-cargoflow2-ladder-grid-v1`, world lineage
+  depot-mutation-3 after-save `183b2027…6a6`
+  (`PREREQUISITE_ATTEMPT_SOURCE_SAVE_LOAD`), save-restore GS identity
+  present (`NetworkFreightProof`), budgets byte-equal the of-record plan
+  (funds 489,650 / max_cost 5,000 / 25 planned exchanges / 60-day
+  authority); ports game 37155 / admin 36957 (fresh allocation), workspace
+  `isolated/openttd-15.3-9__6eu5v`; root exactly the pre-gate family shape
+  (4 entries). Read-only gates of record: standalone `preflight` →
+  `PREFLIGHT PASS` exit 0; pre-auth `verify` →
+  `{"authorization_state": "CLAIM_ABSENT", "verification":
+  "AUTHORIZATION_UNVERIFIED"}` exit 1 by design. Candidates 1–3 seals
+  re-digested byte-identical after the round; no `artifacts/` byte
+  changed anywhere else; writes confined to the fresh candidate-4
+  directory. Nothing signed, claimed or launched. NEXT: round-4
+  independent review (ticket 02's method applies fresh, fresh-context,
+  new ticket file of record), then Gate C (03 class), then the ONE
+  launch (04 class) — each its own explicit operator approval.
+- 2026-11-05 — CORRECTION OF RECORD (append-only; candidate-4 of the
+  preceding row is now **seal-superseded**): after the round-4 staging
+  row was written, the in-session model/domain work continued — the
+  shared-language append to the root `CONTEXT.md` (six corridor terms:
+  route binding / expand-only parameterization / staged candidate /
+  freeze pin / seal / reconciliation debt), the
+  `cargoflow2_register_route_binding` docstring rewording
+  (plan-version-scoped truth per the code-review finding), and the
+  candidate-lineage comment rewording. The candidate-4 freeze inventory
+  pins all three files, and its live digest now disagrees for all three
+  (three freeze-pin mismatches — the loop-class of candidate-3's debt,
+  introduced by post-staging writes again). No signing, claim, launch,
+  artifact write or code-data change happened anywhere; the round-4 seal
+  stays on disk byte-exact (`325910c3…c9f`); candidates 1–3 stay sealed;
+  the round-3 REVIEW-FINDINGS verdict keeps standing. The method of
+  record stands: the write cluster completes to its final text, then the
+  NEXT fresh staging round (candidate-5: one advance of the round
+  identity + ONE `prepare`, a single operator-approved action) composes
+  from the settled tree, and the fresh candidate re-reviews fresh.
+  Discipline note of record: model/doc writes and stage freezes do not
+  interleave — a staged round forbids any write inside a pinned source
+  until its gates close or a fresh round supersedes it.
+- 2026-11-05 — CODE-REVIEW CORRECTION ROW (append-only; the "no push"
+  bookkeeping of record): the two-axis code review of `ad59821...HEAD`
+  (2026-11-05) surfaced that `e177d03` and `2e5782f` rest on
+  `origin/miles/fright-delivery` while several ticket rows and commit
+  messages say "no push". Operator fact of record, given in-session:
+  **the operator pushed those two commits manually, outside every agent
+  session; no agent-run push subcommand exists.** The books' "no push"
+  phrasing was written from the agent-session view and is NOT corrected
+  retroactively — the rows stand as written (no relabel); this row adds
+  the operator-side fact that must accompany them. The operator-side
+  pushes were legitimate operator-authorized acts; commit authority stays
+  the operator's, and agent sessions of record never push.

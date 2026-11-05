@@ -38,6 +38,34 @@ Separate derived offline recovery does not change that result.
 **Prepared qualification**: Frozen inputs and controlled checks awaiting separate
 native authorization. It is not an accepted save, reload, or experiment.
 
+**Route binding**: One versioned instance of the corridor route contract —
+its own tiles, engine, funds and census display pins. Binding 1 is the
+default derivation and stays byte-equal to the contract of record.
+_Avoid_: route config, plan version.
+
+**Expand-only parameterization**: A refactor of a pinned contract that
+reproduces every recorded digest of the default binding byte-equal,
+refuses cross-version composition drift, and widens behavior only by a
+new binding id — never by loosening a gate.
+
+**Staged candidate**: The sealed PRELAUNCH artifact of one `prepare`,
+carrying a fresh round identity; its composition is frozen at prepare
+time.
+_Avoid_: snapshot, build.
+
+**Freeze pin**: One file's sha256 inside a sealed inventory. The
+production preflight refuses any live-source drift against the pins, by
+design.
+_Avoid_: file lock.
+
+**Seal**: The sha256 of a candidate's `PRELAUNCH.json` — one round's
+identity. Distinct from the freeze pins (per file) and from Gate C (the
+operator's signature).
+
+**Reconciliation debt**: A reviewer finding standing against a staged
+candidate. Discharged only by a fresh round composed from the current
+sources; never by a relabel.
+
 ---
 
 # OpenTTD Integration Project Context
