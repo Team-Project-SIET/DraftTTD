@@ -136,6 +136,11 @@ WORLD = """
 ::no_op <- false;
 ::reject_start <- false;
 ::depots <- {};
+/* The 15.3 native fail-close model (the depot-mutation E72 stub idiom and
+ * the T-006 root cause): the per-script current road type is
+ * INVALID_ROADTYPE (63) until set, and a GSRoad tile predicate that
+ * consults that current type fails closed until the package pins it. */
+::cur_road_type <- 63;
 ::last_accepted <- -1;
 /* Motion scripting: every Sleep runs the queued callbacks whose tick is due,
  * and a strictly increasing day sweep lands exactly the §4 financial world of
@@ -253,7 +258,16 @@ function civil_day_of_month(day) {
 }
 class GSRoad {
     static ROADTYPE_ROAD = 0;
-    static function IsRoadDepotTile(t) { return t in ::depots; }
+    static ROADTYPE_INVALID = 63;
+    static function IsRoadTypeAvailable(t) { return t == GSRoad.ROADTYPE_ROAD; }
+    static function SetCurrentRoadType(t) {
+        if (GSRoad.IsRoadTypeAvailable(t)) ::cur_road_type = t;
+    }
+    static function GetCurrentRoadType() { return ::cur_road_type; }
+    static function IsRoadDepotTile(t) {
+        return GSRoad.IsRoadTypeAvailable(GSRoad.GetCurrentRoadType()) &&
+            (t in ::depots);
+    }
 }
 class GSStation {
     static function GetStationID(t) { return (t in ::stops) ? ::stops[t].sid : -1; }

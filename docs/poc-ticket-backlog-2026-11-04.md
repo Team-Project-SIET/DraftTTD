@@ -44,7 +44,22 @@ T-001 offline implementation of D5-CARGOFLOW-2
             └─ T-004 Gate C Option-1 signing                     (GATE)
                  └─ T-005 launch approval → ONE launch → replay  (GATE)
                       └─ T-006 verdict reconciliation
-                           ├─ halt class → T-007 capture fix design round (new)
+                           ├─ halt class → read-only root-cause diagnosis
+                           │   ├─ R1: T-007 SiteOp road-type fix (executed
+                           │   │   offline 2026-11-05, E106)
+                           │   │   └─ fresh candidate cycle (round-2 ladder):
+                           │   │       T-002 → T-003 → T-004 → T-005 → T-006
+                           │   │       (same gates, fresh candidate identity
+                           │   │       + seal; on halt, repeat diagnosis →
+                           │   │       fix → fresh cycle; never relabel,
+                           │   │       never relaunch a consumed attempt)
+                           │   └─ R2: T-008 read-only diagnosis (complete
+                           │       2026-11-05, E111 — census-gate scale
+                           │       inversion confirmed, corrective direction
+                           │       documented)
+                           │       └─ future corrective ticket (pending;
+                           │           opened only after operator review;
+                           │           no fix, no staging invented here)
                            └─ delivered class → T-020 M8 block
 T-020 M8: ≥2 executable routes, P05 selection, native landing
   └─ T-021 P07 closed loop + funds-taxonomy decision
@@ -53,6 +68,48 @@ Post-PoC (P2 backlog, separate approvals): T-030 fleet/capacity,
 T-031 matched A/B, T-032 five-year, T-033 OPEX/ROI consolidation,
 T-034 full regression 15.3.
 ```
+
+Round ledger (authoritative per-ticket status stays in the ticket
+entries and status log below; every ID and historical record preserved):
+
+- **T-001** — complete 2026-11-04 (offline implementation; no gate
+  consumed).
+- **Round 1** (candidate-1, seal `c7a1c5d5…333b`): T-002 gates passed
+  2026-11-04; T-003 42/42 re-derivation checks PASS, verdict
+  READY-FOR-GATE-C 2026-11-04; T-004 signed 2026-11-04; T-005 ONE
+  launch 2026-11-05 → terminal halt `INVALID_SITE` at `site-00`;
+  T-006 reconciled **not achieved** 2026-11-05 → halt class.
+- **T-007** — executed offline 2026-11-05 under explicit operator
+  approval (E106): the completed root-cause fix of the T-006/E105
+  diagnosis — `GSRoad.SetCurrentRoadType(GSRoad.ROADTYPE_ROAD)` before
+  the re-pin join inside `SiteOp` of the protocol-11 package. Consumed
+  candidate-1 stays sealed terminal evidence; no restaging on this
+  ticket.
+- **Round 2** (candidate-2, seal `f991a440…55d4e`, the T-007 fix
+  cycle): **T-002 round 2 staged 2026-11-05 (E107) — complete**;
+  **T-003 round 2 reviewed 2026-11-05 (E108, 45/45 re-derivation
+  checks PASS, verdict READY-FOR-GATE-C) — the current gate of
+  record**. The fresh cycle continues T-004 → T-005 → T-006, each its
+  own explicit operator approval; nothing scheduled.
+  **Round-2 tail of record:** T-004 round 2 signed 2026-11-05 (E109);
+  **T-005 round 2 executed 2026-11-05 (E110): ONE launch — `site-00`
+  `READY` live (the T-007 fix measured live-true), terminal halt
+  `ENGINE_PIN_MISMATCH` at `engine-00`, replay reconciles exactly,
+  candidate-2 consumed — nothing relabeled, nothing relaunched.**
+  **T-008 read-only diagnosis completed 2026-11-05 (E111): root cause
+  = census-gate scale inversion (the `(raw >> 8) == 421` join is
+  unsatisfiable because the script surface already returns the display
+  figure); corrective direction documented; no code changed.** Next:
+  the future corrective ticket, opened only by operator review;
+  nothing scheduled.
+- **T-008–T-019 are undefined, not reserved**: no ticket was ever
+  assigned to these IDs, at backlog creation or since. The ladder was
+  numbered T-001–T-007 and jumps to the pre-existing T-020/T-021/T-022
+  M8/completion block, then the P2 backlog T-030+. No T-008–T-019
+  ticket exists and none is created here. **2026-11-05 update:** the
+  first T-008 assignment happened on 2026-11-05 under explicit
+  operator task direction — the R2 `ENGINE_PIN_MISMATCH` read-only
+  diagnosis ticket created below. T-009–T-019 remain undefined.
 
 ## Execution constraints (per `CONTEXT.md`, `AGENTS.md`, design §6)
 
@@ -105,7 +162,14 @@ lint/type gates per `REPRODUCE.md`.
 
 ### T-002 — Operator staging gate: `D5-CARGOFLOW-2` candidate
 
-- **Status:** pending (GATE; operator approval required).
+- **Status:** round-2 gates passed 2026-11-05 under explicit operator
+  approval (the T-007 fix cycle, fresh candidate identity, ONE
+  `prepare`); first-round gates passed 2026-11-04 under explicit
+  operator approval
+  (staging approval consumed; prelaunch seal of record
+  `c7a1c5d5…333b` == sidecar unchanged after every read-only step;
+  pre-auth `verify` intentionally exit 1). Awaiting T-003 independent
+  review gate on the round-2 candidate.
 - **Objective and scope:** on operator approval only, run the pipeline's
   offline `prepare` to stage the candidate, then one read-only
   `preflight` (`PRELAUNCH PASS` expected) and `verify`
@@ -126,8 +190,22 @@ lint/type gates per `REPRODUCE.md`.
 
 ### T-003 — Independent read-only review of the staged candidate
 
-- **Status:** pending (GATE; separate operator-approved reviewer, never
-  the author session).
+- **Status:** round-2 review complete 2026-11-05 under explicit
+  operator approval — 45/45 re-derivation checks PASS, verdict
+  **READY-FOR-GATE-C** for
+  `d5-corridor-cargoflow2-native-candidate-2` / seal `f991a440…55d4e`
+  (fix-carry verified byte-level: staged main digest `2c7f6b09…`
+  contains the T-007 `SiteOp` fix, single occurrence, before the
+  re-pin join; source↔staged main byte-equal; pipeline preflight and
+  pre-auth verify re-executed read-only in-session). Round-1 review
+  complete 2026-11-04 — 42/42 re-derivation checks PASS exit 0, verdict
+  **READY-FOR-GATE-C** on candidate-1, zero reconciliation debt.
+  Round-2 script of record
+  `/tmp/opencode/t003_r2_review_cargoflow2_c2.py`
+  (output `/tmp/opencode/t003_r2_output.txt`); zero staged defects,
+  zero staging rewrites, candidate-1 and candidate-2 bytes untouched
+  (both seals re-digested unchanged post-review). Awaiting T-004
+  Gate C signing gate on the round-2 candidate.
 - **Objective and scope:** fresh-context audit of the staged bytes
   (seals, identity, world/prerequisite binding, schedule, funds model,
   replay inventory) with the E99/§12-style record.
@@ -143,7 +221,18 @@ lint/type gates per `REPRODUCE.md`.
 
 ### T-004 — Gate C Option-1 signing
 
-- **Status:** pending (GATE; operator signing).
+- **Status:** round-2 signed 2026-11-05 under explicit operator
+  approval — ONE signing operation (fresh seed-derived key asserted
+  pre-write against the pinned operator anchor; production signer
+  only); payload digest `3f489b18…4ee55788` (== production
+  `staged_cargoflow2_authorization_payload_digest`),
+  `AUTHORIZATION.json` record digest `45820767…7eeb9`, operator
+  identity unchanged `sha256-ed25519-public-key:cbb63ff5…40c614`;
+  seal `f991a440…55d4e` byte-equal after the write; post-write
+  preflight PASS; lifecycle claim still `CLAIM_ABSENT` (minted only
+  by the launch). Seed env unset + empty-verified. Round-1 signed
+  2026-11-04 (candidate-1; payload `3d787802…61661`, record
+  `427bbdb4…793cdc`). Awaiting T-005 launch gate on candidate-2.
 - **Objective and scope:** operator signs the authorization payload
   binding `D5-CARGOFLOW-2` to the freshly staged candidate; no
   authorization reuse across candidates.
@@ -156,7 +245,44 @@ lint/type gates per `REPRODUCE.md`.
 
 ### T-005 — Launch approval, one launch, read-only replay
 
-- **Status:** pending (GATE; separate explicit operator approval).
+- **Status:** round-2 executed 2026-11-05 under explicit operator
+  approval — ONE launch of candidate-2 at the pinned OpenTTD 15.3
+  binary + OpenGFX-8.0 archive; run of record `RC=1`, status
+  `PHASE_HALTED_PREFIX_PRESERVED`, `preflight PASS`,
+  `native_launches=1` (== budget), `connections=1`, `requests=2`,
+  `verified=false`. **The E106/T-007 fix measured live-true:** site-00
+  progressed to `READY` (response `READY` for depot `45487`, pickup
+  `45748`, delivery `50862`, day 712228 tick 14, funds 489650, income
+  0; stderr decisive line `D5_CARGOFLOW2 site-00 READY`; round-1's
+  `INVALID_SITE` did not recur), the site op executed live
+  (`state_changed=true`). Terminal halt class of record:
+  `ENGINE_PIN_MISMATCH` at the staged exchange `engine-00` (response
+  op `engine`, requested pin `engine=123`, cost 0, funds 489650, plan
+  == seal `f991a440…55d4e`, protocol 11; stderr decisive line
+  `D5_CARGOFLOW2 engine-00 ENGINE_PIN_MISMATCH`; `HALTED_BEFORE_
+  MUTATION`; 23 later steps pending — the halt is terminal and the
+  identity live-effective is unmeasured this round). Read-only replay
+  of record: `verification PHASE_HALTED_EVIDENCE_PRESERVED`, failed
+  exchange `engine-00` / `ENGINE_PIN_MISMATCH` / world_state
+  `HALTED_BEFORE_MUTATION`, `RC=1` — verdict reconciles the run
+  verdict exactly; nothing relabeled, nothing retried, nothing
+  relaunched, no diagnostic round scheduled. Launch bindings of
+  record: `LAUNCH-CONSUMED.json` binds authorization record
+  `45820767…7eeb9`, seal `f991a440…55d4e`, operator identity
+  unchanged `cbb63ff5…40c614`; `CLAIM.json`
+  `launches_allowed=1 / retries=0 / consumed=true`; `native_launches=
+  1` == budget; 1 connection; certified cleanup
+  `reaped / sockets_closed / workspace_disposed / credential_removed`,
+  `cleanup_error=[]`, `remaining_processes=[]`, `returncode=0`
+  (pid 181344), listener closed, reservation released, no openttd
+  process after, ports 60131/59411 free. Manifest 19/19 OK, 0
+  non-OK; seal byte-equal + sidecar after the run; candidate root =
+  20 files + empty `isolated/` shell; after-diagnostic save retained.
+  `git diff --check` clean; CONTEXT pin `36648f9c2fee4106` intact.
+  Candidate-2 is now consumed terminal evidence — never relaunched,
+  never reconnected, never re-staged without a fresh round identity.
+  Round-1 (candidate-1, halted `INVALID_SITE` at site-00, bindings
+  `427bbdb4…793cdc` / `c7a1c5d5…333b`) remains retained history.
 - **Objective and scope:** exactly one native launch of the signed
   candidate at the pinned binary/OpenGFX versions; after exit, the
   read-only replay verifier re-derives the receipts; cleanup certified.
@@ -174,7 +300,37 @@ lint/type gates per `REPRODUCE.md`.
 
 ### T-006 — Delivery verdict reconciliation
 
-- **Status:** pending (depends on T-005).
+- **Status:** reconciled 2026-11-05 — the T-005 outcome class per §7
+  is **not achieved** (halt at exchange 0; zero of the seven
+  acceptance conditions observed), so per this ticket's rule a new
+  capture-fix design round opens; the consumed attempt stays final.
+  The read-only root-cause diagnosis of record (this round): the
+  `INVALID_SITE` halt is a package-side GSRoad API sequencing defect —
+  the protocol-11 `SiteOp` re-pin join
+  (`d5_cargoflow2_package/main.nut`:389–402) calls
+  `GSRoad.IsRoadDepotTile(this.depot_tile)` while the fresh script
+  instance never calls `GSRoad.SetCurrentRoadType(GSRoad.ROADTYPE_ROAD)`
+  (0 occurrences in the failing package vs ≥1 in every worked
+  predecessor: freight v1, freight v2 `Handle` line 1694,
+  depot-mutation 173, depot-recheck 242, extension 1016); on the
+  pinned OpenTTD 15.3 the per-instance default is
+  `ScriptStorage.road_type = INVALID_ROADTYPE` with
+  `ScriptRoad::IsRoadDepotTile` early-returning false when the current
+  road type is unavailable — the seventh join member fails
+  deterministically, world-independent. No identity failed validation:
+  on the identical launched world bytes (`183b2027…6a6`) the
+  same-session precedent `d5-corridor-freight-native-candidate-5`
+  measured every identity fact live-true (`sid0=0` `truck0=true`,
+  `sid1=2` `truck1=true`, `pickup_industry=0` count 1,
+  `delivery_industry=1` count 1, `depot_ok=true` `depot_edge=true`,
+  `funds=489650` == pinned close-out, status `READY`); refusal path =
+  normal `SiteOp` return (no `D5_CARGOFLOW2_THROW` in stderr, no
+  observation fields, request echoes byte-equal the baked pins).
+  **Safest next ticket (T-007):** single-package GSRoad sequencing
+  fix (Set-before-Get inside `SiteOp`, family idiom), then a full
+  fresh candidate cycle (staging → review → Gate C → ONE launch)
+  under the same gate discipline; candidate-1 stays sealed consumed;
+  nothing scheduled without operator approval.
 - **Objective and scope:** classify the outcome against §7; if any of
   the seven acceptance conditions is unmet, open a new capture-fix
   design round (fresh identity, design record first) — never relabel,
@@ -187,6 +343,182 @@ lint/type gates per `REPRODUCE.md`.
 - **Validation procedure:** replay re-check; cross-check of §7 list.
 - **Risks and approvals:** verdict text is subject to operator review;
   new design rounds each need their own approvals.
+
+### T-007 — Fix the D5-CARGOFLOW-2 `SiteOp` road-type initialization defect
+
+- **Status:** executed 2026-11-05 offline under explicit operator
+  approval (code fix + focused offline validation only; no staging, no
+  signing, no candidate creation, no OpenTTD launch, no historical
+  evidence modification, no Git mutations). The fix of record: in
+  `d5_cargoflow2_package/main.nut` `SiteOp` (>387), the five-line
+  comment of the T-006 root cause plus
+  `GSRoad.SetCurrentRoadType(GSRoad.ROADTYPE_ROAD)` now precedes the
+  `/* Re-pin gate: */` join (the freight v2 `Handle`:1694 family
+  idiom); no other package byte changed (single GSRoad consumer of
+  record: the `IsRoadDepotTile` join member; the 25-row
+  `cargoflow2_planned` pin table is untouched). The VM stub world
+  (`tests/test_corridor_cargoflow2.py`) gained the 15.3 fail-close
+  model on the depot-mutation E72 idiom (`::cur_road_type <- 63`
+  default; `IsRoadTypeAvailable`/`SetCurrentRoadType`/
+  `GetCurrentRoadType`/fail-close `IsRoadDepotTile`), making the VM
+  suite a true regression lock: the pre-fix package cannot pass it.
+  **Offline validation of record:** `tests/test_corridor_cargoflow2_vm.py`
+  + `tests/test_corridor_cargoflow2.py` → **87 passed** (1.32 s);
+  `tests/test_corridor_cargoflow2_native.py` (offline native checks,
+  incl. the wire-to-`nut` pin binding regex — unaffected by the fix)
+  → **37 passed** (73.69 s); `ruff check` + `uvx ty check` on the
+  touched test path → clean; `git diff --check` → clean;
+  `CONTEXT.md` pin `36648f9c2fee4106` intact. Composition note of
+  record: `staged_cargoflow2_composition()` stages this `main.nut` at
+  the next staging round, so the next candidate's composition digest —
+  and therefore its PRELAUNCH seal — differs from the consumed
+  candidate-1 bytes (`c7a1c5d5…333b`, which stay sealed historical
+  evidence). **NEXT (needs its own operator approval):** fresh
+  candidate cycle T-002 staging → T-003 independent review → T-004
+  Gate C signing → T-005 ONE launch, identical gate discipline,
+  fresh identity; nothing scheduled.
+- **Objective and scope:** fix the deterministic seventh-join-member
+  refusal (E105 root cause) with the minimal single-package change;
+  zero Python wire/protocol/guard/echo/exception-handling change.
+- **Dependencies:** T-006 (root cause of record).
+- **Acceptance criteria:** fix present in `SiteOp` before the
+  `IsRoadDepotTile` join; focused offline suites green; static checks
+  clean; exact diff verified; authority pin preserved.
+- **Required evidence:** E106 row.
+- **Validation procedure:** REPRODUCE.md static-check precedent
+  (`ruff check`, `git diff --check`, `uvx ty check`) + the focused
+  cargoflow2 suites.
+- **Risks and approvals:** offline-validated only — the native world can
+  only confirm it at the next Gate C launch, which is a fresh,
+  separately approved attempt.
+
+### T-008 — Read-only diagnosis: the R2 `ENGINE_PIN_MISMATCH` halt at `engine-00`
+
+- **Status:** complete 2026-11-05, read-only forensic diagnosis under
+  explicit operator task direction (diagnosis, not implementation: no
+  source edits, no test edits, no staging/signing/claims, no launch,
+  no AdminPort traffic, no replay reruns, no candidate reuse, no
+  evidence regeneration, no Git mutations; T-005 round-2 terminal
+  verdicts and both consumed candidates untouched). Full disposition
+  lives in the status log and **E111**; the summary of record:
+- **Root cause (CONFIRMED, source-level, deterministic):** the
+  protocol-11 `engine-00` census join
+  (`d5_cargoflow2_package/main.nut:448-454`) demands
+  `(GSEngine.GetRunningCost(123) >> 8) == 421`, i.e. a raw of at least
+  107,776; on the pinned binary (`276d5b69…904c`, upstream tag 15.3)
+  `ScriptEngine::GetRunningCost` is a no-shift passthrough
+  (`src/script/api/script_engine.cpp:139-143` → `engine.cpp:280-302`
+  → `GetPrice(..., -8)` = `_price × factor >> 8`, `economy.cpp:949-962`
+  / `economy_func.h:40`), i.e. it already returns the per-economy-year
+  **display** figure — the same number the family has always recorded
+  (`planner.nut:52` + `freight_runtime_planning.py:347-362`,
+  `probe_package/main.nut:158`, `p08_road.py:604`), named
+  `running_cost_gbp_per_economy_year = 421` since E8/attempt19; the
+  256-scaled "raw" the join wanted exists only at the core vehicle
+  surface (`roadveh_cmd.cpp:1652-1664`, billing numerator at
+  `:1742-1745`, display conversion `vehicle_base.h:566`) and is NEVER
+  script-exposed. The possible display values are exactly
+  {421 (vehicle_costs ×6, measured on E8/attempt19 and consistent with
+  the live purchase 4429 on the same ×6 construction leg), 562 (×8),
+  632 (×9)} — `pricebase.h:57/:29` starts 1600/14000, engine 123 =
+  the base road-vehicle row with `running_cost 90`, `cost_factor 108`
+  (`engines.h:674-700`, `PR_RUNNING_ROADVEH` hardcoded `:658-670`);
+  every possible value fails the join (1/2/2 ≠ 421); the gate is
+  UNSATISFIABLE on every reachable world — a binary-and-setting
+  independent formula defect, mirrored fail-closed in Python
+  (`corridor_cargoflow2.py:1014` READ-step census check and
+  `:1150-1157` `admit_running_cost`). The design premise itself
+  (design §4 `docs/d5-cargoflow-delivery-design-2026-11-04.md:202-218`,
+  package comment `main.nut:447-449`) inverted the two surfaces; the
+  design's own E97 window bound (`funds 485221 → 485214`) is
+  reproduced exactly by the display-421 billing arithmetic and had no
+  contradiction with it — the bound was validated at the core surface
+  and misapplied to the script surface.
+- **Emitter path certified (Track A):** request→`CargoFlow2Handle`
+  (`main.nut:1235`)→shape/echo admission (passed — the response's
+  echo table comes from the decoded wire request, `:1265-1273`, so
+  `engine:123` decoded correctly; `plan == f991a440…55d4e` == seal)→
+  `EngineOp` (`:421`)→pin gate passed (`:427-429`)→`IsBuildable`
+  passed (`:432-437`, else `UNAVAILABLE_ENGINE`)→**census join fails
+  on the running-cost member → `ENGINE_PIN_MISMATCH` at `:453`**→
+  refusal frame echo-only (`StripObservations` discipline, `:382-387`;
+  observed frame `engine-00-response.json` carries zero census keys)→
+  Python halt ladder `ENGINE_PIN_MISMATCH ∈ FAILURE_STATUSES`
+  (`corridor_cargoflow2.py:208/:250`)→`HALTED_BEFORE_MUTATION`
+  (`:1662/:1680`)→`PHASE_HALTED_PREFIX_PRESERVED` + replay
+  `PHASE_HALTED_EVIDENCE_PRESERVED` (E110).
+- **Refuted alternatives (all with receipts):** incorrect engine ID
+  (echo + plan==seal); translation/indexing (same binary-pinned id
+  read identically by both languages, no offset arithmetic);
+  unavailable/not-buildable/company-gated (v2 candidate-5/-6
+  `engine-00` READY + `purchase-00` BUILT charged exactly 4429 on the
+  same world bytes `183b2027…6a6`, company 0); wrong category
+  (VT_ROAD, COAL, capacity 20, speed 48, `road_type 0`); serialization
+  mismatch (typed response, echoes verbatim, protocol 11); staged/
+  source divergence (E108 45/45 byte audit; runtime behavior == the
+  reviewed bytes' own branch behavior); binary/content-version
+  (same binary across E8/attempt19/v2 candidates/candidate-2);
+  world-value divergence as root cause (only the fifth member is
+  world-bound; ALL its possible values fail the join — A1's own value
+  among {421, 562, 632} stays UNPINNED offline, bounded, and
+  immaterial to the verdict).
+- **Mutation/halt semantics (Track E):** `state_changed=true`
+  (`corridor_cargoflow2_native.py:1575`, "the pinned chain mutates")
+  is Python bookkeeping set after the first positively-verified
+  exchange (site-00), a channel/instance-state assertion, not a
+  measured map delta; `HALTED_BEFORE_MUTATION` is the generic
+  fail-closed label for any failed exchange and covers only the
+  failed frame (EngineOp mutates nothing; `this.engine_id` only on
+  success `:464-466`); `SiteOp` stays observation-only with the
+  T-007 road-type re-pin a GS context set; `session-before.sav`
+  `38dfa1a2…` ≠ `after-diagnostic.sav` `b0aa2383…` — the unpaused
+  epoch-day advance 712223→712228 is the documented clock behavior;
+  content-level save-delta attribution beyond that: UNKNOWN, not
+  inferred.
+- **Residual unknowns of record:** A1's in-save `economy.inflation`
+  truthiness (design-only claim; corroborated offline by identical
+  421/4429 across two independently generated worlds at mid-1951
+  dates); A1's own running display among {421, 562, 632}; the
+  after-diagnostic save content delta; whether any allowed settings
+  combination could push the script running display ≥ 107,777
+  (bounded NO for this binary).
+- **Minimal corrective direction (not executed here):** compare
+  display==display — GS join `raw != this.RUNNING_DISPLAY_PIN` (drop
+  the second `>> 8`; keep the ≤2^31 sanity guard and fail-closed
+  admission), Python mirrors `:1014` and `:1153` same; reword the
+  inverted §4/comment premises (`main.nut:447-449`,
+  `corridor_cargoflow2.py:109-110`); pin stays 421; no weakening of
+  any other refusal.
+- **Required regression tests for the future fix:** VM suite —
+  engine-00 must reach READY with echoed `running_cost == 421` on a
+  stub world whose `GetRunningCost` returns 421, and refuse any other
+  value; wire tests — a READY frame with `running_cost 107,776` must
+  be REFUSED (the old second-shift arithmetic would accept it:
+  inversion regression lock), `421` accepted; `admit_running_cost` —
+  accepts 421, refuses 0 and 107,776; wire-to-nut pin binding — no
+  second shift remains on the running-cost census member; funds-model
+  §4.1 arithmetic unchanged (display/365).
+- **Dependencies:** T-005 round 2 (E110 terminal halt).
+- **Acceptance criteria (this ticket):** emitter identified to line
+  + source level; engine-123 semantics established as far as offline
+  evidence permits; contract vs 15.3 semantics reconciled; mutation/
+  halt semantics separated; historical comparison documented;
+  hypotheses dispositioned with evidence; root cause + confidence
+  stated (CONFIRMED, no native run needed); residual unknowns
+  explicit; corrective direction, regression tests and the
+  next-ticket proposal documented; no forbidden touch; authority pins
+  intact.
+- **Required evidence:** E111.
+- **Validation procedure:** read-only reconstruction from staged
+  artifact of record (candidate-2, seal `f991a440…55d4e`), retained
+  sibling/precedent evidence, and upstream sources fetched read-only
+  at tag 15.3 (= pinned binary version); integrity close per
+  `REPRODUCE.md` (`git diff --check`, CONTEXT pin, manifest
+  re-verification — executed; clean).
+- **Risks and approvals:** the corrective fix itself is NOT executed
+  on this ticket (operator approval required); a fresh candidate
+  round 3 (staging → review → Gate C → one launch) remains the only
+  native validation path; nothing scheduled.
 
 ### T-020 — M8 route selection demonstrated on the corridor
 
@@ -359,3 +691,666 @@ readiness, outside this round's PoC definition.
     touched paths; ``ty`` clean on the test file alone (pair prints the
     single inherited connect diagnostic); ``git diff --check`` clean;
     CONTEXT.md sha pin ``36648f9c2fee4106…`` intact.
+- 2026-11-04 — T-002 read-only staging-readiness verification: no drift.
+  Staging module digest == E100 (``f72fbcb7bf58de1c…``); wire contract
+  ``2e652d62…``, package ``ffc8f030…``/``ecc5c50b…`` present; protocol
+  pins intact (protocol 11, identity/schema/candidate dir of record);
+  depot prerequisite ``after.sav`` re-digested == ``183b2027…6a6``; no
+  ``*cargoflow2*`` artifact existed (fresh candidate); budgets pinned
+  upstream (requests 32 / day 60 / max_cost 5000 / funds 489650 /
+  launch 1); frozen inputs on disk (SEED17 ``frozen-source.zip``,
+  OpenGFX ``opengfx-8.0-all.zip``, binary digest ``276d5b69…904c``,
+  no openttd process); ``git diff --check`` clean; ``CONTEXT.md`` pin
+  ``36648f9c2fee4106`` intact. REPRODUCE.md has no ``cargoflow2``
+  entries — precedent-consistent (protocols 8/9/10 rounds also record
+  invocations in E-rows); exact invocations recorded below.
+- 2026-11-04 — T-002 Gate 2 staging executed under explicit operator
+  approval (one `prepare` + read-only `preflight`/`verify`, stop before
+  T-003; approval offered as a structured choice, answer recorded):
+  - ONE `prepare` → ``PRELAUNCH PASS
+    artifacts/experiments/d5-corridor-cargoflow2-native-candidate-1``
+    first attempt; standalone `preflight` → ``PREFLIGHT PASS`` exit 0;
+    pre-auth `verify` →
+    ``{"authorization_state": "CLAIM_ABSENT", …,
+    "verification": "AUTHORIZATION_UNVERIFIED"}`` exit 1 by design.
+  - Staged root exactly 4 entries (``PRELAUNCH.json``,
+    ``PRELAUNCH.sha256``, ``graphics-identity.json``, ``isolated/``);
+    no gate files (no AUTHORIZATION/CLAIM/LAUNCH-CONSUMED). Seal of
+    record ``c7a1c5d54e1c277410661f36b0af014a40f5c096c7b2bf579b533a63b389333b``
+    == sidecar byte-exact, re-digested after every later step
+    (unchanged). No ``artifact-manifest.sha256`` yet (family precedent:
+    none is owed pre-launch; it appears with the launch receipts).
+  - ``PRELAUNCH.json`` of record: schema ``d5-cargoflow2-prelaunch-v1``,
+    milestone ``D5-CARGOFLOW``, kind ``cargoflow2``, attempt
+    ``D5-CARGOFLOW-2``, candidate dir of record; binary
+    ``276d5b698a6b…`` argv-pinned; ports game 52075 / admin 34135;
+    fresh staged public key ``4547cc22c28bcb96…`` (secret retained
+    0600 inside the candidate workspace only). Frozen inventory 3502
+    entries incl. all four
+    ``d5_cargoflow2_package``/``road_company_package`` ``.nut`` files;
+    staged source world = the depot ``after.sav``
+    (``PREREQUISITE_ATTEMPT_SOURCE_SAVE_LOAD``, digest-bound).
+  - Plan of record: plan digest ``5c0998f2d164198e2545ebd9709b2ae32afdbc3d4ef4dc8a7188a202e3f0bf2d``
+    + plan model digest; ``schedule_version 1``; exactly 25 exchanges
+    (11 fixed ``offset -1`` chain
+    site→engine→purchase→vread→order×2→order-read→monitor→start→vread,
+    ``arrive-00`` watch bounded 5 days, ``flow-00…11`` at offsets
+    0..55 step 5, tails ``finance-00``/``finish-00`` at offset 55);
+    ladder grid schema ``d5-cargoflow2-ladder-grid-v1`` equality-gated
+    5+55 = 60. Budgets: requests 32, launches 1, retries 0, reconnects
+    0, 512/1400 B, 900 s, funds 489650, max_cost 5000, watch 2048
+    ticks/60 s.
+  - Funds model ``d5-cargoflow2-funds-model-of-record-v1`` staged:
+    exact purchase debit 4429, monthly interest + 25 station fee at
+    economy-month boundaries, per-day running costs with the exact 8.8
+    fraction carry, income at the same observation instants; the Feb 1
+    charge of record 167+25 = 192 (489650 → 489458) is the
+    E99-replicated cross-check.
+  - Hypotheses ``RETAINED_PROBE_REBOUND``: the 7-sample E99 prefix
+    re-bound (source ``artifacts/experiments/d5-corridor-cargoflow-native-candidate-1/result.json``,
+    ``774967a9a57f14dd…``); verdicts never previously bound.
+  - Read-only policy ``d5-cargoflow2-readonly-v1``; cost-bearing
+    surface = the quote-first ``purchase`` only. World block: tiles
+    45748/50862/45487 (+ fronts 45747/50863/45743), sids 0/2,
+    industries 0/1, cargo 1, engine 123, loan 100000, rate 2, launch
+    day 712228, welcome ``start_day 712223`` seed 17 revision 15.3
+    256×256.
+  - Prerequisite block: attempt ``D5-F12-DEPOT-3``, after-save
+    ``183b2027…6a6`` == the pinned world pin, prerequisite prelaunch
+    ``4df12e1f…``, schema ``d5-native-prerequisite-attempt-v1``;
+    provenance chain: A1 lineage after-save ``3748e00c…20bd``, depot
+    chain, reload receipt (``funds_of_record 489650``, ``fleet_of_record 0``),
+    world-pin version 3.
+  - 0 manifest mismatches; no terminal identity touched; historical
+    zones byte-untouched; writes confined to the fresh candidate dir;
+    the reserve/check gate re-verified no other openttd process.
+- 2026-11-04 — T-003 independent read-only review of the staged bytes
+  under explicit operator approval (no modification, no signing, no
+  launch; stop before Gate C):
+  - Fresh re-derivation audit `/tmp/opencode/t003_review_cargoflow2_c1.py`
+    (output `/tmp/opencode/t003_review_output.txt`): **42/42 checks
+    PASS exit 0**, verdict **READY-FOR-GATE-C**, zero reconciliation
+    debt. Every assertion re-derived from disk/live modules, then
+    asserted against the staged bytes; production
+    `cargoflow2_preflight`/`verify_cargoflow2_attempt` re-executed
+    inside the audit (read-only) reproducing `PREFLIGHT PASS` and
+    `AUTHORIZATION_UNVERIFIED`/`CLAIM_ABSENT` exit 1; seal re-digested
+    unchanged at audit end (`c7a1c5d5…333b` == sidecar).
+  - Re-derived bindings of record: 4-entry staged root, no gate files;
+    identity quartet (schema `d5-cargoflow2-prelaunch-v1`, attempt
+    `D5-CARGOFLOW-2`, candidate dir, milestone/kind) == live module
+    pins; `plan_policy` == live `cargoflow2_plan_policy()` deep-equal
+    (plan digest `5c0998f2…0bf2d` re-confirmed); 25-exchange schedule
+    exact-by-name; ladder grid equality 5+55 = 60 (`tail_offset` 55 +
+    `arrival_bound_days` 5); welcome `seed 17`/`start_day 712223`/
+    revision 15.3 256×256; world tiles/sids/industries/engine 123/
+    quote 4429/funds 489650/loan 100000/rate 2/fee 25/launch 712228
+    == live wire constants; budgets (32/1/0/0, 512/1400 B, 900 s,
+    watch 2048-60) == live `cargoflow2_budgets()`; funds model schema
+    `…v1` with the 8.8 carry and Feb-1 192 cross-check statements;
+    hypotheses `RETAINED_PROBE_REBOUND` == live output with source
+    digest re-measured `774967a9…`; prerequisite re-pinned on disk:
+    depot after-save `183b2027…6a6`, depot prelaunch `4df12e1f…`,
+    reload receipt (funds 489650/fleet 0/loaded digest 3-way), A1
+    lineage `3748e00c…20bd`, world-pin version 3, staged
+    `source.sav` byte-equal; staged composition: AI pair + the
+    delivery `main.nut` byte-equal to live roots, frozen inventory
+    3502 entries with zero post-staging package drift; GameScript
+    identity `info.nut` == the retained `frozen-source.zip` member
+    (`staged/info.nut`, `fb7ca0ca…`) — the shipped package
+    `info.nut` is intentionally a different file (save-restore identity
+    of record); bridge class + `D5_CARGOFLOW2_READY` marker +
+    `cargoflow2_planned` present in the staged delivery handler
+    bytes.
+  - Disclosures: (a) the review was executed in-session under the
+    operator's T-003 approval, following the E98/E99 re-derivation
+    precedent; the ticket's "separate reviewer" line is satisfied by
+    the fresh-context re-derivation script rather than a second
+    session — recorded openly as a disclosed deviation the operator
+    committed by this approval. (b) Zero staged defects; three
+    audit-script incidents self-caught before any claim: run-1
+    KeyError on a misread grid key (`tail_offset`/`flow_samples`,
+    not `flow_span_days`); run-2 reported a composition mismatch
+    because the check wrongly required the staged GameScript
+    identity `info.nut` to equal the shipped package's `info.nut` —
+    production `staged_cargoflow2_composition()` stages the
+    frozen-source.zip member by design; run-3 dropped an unavailable
+    E99-byte corroboration (the consumed probe's certified cleanup
+    disposed its workspace; its `isolated/` retains no `.nut` bytes).
+    (c) The E99-probe hypothesis source remains read-only-rebound
+    only; nothing reopens it.
+  - NEXT: T-004 Gate C Option-1 signing (operator gate; payload binds
+    `D5-CARGOFLOW-2` to the freshly staged candidate seal
+    `c7a1c5d5…333b`; no authorization reuse across candidates).
+- 2026-11-04 — T-004 Gate C Option-1 signing executed under explicit
+  operator approval (ONE signing operation + read-only verification;
+  stop before T-005; no launch):
+  - Fresh signer script `/tmp/opencode/t004_gate_c_cargoflow2.sh`
+    (re-derived per-round on the E98/E99 signer precedent; the
+    candidate-bound e98 script is never reused). Pre-write refusal
+    gates: gate surface absent (AUTHORIZATION.json/CLAIM.json/
+    LAUNCH-CONSUMED.json/receipt.json/result.json/runtime-identity.json),
+    live seal == sidecar == the operator-approved seal of record
+    `c7a1c5d54e1c277410661f36b0af014a40f5c096c7b2bf579b533a63b389333b`
+    (hard-asserted against the seal named in the approval).
+  - Seed mechanics identical to E99: memory-only extraction from the
+    operator-held PEM outside the repository (48-byte PKCS#8 DER,
+    final-32-bytes window of record), env-only
+    `CARGOFLOW_GATE_SEED`, never printed/never filed/never
+    argument-passed; pre-write identity asserted
+    (`public_from_seed(seed)` == pinned anchor `5063982bd28d…880f`);
+    env unset + printenv-empty verified after. One invocation, no
+    pre-write refusal needed (the measured window was already the E99
+    corrected one).
+  - Production signing surface only:
+    `authorization_payload(metadata, seal)` +
+    `canonical_authorization_bytes` + `sign_authorization_record` +
+    `write_authorization_record` + `verify_authorization`; payload
+    digest of record
+    `3d787802c0f0d3fda825ffb86d6a4c29b3de1f97df43820d641423c2da361661`
+    cross-checked == production
+    `staged_cargoflow2_authorization_payload_digest(candidate)`;
+    `AUTHORIZATION.json` record digest
+    `427bbdb4103022ba95bd2f5d5f91bff5e5bd23d78a364d96ffac3d1261793cdc`;
+    operator identity unchanged
+    `sha256-ed25519-public-key:cbb63ff58f17f13df3e1be0735fad18497e3a0c6ad6b5dd55491d708ae40c614`.
+  - Post-write read-only state of record: root = 5 top-level entries
+    (`AUTHORIZATION.json` joins the 4 staged entries; no CLAIM.json,
+    no LAUNCH-CONSUMED.json); seal byte-equal after the write;
+    `preflight` PASS with the authorization present; standalone
+    pre-launch `verify` → `AUTHORIZATION_UNVERIFIED` / `CLAIM_ABSENT`
+    exit 1 as designed (the claim is minted only at the launch
+    boundary; the lifecycle advanced by the presence of the verified
+    authorization record).
+  - Zero staged defects, zero re-writes: the signing completed in
+    invocation-1; one auxiliary reproduction incident self-caught
+    (the script's post-write block passed a relative candidate path,
+    and `terrain_clearing.reopen` keeps the passed path unresolved,
+    so `is_relative_to` refused in that auxiliary block only; the
+    rerun of the read-only post-state used the resolved path exactly
+    as the T-003 audit did and passed). The signing itself was never
+    repeated.
+  - NEXT: T-005 launch gate — ONE launch of the signed candidate at
+    the pinned binary/OpenGFX versions, then read-only replay +
+    cleanup. Requires its own explicit operator approval; nothing
+    scheduled.
+- 2026-11-05 — T-005 launch gate executed under explicit operator
+  approval (exactly ONE native launch + read-only replay + certified
+  cleanup; no retries, no relaunches, no second attempt; stop after
+  final reporting):
+  - Pre-launch gates re-verified fresh (nothing stale): live seal ==
+    sidecar == the operator-approved seal of record
+    `c7a1c5d54e1c277410661f36b0af014a40f5c096c7b2bf579b533a63b389333b`;
+    pinned binary sha256 `276d5b69…904c`; OpenGFX
+    `43a0c1dabf39cb86…10903be`; no openttd process; candidate root =
+    5 entries (AUTHORIZATION.json + 4 staged); no
+    CLAIM.json/LAUNCH-CONSUMED.json yet.
+  - Launch command of record (E82/E99 invocation shape), executed
+    exactly once: export `OPENTTD_BINARY=/home/fed/Downloads/openttd-15.3-linux-generic-amd64/openttd`
+    and `OPENTTD_OPENGFX_ARCHIVE=/home/fed/codes/softdev2/artifacts/runtime/verified-assets/opengfx-8.0-all.zip`
+    before Python starts, then
+    `.venv/bin/python -m app.simulation.openttd.proof.corridor_cargoflow2_native run /home/fed/codes/softdev2/artifacts/experiments/d5-corridor-cargoflow2-native-candidate-1`.
+    **`run` return code of record: 1.**
+  - Run outcome of record: `status=PHASE_HALTED_PREFIX_PRESERVED`,
+    `returncode=0`, `preflight=PASS`, `native_launches=1`
+    (== budget), `connections=1` (== budget), `requests=1`,
+    `exchanges=[]`, `command_accepted=false`, `state_changed=false`,
+    `verified=false`; halt
+    `{"label":"site-00","error":"ValueError: the delivery exchange site-00 failed verification: cargo-flow 2 exchange site-00 ended INVALID_SITE"}`;
+    phase verdict `CARGOFLOW2_GATE_UNDECIDED_INCOMPLETE`.
+    Exchange `site-00-request.json` (op=site, protocol 11, depot
+    `45487`, pickup `45748`, delivery `50862`, plan ==
+    the candidate seal) → `site-00-response.json` status
+    **`INVALID_SITE`**; server stderr decisive line
+    `D5_CARGOFLOW2 site-00 INVALID_SITE` before admin disconnect.
+    Prefix preserved: all 26 later steps remained pending
+    (engine-00 … finish-00); the halt class is terminal — nothing
+    relabeled, nothing retried, no relaunch.
+  - Read-only replay of record, executed once:
+    `.venv/bin/python -m app.simulation.openttd.proof.corridor_cargoflow2_native verify /home/fed/codes/softdev2/artifacts/experiments/d5-corridor-cargoflow2-native-candidate-1`
+    → **`{"verification":"PHASE_HALTED_EVIDENCE_PRESERVED","failed":{"label":"site-00","status":"INVALID_SITE","world_state":"HALTED_BEFORE_MUTATION",…},"result_status":"PHASE_HALTED_PREFIX_PRESERVED"}`,
+    exit 1** — the replay verdict reconciles the run verdict exactly;
+    no retry on halt; consumed identity never relaunched.
+  - Post-run read-only state of record: root grew to 19 top-level
+    entries (`CLAIM.json`, `LAUNCH-CONSUMED.json`, `frames.json`,
+    `cleanup.json`, `result.json`, `runtime-identity.json`,
+    `session-before-identity.json`, `session-before.sav`,
+    `site-00-request.json`, `site-00-response.json`, `stdout.log`,
+    `stderr.log`, `artifact-manifest.sha256` join the staged 5 +
+    `isolated/`);
+    `LAUNCH-CONSUMED.json` of record
+    `{"authorization_sha256":"427bbdb4…793cdc","operator_key_identity":"sha256-ed25519-public-key:cbb63ff5…40c614","prelaunch_digest":"c7a1c5d5…333b","schema":"d5-native-launch-consumed"}`;
+    `CLAIM.json` of record
+    `{"authorization_schema":"d2-clearing-claim-authorization-v2","consumed":true,"launches_allowed":1,"retries":0}`
+    with the same record/identity bindings. Pre-launch seal
+    `PRELAUNCH.json` byte-equal after the run;
+    `artifact-manifest.sha256` re-verified 16/16 OK, 0 non-OK.
+  - Certified cleanup of record: `cleanup.json`
+    `reaped=true`, `sockets_closed=true`, `workspace_disposed=true`,
+    `credential_removed=true`, `cleanup_error=[]`,
+    `remaining_processes=[]`, `returncode=0`, `graceful_attempted=true`
+    (`quit_requested` → `reaped`), endpoint verification
+    `connection_closed=true`, `listener_closed=true`,
+    `process_reaped=true`, `reservation_released=true`, and a TCP
+    `TIME_WAIT` kernel state on the admin-port tuple with
+    `immediate_rebindability_required=false`
+    (policy `linux-kernel-endpoint-closure-v1`); no openttd process
+    after the run.
+  - Integrity close-out: `git diff --check` clean; `CONTEXT.md` pin
+    `36648f9c2fee4106` intact; historical zones untouched; no
+    commit/push; staged bytes untouched apart from the pipeline-written
+    post-launch artifacts; no standalone scripts used (CLI of record
+    only).
+  - NEXT: T-006+ downstream gates (verdict reconciliation → M8 → …)
+    require their own explicit operator approval; nothing scheduled;
+    the consumed candidate-1 lifecycle can never be relaunched.
+- 2026-11-05 — T-006 read-only root-cause diagnosis executed under
+  explicit operator approval (read-only only; no source edits, no
+  restaging, no signing, no native run, no credential reads, no Git
+  mutations; preserve terminal verdicts; consumed candidate-1 never
+  relaunched or reconnected):
+  - Outcome class of record (T-006's own §7 reconciliation): NOT
+    achieved — halted at the first of 26 exchanges with
+    `state_changed=false`/`HALTED_BEFORE_MUTATION`; per this ticket's
+    rule the capture-fix round opens with a fresh identity and design
+    record, never a relabel or reopen of the terminal attempt.
+  - Dispatch path exclusion of record: `d5_cargoflow2_package/
+    main.nut` has two `INVALID_SITE` emitters — (1) the pre-ladder
+    pin-drift gate (`CargoFlow2PinsDrifted`, line 300 — request echoes
+    `pickup 45748 / delivery 50862 / depot 45487 / offset -1` are
+    byte-equal the baked GS pins, planned-op/offset match, excluded);
+    (2) the seven-fact live re-derivation inside `SiteOp` (lines 393–399
+    `GetStationID(pickup)==PICKUP_SID 0`, `GetStationID(delivery)==
+    BAY_SID 2`, `IsValidStation 0/2`, `IsValidIndustry 0/1`,
+    `IsRoadDepotTile(depot_tile)`). Caught-exception refusals are
+    logged `D5_CARGOFLOW2_THROW` + `UNSUPPORTED_NATIVE_FACT`
+    (catch at the dispatch) — stderr has no `D5_CARGOFLOW2_THROW`, so
+    the refusal of record was a normal `SiteOp` join return.
+  - **Root cause of record (high confidence):** the failing package's
+    `SiteOp` calls `GSRoad.IsRoadDepotTile(this.depot_tile)` **without
+    ever calling `GSRoad.SetCurrentRoadType(GSRoad.ROADTYPE_ROAD)`**
+    (grep of record: 0 occurrences of `SetCurrentRoadType` in
+    `d5_cargoflow2_package/main.nut` vs ≥1 in every worked
+    predecessor — `d5_freight_v2_package/main.nut`:1694 (in `Handle`,
+    before every op), `d5_depot_mutation_package/main.nut`:173,
+    `d5_depot_recheck_package/main.nut`:242,
+    `d5_extension_package/main.nut`:1016, freight v1 `vehicle.nut`:139
+    (+ its defensive `GetCurrentRoadType()!=0` guard)). Upstream
+    OpenTTD **15.3** source of record (tag of the pinned binary
+    `276d5b69…904c`): `src/script/script_storage.hpp` —
+    `RoadType road_type = INVALID_ROADTYPE;` (**every fresh script
+    instance starts with no road type set**); `src/script/api/
+    script_road.cpp` `ScriptRoad::IsRoadDepotTile` —
+    `if (!IsRoadTypeAvailable(GetCurrentRoadType())) return false;`
+    → the seventh join member evaluates false **deterministically,
+    independent of the world**.
+  - **No identity failed validation** (the evidence of record):
+    identical launched world bytes (`183b2027…6a6` = depot-mutation-3
+    after-save, staged + preflight-verified at `source.sav`; welcome
+    identity `seed 17 / start_day 712223 / revision 15.3` matching all
+    retained chain sessions) measured live-true by the same-session
+    precedent `d5-corridor-freight-native-candidate-5` (its own
+    `site-00-response.json`, v2 handler which DOES set the road type
+    first): `sid0=0` `truck0=true` (pickup stop 45748 ⇒ station 0),
+    `sid1=2` `truck1=true` (A1 bay 50862 ⇒ station 2),
+    `pickup_industry=0` count 1, `delivery_industry=1` count 1,
+    `depot_ok=true` `depot_edge=true`, `funds=489650` == pinned
+    close-out funds, `status=READY`. The extension-3 chain independently
+    confirmed bay tile 50862 carries `sid=2` (`confirm-03-response.json`)
+    and the depot chain confirmed depot 45487 (`depot-00-response.json`,
+    `after-00`: depot_present/linked, front 45743). The halted session
+    advanced no ticks against the pinned instant (`state_changed=false`,
+    launch-day/site exchange ran within the same second as the READY
+    banner); nothing mutated.
+  - **Which identity failed?** None. The falsified member is the
+    road-depot tile **predicate** on depot 45487 — its
+    road-type-availability precondition, falsified by the unset
+    per-instance road type of the fresh GS instance — not the depot,
+    not the pickup stop, not the delivery bay, not either industry.
+  - Confidence: **high** for the class (two-source 15.3 proof +
+    family Set-before-Get precedent + same-world live-measure
+    superset); the residual (UNKNOWN, not guessable offline): the exact
+    live `GetCurrentRoadType()` value inside the failing instance can
+    never be re-measured (one-launch-of-record spent; no secondary
+    native run permitted) — the determination rests on the released
+    15.3 source of the exact tagged binary.
+  - Integrity close-out: read-only reads only; no source files edited;
+    no `artifacts/` bytes touched; `git diff --check` clean;
+    `CONTEXT.md` pin `36648f9c2fee4106` intact; secrets/keys untouched.
+  - NEXT (T-007, needs operator approval): single-package GSRoad
+    sequencing fix inside `d5_cargoflow2_package/main.nut` `SiteOp`
+    (Set-before-Get ROADTYPE_ROAD on the family idiom), then a full
+    fresh candidate cycle (T-002 staging → T-003 review → T-004 Gate C
+    → T-005 ONE launch) under the same gate discipline with a fresh
+    candidate identity and seal; candidate-1 stays sealed consumed;
+    nothing relabeled, nothing relaunched, nothing scheduled.
+- 2026-11-05 — T-007 executed under explicit operator approval (the
+  fix itself only; no staging, no signing, no candidate creation, no
+  OpenTTD launch, no historical evidence modification, no Git
+  mutations, candidate-1 untouched):
+  - Package fix of record (`app/simulation/openttd/` `d5_cargoflow2_package/main.nut`):
+    inside `SiteOp`, before the `/* Re-pin gate: */` join, a five-line
+    comment of the T-006 root cause plus
+    `GSRoad.SetCurrentRoadType(GSRoad.ROADTYPE_ROAD)` — the freight v2
+    `Handle`:1694 family idiom. Grep of record: one GSRoad consumer in
+    the package (`IsRoadDepotTile` join member at >399); the
+    `cargoflow2_planned` pin table, guards, echoes, catch branch and
+    every other package byte unchanged.
+  - Regression model of record
+    (`tests/test_corridor_cargoflow2.py`): the stub GSRoad gains the
+    15.3 fail-close behavior on the depot-mutation E72 stub idiom —
+    `::cur_road_type <- 63` default (INVALID_ROADTYPE),
+    `IsRoadTypeAvailable(t) == (t == ROADTYPE_ROAD)`,
+    `SetCurrentRoadType` silently no-ops an unavailable type,
+    `GetCurrentRoadType`, and `IsRoadDepotTile` gated on
+    `IsRoadTypeAvailable(GetCurrentRoadType())`. Consequence: the
+    pre-fix package bytes now fail the VM suite, so the suite is a
+    true regression lock for this defect class.
+  - Offline validation of record: `tests/test_corridor_cargoflow2_vm.py`
+    + `tests/test_corridor_cargoflow2.py` → **87 passed** (1.32 s);
+    `tests/test_corridor_cargoflow2_native.py` → **37 passed** (73.69
+    s; offline native checks only, including the wire-to-`nut` pin
+    binding regex test — it binds the planned-row/pin-table shapes,
+    which the fix does not touch). Static checks of record:
+    `ruff check tests/test_corridor_cargoflow2.py` → "All checks
+    passed!"; `uvx ty check` on the touched path → "All checks
+    passed!"; `git diff --check` → clean.
+  - Diff close-out of record: 4 files changed (+433/−7 across this
+    round's ledger rows and the two fix files); exact hunks verified
+    in `git diff` (main.nut +6: 5 comment lines + the Set line;
+    test_corridor_cargoflow2.py: init default + the full fail-close
+    GSRoad class); `CONTEXT.md` pin `36648f9c2fee4106` intact.
+  - Sealing note of record: `staged_cargoflow2_composition()` stages
+    this `main.nut`, so the NEXT candidate's composition digest and
+    PRELAUNCH seal differ from the consumed candidate-1 bytes
+    (`c7a1c5d5…333b`, sealed historical evidence, untouched); the
+    next Gate C round derives its own fresh seal.
+  - NEXT (needs its own operator approval): fresh candidate cycle
+    T-002 staging → T-003 independent review → T-004 Gate C signing →
+    T-005 ONE launch under the unchanged gate discipline; nothing
+    scheduled, nothing relabeled, nothing relaunched. Evidence index
+    E106.
+- 2026-11-05 — T-002 round-2 staging executed under explicit operator
+  approval (ONE `prepare` + read-only `preflight`/inline + standalone
+  `preflight` + pre-auth `verify`; stop before T-003; never reuse
+  candidate-1; no signing, no launch, no reconnection, no historical
+  evidence modification, no Git mutations):
+  - Identity advance of record: the pipeline's candidate-dir-of-record
+    constant advanced
+    `d5-corridor-cargoflow2-native-candidate-1` →
+    `d5-corridor-cargoflow2-native-candidate-2` (the T-007 fix cycle's
+    own round identity; comment records candidate-1 as sealed consumed
+    history). No other pipeline byte edited. Focused suites re-run
+    green on the edited module: `tests/test_corridor_cargoflow2_native.py`
+    → 37 passed (63.16 s), `tests/test_corridor_cargoflow2_vm.py` +
+    `tests/test_corridor_cargoflow2.py` → 87 passed (1.29 s);
+    `ruff check` on the touched module → clean; `uvx ty check` on the
+    module → 1 PRE-EXISTING diagnostic only (`invalid-method-override`
+    at the `connect` method, line 1176 — outside this round's edit,
+    which is a string constant; disclosed, not repaired, no behavior
+    change).
+  - ONE `prepare` → ``PRELAUNCH PASS
+    artifacts/experiments/d5-corridor-cargoflow2-native-candidate-2``
+    first attempt, exit 0; standalone `preflight` → ``PREFLIGHT PASS``
+    exit 0; pre-auth `verify` →
+    ``{"authorization_state": "CLAIM_ABSENT", …,
+    "verification": "AUTHORIZATION_UNVERIFIED"}`` exit 1 by design.
+  - Staged root exactly 4 entries (``PRELAUNCH.json``,
+    ``PRELAUNCH.sha256``, ``graphics-identity.json``, ``isolated/``);
+    no gate files (no AUTHORIZATION/CLAIM/LAUNCH-CONSUMED/artifact
+    manifest). Seal of record
+    ``f991a440de773b350a134db528d1ddef528c527ab893d2b5cce2e8fd00255d4e``
+    == sidecar byte-exact, freshly derived from the fixed composition
+    and ≠ candidate-1's ``c7a1c5d5…333b``.
+  - Identity of record in the fresh ``PRELAUNCH.json``: schema
+    ``d5-cargoflow2-prelaunch-v1``, milestone ``D5-CARGOFLOW``, kind
+    ``cargoflow2``, attempt ``D5-CARGOFLOW-2``,
+    candidate_directory ``d5-corridor-cargoflow2-native-candidate-2``,
+    binary ``276d5b69…904c`` argv-pinned, fresh staged public key
+    ``8554728676a19efb…``, ports game 60131 / admin 59411, workspace
+    ``isolated/openttd-15.3-xkikmt5i``; frozen inventory 3502 entries;
+    world block = the pinned depot after-save prerequisite
+    ``183b2027…6a6`` (``PREREQUISITE_ATTEMPT_SOURCE_SAVE_LOAD``,
+    welcome ``seed 17 / start_day 712223 / revision 15.3``); budgets
+    byte-identical the round-1 plan of record (requests 32, launches
+    1, retries 0, reconnects 0, funds 489650, max_cost 5000, watch
+    2048 ticks/60 s, day 60).
+  - **Fix-carry proof of record:** staged
+    ``isolated/openttd-15.3-xkikmt5i/game/RoadFreightProof/main.nut``
+    digest ``2c7f6b09e87d6ebf…`` == the frozen inventory entry, and
+    the staged bytes contain ``GSRoad.SetCurrentRoadType`` (the T-007
+    fix) — the composition digest necessarily differs from
+    candidate-1's staged main ``ffc8f030cc4b2620…`` (pre-fix bytes),
+    so candidate-2 is a genuinely new composition, not a relabel.
+  - Read-only policy held: ``PRELAUNCH.sha256`` unchanged after the
+    standalone preflight and verify steps; candidate-1 re-digested
+    byte-identical ``c7a1c5d5…333b`` (sealed consumed, untouched);
+    writes confined to the fresh candidate-2 directory.
+  - NEXT (T-003, needs its own operator approval): independent
+    read-only review of the staged round-2 candidate; nothing
+    scheduled, nothing relaunched. Evidence index E107.
+- 2026-11-05 — T-003 round-2 independent read-only review executed
+  under explicit operator approval (no file writes inside the repo, no
+  staging rerun, no signing, no claims, no OpenTTD launch, no
+  reconnection; candidate-1 and candidate-2 bytes untouched):
+  - Method of record: one fresh re-derivation script
+    `/tmp/opencode/t003_r2_review_cargoflow2_c2.py`
+    (output `/tmp/opencode/t003_r2_output.txt`) — 45 checks across
+    identity/seal/structure, source↔staged correspondence (incl. the
+    T-007 fix placement), binary/OpenGFX/world lineage, pins/budgets/
+    plan re-derivation, pipeline preflight + pre-auth verify
+    re-execution, environment confinement, absence of unauthorized
+    gate/launch artifacts. **45/45 PASS, verdict READY-FOR-GATE-C.**
+  - Review details of record: seal `f991a440de773b35…55d4e` ==
+    sidecar + unchanged after the whole review (re-digested);
+    staged `main.nut` byte-equal the app package AND contains the
+    T-007 fix exactly once, inside `SiteOp`, before the `/* Re-pin
+    gate: */` join; staged `info.nut` byte-equal the frozen
+    `staged/info.nut`; staged AI byte-equal the package; inventory
+    main-digest == recomputed staged digest `2c7f6b09e87d6ebf…` ≠
+    candidate-1's pre-fix `ffc8f030…`; binary digest pin, argv pins
+    (workspace cfg/source.sav/`-dscript=4,grf=1,net=3`), no openttd
+    process; `source.sav` == pinned depot-3 after-save
+    `183b2027…6a6`; welcome/pin/budgets/schedule/
+    schedule_version/ladder-grid/funds-model blocks re-derived equal
+    (plan digest + model digest re-computed from the live pipeline ==
+    staged values); hypotheses `RETAINED_PROBE_REBOUND` still bound to
+    the consumed protocol-10 receipt with its digest recomputed
+    byte-true; OpenGFX staged files re-digested == identity == zip;
+    `.admin-secret` mode 0600 asserted metadata-only (contents never
+    read), excluded from the frozen inventory; environment overrides
+    confined to the workspace; ports 60131/59411 sane+distinct;
+    `cargoflow2_preflight` re-executed PASS; `verify_cargoflow2_attempt`
+    re-executed → `AUTHORIZATION_UNVERIFIED`/`CLAIM_ABSENT` exit 1 by
+    design; root exactly 4 entries, no gate files, no run logs/saves
+    in the workspace; `save_policy` present. Script-side twos (a
+    comment-suffix search string and a schedule-row key name) were
+    corrected in the review script itself — the candidate needed zero
+    corrections; both script digests recorded above.
+  - Integrity close-out: candidate-1 seal re-digested
+    `c7a1c5d5…333b` == sidecar (untouched); candidate-2 seal
+    unchanged post-review; `git diff --check` clean; `CONTEXT.md` pin
+    `36648f9c2fee4106` intact.
+  - Residual risks of record (for T-004/T-005, not blocking): the E105
+    residual UNKNOWN (exact live road type of the failing instance)
+    remains unmeasurable offline — candidate-2 carries the fix whose
+    live effect shows only at the ONE Gate C launch; the pre-existing
+    `uvx ty` diagnostic (`invalid-method-override` at `connect`)
+    remains unfixed upstream noise; ports are allocated fresh at
+    T-005, so reuse of 60131/59411 is not guaranteed at launch.
+  - NEXT (T-004, needs its own operator approval): Gate C Option-1
+    signing on the round-2 candidate (fresh operator-held PEM, fresh
+    seed discipline — `CARGOFLOW_GATE_SEED` env-only, never
+    printed/filed/argument-passed); nothing scheduled, nothing
+    relabeled, nothing relaunched. Evidence index E108.
+- 2026-11-05 — T-004 round-2 Gate C Option-1 signing executed under
+  explicit operator approval (signing only; ONE signing operation +
+  read-only verification; stop before T-005; no claim, no launch, no
+  reconnection, no consumption, no historical evidence modification,
+  no Git mutations):
+  - Pre-write identity + seal re-verification of record (the fresh
+    round-2 signer script `/tmp/opencode/t004_gate_c_cargoflow2_c2.sh`,
+    per-round re-derivation on the E99/E98 signer precedent; the
+    candidate-1-bound `t004_gate_c_cargoflow2.sh` never reused):
+    gate surface absent (AUTHORIZATION.json/CLAIM.json/
+    LAUNCH-CONSUMED.json/receipt.json/result.json/runtime-identity.json),
+    live seal == sidecar == the operator-approved seal of record
+    `f991a440de773b350a134db528d1ddef528c527ab893d2b5cce2e8fd00255d4e`
+    (hard-asserted twice in the script, incl. the exact candidate-2
+    approval constant).
+  - Seed mechanics identical to E99/round-1: memory-only extraction
+    from the operator-held PEM outside the repository (48-byte PKCS#8
+    DER, final-32-bytes window of record), env-only
+    `CARGOFLOW_GATE_SEED`, never printed/never filed/never
+    argument-passed; pre-write identity asserted
+    (`public_from_seed(seed)` == pinned anchor
+    `5063982bd28d…880f`); env unset + printenv-empty verified after
+    (and outside the script session). Operator PEM contents never
+    read beyond the DER-body parse; no credential inspection beyond
+    that surface.
+  - Production signing surface only: `authorization_payload(metadata,
+    seal)` + `canonical_authorization_bytes` +
+    `sign_authorization_record` + `write_authorization_record` +
+    `verify_authorization`; payload digest of record
+    `3f489b183c819a4d76775e88490d27e915d41eb56a9f3652ff5b70da4ee55788`
+    cross-checked == production
+    `staged_cargoflow2_authorization_payload_digest(candidate-2)`;
+    `AUTHORIZATION.json` record digest
+    `45820767c462be4469e8a11f8ab9d351f5badba7ad544ac694e20bfd3277eeb9`;
+    operator identity unchanged
+    `sha256-ed25519-public-key:cbb63ff58f17f13df3e1be0735fad18497e3a0c6ad6b5dd55491d708ae40c614`.
+  - Post-write read-only state of record: root = 5 entries
+    (`AUTHORIZATION.json` joins `PRELAUNCH.json`/`PRELAUNCH.sha256`/
+    `graphics-identity.json`/`isolated/`; no CLAIM.json, no
+    LAUNCH-CONSUMED.json); seal `f991a440…55d4e` byte-equal after the
+    write; `preflight` PASS with the authorization present;
+    standalone pre-launch `verify` → `AUTHORIZATION_UNVERIFIED` /
+    `CLAIM_ABSENT` exit 1 as designed (the claim is minted only at
+    the launch boundary; the lifecycle advanced by the presence of
+    the verified authorization record).
+  - Zero staged defects, zero re-writes: the signing completed in
+    invocation-1 with no auxiliary incident (the round-1
+    relative-path lesson baked in — the post-write block uses the
+    absolute candidate path). No candidate bytes beyond
+    `AUTHORIZATION.json` were written; the PRELAUNCH seal
+    re-verified post-write.
+  - NEXT (T-005, needs its own explicit operator approval): ONE launch
+    of the signed candidate-2 at the pinned binary/OpenGFX versions,
+    then read-only replay + integrity sweep + certified cleanup;
+    nothing scheduled, nothing relaunched. Evidence index E109.
+- 2026-11-05 — T-005 round-2 launch gate executed under explicit
+  operator approval (exactly ONE native launch of candidate-2 +
+  read-only replay + integrity sweep + certified cleanup of record;
+  stop after final reporting; no retries, no relaunches, no
+  reconnections, no source edits, no second attempt, no historical
+  evidence modification, no Git mutations):
+  - Pre-launch gates re-verified fresh (nothing stale; per-round
+    script `/tmp/opencode/t005_r2_prelaunch_gates.sh`, E104
+    precedent): no openttd process; gate surface = exactly the 4
+    staged entries + `AUTHORIZATION.json` (+ `isolated/`), no launch
+    receipts; live seal == sidecar == the operator-approved seal of
+    record `f991a440de773b350a134db528d1ddef528c527ab893d2b5cce2e8fd0
+    0255d4e`; `verify_authorization` PASS via the production surface
+    (record `45820767…7eeb9`, payload `3f489b18…4ee55788` ==
+    `staged_cargoflow2_authorization_digest`, operator identity
+    `sha256-ed25519-public-key:cbb63ff5…40c614`); binary file
+    sha256 == pin `276d5b69…904c`; staged `source.sav` digest ==
+    the world bind `183b2027…efe6a6`; argv pins `-D127.0.0.1:60131` /
+    `-c cfg` / `-g source.sav` / `-dscript=4,grf=1,net=3`; budgets
+    `launches 1 / retries 0 / reconnects 0 / connection_attempts 1`;
+    OpenGFX-8.0 archive present → `T-005 R2 PRE-LAUNCH GATES: ALL
+    PASS`, one attempt.
+  - Launch command of record (E104/E82 invocation shape), executed
+    exactly once with `OPENTTD_BINARY` and `OPENTTD_OPENGFX_ARCHIVE`
+    exported before Python starts:
+    `.venv/bin/python -m app.simulation.openttd.proof.corridor_cargoflow2_native run /home/fed/codes/softdev2/artifacts/experiments/d5-corridor-cargoflow2-native-candidate-2`
+    → **run return code of record: 1**.
+  - Run outcome of record (verified terminal in the JSON of record):
+    `preflight=PASS`, `native_launches=1` (== budget), `connections=1`
+    (== budget), `requests=2`, `exchanges=["site-00"]`,
+    `command_accepted=true`, `state_changed=true`, `verified=false`,
+    `status=PHASE_HALTED_PREFIX_PRESERVED`. site-00 `READY` (day
+    712228 tick 14, funds 489650, income 0 — funds fence intact); the
+    E106/T-007 `GSRoad.SetCurrentRoadType` fix measured live-true;
+    round-1's `INVALID_SITE` class did not recur. Halt of record:
+    `{"label":"engine-00","error":"ValueError: the delivery exchange
+    engine-00 failed verification: cargo-flow 2 exchange engine-00
+    ended ENGINE_PIN_MISMATCH"}` — engine-00 response `ENGINE_PIN_
+    MISMATCH`, op `engine`, requested pin `engine=123`, cost 0,
+    plan == seal, protocol 11, world bind depot `45487` / pickup
+    `45748` / delivery `50862`; stderr decisive line
+    `D5_CARGOFLOW2 engine-00 ENGINE_PIN_MISMATCH`; phase verdict
+    `CARGOFLOW2_GATE_UNDECIDED_INCOMPLETE`. The halt class is
+    terminal; 23 later steps pending (the live engine-identity fact
+    is unmeasured this round — recording the class is all T-005
+    claimed, no diagnosis without a new approval).
+  - Read-only replay of record, executed once:
+    `.venv/bin/python -m app.simulation.openttd.proof.corridor_cargoflow2_native verify /home/fed/codes/softdev2/artifacts/experiments/d5-corridor-cargoflow2-native-candidate-2`
+    → `{"verification":"PHASE_HALTED_EVIDENCE_PRESERVED","failed":
+    {"label":"engine-00","status":"ENGINE_PIN_MISMATCH",
+    "world_state":"HALTED_BEFORE_MUTATION",…},"exchanges":["site-00"],
+    "result_status":"PHASE_HALTED_PREFIX_PRESERVED"}`, **exit 1** —
+    the replay verdict reconciles the run verdict exactly; consumed
+    identity never relaunched.
+  - Post-run read-only state of record: root = 20 files + `isolated/`
+    (empty shell, the E104 shape; `after-diagnostic.sav` retained);
+    `LAUNCH-CONSUMED.json` binds authorization record `45820767…7eeb9`
+    + seal `f991a440…55d4e` + operator identity `cbb63ff5…40c614`
+    (`schema d5-native-launch-consumed`); `CLAIM.json` `consumed=true
+    / launches_allowed=1 / retries=0`; certified cleanup of record
+    `reaped=true / sockets_closed=true / workspace_disposed=true /
+    credential_removed=true`, `cleanup_error=[]`,
+    `remaining_processes=[]`, `returncode=0` (pid 181344, quit
+    requested → reaped), listener closed, reservation released; post-
+    run process/port check: no openttd process, game 60131 / admin
+    59411 free; `artifact-manifest.sha256` re-verified 19/19 OK, 0
+    non-OK; `PRELAUNCH.json` seal byte-equal + sidecar after the run.
+  - Integrity close of record: `git diff --check` clean; CONTEXT pin
+    `36648f9c2fee4106` intact; candidate-1 untouched (sealed
+    R6 terminal evidence); no source edits; no ticket restructuring;
+    nothing scheduled — any capture-fix round (fresh candidate
+    round identity + explicit operator approval only) starts from
+    T-002 staging. Evidence index E110.
+- 2026-11-05 — T-008 read-only forensic diagnosis of the round-2
+  `ENGINE_PIN_MISMATCH` halt at `engine-00`, executed under explicit
+  operator task direction (docs-only; zero code edits, zero test
+  edits, zero staging/signing/claims, zero launches, zero AdminPort
+  traffic, zero replay reruns, zero candidate reuse, zero evidence
+  regeneration, zero Git mutations; T-005 round-2 terminal verdicts
+  untouched):
+  - Emitter of record: the `engine-00` census join
+    (`d5_cargoflow2_package/main.nut:448-454`); the echo/pin branch
+    (`:427-429`) refuted by the live decoded-request echo table and
+    the E110 observed frame shape, `UNAVAILABLE_ENGINE` (`:432-437`)
+    refuted by `IsBuildable(123)` true (E8 census + freight-v2
+    candidate-5/-6 `engine-00` READY on the same world bytes).
+  - Root cause CONFIRMED at source level against tag-15.3 upstream
+    (= the pinned binary version): the join's `(raw >> 8) == 421`
+    member demands `raw ≥ 107,776`, while the script surface already
+    returns the per-economy-year display figure (possible values
+    exactly {421, 562, 632} across allowed `vehicle_costs`; all fail
+    the join: 1/2/2 ≠ 421) — an UNSATISFIABLE gate, deterministic,
+    world- and setting-independent; mirrored fail-closed in both
+    Python checks (`corridor_cargoflow2.py:1014`, `:1153`); the
+    inverted premise is documented in design §4 and the package
+    comment and traced to the dual reading of core `RoadVehicle::
+    GetRunningCost()` (256-scaled, billing surface, never
+    script-exposed) vs script `Engine::GetRunningCost()` (display).
+    Four of five census members measured live-equal on the same
+    world bytes (candidate-5/-6, incl. live purchase 4429); A1's own
+    fifth-member display value stays UNPINNED offline but bounded and
+    immaterial.
+  - Corrective direction of record: display==display comparison in
+    the GS join (drop the second shift; fail-closed admission kept;
+    pin stays 421) + both Python mirrors; reword the inverted
+    premises; regression-lock matrix captured in the T-008 ticket
+    (incl. the 107,776-refusal inversion lock and the no-second-shift
+    byte binding). Next ticket proposed: "Fix the D5-CARGOFLOW-2
+    engine census scale inversion", executed offline, then the usual
+    fresh candidate round-3 ladder, each gate separately approved;
+    nothing scheduled here.
+  - Integrity close: `git diff --check` clean on both ledger files;
+    `CONTEXT.md` pin `36648f9c2fee4106` intact; candidate-1 and
+    candidate-2 artifact manifests re-verified untouched (19/19
+    each); source WIP paths byte-identical to the pre-task set.
+    Evidence index E111.

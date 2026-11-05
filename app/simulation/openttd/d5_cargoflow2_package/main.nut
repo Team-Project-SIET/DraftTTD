@@ -387,6 +387,12 @@ class D5CargoFlow2Proof extends GSController {
 
     /* -- op: site re-pin (pure observation, zero cost) ----------------------- */
     function SiteOp(q, r) {
+        /* The tile predicates of the join consult the per-instance current
+         * road type; a fresh instance starts at INVALID_ROADTYPE and a
+         * GSRoad tile predicate fails closed (script_road.cpp), so the
+         * road type of record is pinned first (the freight v2 Handle
+         * idiom, T-006 root cause of the INVALID_SITE halt). */
+        GSRoad.SetCurrentRoadType(GSRoad.ROADTYPE_ROAD)
         /* Re-pin gate: the corridor station/industry identity of record is
          * re-derived from the live world before anything else observes it
          * (any drift is the INVALID_SITE refusal of record). */
