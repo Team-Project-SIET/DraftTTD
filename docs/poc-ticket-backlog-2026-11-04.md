@@ -2105,3 +2105,32 @@ readiness, outside this round's PoC definition.
   (ticket 02 method), Gate C signing (ticket 03), ONE launch
   (ticket 04), each gate its own separate explicit operator approval;
   ticket 05 issues no candidate actions and holds none.
+- 2026-11-05 — T-001/round-6 STAGE: round-6 gate 1 (staging approval
+  in-session, one action) executed and booked on the settled
+  post-settle-then-freeze tree — identity advance `candidate-5` →
+  `candidate-6` (only pipeline edit; lineage comment of record updated:
+  candidates 1–2 consumed with native verdicts, 3–4 seal-superseded by
+  freeze-pin debts, candidate-5 consumed terminal history — the
+  arrive-00 funds-residual halt class answered by E114/E115; candidate-6
+  composes from the current tree, never a relabel); focused suites 134
+  exit 0 (84 + 11 + 39), ruff clean, ty = the one frozen-mirror
+  `connect` census-baseline diagnostic (untouched region); ONE
+  `prepare` → `PRELAUNCH PASS` exit 0 FIRST ATTEMPT — candidate of
+  record `artifacts/experiments/d5-corridor-cargoflow2-native-candidate-6`,
+  seal `e929d7b2e749f2a14af9bb19fdf12f76f96fe912e7f1d716af733a44d926ec49`
+  (≡ `PRELAUNCH.sha256`, differs from all five predecessors); ZERO
+  freeze-pin mismatches across all 3502 sealed entries (E114 + E115 both
+  committed before staging); plan digest of record unchanged `5c0998f2…bf2d`,
+  plan model digest fresh `98d055c4e826296f79a8e7d70275be14256229732637fc6cdf547dca47f506ca`,
+  ladder grid v1, 25 exchanges, max_cost 5000, company 0; workspace
+  `isolated/openttd-15.3-m6aqc6ph`, ports game 36457 / admin 58297, root
+  exactly 4 entries; standalone `preflight` → `PREFLIGHT PASS` exit 0;
+  pre-auth `verify` → `AUTHORIZATION_UNVERIFIED`/`CLAIM_ABSENT` exit 1
+  by design; candidates 1–5 seals re-digested byte-identical; gate files
+  absent; nothing signed, claimed or launched; no `artifacts/` byte
+  touched outside the fresh candidate-6 directory; no push. Books:
+  ticket `01-round6-stage.md` + this entry + the pipeline stamp, one
+  commit. NEXT GATES (each its own explicit operator approval, none
+  granted by this stage): round-6 independent review (ticket 02 method,
+  fresh-context read-only) → Gate C signing (ticket 03) → ONE launch
+  (ticket 04).
