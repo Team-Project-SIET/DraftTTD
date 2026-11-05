@@ -1875,3 +1875,52 @@ readiness, outside this round's PoC definition.
     06 (delivered-class) bookkeeping per this verdict; the arrive-00
     funds-residual-1 question is a fresh diagnostic-first candidate
     frame.
+- 2026-11-05 — TICKET 05 (halt-class loop, round-5 arm) DIAGNOSIS-OF-RECORD
+  EXECUTED READ-ONLY (E112; grilling round-1 task direction, Q2
+  diagnosis-first; zero source edits, zero test edits, zero candidate
+  lifecycle actions, zero launches, no commit yet): the arrive-00
+  `CARGOFLOW2_FUNDS_DIVERGED` halt class forensically closed on preserved
+  evidence only. Emitter of record traced exactly (two levels): the
+  zero-residual fence itself (`Cargoflow2FundsModel.reconcile`
+  `corridor_cargoflow2.py:1599-1617`) + the runner fail-closed wrap
+  (`proof/corridor_cargoflow2_native.py:1572`) composing the recorded
+  `result.json` halt.error verbatim. Production replay of record
+  (script `/tmp/opencode/t005_r5_diag_arrive00.py` + transcript
+  `t005_r5_diag_arrive00_output.txt`, exit 0): the retained wire bytes
+  re-parse through the production Contract schemas (JSON mode), the
+  production prefix verify (`cargoflow2_phase_outcome`, exchanges[0:10],
+  seal `d4715fd3…41ad`) reproduces the retained `result.json` phase
+  outcome **full-field**, the same per-step verify of record re-entered
+  across all 11 exchanges reproduces the verbatim halt ValueError, and
+  the pre-arrive funds-model witness (`income_deltas` 10 rows in
+  `plan.schedule` order, `running_cost 421`, `running_costs []`)
+  reproduces exactly. **Root cause (CONFIRMED, high, source level): the
+  fence's day-charge walk diverges from the observed 4-debit native class
+  at three term level** — (1) model-only start-day partial charge
+  (rt = 74−27 = 47 → whole 1; native charged nothing before its first
+  rollover tick 48), (2) model-only day-230 borrow bonus
+  (`new_fraction = (fraction − low) % 256` books whole 2 on day-230 from
+  fraction 30 < low 39; class level charges 1 per boundary), (3)
+  class-only in-window day-232 rollover debit (native clock law
+  `date = 712229 + floor((tick − 48)/74)` fits all 7 probe pairs + the
+  arrive-00 instant; day-232 onset tick 270 ≤ read tick 292 while the
+  walk books `range(prev_day, day)`). Closure: modeled 5 debits
+  (489650 − 4429 − 5 = 485216) vs observed 4 (485217): 5 − 4 == 2 − 1 ==
+  residual +1. Native-internal mechanism kept UNKNOWN per the E111
+  discipline: (A) flat 1-coin-per-rollover with internal fractional
+  retention (boundary set {48, 122, 196, 270}) and (B) scalar cumulative
+  `floor(421·elapsed/(365·74))` (crossings {92, 156, 220, 284}) each
+  reproduce all 11 retained instants exactly; `OpenTTD-Knowledge` carries
+  no billing semantics (greps empty) and the binary disasm was out of
+  scope — the fix round targets the observed trajectory class, not an
+  asserted internal policy. No other terms (no month boundary in-window —
+  next 712254; income 0 at every read; purchase whole-unit). Round-5
+  verdicts untouched; candidate-5 stays consumed terminal history.
+  Ticket `.scratch/d5-corridor-poc-tail/issues/05-halt-class-loop.md`
+  boxes updated (diagnosis complete; cards block written; offline fix
+  still open). NEXT: offline fix-of-record needs its own explicit
+  operator direction (align the walk to the observed 4-debit class; no
+  wire/fail-closed loosening; regression locks the whole class needs),
+  then settle-then-freeze doc/vocabulary writes, then round-6 re-entry —
+  fresh candidate identity `candidate-6` + ONE prepare, fresh review,
+  Gate C, ONE launch, each gate separately approved.
