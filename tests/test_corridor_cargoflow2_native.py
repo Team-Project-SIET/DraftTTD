@@ -1136,3 +1136,20 @@ def test_attempt_bytes_never_parse_into_the_consumed_contract_families():
         SurveyReadback.parse_for(survey, delivery.to_bytes())
     with pytest.raises(Exception):
         cf10.CargoFlowReadback.parse_for(probe_request_model, delivery.to_bytes())
+
+
+_SCHEDULE_DIGEST_OF_RECORD = "5c0998f2d164198e2545ebd9709b2ae32afdbc3d4ef4dc8a7188a202e3f0bf2d"
+
+
+def test_route_binding_ladder_matches_the_pipeline_of_record():
+    """The contract module's parameterized schedule derivation, built with
+    the DEFAULT binding, reproduces the pipeline's staged ladder rows of
+    record byte-for-byte, and the staged plan policy keeps binding the v1
+    schedule version of record."""
+    default = cf.cargoflow2_route_binding()
+    assert default.route_version == cf.CARGOFLOW2_SCHEDULE_VERSION == 1
+    rows = cf.cargoflow2_schedule_rows(default)
+    assert rows == work.cargoflow2_schedule()
+    assert work.plan_digest_of(rows) == _SCHEDULE_DIGEST_OF_RECORD
+    policy = work.cargoflow2_plan_policy()
+    assert policy["schedule_version"] == cf.CARGOFLOW2_SCHEDULE_VERSION
