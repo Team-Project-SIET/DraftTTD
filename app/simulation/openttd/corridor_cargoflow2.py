@@ -859,7 +859,8 @@ class Cargoflow2Readback(Contract):
     running_cost: Annotated[StrictInt, Field(ge=1, le=2147483647)] | None = None
     # The engine-census echo fields of record (the §5.2 pinned admission):
     # the handler re-derives them fail-closed and the readback carries them
-    # verbatim beside the raw running cost.
+    # verbatim beside the running cost (E111: the script value is the
+    # per-economy-year display figure).
     price: Money | None = None
     max_speed: Annotated[StrictInt, Field(ge=0, le=2147483647)] | None = None
     order_len: Annotated[StrictInt, Field(ge=0, le=65535)] | None = None
@@ -1009,11 +1010,14 @@ class Cargoflow2Readback(Contract):
                 if self.price != CARGOFLOW2_PURCHASE_QUOTE:
                     raise ValueError("the engine readback echoes its pinned price")
                 # The success-field-subset check above refuses an engine
-                # frame without its raw running cost; assert for the check.
+                # frame without its running cost; assert for the check.
+                # E111: the script surface returns the display figure, so
+                # the pin comparison applies no second shift — a 256-scaled
+                # raw is script-unreachable and refuses here of record.
                 assert self.running_cost is not None
-                if (self.running_cost >> 8) != CARGOFLOW2_RUNNING_DISPLAY:
+                if self.running_cost != CARGOFLOW2_RUNNING_DISPLAY:
                     raise ValueError(
-                        "the engine raw running cost disagrees with its display figure"
+                        "the engine running cost disagrees with its display figure"
                     )
         elif self.op == "purchase":
             if self.order_index != -1 or self.watch_days != -1 or self.offset != -1:
@@ -1146,23 +1150,29 @@ class Cargoflow2FundsModel:
         self.purchase_paid = False
         self.running_costs: list[tuple[str, list[tuple[int, int, int]]]] = []
 
-    def admit_running_cost(self, raw: int) -> None:
-        """§4.1: the raw pin arrives natively and is admitted fail-closed."""
+    def admit_running_cost(self, display: int) -> None:
+        """§4.1 (the E111 correction): the display pin arrives natively and
+        is admitted fail-closed — a 256-scaled raw is script-unreachable."""
         if self.running_cost is not None:
             raise ValueError("the running cost was already pinned at its exchange")
-        if raw <= 0 or (raw >> 8) != CARGOFLOW2_RUNNING_DISPLAY:
+        if display != CARGOFLOW2_RUNNING_DISPLAY:
             raise ValueError(
-                "the raw running cost is inconsistent with its display figure"
+                "the running cost is inconsistent with its display figure"
             )
-        self.running_cost = raw
+        self.running_cost = display
 
     def _day_running_cost(self, rt: int) -> int:
-        """The 8.8 fixed-point day charge and its exact fraction carry (§4.3)."""
+        """The 8.8 fixed-point day charge and its exact fraction carry (§4.3).
+
+        The pinned figure is the per-economy-year display value of record
+        (E111); the 8.8 day charge reconstructs its 256-scaled surface
+        exactly, so the billing arithmetic of record is unchanged.
+        """
         if self.running_cost is None:
-            raise ValueError("the running-cost raw was never pinned at engine-00")
+            raise ValueError("the running cost was never pinned at engine-00")
         if not 0 < rt <= DAY_TICKS:
             raise ValueError(f"the running-tick count {rt} is outside its single day")
-        c256 = self.running_cost * rt // (DAYS_IN_ECONOMY_YEAR * DAY_TICKS)
+        c256 = self.running_cost * rt * 256 // (DAYS_IN_ECONOMY_YEAR * DAY_TICKS)
         low = c256 & 0xFF
         new_fraction = (self.fraction - low) % 256
         whole = (c256 >> 8) + (1 if new_fraction > self.fraction else 0)
@@ -1318,7 +1328,8 @@ def _cargoflow2_read_step(
             observed=readback.funds,
         )
         # The success-field subset check refuses an engine frame without
-        # its raw running cost; assert so the fence is typed on raws.
+        # its running cost; assert so the fence is typed (E111: the wire
+        # value is the display figure, admitted against its pin).
         assert readback.running_cost is not None
         model.admit_running_cost(int(readback.running_cost))
     elif readback.op == "site":

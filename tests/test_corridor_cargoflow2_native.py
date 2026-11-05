@@ -1085,6 +1085,20 @@ def test_nut_pin_table_binds_to_the_python_attempt_schedule():
         assert found.group(1) == str(value)
 
 
+def test_nut_running_cost_join_carries_no_second_shift():
+    """The E111 regression lock, byte-level: the running-cost census member
+    must compare the script display figure to its pin directly — the shipped
+    package carries neither the banned ``(raw >> 8)`` second shift on the
+    running-cost member anywhere the join reads, nor a raw-scaled reader
+    that would accept it: the inversion of the R2 halt can never return."""
+    text = (work.CARGOFLOW2_PACKAGE / "main.nut").read_text()
+    assert "(raw >> 8)" not in text
+    assert "display != this.RUNNING_DISPLAY_PIN" in text
+    assert re.search(
+        r"local display = GSEngine\.GetRunningCost\(pinned\)", text
+    ) is not None
+
+
 def test_attempt_bytes_never_parse_into_the_consumed_contract_families():
     """The protocol-11 attempt bytes cannot be retrofitted into the
     protocol-5, -6, -9 or -10 wire contracts."""

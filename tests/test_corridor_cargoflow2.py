@@ -50,7 +50,7 @@ PLAN = work.cargoflow2_pipeline_plan()
 EXCHANGES = tuple(cf.CARGOFLOW2_EXCHANGE_IDS)
 FUNDS = FUNDS_AT_DEPOT_MUTATION_CLOSE
 QUOTE = cf.CARGOFLOW2_PURCHASE_QUOTE
-ENGINE_RAW_RUNNING = 421 << 8
+ENGINE_RUNNING_DISPLAY = 421
 
 # The stub world's launch instant and anchor: the fixed chain observes at the
 # launch day (L = 712228) with the latched tick 30 of record, and the first
@@ -124,7 +124,7 @@ WORLD = """
 ::engine_ok <- true;
 ::engine_price <- 4429;
 ::engine_capacity <- 20;
-::engine_raw_running <- 107776;
+::engine_display_running <- 421;
 ::engine_speed <- 48;
 ::vehicles <- {};
 ::orders <- {};
@@ -167,7 +167,7 @@ function cargoflow2_stub_fees(old_day, new_day) {
     for (local d = old_day; d < new_day; d++) {
         local rt = 74;
         if (d == ::run_start_day) rt = 74 - ::run_start_tick;
-        local c256 = (::engine_raw_running * rt) / 27010;
+        local c256 = (::engine_display_running * rt * 256) / 27010;
         local next = (::stub_frac - (c256 % 256) + 256) % 256;
         local whole = (c256 >> 8) + (next > ::stub_frac ? 1 : 0);
         ::funds = ::funds - whole;
@@ -321,7 +321,7 @@ class GSEngine {
     static function GetCapacity(_) { return ::engine_capacity; }
     static function GetPrice(_) { return ::engine_price; }
     static function GetMaxSpeed(_) { return ::engine_speed; }
-    static function GetRunningCost(_) { return ::engine_raw_running; }
+    static function GetRunningCost(_) { return ::engine_display_running; }
 }
 class GSVehicle {
     static VS_RUNNING = 0;
@@ -713,7 +713,7 @@ def funds_walk(
             continue
         observed[exchange_id] = model.advance(exchange_id, day, tick, income)
         if row["op"] == "engine":
-            model.admit_running_cost(ENGINE_RAW_RUNNING)
+            model.admit_running_cost(ENGINE_RUNNING_DISPLAY)
         elif row["op"] == "start":
             model.start_vehicle(day, tick)
     return observed, model
@@ -839,7 +839,7 @@ def built_ladder(
                 capacity=cf.CARGOFLOW2_CAPACITY,
                 price=cf.CARGOFLOW2_PURCHASE_QUOTE,
                 max_speed=cf.CARGOFLOW2_MAX_SPEED,
-                running_cost=ENGINE_RAW_RUNNING,
+                running_cost=ENGINE_RUNNING_DISPLAY,
             )
             cost = 0
         elif op == "purchase":
@@ -1417,7 +1417,11 @@ def test_ready_ladder_day_is_checked_against_the_anchor():
     ("site", dict(bay_sid=3), "the site readback re-pins the corridor station ids"),
     ("site", dict(bay_industry=2), "the site readback re-pins the corridor industries"),
     ("engine", dict(price=4430), "the engine readback echoes its pinned price"),
-    ("engine", dict(running_cost=420 << 8), "the engine raw running cost disagrees"),
+    # The E111 inversion regression lock: a 256-scaled raw-sized running
+    # cost refuses the readback (the old second-shift arithmetic would
+    # have accepted it); any wrong display figure refuses the same way.
+    ("engine", dict(running_cost=107776), "the engine running cost disagrees"),
+    ("engine", dict(running_cost=420), "the engine running cost disagrees"),
     ("engine", dict(vehicle=1), "engine readback must not name a vehicle"),
     ("purchase", dict(vehicle=-1), "built purchase must name the pinned engine and vehicle"),
     ("purchase", dict(cost=4000), "built purchase must cost its pinned quote"),
@@ -1518,7 +1522,7 @@ def test_funds_walk_exact_acquisition_vector():
     assert observed["flow-11"] == 484774
     assert observed["finance-00"] == 484774
     assert observed["finish-00"] == 484774
-    assert model.running_cost == ENGINE_RAW_RUNNING
+    assert model.running_cost == ENGINE_RUNNING_DISPLAY
     assert model.purchase_paid and model.started == (ANCHOR, TICK_OF_RECORD)
 
 
@@ -1574,12 +1578,23 @@ def test_funds_model_refusals():
             observed=FUNDS - 3,
         )
 
-    warm.admit_running_cost(ENGINE_RAW_RUNNING)
+    warm.admit_running_cost(ENGINE_RUNNING_DISPLAY)
     with pytest.raises(ValueError, match="already pinned"):
-        warm.admit_running_cost(ENGINE_RAW_RUNNING)
+        warm.admit_running_cost(ENGINE_RUNNING_DISPLAY)
     with pytest.raises(ValueError, match="inconsistent with its display figure"):
         Cargoflow2FundsModel(start_funds=FUNDS, purchase_quote=QUOTE).admit_running_cost(
-            420 << 8
+            420
+        )
+    # The E111 inversion regression lock: the pinned display surface never
+    # widens back to a 256-scaled raw — a raw-sized value refuses, never
+    # admits (the old second-shift arithmetic would have accepted it).
+    with pytest.raises(ValueError, match="inconsistent with its display figure"):
+        Cargoflow2FundsModel(start_funds=FUNDS, purchase_quote=QUOTE).admit_running_cost(
+            107776
+        )
+    with pytest.raises(ValueError, match="inconsistent with its display figure"):
+        Cargoflow2FundsModel(start_funds=FUNDS, purchase_quote=QUOTE).admit_running_cost(
+            0
         )
 
     warm.debit_purchase()

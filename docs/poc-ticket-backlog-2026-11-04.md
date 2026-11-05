@@ -102,14 +102,26 @@ entries and status log below; every ID and historical record preserved):
   figure); corrective direction documented; no code changed.** Next:
   the future corrective ticket, opened only by operator review;
   nothing scheduled.
+- **T-009** — executed offline 2026-11-05 under explicit operator
+  approval (gate DG-1 of `docs/roadmap-and-scope-2026-11-05.md`): the
+  completed corrective fix of the T-008/E111 diagnosis — the census
+  display figure compared to its pin with no second shift, both Python
+  mirrors, the 8.8 funds arithmetic of record preserved exactly
+  (display/365 reconstruction), the full E111 regression-lock matrix
+  and the marked design-§4 correction bullet. Suites 88 + 38 passed,
+  ruff/ty "All checks passed!", `git diff --check` clean; the fresh
+  candidate round 3 (staging → review → Gate C → one launch) remains
+  the only native validation path; the consumed candidates 1–2 stay
+  untouched.
 - **T-008–T-019 are undefined, not reserved**: no ticket was ever
   assigned to these IDs, at backlog creation or since. The ladder was
   numbered T-001–T-007 and jumps to the pre-existing T-020/T-021/T-022
-  M8/completion block, then the P2 backlog T-030+. No T-008–T-019
-  ticket exists and none is created here. **2026-11-05 update:** the
-  first T-008 assignment happened on 2026-11-05 under explicit
-  operator task direction — the R2 `ENGINE_PIN_MISMATCH` read-only
-  diagnosis ticket created below. T-009–T-019 remain undefined.
+  M8/completion block, then the P2 backlog T-030+. **2026-11-05
+  update:** the first T-008 assignment happened on 2026-11-05 under
+  explicit operator task direction — the R2 `ENGINE_PIN_MISMATCH`
+  read-only diagnosis ticket created below — and the first T-009
+  assignment followed the same day, the corrective fix of record
+  above. T-010–T-019 remain undefined.
 
 ## Execution constraints (per `CONTEXT.md`, `AGENTS.md`, design §6)
 
@@ -519,6 +531,60 @@ lint/type gates per `REPRODUCE.md`.
   on this ticket (operator approval required); a fresh candidate
   round 3 (staging → review → Gate C → one launch) remains the only
   native validation path; nothing scheduled.
+
+### T-009 — Fix the D5-CARGOFLOW-2 engine census scale inversion
+
+- **Status:** executed offline 2026-11-05 under explicit operator
+  approval (gate DG-1, in-session: "open the corrective fix ticket and
+  execute FD-A-1 offline now") — the T-008 corrective direction
+  applied as specified. No staging, no signing, no claim, no launch,
+  no reconnection, no `artifacts/` byte change, no commit/push.
+- **Objective and scope:** the single GS census-line fix of record in
+  `app/simulation/openttd/d5_cargoflow2_package/main.nut` (the joined
+  running-cost member now compares the script display figure to
+  `RUNNING_DISPLAY_PIN` directly — no second shift — with the honest
+  `local display` rename and the fail-closed ≤2^31 sanity guard kept);
+  both Python mirrors dropped of the second shift
+  (`corridor_cargoflow2.py` wire readback check + `admit_running_cost`);
+  the 8.8 funds arithmetic of record preserved exactly by
+  reconstructing its 256-scaled surface from the pinned display figure
+  (`c256 = display · 256 · rt / (365 · 74)` — integer-identical to the
+  core-form charge the E99 window replicated); design §4 corrected via
+  a clearly marked correction bullet (the original bullet preserved,
+  its core-surface statements left intact).
+- **Regression model of record (the full E111 matrix):** readback
+  inversion locks — a `running_cost = 107776` engine frame (the old
+  second-shift arithmetic would have admitted it) and a wrong display
+  `420` both refuse the wire readback; the funds model's
+  `admit_running_cost` accepts 421 of record and refuses 107776 and 0;
+  the stub world's census figure is the display 421 (`GetRunningCost`
+  behaves like the pinned binary surface) with its independent
+  day-charge reimplementation using the same reconstruction, so the
+  funds fence of record still proves the two agree; the wire-to-Nut
+  byte lock asserts the shipped package carries neither a banned
+  `(raw >> 8)` nor a missing `display != this.RUNNING_DISPLAY_PIN`
+  join.
+- **Offline validation of record:** `tests/test_corridor_cargoflow2.py`
+  + `tests/test_corridor_cargoflow2_vm.py` → **88 passed** (exit 0);
+  `tests/test_corridor_cargoflow2_native.py` → **38 passed** (exit 0,
+  includes the new byte-lock test); `ruff check` on the touched module
+  and both suites → "All checks passed!"; `uvx ty check` on the
+  touched module + wire suite → "All checks passed!"; `git diff
+  --check` clean; `CONTEXT.md` authority pin `36648f9c2fee4106`
+  intact; consumed candidates 1–2 untouched (sealed terminal evidence;
+  their seals refer to the pre-fix composition bytes of record).
+- **Required evidence:** the validated diff + this ticket + status log
+  entry of record; no new native evidence until the round-3 lifecycle
+  runs.
+- **Validation procedure:** focused suites + lint/type gates per
+  `REPRODUCE.md` (E106 precedent invocations).
+- **Risks and approvals:** the never-executed-tail caveat stands —
+  purchase, departure gates, cycle ladder and delivery remain
+  unmeasured natively on this protocol-11 line; if the round-3 launch
+  halts at a class of record, the corrective loop repeats with a fresh
+  round identity. Next gate: round-3 staging (T-002 round 3), then the
+  unchanged ladder, each its own explicit operator approval; nothing
+  scheduled.
 
 ### T-020 — M8 route selection demonstrated on the corridor
 
@@ -1354,3 +1420,74 @@ readiness, outside this round's PoC definition.
     candidate-2 artifact manifests re-verified untouched (19/19
     each); source WIP paths byte-identical to the pre-task set.
     Evidence index E111.
+- 2026-11-05 — T-009 (the census-scale inversion fix, the T-008
+  corrective direction of record) executed offline under explicit
+  operator approval:
+  - GS fix of record: `d5_cargoflow2_package/main.nut` — the census
+    join reads `local display = GSEngine.GetRunningCost(pinned)` and
+    compares `display != this.RUNNING_DISPLAY_PIN` with no second
+    shift (header §4.1 comments + the pin comment reworded to the
+    E111-corrected premise; the ≤2^31 sanity guard kept fail-closed).
+  - Python mirrors of record: `corridor_cargoflow2.py` — wire readback
+    compares `self.running_cost != CARGOFLOW2_RUNNING_DISPLAY` (a
+    256-scaled raw refuses, message
+    "the engine running cost disagrees with its display figure");
+    `admit_running_cost(display)` refuses any value off the 421 pin
+    (including 107776 — the E111 inversion regression lock — and 0);
+    `_day_running_cost` reconstructs the unchanged 8.8 day charge as
+    `c256 = display · 256 · rt / (365 · 74)` — integer-identical to
+    the core-form billing the E99 window replicated.
+  - Funds walk of record unchanged in its numbers: the stub world's
+    census returns the display 421 and its independent day-charge
+    reimplementation uses the same reconstruction, so every funds
+    level of record (485221 → 484774 tail, the two 192 monthly fees,
+    the exact 8.8 whole rows) still proves the model↔stub agreement.
+  - Regression locks of record: readback refusal rows for
+    `running_cost = 107776` (would have admitted under the old
+    `(raw >> 8)` arithmetic) and `420`; funds-model refusal cases
+    107776/0 with the 421 acceptance; the native byte-level lock
+    (`(raw >> 8)` absent, `display != this.RUNNING_DISPLAY_PIN`
+    present) — 1 new test in `tests/test_corridor_cargoflow2_native.py`
+    plus one extra refusal param row in
+    `tests/test_corridor_cargoflow2.py`.
+  - Design doc §4 corrected by a clearly marked correction bullet
+    (E111/T-009, the original inverted-premise bullet preserved).
+  - Offline validation of record: `tests/test_corridor_cargoflow2.py`
+    + `tests/test_corridor_cargoflow2_vm.py` → 88 passed (exit 0);
+    `tests/test_corridor_cargoflow2_native.py` → 38 passed (exit 0);
+    `ruff check` and `uvx ty check` on the touched paths → "All checks
+    passed!"; `git diff --check` clean; `CONTEXT.md` pin
+    `36648f9c2fee4106` intact; consumed candidates 1–2 byte-untouched;
+    nothing staged, signed, claimed, launched or committed.
+  - Next gate: round-3 staging (T-002 round 3), each its own explicit
+    operator approval; nothing scheduled.
+- 2026-11-05 — the Phase A tail spec of record published (`ready-for-agent`):
+  [docs/specs/d5-corridor-poc-tail.md](../specs/d5-corridor-poc-tail.md) —
+  the round-3 corrected attempt lifecycle (T-002/T-003/T-004/T-005 round 3),
+  the delivered class (T-006), the M8 block (T-020), P07 + funds taxonomy
+  (T-021) and the PoC completion declaration (T-022) specified in one
+  contract. Tracker rows unchanged (the gates are already ticketed above);
+  the spec adds the two-route admission semantics, the selection-artifact
+  requirement, the funds-taxonomy/ADR requirement, the reporting-closure
+  content and the corrective-loop semantics, each bound to the four
+  existing test seams (replay verifier, funds fence, VM package suite,
+  wire-to-Nut byte bindings) with zero new seams. Out of scope: Phase B,
+  Phase C, executable terrain, evidence regeneration, commit authority.
+  Nothing scheduled; every gate remains its own explicit operator approval.
+- 2026-11-05 — the Phase A tail spec broken into 13 agent-executable tickets
+  (tracer-bullet slices with blocking edges, approved under the to-tickets
+  interview; granularity and edges confirmed by the operator) and published
+  to the local tracker directory `.scratch/d5-corridor-poc-tail/issues/`
+  (files 01–13, one per ticket, `ready-for-agent` each):
+  01 round3-staging; 02 round3-independent-review; 03 round3-gate-c-signing;
+  04 round3-one-launch; 05 halt-class-loop (conditional arm);
+  06 delivered-class-reconciliation; 07 route-admission-contract-prefactor
+  (expand-only, parallelizable); 08 second-route-admission; 09
+  selection-of-record-m8; 10 selected-route-delivered-attempt; 11
+  funds-taxonomy-adr; 12 p07-replay-closure; 13 poc-completion-declaration.
+  Frontier of record today: 01 (round-3 staging, operator staging approval
+  in-session) and 07 (prefactor, no approvals needed). The PoC backlog rows
+  above remain the authority of record for live status; .scratch tickets are
+  the execution view. Every ticket re-states the standing operator gates it
+  must never bypass; no commit/push inside any ticket (commit authority is
+  a separate staging-allowlist decision, DG-10).

@@ -42,8 +42,10 @@
  * Financial fence: the funds model and its zero-residual reconciliation
  * are Python-side (§4); this package only echoes its measured funds at
  * the exchange instant (post-wait for the ladder ops) and the pinned
- * engine census admission (engine-00 pins the RAW running cost of record
- * through GSEngine.GetRunningCost, (raw >> 8) == the 421 display figure).
+ * engine census admission (engine-00 pins the running cost of record
+ * through GSEngine.GetRunningCost — on the pinned binary that read IS
+ * the 421 per-economy-year display figure, compared to its pin with no
+ * second shift; the funds model derives day charges as display/365).
  * funding/quote/cost refusals fail closed before any mutation, and the
  * purchase realizes exactly its tested quote once.
  *
@@ -126,8 +128,10 @@ class D5CargoFlow2Proof extends GSController {
     ENGINE_MAX_COST = 5000
     CAPACITY_PIN = 20
     SPEED_PIN = 48
-    /* The pinned raw-running-cost display figure: (raw >> 8) must equal
-     * 421 (§4.1); the raw value itself rides the engine readback. */
+    /* The pinned running-cost display figure (§4.1, the E111 correction):
+     * GSEngine.GetRunningCost returns the display figure directly, so the
+     * census join compares it to 421 with no further shift; the value
+     * itself rides the engine readback. */
     RUNNING_DISPLAY_PIN = 421
 
     /* Real 15.x order-flag values (N2, carried from freight v2): the
@@ -437,19 +441,21 @@ class D5CargoFlow2Proof extends GSController {
             return
         }
         /* The pinned census admission of record (§5.2): cargo 1,
-         * capacity 20, price 4429, max_speed 48 and the raw running cost
-         * whose 8.8 fixed point reads the 421 display figure. Any other
-         * world refuses outright. */
+         * capacity 20, price 4429, max_speed 48 and the running-cost
+         * display figure 421 (the E111 correction: the script surface
+         * returns the display figure directly, so the comparison applies
+         * no second shift; the ≤2^31 sanity guard stays fail-closed).
+         * Any other world refuses outright. */
         local cargo = GSEngine.GetCargoType(pinned)
         local capacity = GSEngine.GetCapacity(pinned)
         local price = GSEngine.GetPrice(pinned)
         local speed = GSEngine.GetMaxSpeed(pinned)
-        local raw = GSEngine.GetRunningCost(pinned)
-        if (cargo < 0 || capacity < 0 || price < 0 || speed < 0 || raw < 1 ||
-            raw > 2147483647) throw "D5_NATIVE_FACT"
+        local display = GSEngine.GetRunningCost(pinned)
+        if (cargo < 0 || capacity < 0 || price < 0 || speed < 0 ||
+            display < 1 || display > 2147483647) throw "D5_NATIVE_FACT"
         if (cargo != CARGOFLOW2_CARGO || capacity != this.CAPACITY_PIN ||
             price != this.ENGINE_QUOTE || speed != this.SPEED_PIN ||
-            (raw >> 8) != this.RUNNING_DISPLAY_PIN) {
+            display != this.RUNNING_DISPLAY_PIN) {
             r.status = "ENGINE_PIN_MISMATCH"
             return
         }
@@ -459,7 +465,7 @@ class D5CargoFlow2Proof extends GSController {
         r.capacity <- capacity
         r.price <- price
         r.max_speed <- speed
-        r.running_cost <- raw
+        r.running_cost <- display
         r.income <- income
         r.status = "READY"
         this.engine_id = pinned

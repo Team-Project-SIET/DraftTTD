@@ -217,6 +217,17 @@ terminal and unlabeled-unchanged; nothing here relabels them.
   or one inconsistent with the display figure and the E97 window
   delta (funds 485221 → 485214 over a running window — a raw-421
   misreading would charge ≈ 0 per day), refuses the admission.
+- **Correction of record (2026-11-05, E111/T-009).** The bullet above
+  documents the inverted premise this design carried: `GSEngine.GetRunningCost`
+  on the pinned binary returns the **display** figure directly (the 256-scaled
+  raw exists only at the vehicle core surface and is never script-exposed), so
+  the engine-00 census pins the display value 421 by direct comparison — no
+  second shift — and the funds model reconstructs the 8.8 day charges from the
+  pinned display figure (display/365, identical billing arithmetic, exact
+  fraction carry). "a raw-421 misreading would charge ≈ 0 per day" stays true
+  at the CORE surface the bullet cites; the window bound (funds 485221 →
+  485214, Δ7) corroborates unchanged. Consumed candidates 1–2 record the
+  defect's outcome; the corrective fix is this round's FD-A-1/T-009 work.
 - **No other charges**: `economy.inflation` false,
   `economy.infrastructure_maintenance` false (defaults of record), and
   the negative-cash interest branch of `CompaniesPayInterest` cannot
