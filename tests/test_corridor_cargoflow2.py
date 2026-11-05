@@ -144,10 +144,12 @@ WORLD = """
 ::last_accepted <- -1;
 /* Motion scripting: every Sleep runs the queued callbacks whose tick is due,
  * and a strictly increasing day sweep lands exactly the §4 financial world of
- * record: one whole-unit running charge per ended day through the same 8.8
- * fixed-point fraction carry the wire model walks (independent
- * reimplementation — the two must agree at every exchange, the funds fence
- * proves it), plus the whole monthly fee at each crossed 1950 boundary. */
+ * record: the E113 charge-event law of record (the launch day's own event
+ * silent pre-unstop, the unstop partial billed inside the first billed day's
+ * event, every later ended day full 74) through the same 8.8 fixed-point
+ * fraction carry the wire model walks (independent reimplementation — the two
+ * must agree at every exchange, the funds fence proves it), plus the whole
+ * monthly fee at each crossed 1950 boundary. */
 ::moves <- [];
 ::stub_frac <- 0;
 ::run_start_day <- -1;
@@ -164,9 +166,15 @@ function run_motion(old_day, new_day) {
     }
 }
 function cargoflow2_stub_fees(old_day, new_day) {
+    /* The E113 source law of record (one law both frames): the charge
+     * event of the ended day fires the day after the day's roll, so the
+     * launch day's own event is pre-unstop and bills nothing; the first
+     * billed event is the launcher-day + 1 event carrying the unstop
+     * partial rt = 48 - run_start_tick, every later ended day full 74. */
     for (local d = old_day; d < new_day; d++) {
+        if (d <= ::run_start_day) continue;
         local rt = 74;
-        if (d == ::run_start_day) rt = 74 - ::run_start_tick;
+        if (d == ::run_start_day + 1) rt = 48 - ::run_start_tick;
         local c256 = (::engine_display_running * rt * 256) / 27010;
         local next = (::stub_frac - (c256 % 256) + 256) % 256;
         local whole = (c256 >> 8) + (next > ::stub_frac ? 1 : 0);
@@ -361,8 +369,10 @@ class GSVehicle {
             v.state = VS_RUNNING;
             v.speed = 30;
             v.in_depot = false;
-            /* The running-cost world anchoring of record (the §4 partial
-             * start day is charged from the latched (day, tick) instant). */
+            /* The running-cost world anchoring of record (E113): the
+             * vehicle unstops after the latched (day, tick) instant and
+             * the running count starts at tick + 1 — the start-day
+             * partial bills inside the first billed lattice event. */
             ::run_start_day = ::day;
             ::run_start_tick = ::ticks;
         } else {
@@ -627,9 +637,14 @@ def run_probe_vm() -> tuple[
     The stub's own funds arithmetic (``cargoflow2_stub_fees``) is the world's
     fee walk; the wire contract's zero-residual funds fence reconciles every
     exchange against the model of record — two independent implementations
-    agree or the run halts. The stub carries the right run of fees so every
-    reconcile passes: 485221 at the purchase and the daily/monthly stairway
-    through the two crossed 1950 boundaries.
+    agree or the run halts. The stub carries the right run of fees under the
+    E113 law of record: 485221 at the purchase, the charge-event stairway
+    (silent pre-unstop launch event, unstop partial inside the first billed
+    event, full days after) and the two crossed 1950 boundaries. Every
+    ladder row drives at its own law instant: the row's five-day sweep
+    lands its flow day and its ticks end exactly at the row's roll tick,
+    so the echo instant is in-day 0 and excludes that day's own charge
+    event exactly as the stub's ``[old_day, new_day)`` fee loop does.
     """
     global _DRIVER
     _DRIVER = {"vehicle": -1}
@@ -637,9 +652,22 @@ def run_probe_vm() -> tuple[
     sweep_days(vm, 0)
     witness_arrival(vm, at_tick=40)
     exchanges: list[tuple[cf.Cargoflow2Request, cf.Cargoflow2Readback]] = []
+    prev_offset = 0
     for index, row in enumerate(SCHEDULE):
-        if row["op"] == "flow" and int(row["offset"]) > 0:
+        offset = int(row["offset"])
+        if row["op"] == "flow" and offset > 0:
             sweep_days(vm, 1)
+            law_tick = cf.CARGOFLOW2_DAY_ROLL_ANCHOR + cf.DAY_TICKS * (offset - 1)
+            # The row's (offset − prev_offset) Sleeps advance the roll-day
+            # sweep one ended day each; pre-shape the window start so the
+            # exit instant lands exactly at the row's law tick.
+            vm.execute(f"::ticks = {law_tick - (offset - prev_offset)};")
+            prev_offset = offset
+        elif row["op"] in ("finance", "finish"):
+            # The tail rows read the flow-11 instant unchanged: no further
+            # day sweep after the ladder's last step (their own events are
+            # read-only, their echo instant already holds the roll tick).
+            sweep_days(vm, 0)
         request = make_request(index)
         readback = drive(vm, request)
         probes = cf.cargoflow2_phase_outcome(
@@ -667,10 +695,25 @@ def _exchange_day(row: dict, *, arrival_day: int) -> int:
 def _exchange_tick(
     row: dict, *, start_tick: int, arrival_tick: int, sample_tick: int
 ) -> int:
+    """The E113 law-consistent observation tick of one exchange row.
+
+    Base rows read on the launch day before the day's own event window
+    (with the latched ``start_tick``), the arrival and the zero-offset
+    flow read inside the launch day's flight window at ``arrival_tick``
+    (< the day-roll anchor + 1, so the day-712229 event stays unbilled),
+    and every ladder step at offset ≥ 1 reads at its own day's roll tick
+    ``48 + 74 · (offset − 1)`` — in-day 0, so the read excludes that day's
+    own event exactly as the stub's ``[old_day, new_day)`` fee loop never
+    bills the crossing day. ``sample_tick`` is kept for the ladder's
+    latch instants, which carry no funds reconciliation.
+    """
     if row["op"] == "arrive-watch":
         return arrival_tick
     if row["op"] in ("flow", "finance", "finish"):
-        return sample_tick
+        offset = int(row["offset"])
+        if offset <= 0:
+            return arrival_tick
+        return cf.CARGOFLOW2_DAY_ROLL_ANCHOR + cf.DAY_TICKS * (offset - 1)
     return start_tick
 
 
@@ -1496,60 +1539,142 @@ def test_worst_case_response_byte_audit():
 def test_funds_walk_exact_acquisition_vector():
     """The hand-carried funds vector of record, walked by the model alone.
 
-    Every level was hand-derived from the §4 pins and reproduced by the
-    real handler run (the stub fee engine agrees walk for walk): the
-    purchase debit to 485221, the flow-01 level 485215 (the start-day
-    partial 44-tick charge from the latched tick 30), the flow-06 level
-    484994 (the Feb 1 charge 167+25 landed in its span), flow-11 at
-    484774 (the Mar 1 charge in its span) and the tail rows frozen at
-    the last level.
+    Every level is the E113 law's own walk (the stub fee engine's
+    independent reimplementation agrees walk for walk): the purchase debit
+    to 485221, the flow-01 level 485217 (the day-712229 charge event
+    carrying the unstop partial, rt = 48 − 30 = 18 from the latched tick
+    30), the flow-06 level 484996 (the Feb 1 charge 167+25 landed in its
+    span), flow-11 at 484775 (the Mar 1 charge in its span) and the tail
+    rows frozen at the last level.
     """
     observed, model = funds_walk({})
     assert observed["site-00"] == 489650
     assert observed["engine-00"] == 489650
     assert observed["purchase-00"] == 485221
     assert observed["flow-00"] == 485221
-    assert observed["flow-01"] == 485215
-    assert observed["flow-02"] == 485209
-    assert observed["flow-03"] == 485204
-    assert observed["flow-04"] == 485198
-    assert observed["flow-05"] == 485192
-    assert observed["flow-06"] == 484994
-    assert observed["flow-07"] == 484989
-    assert observed["flow-08"] == 484983
-    assert observed["flow-09"] == 484977
-    assert observed["flow-10"] == 484971
-    assert observed["flow-11"] == 484774
-    assert observed["finance-00"] == 484774
-    assert observed["finish-00"] == 484774
+    assert observed["flow-01"] == 485217
+    assert observed["flow-02"] == 485211
+    assert observed["flow-03"] == 485205
+    assert observed["flow-04"] == 485199
+    assert observed["flow-05"] == 485194
+    assert observed["flow-06"] == 484996
+    assert observed["flow-07"] == 484990
+    assert observed["flow-08"] == 484984
+    assert observed["flow-09"] == 484979
+    assert observed["flow-10"] == 484973
+    assert observed["flow-11"] == 484775
+    assert observed["finance-00"] == 484775
+    assert observed["finish-00"] == 484775
     assert model.running_cost == ENGINE_RUNNING_DISPLAY
     assert model.purchase_paid and model.started == (ANCHOR, TICK_OF_RECORD)
 
 
 def test_funds_walk_running_rows_of_record():
-    """The exact 8.8-carry whole rows: the start-day partial then full days.
+    """The exact 8.8-carry whole rows: unstop partial inside the first
+    billed event, then full days.
 
-    Row shape per ended day is ``(ended_day, running_ticks, whole_units)``:
-    the start day runs 74 − 30 = 44 ticks from the latched instant, every
-    later ended day runs the full 74. The two crossed 1950 boundaries
-    show in the funds levels (flow-06 and flow-11), whole-unit and
-    fraction-free, exactly one 192 each.
+    Row shape per billed event is ``(event_day, running_ticks,
+    whole_units)`` under the E113 charge-event law: the day-712229 event
+    carries the unstop partial rt = 48 − 30 = 18 from the latched tick 30
+    (no phantom start-day row — the launch day's own event is silent
+    pre-unstop), every later billed event runs the full 74 and event rows
+    key by their own rolled day. The two crossed 1950 boundaries show in
+    the funds levels (flow-06 and flow-11), whole-unit and fraction-free,
+    exactly one 192 each.
     """
     observed, model = funds_walk({})
     rows = dict(model.running_costs)
     assert [row for row in rows if row not in CARGOFLOW2_FLOW_ROW_IDS] == []
     flow_rows = rows["flow-01"]
-    assert flow_rows[0] == (712228, 44, 1)
+    assert flow_rows[0] == (712229, 18, 1)
     assert [row for row in flow_rows[1:]] == [
-        (712229, 74, 1),
         (712230, 74, 1),
-        (712231, 74, 2),
+        (712231, 74, 1),
         (712232, 74, 1),
     ]
     assert all(row[1] == 74 for rid, day_rows in rows.items() for row in day_rows[1:])
     assert list(rows) == ["flow-01", "flow-02", "flow-03", "flow-04", "flow-05", "flow-06",
                           "flow-07", "flow-08", "flow-09", "flow-10", "flow-11"]
     assert model.fraction in range(256)
+
+
+def test_funds_model_charge_event_walk_candidate5_class():
+    """The E113 fence lock: the funds model walks the candidate-5 halt class.
+
+    Regression lock of the halt class of record, walked on the corridor's
+    own 11 instants (base chain on the launch day, arrive-00 at its
+    (712232, 292) instant): the charge-event lattice of record — events at
+    ``T0 + 1 + 74k`` (the day-roll anchor T0 = 48, the vehicle-1 slot), the
+    launch day's own event silent pre-unstop, the start-day partial billed
+    inside the first billed event (rt = 49 − 28 = 21 from the unstop count
+    start 28), every later day full 74, and the in-window day-712232 event
+    counted. Each event bills ``c256 >> 8`` whole plus the uint8-wrap
+    borrow carry: ledger [(712229, 21, 1), (712230, 74, 1), (712231, 74, 1),
+    (712232, 74, 1)] and 485217 observed at arrive-00 with residual 0. The
+    pre-fix walk kept the model-only day-row frame — a phantom (712228, 47)
+    start-day row, the phase-shifted early-borrow day-712230 whole 2, and
+    the missed in-window day-712232 event — ending at funds 485216 with
+    residual +1: the exact divergence that halted candidate-5 at arrive-00.
+    """
+    from app.simulation.openttd.corridor_cargoflow2 import Cargoflow2FundsModel
+
+    model = Cargoflow2FundsModel(start_funds=489650, purchase_quote=4429)
+    corridor: list[tuple[str, int, int]] = [
+        ("site-00", 712228, 15),
+        ("engine-00", 712228, 16),
+        ("purchase-00", 712228, 18),
+        ("vread-00", 712228, 19),
+        ("order-00", 712228, 21),
+        ("order-01", 712228, 23),
+        ("order-read-00", 712228, 24),
+        ("monitor-00", 712228, 25),
+        ("start-00", 712228, 27),
+        ("vread-01", 712228, 28),
+    ]
+    expected = {
+        "site-00": 489650,
+        "engine-00": 489650,
+        "purchase-00": 489650,
+        "vread-00": 485221,
+        "order-00": 485221,
+        "order-01": 485221,
+        "order-read-00": 485221,
+        "monitor-00": 485221,
+        "start-00": 485221,
+        "vread-01": 485221,
+        "arrive-00": 485217,
+    }
+    for exchange_id, day, tick in corridor:
+        modeled = model.advance(exchange_id, day, tick, 0)
+        assert modeled == expected[exchange_id], (exchange_id, modeled)
+        if exchange_id == "engine-00":
+            model.admit_running_cost(ENGINE_RUNNING_DISPLAY)
+        elif exchange_id == "purchase-00":
+            model.debit_purchase()
+        elif exchange_id == "start-00":
+            model.start_vehicle(day, tick)
+    assert model.started == (712228, 27)
+    # The pre-arrive witness of record: no billed event yet (the launch
+    # day's own event is pre-session silent, the first billed event sits at
+    # tick 49 of day 712229, after every base-chain instant).
+    assert model.funds == 485221
+    residual = model.reconcile(
+        exchange_id="arrive-00",
+        day=712232,
+        tick=292,
+        income=0,
+        observed=485217,
+    )
+    assert residual == 0
+    rows = dict(model.running_costs)
+    assert rows == {
+        "arrive-00": [
+            (712229, 21, 1),
+            (712230, 74, 1),
+            (712231, 74, 1),
+            (712232, 74, 1),
+        ],
+    }
 
 
 def test_funds_model_refusals():
@@ -1616,13 +1741,13 @@ def test_funds_walk_income_attr_of_record():
     income["finance-00"] = 3000
     income["finish-00"] = 3000
     observed, _model = funds_walk(income)
-    assert observed["flow-01"] == 485215  # before the first income delta
-    assert observed["flow-02"] == 485209 + 300
-    assert observed["flow-03"] == 485204 + 600
-    assert observed["flow-04"] == 485198 + 900
-    assert observed["flow-11"] == 484774 + 3000
-    assert observed["finance-00"] == 484774 + 3000
-    assert observed["finish-00"] == 484774 + 3000
+    assert observed["flow-01"] == 485217  # before the first income delta
+    assert observed["flow-02"] == 485211 + 300
+    assert observed["flow-03"] == 485205 + 600
+    assert observed["flow-04"] == 485199 + 900
+    assert observed["flow-11"] == 484775 + 3000
+    assert observed["finance-00"] == 484775 + 3000
+    assert observed["finish-00"] == 484775 + 3000
 
 
 # --- The §5.5 verdict slicing: knob matrix over the synthetic ladder --------
@@ -1756,11 +1881,11 @@ def test_complete_ladder_sampling_of_record():
     assert civil_ymd(by_id["flow-11"].day) == (1950, 3, 2)
     # the funds stairway at the sampled instants (the model of record; the
     # default ladder's cumulative income attribution rides both levels)
-    assert by_id["flow-06"].funds == 484994 + 1500 == 486494
-    assert by_id["flow-11"].funds == 484774 + 3000 == 487774
+    assert by_id["flow-06"].funds == 484996 + 1500 == 486496
+    assert by_id["flow-11"].funds == 484775 + 3000 == 487775
     # this fixture's finance frame reads income 0 (its income_by_id carries
     # flow rows only), so its walk level unwinds the cumulative attribution
-    assert by_id["finance-00"].funds == 484774
+    assert by_id["finance-00"].funds == 484775
     # the last ladder row shares the finance row's economy day
     assert by_id["flow-11"].day == by_id["finance-00"].day
 
@@ -1846,8 +1971,8 @@ _DEFAULT_PIN_TABLE_OF_RECORD = {
 }
 
 # The §4 funds acquisition vector of record, walked whole (the exact
-# purchase debit, the start-day partial, the two crossed 1950 boundaries,
-# the income-free ladder).
+# purchase debit, the unstop partial billed inside the first charge
+# event, the two crossed 1950 boundaries, the income-free ladder).
 _ACQUISITION_VECTOR_OF_RECORD = {
     "site-00": 489650,
     "engine-00": 489650,
@@ -1861,19 +1986,19 @@ _ACQUISITION_VECTOR_OF_RECORD = {
     "vread-01": 485221,
     "arrive-00": 485221,
     "flow-00": 485221,
-    "flow-01": 485215,
-    "flow-02": 485209,
-    "flow-03": 485204,
-    "flow-04": 485198,
-    "flow-05": 485192,
-    "flow-06": 484994,
-    "flow-07": 484989,
-    "flow-08": 484983,
-    "flow-09": 484977,
-    "flow-10": 484971,
-    "flow-11": 484774,
-    "finance-00": 484774,
-    "finish-00": 484774,
+    "flow-01": 485217,
+    "flow-02": 485211,
+    "flow-03": 485205,
+    "flow-04": 485199,
+    "flow-05": 485194,
+    "flow-06": 484996,
+    "flow-07": 484990,
+    "flow-08": 484984,
+    "flow-09": 484979,
+    "flow-10": 484973,
+    "flow-11": 484775,
+    "finance-00": 484775,
+    "finish-00": 484775,
 }
 
 

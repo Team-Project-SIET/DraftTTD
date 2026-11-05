@@ -144,6 +144,18 @@ CARGOFLOW2_YEARLY_INTEREST = (
 DAYS_IN_ECONOMY_YEAR = 365
 DAY_TICKS = 74
 
+# The E113 charge-event lattice of record: the spread economy-day proc
+# ("This is called once per day for each vehicle, but not in the first
+# tick of the day", vehicle.cpp:921-950 at tag-15.3) dispatches each
+# vehicle on the first tick after its day's roll — vehicle 1's slot
+# (``index % DAY_TICKS == 1``) inside ``CallVehicleTicks``, which runs
+# after the economy ``Elapsed`` roll (openttd.cpp:1264-1267). The charge
+# events sit at ``T0 + 1 + 74k``; with the day-roll anchor T0 = 48 (E112's
+# clock law of record, ``date = 712229 + floor((tick - 48) / 74)``) the
+# event k bills on its own rolled day ``CARGOFLOW2_LAUNCH_DAY + 1 + k``.
+CARGOFLOW2_DAY_ROLL_ANCHOR = 48
+CARGOFLOW2_CHARGE_SLOT = 1
+
 # The launch day of record: L = 712228 (Jan 6, 1950 — the save's current
 # date at load, pinned by E99's ``sample-00`` anchor at tick 17). The 1950
 # calendar base of record: day 712223 is Jan 1, 1950. The attempt can never
@@ -349,6 +361,8 @@ if (
     or _CARGOFLOW2_MONTH_INSTALLMENT_BY_DAY[712254] != 167
     or _CARGOFLOW2_MONTH_INSTALLMENT_BY_DAY[712282] != 167
     or CARGOFLOW2_YEARLY_INTEREST != 2000
+    or CARGOFLOW2_DAY_ROLL_ANCHOR != 48
+    or CARGOFLOW2_CHARGE_SLOT != 1
     or PLANNED_CARGOFLOW2_EXCHANGES > CARGOFLOW2_REQUEST_BUDGET
     or CARGOFLOW2_WAIT_MAX_TICKS != 2048
     or CARGOFLOW2_WAIT_DAY_CAP != 60
@@ -1481,15 +1495,19 @@ class Cargoflow2FundsModel:
 
     The model owns: the exact purchase debit; the staircase monthly
     interest plus the pinned station fee at each new economy-month
-    boundary; the per-economy-day running cost through the exact 8.8
-    fixed-point fraction carry (§4.3) — the start day carries the partial
-    tick count derived from the latched (day, tick) start instant; and the
-    delivery income attributed from the engine's own quarter-income reads
-    at the same observation instants. The purchase, interest and fee are
-    whole-unit and fraction-free; only the vehicle running cost touches the
-    fraction. Anything observed outside these terms is a divergence: the
-    fence halts fail-closed at that exchange, and the model is never
-    loosened to pass (§8 item 5).
+    boundary; the running cost billed at every charge event of the E113
+    lattice (events at ``T0 + 1 + 74k``, vehicle 1's slot, keyed by its
+    own rolled day) through the exact 8.8 fixed-point fraction carry
+    (§4.3) — the unstop partial bills inside the first billed event
+    (rt = event − count start, from the latched + 1 unstop tick), every
+    later event full ``DAY_TICKS``, and a pre-count (rt ≤ 0) event is
+    silent with no state change; and the delivery income attributed from
+    the engine's own quarter-income reads at the same observation
+    instants. The purchase, interest and fee are whole-unit and
+    fraction-free; only the vehicle running cost touches the fraction.
+    Anything observed outside these terms is a divergence: the fence
+    halts fail-closed at that exchange, and the model is never loosened
+    to pass (§8 item 5).
     """
 
     def __init__(
@@ -1511,6 +1529,14 @@ class Cargoflow2FundsModel:
         self.frontier: tuple[int, int] | None = None
         self.purchase_paid = False
         self.running_costs: list[tuple[str, list[tuple[int, int, int]]]] = []
+        # The charge-event cursor and the running-count period start of
+        # record: the cursor starts one lattice step before the session
+        # (the launch day's own event, tick −25 under T0 = 48), silent —
+        # pre-unstop events bill nothing and take no state change.
+        self._next_charge_tick = (
+            CARGOFLOW2_DAY_ROLL_ANCHOR + CARGOFLOW2_CHARGE_SLOT - DAY_TICKS
+        )
+        self._run_period_start: int | None = None
 
     def admit_running_cost(self, display: int) -> None:
         """§4.1 (the E111 correction): the display pin arrives natively and
@@ -1545,36 +1571,61 @@ class Cargoflow2FundsModel:
         return whole
 
     def start_vehicle(self, day: int, tick: int) -> None:
-        """§4.2 item 4: the start day is partial from its latched tick."""
+        """§4.2 item 4: the start day is not its own row — the vehicle
+        unstops one tick after its latched acceptance and the running
+        count starts there (E113's unstop latch), so the start-day partial
+        bills inside the first billed lattice event on the next rolled
+        day."""
         if self.started is not None:
             raise ValueError("the vehicle was already started")
         if self.frontier is None:
             raise ValueError("the model has no observation frontier before the start")
         self.started = (day, tick)
+        self._run_period_start = tick + 1
 
     def advance(
         self, exchange_id: str, day: int, tick: int, income: int
     ) -> int:
         """Reconcile the modeled funds up to one observation instant.
 
-        Charge application order: the economy-day running-cost boundaries
-        for days ended since the frontier (whole days at ``DAY_TICKS``; the
-        start day partial from its latched tick), then the whole-unit
-        monthly charges at each new economy-month boundary crossed, then
-        the engine-read income delta. Returns the modeled funds level.
+        Charge application order: the charge events of the E113 lattice up
+        to this observation tick — event k bills on its own rolled day
+        ``CARGOFLOW2_LAUNCH_DAY + 1 + k`` its own
+        ``raw · rt // 27010`` charge at the 8.8 fraction carry since the
+        last billed event (the first interval from the unstop count
+        start, ``DAY_TICKS`` between consecutive events, an rt ≤ 0 event
+        silent with no state change), then the whole-unit monthly
+        charges at each new economy-month boundary crossed by the
+        observation days, then the engine-read income delta. Returns the
+        modeled funds level.
         """
-        if self.frontier is not None and day < self.frontier[0]:
+        if self.frontier is not None and (day, tick) < self.frontier:
             raise ValueError("the observation clock ran backwards")
         daily: list[tuple[int, int, int]] = []
-        monthly = 0
-        if self.frontier is not None and day > self.frontier[0]:
-            prev_day = self.frontier[0]
-            if self.running_cost is not None and self.started is not None:
-                start_day, start_tick = self.started
-                for ended_day in range(max(prev_day, start_day), day):
-                    rt = DAY_TICKS - start_tick if ended_day == start_day else DAY_TICKS
+        while self._next_charge_tick <= tick:
+            event_tick = self._next_charge_tick
+            event_day = CARGOFLOW2_LAUNCH_DAY + 1 + (
+                (event_tick - CARGOFLOW2_DAY_ROLL_ANCHOR - CARGOFLOW2_CHARGE_SLOT)
+                // DAY_TICKS
+            )
+            if self.started is not None and self.running_cost is not None:
+                count_start = self._run_period_start
+                if count_start is None:
+                    # Unreachable on the walk of record — every started
+                    # model was seeded by its own start_vehicle — but the
+                    # guard keeps the count arithmetic total.
+                    raise ValueError("the running count has no unstop period start")
+                rt = event_tick - count_start
+                if rt > 0:
                     whole = self._day_running_cost(rt)
-                    daily.append((ended_day, rt, whole))
+                    daily.append((event_day, rt, whole))
+                    self._run_period_start = event_tick
+            self._next_charge_tick += DAY_TICKS
+        if daily:
+            self.running_costs.append((exchange_id, daily))
+        monthly = 0
+        if self.frontier is not None:
+            prev_day, _prev_tick = self.frontier
             monthly = sum(
                 cargoflow2_month_charge(boundary)
                 for boundary in CARGOFLOW2_MONTH_BOUNDARY_DAYS
@@ -1592,8 +1643,6 @@ class Cargoflow2FundsModel:
         self.funds += delta
         self.income_deltas.append((exchange_id, day, tick, delta))
         self.frontier = (day, tick)
-        if daily:
-            self.running_costs.append((exchange_id, daily))
         return self.funds
 
     def reconcile(

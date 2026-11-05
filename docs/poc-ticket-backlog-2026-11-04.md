@@ -1991,3 +1991,66 @@ readiness, outside this round's PoC definition.
   refresh) committed BEFORE round-6's identity advance, then the
   round-6 gate ladder — `candidate-5` → `candidate-6` + ONE prepare,
   fresh review, Gate C, ONE launch, each gate separately approved.
+- 2026-11-05 — TICKET 05 (halt-class loop, round-5 arm) OFFLINE FIX OF
+  RECORD EXECUTED UNDER EXPLICIT OPERATOR APPROVAL ("resume ticket 05
+  to next ticket"), evidence E114: the funds model's day-charge walk
+  moved to the E113 charge-event frame — failing-regression lock first:
+  `test_funds_model_charge_event_walk_candidate5_class` (candidate-5's
+  own 11-instant corridor grid, arrive-00 reconcile `observed=485217`
+  residual 0, running rows [(712229, 21, 1), (712230, 74, 1), (712231,
+  74, 1), (712232, 74, 1)]) ran pre-fix RED (transcript
+  `/tmp/opencode/t005_r6_lock_prefix_output.txt`, exit 1, `assert
+  485221 == 485217` — the pre-fix walk charged nothing before
+  arrive-00) then GREEN post-fix (transcript
+  `/tmp/opencode/t005_r6_lock_postfix_output.txt`, exit 0). The fix
+  (`app/simulation/openttd/corridor_cargoflow2.py`, funds model only;
+  proviso kept: no wire/fail-closed gate touched, kernel
+  byte-unchanged, `reconcile`'s zero-residual fence unchanged):
+  constants `CARGOFLOW2_DAY_ROLL_ANCHOR = 48` +
+  `CARGOFLOW2_CHARGE_SLOT = 1` pinned with the §4 guard; walk cursor
+  started one lattice step pre-session (tick −25, silent);
+  `start_vehicle` seeds the running count at `tick + 1` (no phantom
+  start-day row); `advance` bills every lattice event up to the
+  observation tick keyed by its own rolled day, gated on
+  started-and-admitted (a raw-less advance stays charge-free, E111's
+  order preserved), rt = event − count start (latched tick + 1, then
+  event-after-each billed), rt ≤ 0 events silent with no state change,
+  rows re-keyed `(event_day, rt, whole)`; the backstop guard widened to
+  (day, tick) tuple ordering (same-day-tick-backwards arm, raise
+  string intact). Toy twin, one law both frames
+  (`tests/test_corridor_cargoflow2.py`): `_exchange_tick` walks
+  law-consistent instants (base rows keep 30, arrival + flow-00 keep
+  40, offset ≥ 1 at `48 + 74·(offset − 1)` in-day 0 — each read
+  excludes that day's own event exactly as the stub's `[old_day,
+  new_day)` fee loop never bills the crossing day); the Squirrel fee
+  engine rewritten to the same law (silent `d ≤ run_start_day`, rt =
+  `48 − run_start_tick` on the first charged day, full 74 after);
+  `run_probe_vm` pre-shapes each ladder row's window start
+  `offset − prev_offset` ticks short of the roll tick so the row's own
+  sweep lands the law tick exactly (a first freeze-set attempt was
+  rejected by the window's own `CLOCK_STALLED` watchdog — strictly
+  increasing ticks is its contract — disclosed in the evidence).
+  Re-derived funds figures of record (the walk itself the authority):
+  flow-01 485217 (unstop partial rt-first 18 from the latched tick 30),
+  flow-02..05 485211/485205/485199/485194, flow-06 484996 (Feb 1),
+  flow-07..10 484990/484984/484979/484973, flow-11 484775 (Mar 1), rows
+  witnessed flow-01 [(712229, 18, 1), (712230, 74, 1), (712231, 74, 1),
+  (712232, 74, 1)], borrow rows [712234, 712241, 712247, 712254,
+  712261, 712267, 712274, 712280] (8 borrows across 54 billed events,
+  the E113 per-7-days rate; non-monthly whole 62; tail fraction 166;
+  probe `/tmp/opencode/t005_r6_walk_probe.txt`);
+  `_ACQUISITION_VECTOR_OF_RECORD` re-carried to the walk values. Gates
+  green, exit 0: focused suites `tests/test_corridor_cargoflow2.py`
+  (84) + `tests/test_corridor_cargoflow2_vm.py` (11) +
+  `tests/test_corridor_cargoflow2_native.py` (39 offline) = 134 passed;
+  the production-path run of record `test_ladder_of_record_runs_green`
+  end-to-end green under the new law; `ruff check` clean on all four
+  touched paths; `uvx ty check` clean (0 diagnostics); `git diff
+  --check` clean; `CONTEXT.md` pin untouched, round-5 verdicts
+  unrelabeled, candidate-5 stays consumed terminal history, no run, no
+  staging, no candidate actions. NEXT: settle-then-freeze
+  doc/vocabulary writes (spec §4.3 wording, CONTEXT.md rows via
+  authority transition 3, AI_HANDOFF refresh) — own approval, BEFORE
+  round-6; then the round-6 gate ladder — `candidate-5` →
+  `candidate-6` + ONE prepare, fresh review, Gate C, ONE launch, each
+  gate separately approved.

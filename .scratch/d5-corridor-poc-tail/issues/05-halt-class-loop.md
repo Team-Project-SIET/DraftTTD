@@ -16,8 +16,11 @@ nothing further.
 
 **Status:** in-progress 2026-11-05 — diagnosis-of-record complete (E112),
 refined by the 15.3 source pin (E113: one billing mechanism; the +1 is
-the start-day rt frame error 47 vs 21); offline fix + fresh-round
-re-entry gates remain, each its own explicit operator approval
+the start-day rt frame error 47 vs 21); **offline fix of record landed
+(E114)** — funds-model charge-event walk + one-law toy twin, failing
+regression lock RED pre-fix, gates green, committed; settle-then-freeze
+doc cluster + round-6 re-entry gates remain, each its own explicit
+operator approval
 
 - [x] Branch decision of record stated from the round-5 outcome (delivered →
       not needed; halt → proceed)
@@ -98,6 +101,51 @@ confirmed (the in-window day-712232 event, tick 271, is a real fourth
 debit the model never books). Fix direction is now source-precise: the
 funds-model day-walk moves to the charge-event frame (kernel
 arithmetic unchanged; regression locks the whole class needs).
+
+**Round-5 arm — offline fix of record (2026-11-05, E114):** the
+operator approved the fix round ("resume ticket 05") and the fix
+landed under the clean-run discipline. **Failing regression lock
+first**: `test_funds_model_charge_event_walk_candidate5_class` (the
+candidate-5 11-instant corridor grid + arrive-00 reconcile
+`observed=485217` residual 0 + running rows [(712229, 21, 1),
+(712230, 74, 1), (712231, 74, 1), (712232, 74, 1)]) ran pre-fix RED
+(charged nothing before arrive-00, `assert 485221 == 485217`, exit 1,
+transcript retained) then GREEN post-fix — the lock fences the exact
+class of record. **Model fix** (`corridor_cargoflow2.py`,
+`Cargoflow2FundsModel` only): pinned constants
+`CARGOFLOW2_DAY_ROLL_ANCHOR = 48` + `CARGOFLOW2_CHARGE_SLOT = 1`
+(re-pinned in the §4 guard block); the walk cursor starts one lattice
+step pre-session (tick −25, silent); `start_vehicle` keeps its refuses
+verbatim and seeds the running count at `tick + 1` (no phantom
+start-day row); `advance` bills every lattice event up to the
+observation tick keyed by its own rolled day
+(`L + 1 + (t − 49) // 74`), gated on started-and-admitted (a raw-less
+advance stays charge-free, E111's order preserved), rt = event − count
+start (latched tick + 1, then event-after-each billed), rt ≤ 0 silent
+with no state change, rows re-keyed `(event_day, rt, whole)`; kernel
+byte-unchanged; monthly boundaries unchanged; `reconcile` untouched;
+the backstop guard widened to (day, tick) tuple ordering — the new
+same-day-tick-backwards arm, exact raise string intact. **Toy twin
+(one law both frames)**: `_exchange_tick` law instants (base rows
+keep 30, arrival + flow-00 keep 40, offset ≥ 1 rows at
+`48 + 74·(offset − 1)` in-day 0); the Squirrel fee engine rewritten to
+the same law (silent `d ≤ run_start_day`, rt = `48 − run_start_tick`
+on the first charged day, full 74 after); `run_probe_vm` pre-shapes
+each row's window start `offset − prev_offset` ticks short of the
+roll tick so the row's own sweep lands the law tick (a tick freeze-set
+was first tried and halted in the window's own `CLOCK_STALLED` —
+strictly increasing ticks are its contract — and the pre-shape is the
+landing shape); re-derived funds figures of record: flow-01 485217
+(rt-first 18 from the latched tick 30), flow-06 484996, flow-11
+484775, borrow rows [712234, 712241, 712247, 712254, 712261, 712267,
+712274, 712280] (8, the E113 per-7-days rate), non-monthly whole 62,
+tail fraction 166; `_ACQUISITION_VECTOR_OF_RECORD` re-carried.
+**Gates**: 134 passed (84 + 11 + 39; the prod-path ladder
+`test_ladder_of_record_runs_green` end-to-end green under the new
+law), `ruff` clean, `uvx ty` clean (0 diagnostics), `git diff --check`
+clean, pytest exit 0 on the focused runs of record. No run, no
+staging, no candidate actions; candidate-5 stays consumed terminal
+history.
 
 **Cards block of record (next candidate round):** the round-6 cycle
 re-enters ticket 01's ladder with a fresh identity — pipeline constant
