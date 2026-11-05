@@ -3,9 +3,9 @@
 	"path": "CONTEXT.md",
 	"historical_sha256": "b94b96649b466e73e25c9df9409bd745e311b84273bedfd9a111792869e3b7b3",
 	"historical_bytes_retained": false,
-	"current_sha256": "343daad2de19d44364c51fcf2665088c24d2734a521955845953821580ba7caf",
+	"current_sha256": "847d710abe87e2ed211a72d6455f3f1326b1476eca1711ab8be900080ec2984d",
 	"recorded": "2026-11-05",
-	"authority": "Explicit operator authorization, session 2026-11-05 (appended-option Q3, grilling round 1)",
+	"authority": "Explicit operator authorization, session 2026-11-05 (grilling round for ending ticket 05 answered 'A A A': one approval covering the settle-then-freeze doc-cluster round and the close-out commit)",
 	"decision": "ADR-014",
-	"reason": "Second sanctioned transition to the current canonical CONTEXT.md, keeping the original 2026-10-08 capture (b94b9664…) as the record's historical anchor. Evolution of record: b94b9664… → 36648f9c2fee…cc29 (sanctioned 2026-10-25, ADR-014) → 343daad2de19…caf (2026-11-05): six corridor-vocabulary terms (route binding, expand-only parameterization, staged candidate, freeze pin, seal, reconciliation debt) appended to the prepend-only shared-language zone with zero earlier bytes changed. The predecessor byte states remain reachable as git-tracked history, not as retained re-capture files; all historical freeze manifests remain frozen and unmodified."
+	"reason": "Third sanctioned transition to the current canonical CONTEXT.md, keeping the original 2026-10-08 capture (b94b9664…) as the record's historical anchor. Evolution of record: b94b9664… → 36648f9c2fee…cc29 (sanctioned 2026-10-25, ADR-014) → 343daad2de19…caf (2026-11-05, second transition: route binding, expand-only parameterization, staged candidate, freeze pin, seal, reconciliation debt) → 847d710abe87…984d (2026-11-05, third transition: day-roll anchor, charge event, unstop count start) — both transitions appended corridor-vocabulary terms to the prepend-only shared-language zone with zero earlier bytes changed, as the settle-then-freeze round of ticket 05. The predecessor byte states remain reachable as git-tracked history, not as retained re-capture files; all historical freeze manifests remain frozen and unmodified."
 }

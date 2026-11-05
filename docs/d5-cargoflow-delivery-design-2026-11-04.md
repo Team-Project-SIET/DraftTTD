@@ -312,15 +312,26 @@ exchange.
    (`economy.cpp:1972` sits inside the inflation branch), so the fee
    is 25 at every boundary of the attempt. Pinned by the E99
    cross-check: 192 − 167 = 25.
-4. **Vehicle running costs** — at each economy-day boundary, for the
-   previous day's `running_ticks`: the 8.8 fixed-point amount
+4. **Vehicle running costs** — at each charge event of the E113 event
+   lattice of record: the events sit at `T0 + 1 + 74k` (T0 = 48 is the
+   day-roll anchor of record, so vehicle 1's spread day-proc slot fires
+   on the first tick after its day's roll — the spread proc
+   `vehicle.cpp:921-950` dispatched inside `CallVehicleTicks` after the
+   economy roll, `openttd.cpp:1264-1267`), and each event k bills on
+   its own rolled economy day. The amount is the 8.8 fixed-point
    `C256 = raw · rt / (365 · 74)` (integer division), paid through
-   `SubtractMoneyFromCompanyFract`. `rt = 74` for every economy day
-   the vehicle is started and not `Stopped` — driving and loading both
+   `SubtractMoneyFromCompanyFract`; `rt` is the uninterrupted running
+   tick count since the count start — driving and loading both
    accrue (`roadveh_cmd.cpp:1662`), and breakdowns do not set
-   `Stopped`, so they move no money. The start day is partial: its
-   tick count is derived from the latched (day, tick) phase of record,
-   which the receipts' own day-ladder pairs pin. The vehicle never
+   `Stopped`, so they move no money. The count start of record: the
+   vehicle unstops one tick after its latched acceptance (start tick
+   + 1) and the count carries until the first billed event; every
+   billed event resets the count start after billing
+   (`roadveh_cmd.cpp:1745`), so the later intervals run the full 74.
+   A pre-count event (rt ≤ 0 — the launch day's own event arrives
+   before the unstop and before `start-00`) is fully silent and
+   changes no state (`roadveh_cmd.cpp:1728`'s `running_ticks == 0`
+   gate). The start day is never its own billed row. The vehicle never
    enters a depot after `start-00` (the two-order loop has no depot
    order), so no `Stopped` time exists.
 5. **Other expenses — none of record.** Inflation off (no
@@ -348,9 +359,9 @@ exchange.
 `money_fraction` is a uint8 accumulator, 0 at founding. The complete
 `SubtractMoneyFromCompanyFract` site set is the four vehicle
 running-cost handlers (§3.3); this attempt owns one road vehicle, so
-the fraction evolves solely under the daily road-vehicle charge. Per
-charge, with fraction state `f` and 8.8 amount `C256`
-(`company_cmd.cpp:324-335`):
+the fraction evolves solely under the road-vehicle charge of the E113
+event lattice (§4.2 item 4). Per charge, with fraction state `f` and
+8.8 amount `C256` (`company_cmd.cpp:324-335`):
 
 ```
 low   = C256 & 0xFF

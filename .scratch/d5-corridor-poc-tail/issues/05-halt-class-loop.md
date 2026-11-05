@@ -14,13 +14,15 @@ round 3 delivered, this ticket resolves trivially as "not needed".
 **Blocked by:** 04 (Round-3: the one launch). Its "not needed" arm needs
 nothing further.
 
-**Status:** in-progress 2026-11-05 — diagnosis-of-record complete (E112),
+**Status:** closed 2026-11-05 — diagnosis-of-record complete (E112),
 refined by the 15.3 source pin (E113: one billing mechanism; the +1 is
-the start-day rt frame error 47 vs 21); **offline fix of record landed
-(E114)** — funds-model charge-event walk + one-law toy twin, failing
-regression lock RED pre-fix, gates green, committed; settle-then-freeze
-doc cluster + round-6 re-entry gates remain, each its own explicit
-operator approval
+the start-day rt frame error 47 vs 21); offline fix of record landed
+(E114) — funds-model charge-event walk + one-law toy twin, failing
+regression lock RED pre-fix, gates green, committed `1724b00`; the
+settle-then-freeze doc cluster landed as this ticket's final gate
+(E115) and it closes with no dangling gates. Its re-entry obligation is
+carried in full by the round-6 gate ladder on tickets 01–04; this
+ticket issues no candidate actions
 
 - [x] Branch decision of record stated from the round-5 outcome (delivered →
       not needed; halt → proceed)
@@ -154,3 +156,47 @@ independent review (ticket 02 method), Gate C signing (ticket 03), ONE
 launch (ticket 04) — four separate operator approvals, none authorized by
 this ticket; settle-then-freeze: all remaining doc/vocabulary writes land
 and are committed before round-6's identity advance.
+
+**Close-out of record (2026-11-05, E115):** the ticket's final gate was
+the settle-then-freeze doc cluster, landed and committed as one
+operator-authorized round (its wording drafted from E112/E113/E114 and
+the spec of record, disclosed as the approved commit's diff):
+
+1. Design record `docs/d5-cargoflow-delivery-design-2026-11-04.md`:
+   §4.2 item 4 re-worded to the E113 event frame — charge events at
+   `T0 + 1 + 74k` (day-roll anchor 48; vehicle 1's spread day-proc slot
+   on the first tick after its day's roll; each event keyed by its own
+   rolled day), rt = uninterrupted running ticks since the count start
+   (unstop latch = latched tick + 1 through the first billed event;
+   every billed event resets the count start after billing), pre-count
+   rt ≤ 0 events fully silent changing no state, the start day never
+   its own billed row; §4.3's framing moved to the same event lattice,
+   the `SubtractMoneyFromCompanyFract` borrow kernel block byte-unchanged.
+2. Spec of record `docs/specs/d5-corridor-poc-tail.md`: the funds
+   taxonomy now names the charge-event lattice (day-roll anchor + 1 +
+   k·74), the unstop partial inside the first billed event and silent
+   pre-count events; the seam-2 funds-fence decision names the stub's
+   independent charge-event reimplementation of the same E113 law and
+   re-carries the pinned walk levels (485221 → 484775, the E114 walk;
+   the superseded 484774 is gone).
+3. CONTEXT.md: three corridor-vocabulary rows appended to the
+   prepend-only shared-language zone with zero earlier bytes changed —
+   **Day-roll anchor**, **Charge event**, **Unstop count start** — and
+   authority transition 3 bound the live bytes
+   (`docs/authority/context-authority-supersession.json` `current_sha256`
+   → `847d710abe87…984d`, evolution chain
+   b94b9664 → 36648f9c → 343daad2 → 847d710a… in the reason); the
+   supersession suite ran green post-write.
+4. AI_HANDOFF.md cargo-flow-2 row records the E112→E114 chain, this
+   close and the round-6 pointer; the backlog status log carries this
+   close-out; EVIDENCE_INDEX gained the E115 row.
+
+Corrective arm complete end-to-end: diagnosis (E112, `ef66108`) →
+source pin (E113, `d9ced1e`) → offline fix (E114, `1724b00`) → doc
+freeze + close (E115, this commit). Re-entry semantics of record: the
+round-6 gate ladder lives on tickets 01–04 — `candidate-5` →
+`candidate-6` + ONE prepare (staging approval), fresh review (ticket
+02), Gate C signing (ticket 03), ONE launch (ticket 04) — four separate
+explicit operator approvals, none granted by this ticket's close; the
+cards block above stays the staged worker's description and is not an
+authorization.

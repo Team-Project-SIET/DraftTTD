@@ -2054,3 +2054,54 @@ readiness, outside this round's PoC definition.
   round-6; then the round-6 gate ladder — `candidate-5` →
   `candidate-6` + ONE prepare, fresh review, Gate C, ONE launch, each
   gate separately approved.
+- 2026-11-05 — TICKET 05 (halt-class loop, round-5 arm) SETTLE-THEN-FREEZE
+  DOC CLUSTER LANDED AND THE TICKET CLOSED, evidence E115, under explicit
+  operator approval (grilling round answered "A A A": Q1-A docs gate
+  first then closed; Q2-A ONE commit covering the doc-cluster round +
+  the close-out; Q3-A the re-entry obligation carried in full by the
+  round-6 ladder on tickets 01–04, ticket 05 issues no candidate
+  actions). Landed: (1) design record
+  `docs/d5-cargoflow-delivery-design-2026-11-04.md` §4.2 item 4 + §4.3
+  re-worded to the E113 law of record — charge events at
+  `T0 + 1 + 74k` keyed by their own rolled day, the unstop partial
+  billed inside the first billed event (count start = latched tick +
+  1, every billed event resets after billing), pre-count rt ≤ 0
+  events fully silent changing no state, the start day never its own
+  billed row, the `SubtractMoneyFromCompanyFract` borrow kernel block
+  byte-unchanged; (2) spec of record `docs/specs/d5-corridor-poc-tail.md`
+  — funds taxonomy names the charge-event lattice with the uint8-wrap
+  borrow kernel unchanged, and the seam-2 funds-fence decision names
+  the stub's independent charge-event reimplementation of the same E113
+  law with the pinned walk levels re-carried 485221 → 484775 (the E114
+  walk; the superseded 484774 never appears again); (3) CONTEXT.md —
+  three corridor-vocabulary rows appended to the prepend-only
+  shared-language zone with zero earlier bytes changed (**Day-roll
+  anchor** — one economy day 74 script ticks, day rolls at tick 48,
+  corridor clock `date = 712229 + floor((tick − 48) / 74)`; **Charge
+  event** — the vehicle's spread day-proc slot on the first tick after
+  its day's roll, billed keyed by its own rolled day, the launch day's
+  own event silent pre-unstop; **Unstop count start** — count begins
+  one tick after the latched acceptance, each billed event resets
+  after billing); authority transition 3 bound the live bytes —
+  `docs/authority/context-authority-supersession.json`
+  `current_sha256` → `847d710abe87e2ed211a72d6455f3f1326b1476eca1711ab8be900080ec2984d`,
+  evolution chain b94b9664 → 36648f9c → 343daad2 → 847d710a… in the
+  reason, predecessor byte states reachable as git history, all
+  historical freeze manifests frozen and unmodified; (4)
+  AI_HANDOFF.md cargo-flow-2 row records the E112→E114 chain, this
+  close and the round-6 pointer; ticket-05 status → closed with a
+  close-out block; EVIDENCE_INDEX gained the E115 row; this entry
+  closes the log's book. Gates of record: `tests/test_authority_supersession.py`
+  green post-write (the transition record binds the live bytes),
+  `git diff --check` clean, doc-only round (zero source edits, zero
+  test edits, no suite run beyond the supersession gate, no run, no
+  staging, no candidate actions, historical zones byte-untouched, no
+  push). Commit: one — `T005 round-5 ticket-05 settle-then-freeze +
+  ticket 05 closed`. Ticket 05's corrective arm is complete end-to-end:
+  diagnosis (E112) → source pin (E113) → offline fix (E114) → doc
+  freeze + close (E115). NEXT: the re-entry obligation is carried in
+  full by the round-6 gate ladder on tickets 01–04 — `candidate-5` →
+  `candidate-6` + ONE prepare (staging approval), fresh review
+  (ticket 02 method), Gate C signing (ticket 03), ONE launch
+  (ticket 04), each gate its own separate explicit operator approval;
+  ticket 05 issues no candidate actions and holds none.

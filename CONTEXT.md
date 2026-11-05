@@ -66,6 +66,22 @@ operator's signature).
 candidate. Discharged only by a fresh round composed from the current
 sources; never by a relabel.
 
+**Day-roll anchor**: The day-roll instant of record in the Cargoflow-2
+funds law — one economy day is 74 script ticks and the day rolls at
+tick 48, so the corridor clock of record reads
+`date = 712229 + floor((tick − 48) / 74)`. _Avoid_: day start,
+midnight.
+
+**Charge event**: One running-cost billing instant of record — the
+vehicle's spread day-proc slot fires on the first tick after its day's
+roll and bills keyed by its own rolled day; the launch day's own event
+is silent pre-unstop. _Avoid_: day boundary, daily charge.
+
+**Unstop count start**: Where the running-cost count begins of record —
+the vehicle unstops one tick after its latched acceptance and accrues
+from that tick to the first billed event; each billed event resets the
+count start after billing. _Avoid_: start-day row.
+
 ---
 
 # OpenTTD Integration Project Context

@@ -127,9 +127,13 @@ One gated execution tail that, in order and always under operator approval:
   records the infeasibility instead of stretching a definition.
 - **Funds taxonomy**: the operator decision enumerates the running-cost
   category under the halt-on-unexplained-drift rule (the model of record
-  bills per-economy-day running cost through the exact 8.8 carry from the
-  pinned display figure, monthly interest + station fees at economy-month
-  boundaries, income attributed at the observation instants). OPEX = observed
+  bills the road-vehicle running cost at every charge event of the E113
+  event lattice — events at the day-roll anchor + 1 + k·74, keyed by
+  their own rolled day, the unstop partial inside the first billed
+  event, silent pre-count events, the exact 8.8 carry from the pinned
+  display figure with the uint8-wrap borrow kernel unchanged; monthly
+  interest + station fees at economy-month boundaries, income
+  attributed at the observation instants). OPEX = observed
   native cash deltas only; DERIVED aggregates stay labeled; anything
   unmeasured stays UNKNOWN; revenue is never reported as profit. The
   decision lands as an ADR-class record it can be pointed at later.
@@ -160,8 +164,9 @@ One gated execution tail that, in order and always under operator approval:
      reconciliation, halt-class typing, pre-auth `CLAIM_ABSENT`,
      relabel/refusal regressions;
   2. the funds fence — the model of record walked against the stub world's
-     independent day-charge reimplementation to the pinned levels
-     (485221 → 484774, the two ×192 monthly fees, the exact 8.8 whole rows);
+     independent charge-event reimplementation of the same E113 law to the
+     pinned walk levels (485221 → 484775, the two ×192 monthly fees, the
+     exact 8.8 whole rows);
   3. the VM package suite against the stub world (including the 15.3
      fail-close road-type idiom) — census admission, purchase quote
      realization, order/loop and cycle semantics;
