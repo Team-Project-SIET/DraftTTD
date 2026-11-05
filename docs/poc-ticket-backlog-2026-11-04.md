@@ -2305,3 +2305,43 @@ readiness, outside this round's PoC definition.
   read-only reconciliation loop (verdict replay + funds fence native-side
   check + ledger row + integrity close) executes only under its own
   explicit operator approval; tickets 08–13 unchanged blocked.
+- 2026-11-05 — T-006/round-6 DELIVERED-CLASS RECONCILIATION (offline
+  reconciliation round granted in-session, one round) executed and booked —
+  read-only over the retained round-6 terminal evidence, no run, no native
+  action, no candidate writes. `T06 RECONCILIATION PASS` (driver
+  `/tmp/opencode/c6_reconcile_06.py`, transcript
+  `/tmp/opencode/c6_reconcile_06_output.txt`, rc 0): (1) terminal picture
+  re-validated — run fact `NATIVE_CARGOFLOW2_COMPLETE` verified rc 0
+  cleanup-complete halt-null 1/1/25, claim single-use consumed bound seal
+  `e929d7b2…ec49` + record `e938eb6…c7e5c`, manifest revalidated 66/66 OK,
+  seal byte-equal after the run, certified cleanup all-true, all 25
+  response frames fidelity-matched against their retained receipts with
+  every success status matched, delivery verdict
+  `CARGOFLOW2_LOADED_NEVER_DELIVERED` re-echoed verbatim; (2) the funds
+  fence of record replayed at the run's own instants — the model of record
+  (staged pins 489650 / 4429 / 421) produced **zero residual at all 25
+  exchanges** and ended exactly at the finance level 484769, the E113
+  ladder billed 59 events (first `(712229, 21, 1)` — the recorded
+  unstop-partial row — last `(712287, 74, 1)`), the two monthly boundaries
+  inside the span (712254, 712282) each 192 (interest 167 + station fee
+  25), income 0 everywhere; (3) the E114 cross-reality typed open — the
+  twin-of-record vector equals the native walk at the anchor (purchase
+  +0, arrive-00 +0) and differs structurally at the later labels
+  (flow-01..04 +5/+5/+4/+4; +197 at each monthly-boundary label;
+  flow-06..11 +5/+4/+4/+5/+197/+5): two law-consistent walks of the same
+  formal model at different instant vectors (the E114 toy twin's
+  compacted fixture pacing vs the run's schedule instants) — carried
+  UNKNOWN open, never reconciled by hand; (4) delivery-ledger row of
+  record = the complete-not-delivered finding
+  `CARGOFLOW2_LOADED_NEVER_DELIVERED` (identities: world source save
+  `183b2027…efe6a6`, session-before save `8b53a960…9746`, plan digest
+  `98d055c4…f506ca`, authorization record `e938eb6…c7e5c`, identity
+  `cbb63ff5…40c614`, `LAUNCH-CONSUMED.json` `329334b7…f02`; the old
+  "attempted, not delivered" finding closes by this terminal record; the
+  delivered arm stays a separate future goal); E36 re-affirmed still-open
+  pending ticket 10. Integrity close: `git diff --check` clean,
+  `CONTEXT.md` pin intact, evidence zone untouched. Books: ticket 06
+  flipped done with facts + this row + E117 ledger row, one commit. The
+  next frontier — ticket 08 (second-route admission; 07 done at
+  `e177d03`) — needs its own explicit operator approval gates, none
+  granted by this round; tickets 09–13 unchanged blocked.
