@@ -1696,3 +1696,29 @@ readiness, outside this round's PoC definition.
   the operator-side fact that must accompany them. The operator-side
   pushes were legitimate operator-authorized acts; commit authority stays
   the operator's, and agent sessions of record never push.
+- 2026-11-05 — T-002 round 5 STAGED (the settled-tree round of record;
+  ticket `.scratch/d5-corridor-poc-tail/issues/01-round5-stage.md`,
+  grilling-round sanctioned, operator-approved as a single action, ONE
+  `prepare` first attempt): identity advance `candidate-4` → `candidate-5`
+  (only pipeline edit; lineage comment corrected to final truth), focused
+  suites 133 exit 0, ruff clean. `PRELAUNCH PASS` exit 0. Candidate of
+  record `artifacts/experiments/d5-corridor-cargoflow2-native-candidate-5`,
+  seal (`PRELAUNCH.json` sha256)
+  `d4715fd3b2d0a9f5be831dfcd9f80188a87ef6460173a55763a2ee2457537741` —
+  differs from all four predecessors; **ZERO freeze-pin mismatches across
+  all 3502 sealed entries** — the first fully-reconciling staging of the
+  cycle; plan digest `5c0998f2…bf2d` UNCHANGED; workspace
+  `isolated/openttd-15.3-7wet880f`; ports 41129/53847; root 4 entries;
+  standalone `preflight` → `PREFLIGHT PASS`; pre-auth `verify` →
+  `CLAIM_ABSENT` exit 1 by design; candidates 1–4 seals re-digested
+  byte-identical; nothing signed, claimed or launched; no `artifacts/`
+  byte touched outside the fresh candidate-5 directory. Legacy note: the
+  selector-2 authority transition was sanctioned and landed BEFORE
+  staging (`docs/authority/context-authority-supersession.json` binds the
+  historical anchor `b94b9664…` → current `343daad2…caf`, reason carries
+  the b94b9664 → 36648f9c → 343daad2 evolution chain; 44 authority
+  assertions green) and the write cluster was committed `80ff619` (13
+  files) BEFORE staging — commit then stage, the settle-then-freeze order
+  of record; no push (agent side). NEXT: round-5 independent review
+  (fresh-context, ticket 02's method), then Gate C signing, then the ONE
+  launch — each its own explicit operator approval.

@@ -177,18 +177,15 @@ D5_CARGOFLOW2_PRELAUNCH_SCHEMA = "d5-cargoflow2-prelaunch-v1"
 D5_CARGOFLOW2_LAUNCH_CONSUMED_SCHEMA = freight_native.D5_FREIGHT_LAUNCH_CONSUMED_SCHEMA
 D5_CARGOFLOW2_PREREQUISITE_SCHEMA = freight_v2_native.D5_FREIGHT_V2_PREREQUISITE_SCHEMA
 
-# Candidate directory of record (round-identity constant; the NEXT fresh
-# round advances this exactly one and runs ONE prepare — a single
-# operator-approved staging action, never split). Lineage of record:
+# Candidate directory of record (round-identity constant; round-5 of
+# record — identity advanced candidate-4 → candidate-5 BY this staging
+# action, one operator-approved action of record). Lineage of record:
 # candidates 1–2 consumed with native verdicts of record; candidates 3–4
-# seal-superseded — both staged, never signed, claimed or launched; the
-# freeze pins of both went stale against the live tree (3: staged before
-# the ticket-07 merge; 4: before the post-staging shared-language/wording
-# write cluster), preflight refusing by design; the reconciliation-debt
-# method of record is a fresh round from the current tree, never a
-# relabel. THIS constant still reads candidate-4; the next approved
-# round stages candidate-5.
-CARGOFLOW2_CANDIDATE_DIRECTORY = "d5-corridor-cargoflow2-native-candidate-4"
+# seal-superseded by freeze-pin debts — both staged, never signed,
+# claimed or launched; the reconciliation-debt method of record is a
+# fresh round from the current tree, never a relabel. Candidate-5
+# composes from the settled post-write-cluster tree.
+CARGOFLOW2_CANDIDATE_DIRECTORY = "d5-corridor-cargoflow2-native-candidate-5"
 
 # Prerequisite lineage of record: the pinned, consumed, replay-verified
 # depot-mutation attempt (D5-F12-DEPOT-3 after-save, world-pin version 3),
