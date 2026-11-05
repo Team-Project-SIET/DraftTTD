@@ -2182,3 +2182,40 @@ readiness, outside this round's PoC definition.
   (each its own explicit operator approval, none granted by this
   review): Gate C signing (ticket 03) → ONE launch (ticket 04, the
   only true native-run gate).
+- 2026-11-05 — T-003/round-6 GATE C (signing approval in-session, one
+  action) executed and booked — the operator's Option-1 signature over the
+  reviewed round-6 candidate via the production signing surface only: one
+  signing operation, first invocation, zero refusals, zero re-writes.
+  Pre-write refusal gates held (gate surface absent; live seal == sidecar
+  == operator-approved `e929d7b2e749f2a14af9bb19fdf12f76f96fe912e7f1d716af733a44d926ec49`;
+  authorization payload digest
+  `5433b7e5477ec2ffedf722b623ad1d3cc8f5777b7469b11d65659da420a108eb`
+  staged == production re-derivation); seed mechanics of record
+  (operator-held PEM 48-byte PKCS#8 final-32 window, memory-only,
+  env-only `CARGOFLOW_GATE_SEED`, never printed/filed/argument-passed;
+  `public_from_seed` == pinned anchor
+  `5063982bd28d48573705f334ed4f396618c4930ce21083789dfbbf13a564880f`;
+  operator key identity unchanged of record
+  `sha256-ed25519-public-key:cbb63ff58f17f13df3e1be0735fad18497e3a0c6ad6b5dd55491d708ae40c614`);
+  `AUTHORIZATION.json` written exactly once — record sha256 of record
+  `e938eb62807965e864f3c5dade973d5259675187a406745a963bb724712f7e5c`,
+  production `verify_authorization` PASS against the seeded anchor
+  (record digest bound); post-write read-only state: root exactly 5
+  entries (no CLAIM/LAUNCH-CONSUMED), seal byte-equal after the write,
+  `preflight` `PREFLIGHT PASS` exit 0 with the authorization present,
+  standalone `verify` still `AUTHORIZATION_UNVERIFIED`/`CLAIM_ABSENT`
+  exit 1 by design (the claim mints at the launch boundary only);
+  candidates 1–6 PRELAUNCH byte-pictures before == after; seed unset +
+  empty verified; no candidate bytes beyond the authorization record
+  touched; `git diff --check` clean; driver
+  `/tmp/opencode/gate_c_cargoflow2_c6.py` + transcript
+  `/tmp/opencode/t6_gate_c_output.txt` (+ CLI gate transcripts
+  `/tmp/opencode/t6_gate_c_preflight_output.txt`,
+  `/tmp/opencode/t6_gate_c_verify_output.txt`) outside the repo.
+  Books: ticket `03-round6-gate-c-signing.md` + this row, one commit.
+  The candidate-6 authorization grant is single-use and the launch is
+  not granted: NEXT GATE — ticket 04r6 ONE launch (the only true
+  native-run gate; needs the pinned `OPENTTD_BINARY` /
+  `OPENTTD_OPENGFX_ARCHIVE` environment set before Python starts and an
+  explicit in-session native-run approval; one attempt, no retry, no
+  reconnect).
