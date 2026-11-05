@@ -1795,3 +1795,83 @@ readiness, outside this round's PoC definition.
     launch of the signed candidate-5 at the pinned binary/OpenGFX
     versions + read-only replay + integrity sweep + certified cleanup;
     nothing scheduled, nothing relaunched.
+- 2026-11-05 — T-005 round-5 launch gate executed under explicit
+  operator approval (exactly ONE native launch of candidate-5 + read-only
+  replay + integrity sweep + certified cleanup of record; stop after
+  final reporting; no retries, no relaunches, no reconnections, no
+  source edits, no second attempt, no historical evidence modification,
+  no Git mutations):
+  - Pre-launch gates re-verified fresh (nothing stale; per-round script
+    `/tmp/opencode/t005_r5_prelaunch_gates.sh`, E110 precedent,
+    transcript `/tmp/opencode/t005_r5_prelaunch_gates_output.txt`): no
+    openttd process; gate surface = exactly the 4 staged entries +
+    `AUTHORIZATION.json` (+ `isolated/`), no launch receipts; live seal
+    == sidecar == the operator-approved seal of record
+    `d4715fd3…41ad`; `verify_authorization` PASS via the production
+    surface (record `57284ae0…b01e`, payload `aa936f19…` ==
+    `staged_cargoflow2_authorization_payload_digest(candidate-5)`,
+    operator identity `sha256-ed25519-public-key:cbb63ff5…40c614`);
+    binary file sha256 == pin `276d5b69…904c`; staged `source.sav`
+    digest == the world bind `183b2027…efe6a6`; argv pins
+    `-D127.0.0.1:41129` / `-c cfg` / `-g source.sav` /
+    `-dscript=4,grf=1,net=3`; budgets `launches 1 / retries 0 /
+    reconnects 0 / connection_attempts 1`; OpenGFX-8.0 archive present
+    → `T-005 R5 PRE-LAUNCH GATES: ALL PASS`, one attempt.
+  - Launch command of record (E110/E104 invocation shape), executed
+    exactly once with `OPENTTD_BINARY` and `OPENTTD_OPENGFX_ARCHIVE`
+    exported before Python starts:
+    `.venv/bin/python -m app.simulation.openttd.proof.corridor_cargoflow2_native run /home/fed/codes/softdev2/artifacts/experiments/d5-corridor-cargoflow2-native-candidate-5`
+    → **run return code of record: 1** (transcript
+    `/tmp/opencode/t005_r5_launch_output.txt`).
+  - Run outcome of record (verified terminal in the JSON of record):
+    `preflight=PASS`, `native_launches=1` (== budget), `connections=1`
+    (== budget), `requests=11`, `command_accepted=true`,
+    `state_changed=true`, `verified=false`,
+    `status=PHASE_HALTED_PREFIX_PRESERVED`. **10 of 15 exchanges clean:**
+    `site-00 READY` (day 712228 tick 15, funds 489650 — funds fence
+    intact), **`engine-00 READY` (tick 16 — round-2's
+    `ENGINE_PIN_MISMATCH` class did NOT recur; the T-009 census
+    display-pin fix and the E111 engine fix both measured live-true on
+    this composition)**, `purchase-00 BUILT` (tick 18, funds 485221 —
+    purchase cost 4,429 under the 5,000 max-cost fence), `vread-00
+    READ`, `order-00`/`order-01 ORDERED`, `order-read-00
+    ORDER_SET_VERIFIED`, `monitor-00 ARMED`, `start-00 STARTED`,
+    `vread-01 READ`. Halt of record at `arrive-00` (status ANCHORED,
+    world state `HALTED_BEFORE_MUTATION`):
+    `ValueError: the delivery exchange arrive-00 failed verification:
+    cargo-flow 2 funds diverged from the modeled trajectory: arrive-00
+    observed 485217, modeled 485216, residual 1`; phase verdict
+    `CARGOFLOW2_GATE_UNDECIDED_INCOMPLETE`, verification
+    `CARGOFLOW2_INCOMPLETE`. The halt class is terminal; no diagnosis
+    without a new approval (recording the class is all T-005 claimed);
+    the consumed identity is never relaunched.
+  - Read-only replay of record, executed once: `verify` →
+    `{"verification":"PHASE_HALTED_EVIDENCE_PRESERVED","failed":
+    {"label":"arrive-00","status":"ANCHORED",
+    "world_state":"HALTED_BEFORE_MUTATION",…}, "exchanges":[site-00 …
+    vread-01] (10), "result_status":"PHASE_HALTED_PREFIX_PRESERVED"}`,
+    **exit 1** (transcript `/tmp/opencode/t005_r5_replay_output.txt`)
+    — the replay verdict reconciles the run verdict exactly; consumed
+    identity never relaunched.
+  - Post-run read-only state of record (transcript
+    `/tmp/opencode/t005_r5_postrun_sweep_output.txt`): root = 38 files
+    + `isolated/` (empty shell, workspace_disposed=true; richer
+    retention than round-2's 20-file shape, manifest covers 37);
+    `LAUNCH-CONSUMED.json` binds authorization record `57284ae0…b01e` +
+    seal `d4715fd3…41ad` + operator identity `cbb63ff5…40c614` (schema
+    `d5-native-launch-consumed`); `CLAIM.json` `consumed=true /
+    launches_allowed=1 / retries=0`; certified cleanup of record
+    `reaped=true / sockets_closed=true / workspace_disposed=true /
+    credential_removed=true`, `cleanup_error=[]`,
+    `remaining_processes=[]`, `returncode=0`; `artifact-manifest.sha256`
+    re-verified 37/37 OK, 0 non-OK; `PRELAUNCH.json` seal byte-equal +
+    sidecar after the run; post-run process check: no openttd process.
+  - Integrity close of record: `git diff --check` clean; `CONTEXT.md`
+    pin intact; candidates 1–4 re-digested byte-identical; no source
+    edits; no ticket restructuring; nothing scheduled — any
+    funds-divergence fix round (fresh candidate round identity +
+    explicit operator approval only) starts from T-002 staging. NEXT
+    (needs operator task direction): ticket 05 (halt-class loop) or
+    06 (delivered-class) bookkeeping per this verdict; the arrive-00
+    funds-residual-1 question is a fresh diagnostic-first candidate
+    frame.
