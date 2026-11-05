@@ -1924,3 +1924,70 @@ readiness, outside this round's PoC definition.
   then settle-then-freeze doc/vocabulary writes, then round-6 re-entry —
   fresh candidate identity `candidate-6` + ONE prepare, fresh review,
   Gate C, ONE launch, each gate separately approved.
+- 2026-11-05 — TICKET 05 (halt-class loop, round-5 arm) 15.3 SOURCE
+  PIN BOOKED (read-only, evidence E113; explicit operator approval
+  "Approve all / Agree all" for the pin round + booking write): the
+  operator chose "Pin via 15.3 source" to resolve E112's H4
+  mechanism UNKNOWN. Provenance closed first: `roadveh_cmd.cpp` sha
+  `d53206f2…467c8` and `vehicle_base.h` sha `3170cf99…4287` re-fetch
+  byte-equal the retained E111 fetches (the retained bytes are true
+  tag-15.3 upstream), and the remaining kernel files were fetched
+  fresh (`company_cmd.cpp`, `vehicle.cpp`, `openttd.cpp`,
+  `timer_game_economy.cpp`, `company_base.h` — full shas in the
+  transcript). Script of record `/tmp/opencode/t005_r5_source_pin.py`
+  + wrapper `t005_r5_source_pin.sh` + transcript
+  `t005_r5_source_pin_output.txt` (exit 0, 0 failures across V1a–V6,
+  tree clean, candidate-5 manifest re-verified 37/37). **One billing
+  mechanism of record, all verbatim in-code**: charges fire in
+  `RoadVehicle::OnNewEconomyDay` (`roadveh_cmd.cpp:1728-1752`,
+  `running_ticks == 0` gate → `cost = GetRunningCost()·rt//(365·74)`
+  in raw 256ths → `running_ticks = 0` → `SubtractMoneyFromCompanyFract`),
+  dispatched by the spread day-proc (`vehicle.cpp:921-950`,
+  `index % 74 == date_fract`, source comment "not in the first tick
+  of the day") after economy `Elapsed` (`openttd.cpp:1264-1267`;
+  `timer_game_economy.cpp:131-136` `date_fract++`, roll resets 0 +
+  `date++`) — vehicle 1 charges on the tick after its day's roll:
+  **events at `T0+1+74k`**. The kernel (`company_cmd.cpp:324-336`):
+  one `uint8_t money_fraction` (`company_base.h:85`) subtracts the
+  charge's low byte with uint8 wrap, a wrap lends one whole coin,
+  `whole == 0` debits silently nothing; money scale display = raw >> 8
+  (`vehicle_base.h:566`): 421 ⇒ raw 107776 ⇒ full day 295 raw = 1
+  whole + 39 frac (the fence's 8.8 algebra exactly, proved rt 1..74).
+  **The source walk (V2, T0=48) reproduces the observed class
+  exactly**: rt at the first event = ticks 28..48 = 21 (unstop latch
+  28; rt==0 events fully silent, consuming no reset), consumed rt
+  ledger [21, 74, 74, 74], whole debits [1, 1, 1, 1] (first is a pure
+  borrow), fraction trail [173, 134, 95, 56], funds 485217 — predicting
+  **all 11 retained instants exactly**; robust at rt_first
+  {20, 21, 22} and across the T0 sweep [18..48] (31/31 anchors, 4
+  debits each). **Model-of-record repro (V5)**: the production
+  `Cargoflow2FundsModel` walk rebuilt in-code reproduces the ledger
+  [(712228, 47, 1), (712229, 74, 1), (712230, 74, 2), (712231, 74, 1)],
+  funds 485216, end fraction 208, and raises the retained halt
+  BYTE-VERBATIM at the arrive-00 reconcile; index-paired deltas
+  [0, 0, 1, 0] — the single delta is the model's day-712230 row
+  booking whole 2 vs the source event's 1, caused by the start-day rt
+  frame 74−27 = 47 vs the true 21 (74−T0 = 26 ticks late, shifting the
+  fraction phase so that row borrows early). **H4 A/B superseded**:
+  the true lattice {T0+1+74k} is neither A's {48,122,196,270} (one
+  tick early) nor B's {92,156,220,284}; amounts are per-event raw·rt
+  with fraction continuity, not flat-1 (later real borrow events debit
+  2 — horizon [419, 937, 1381, 1899, 2343, 2861, 3305, 3823], period
+  74·7). H1/H2 refined (start-day partial is source-true inside
+  day-712229's event; the borrow kernel is genuine and the model's
+  `whole 2` is the same borrow at a phase-shifted frame); H3 confirmed
+  (in-window day-712232 event, tick 271, is a real fourth debit the
+  model never books while a phantom day-712228 row exists). Fix
+  direction now source-precise: the funds-model day-walk moves to the
+  charge-event frame (kernel arithmetic unchanged; regression locks
+  the whole class needs — the pre-fix walk must fail the observed
+  class's fences). Round-5 verdicts untouched; candidate-5 stays
+  consumed terminal history; no test suite executed (nothing
+  code-touched). NEXT: offline fix-of-record needs its own explicit
+  operator approval (rewrite `corridor_cargoflow2.py`'s funds-model
+  day-walk to the charge-event frame with the failing-regression lock
+  first), then settle-then-freeze doc/vocabulary writes (spec §4.3
+  wording, CONTEXT.md rows via authority transition 3, AI_HANDOFF
+  refresh) committed BEFORE round-6's identity advance, then the
+  round-6 gate ladder — `candidate-5` → `candidate-6` + ONE prepare,
+  fresh review, Gate C, ONE launch, each gate separately approved.
