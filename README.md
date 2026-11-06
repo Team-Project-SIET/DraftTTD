@@ -59,10 +59,12 @@ without launching the game:
 
 # 3. Replay the retained one-launch evidence (offline, read-only):
 .venv/bin/python -m app.simulation.openttd.proof.corridor_cargoflow2_native \
-  verify artifacts/experiments/d5-corridor-cargoflow2-native-candidate-9
+  verify artifacts/experiments/d5-corridor-cargoflow2-native-candidate-11
 # -> exit 0, CARGOFLOW2_COMPLETION_VERIFIED, with the phase verdict
 #    CARGOFLOW2_LOADED_NEVER_DELIVERED — the verbatim delivered-miss record
-#    of the retained run; open item E36 stays open by its own rule
+#    of the latest retained run; the same command shape replays the earlier
+#    retained candidate-9 bytes identically, and open item E36 stays open
+#    by its own rule
 ```
 
 Omit `--route-version 2 --schedule-version 2` to stage the historical v1 arm
@@ -88,8 +90,14 @@ either way — no retry, no reconnect, no relabel. Candidate-9's claim is
 consumed: its delivered-arm ladder completed with
 `CARGOFLOW2_LOADED_NEVER_DELIVERED` (loads latched and carried to the bay,
 zero unloadings, zero bay acceptance), and that record is retained, not
-rerunnable. Any further native attempt needs its own fresh candidate,
-independent review, signature and explicit operator authorization.
+rerunnable. Candidate-11's claim is consumed the same way (the 2026-11-06
+corridor production round): the same delivered-arm ladder ran once more
+end-to-end with the same verdict — four loads latched, the 20-ton truck
+departed and arrived at the bay, zero unloadings and zero bay acceptance —
+so the delivered-miss is twice-reproduced on retained evidence, and open
+item E36 stays open by its own rule. Any further native attempt needs its
+own fresh candidate, independent review, signature and explicit operator
+authorization.
 
 ## Random World & Scalable Logistics
 

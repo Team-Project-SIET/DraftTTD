@@ -1199,3 +1199,35 @@ Never `run` on this candidate: the launch claim is single-use and consumed
 `d5-native-launch-consumed` at the ONE authorized launch (E133); a further
 native attempt needs its own staged candidate, independent review, Gate C
 signature and explicit operator authorization.
+
+## 2026-11-06 — corridor production round over candidate-11 (commands of record)
+
+The round staged, reviewed and consumed a fresh delivered-arm candidate
+(`d5-corridor-cargoflow2-native-candidate-11`, E136–E138), superseded by a
+fresh identity only: the round's first staging (`…candidate-10`) carried the
+un-bumped candidate-9 identity badge over its own tree, its staged bytes stay
+preserved at that failed-identity state (seal `a01a5929…f8da68`), never
+signed, claimed or launched, and its `preflight` refuses fail-closed through
+the frozen-source gate. The offline replay surface of record on the consumed
+candidate-11 (the round's THIRD command of record, after `prepare` into a new
+directory and `preflight`):
+
+```bash
+.venv/bin/python -m app.simulation.openttd.proof.corridor_cargoflow2_native \
+  verify \
+  artifacts/experiments/d5-corridor-cargoflow2-native-candidate-11
+```
+
+Output of record: exit 0, `verification == CARGOFLOW2_COMPLETION_VERIFIED`,
+phase verdict verbatim `CARGOFLOW2_LOADED_NEVER_DELIVERED` — the
+delivered-miss twice-reproduced on retained evidence (E137/E138): four loads
+latched (5/10/15 @flow-08 day 712271, the NEW 20-load @flow-09 day 712272),
+the 20-ton truck departed (day 712274) and arrived at the bay (day 712291),
+`unloadings []`, bay acceptance never moved (finance day 712292: delivered 0,
+income 0, funds 484,764), finish `PHASE_STOPPED` with the vehicle still
+RUNNING loaded at the bay. Both consumed candidates verify through the same
+command shape (`candidate-9` above, `candidate-11` here); never `run` on
+either — each launch claim is single-use and consumed
+`d5-native-launch-consumed` at its ONE authorized launch; a further native
+attempt needs its own staged candidate, independent review, Gate C signature
+and explicit operator authorization.
