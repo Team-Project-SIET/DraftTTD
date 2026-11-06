@@ -176,3 +176,74 @@ spec `docs/specs/d5-corridor-poc-tail.md` is discharged. Nothing post-PoC is
 opened by this document; any successor work needs its own explicit
 authorization. Open items E36 and the cross-reality UNKNOWN persist as open
 findings of the record — Phase A closes with them observed, not resolved.
+
+## Addendum (2026-11-06): the delivered-class tail round — E36 disposition of record: OPEN, carried
+
+*This addendum is a fresh-identity append (supersession-disciplined): every
+byte of the declaration above stands as landed; this section adds the
+delivered-class tail round's outcome to the record and touches nothing
+above. The disposition below is the operator-adjudicated branch of record
+per `docs/specs/d5-delivered-class-tail.md` ("decided in-session on the
+actual DELIVERED receipts; if the receipts do not materialize, E36 stays
+open — no definition is stretched to close it"): the receipts did not
+materialize, so E36 stays open. No native run is or was authorized by this
+addendum.*
+
+### The final evidence round of record (the delivered-class tail, E131–E134)
+
+The delivered-class tail staged, reviewed, signed and launched exactly one
+new native attempt on the delivered `(route_version 2, schedule_version 2)`
+arming — `d5-corridor-cargoflow2-native-candidate-9` (seal `b29c03a4…9389fa`,
+one launch consumed single-use, no retry, no reconnect: E133) — and it
+reproduced the delivered-miss class of record on the delivered arm: the full
+26-row ladder ran with zero halts, anchored 712,232 tick 289, loads 5/10/15
+latched at `flow-08` day 712,271, departure cargo 20 `flow-09` day 712,274
+tick 3,395, empty bay arrival `flow-04` day 712,250 tick 1,674, loaded bay
+arrival `flow-12` cargo 20 day 712,291 tick 4,646 — and `unloadings []`
+stayed empty: the vehicle carried its load to the bay and nothing unloaded
+inside the ladder; bay acceptance never moved (finance day 712,292
+delivered 0, income 0, last_accepted 0, funds 484,764; `finish-00`
+`PHASE_STOPPED` with the vehicle RUNNING at the bay tile 50,862 carrying
+load 20). Verdict of record, verbatim, never stretched:
+`CARGOFLOW2_COMPLETE` + `CARGOFLOW2_LOADED_NEVER_DELIVERED`.
+
+### The delivered-class reconciliation of record (E134)
+
+`T09-CLASS RECONCILIATION PASS` — 14 PASS / 0 FAIL (one offline replay
+invocation, read-only, over the retained bytes): the load → departure →
+arrival → unload-attraction → bay-acceptance chain reconciled rows-verbatim
+from the retained result; the funds fence re-derived with the engine of
+record (`cargoflow2_phase_outcome` reproducing the retained rails) stayed
+zero-residual at every observed instant (running cost 421 exact under the
+E113/E114 charge-event lattice, the purchase debit 4,429 whole-unit at
+`purchase-00`, the walk 489,650 → 484,764 over 26 receipts, every income
+delta 0); ADR-0001 labels travel (OBSERVED retained rows, DERIVED attribute
+sums, UNKNOWN the E114 rail); every quoted day figure rides its
+observation tick. The round also fixed the E133 verification-surface defect
+of record at the narrowest layer (the replay readback now inherits the arm
+from its correlated retained request, exactly as the wire seam does) and
+re-reconciled: the production `verify` over the consumed candidate-9 now
+returns `CARGOFLOW2_COMPLETION_VERIFIED` exit 0 with the phase verdict
+verbatim. No retained byte was touched by any of it.
+
+### E36 disposition of record
+
+**E36 stays OPEN, carried observed with the terminal state of record as the
+latest observed class**: D5 native freight **delivery** remains not proven
+after three distinct native attempts (round-6 v1 arm, round-7 v2 arm, and
+the delivered-arm candidate-9), each loading, departing and arriving at the
+bay with zero unloadings and zero bay acceptance; no delivered receipt
+exists anywhere in the retained lineage (§ Open items above; now also the
+candidate-9 bundle this addendum cites). E36 keeps its own closing rule —
+it closes only when a genuinely competing executable route carries native
+DELIVERED receipts — and this addendum neither stretches that rule nor
+declares it satisfied. The cross-reality item E114 likewise stays UNKNOWN,
+its twin figure (484,775) vs the native close now of record (484,764 on the
+delivered arm) carried verbatim, never reconciled by hand. Phase A's
+terminal state above is unchanged: the corridor PoC stands declared
+complete with E36 and E114 as open findings of the record — observed, not
+resolved. Round anchors of record: E131 (the independent review
+`READY-FOR-GATE-C` 39/0), E132 (the Gate C signature, one signing
+operation), E133 (the ONE launch, rc-verbatim), E134 (the reconciliation +
+the verification-surface fix), all streaming from the declared evidence set
+above without altering it.

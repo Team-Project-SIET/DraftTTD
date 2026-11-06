@@ -3188,3 +3188,51 @@ readiness, outside this round's PoC definition.
   native close 484764 rides read-only and stays UNKNOWN. Next
   frontier: tail ticket 08 (the E36 closure addendum) — the completion
   declaration records the open state per its own rule.
+- 2026-11-06 — **tail ticket 08 done (the E36 closure decision + the
+  declaration addendum; E135; the tail's final gate; the disposition
+  adjudicated by the operator's own standing rule —
+  `docs/specs/d5-delivered-class-tail.md`: "decided in-session on the
+  actual DELIVERED receipts; if the receipts do not materialize, E36
+  stays open — no definition is stretched to close it"; the receipts did
+  not materialize, so E36 stays OPEN; exercised under the operator's
+  combined in-session grant with no further pausing; one commit, no
+  push)**: the addendum of record landed as a fresh-identity append to
+  `docs/poc-completion-declaration-2026-11-06.md` — every prior byte of
+  the declaration preserved verbatim (supersession-disciplined). **The
+  disposition of record: E36 stays OPEN, carried observed with the
+  terminal state of record as the latest observed class** — D5 native
+  freight delivery remains not proven after three distinct native
+  attempts (round-6 v1 arm, round-7 v2 arm, and the delivered-arm
+  candidate-9), each loading, departing and arriving at the bay with
+  zero unloadings and zero bay acceptance; no delivered receipt exists
+  anywhere in the retained lineage; E36 keeps its own closing rule
+  (closes only when a genuinely competing executable route carries
+  native DELIVERED receipts) and the addendum neither stretches that
+  rule nor declares it satisfied. The addendum records the
+  delivered-class bundle verbatim: candidate-9 (delivered (2,2) arm,
+  seal `b29c03a4…9389fa`, one launch consumed single-use — E133), the
+  26-row ladder with zero halts (anchor 712,232 tick 289; loads
+  5/10/15 @712,271 flow-08; departure 20 t @712,274 flow-09 tick 3,395;
+  bay arrivals empty 712,250 tick 1,674 / loaded 712,291 tick 4,646;
+  `unloadings []`; finance day 712,292 delivered 0 income 0 funds
+  484,764; `finish-00` `PHASE_STOPPED` vehicle RUNNING at bay tile
+  50,862 carrying load 20), the verdict of record
+  `CARGOFLOW2_COMPLETE` + `CARGOFLOW2_LOADED_NEVER_DELIVERED` never
+  stretched, the reconciliation of record `T09-CLASS RECONCILIATION
+  PASS` 14/0 (E134: rows-verbatim chain, fence zero-residual engine of
+  record, running cost 421, purchase 4,429, walk 489,650 → 484,764
+  over 26 receipts, every income delta 0, ADR-0001 labels travel,
+  script-tick figures), and the E133 verification-surface fix at the
+  narrowest layer with the production `verify` re-reconciled exit 0.
+  Round anchors cited: E131 (review `READY-FOR-GATE-C` 39/0), E132
+  (Gate C, one signing operation), E133 (the ONE launch), E134 (the
+  reconciliation). E114 stays UNKNOWN (twin 484,775 vs native close
+  484,764 on the delivered arm — carried verbatim, never reconciled by
+  hand). Books: ticket 08 done (all eight tail tickets done; no
+  `ready-for-agent` remains), backlog row, E135 row, AI_HANDOFF tail
+  cell, REPRODUCE.md command block for the new command of record (the
+  production offline `verify` over the consumed candidate-9
+  deliverable). Integrity close: focused suites green, `ruff` clean,
+  `git diff --check` clean. THE DELIVERED-CLASS TAIL IS COMPLETE:
+  tickets 01–08 walked under per-round gates; the deliverable class
+  stands re-proven with E36 carried open by its own rule.

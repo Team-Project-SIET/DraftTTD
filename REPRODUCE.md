@@ -1168,3 +1168,34 @@ Focused replay gate of record:
 .venv/bin/pytest tests/test_native_attempt_analytics.py \
   tests/test_performance_insights.py
 ```
+
+## 2026-11-06 — delivered-class tail close (commands of record)
+
+The tail's consumed candidate (the delivered `(route_version 2,
+schedule_version 2)` arming, candidate-9) verifies offline, read-only,
+through the production surface — arm-correct since the E134 fix (the
+replay readback inherits the arm from the correlated retained request,
+exactly as the wire seam does):
+
+```bash
+.venv/bin/python -m app.simulation.openttd.proof.corridor_cargoflow2_native \
+  verify \
+  artifacts/experiments/d5-corridor-cargoflow2-native-candidate-9
+```
+
+Output of record: exit 0, `verification == CARGOFLOW2_COMPLETION_VERIFIED`,
+phase verdict verbatim `CARGOFLOW2_LOADED_NEVER_DELIVERED` (the 26-row
+delivered ladder with `unloadings []`, finance close 484,764 / delivered 0
+/ income 0 — the delivered-miss class of record, E133/E134/E135). Before
+those run bytes existed, `preflight` ran read-only over the staged tree:
+
+```bash
+.venv/bin/python -m app.simulation.openttd.proof.corridor_cargoflow2_native \
+  preflight \
+  artifacts/experiments/d5-corridor-cargoflow2-native-candidate-9
+```
+
+Never `run` on this candidate: the launch claim is single-use and consumed
+`d5-native-launch-consumed` at the ONE authorized launch (E133); a further
+native attempt needs its own staged candidate, independent review, Gate C
+signature and explicit operator authorization.
