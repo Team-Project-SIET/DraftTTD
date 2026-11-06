@@ -2878,3 +2878,60 @@ readiness, outside this round's PoC definition.
   correction no file under `.scratch/d5-corridor-poc-tail/issues/` reads
   `ready-for-agent`: the backlog's ticket set is exhausted, every frontier
   closed.
+- 2026-11-06 — **new spec program: the D5 delivered-class tail (the E36
+  closure)** — `docs/specs/d5-delivered-class-tail.md` plus tickets 01–08
+  under `.scratch/d5-delivered-class-tail/issues/` landed on the
+  operator's explicit "Confirm — land the spec + tickets" (commit
+  `5e3270e`; Door 1 over Phase B/C per the operator's in-session
+  three-door slate adjudication). The tail is the E36 closure program:
+  one read-only diagnosis, the offline delivered-cycle fix, the staging
+  (round 8) and its unchanged gate ladder, then the ONE launch — each
+  ticket its own explicit operator round; no push (agent sessions never
+  push).
+- 2026-11-06 — **tail ticket 01 done (read-only delivery-cycle
+  diagnosis; E128; the round granted in-session as the frontier
+  instruction "do next move"; offline-only; script + transcript
+  `/tmp/opencode/t01_delivered_class_diagnosis.py` +
+  `/tmp/opencode/t01_delivered_class_diagnosis_output.txt` — 19/19
+  PASS, 0 FAIL; read-only over the retained bytes and the live module
+  surface; no staging/claim/signature/launch, no native run; one
+  commit, no push)**: the diagnosis of record is the plan's ladder
+  composition, not any world or machinery defect. (a) PROVEN no
+  cycle-completion observation exists — the 25-exchange ladder ends
+  `flow-11`/`finance-00`/`finish-00` at anchor+55 = 712,287, the
+  `CARGOFLOW2_FLOW_OFFSETS = tuple(range(0, 60, 5))` /
+  `CARGOFLOW2_SPAN_DAYS = 55` ladder standing one interval short of its
+  own 60-day authority framing; (b) PROVEN the loaded return misses the
+  final stand by 2–3 days — trace: loaded departure 712,274 →
+  (175,178)@712,277 (load 20) → (175,186)@712,282 → (175,195)@712,287
+  still carrying 20 t, ~4 straight-tile units short of the bay
+  (174,198), bay-arrival ETA ≈ 712,289–712,290 = anchor+57/+58 > +55
+  (the outbound empty legs ran 19 days round-6 / 20 days round-7);
+  (c) the acceptance machinery is PRESENT + PREEMPTED, not defective —
+  the GameScript awards unload latches per (day, tick)
+  (`kind = "unload"` + `GSCargoMonitor.GetIndustryDeliveryAmount`) and
+  the wire maps `kind == "unload"` → `phase.unloadings`
+  (`corridor_cargoflow2.py` ~1910) with
+  `CARGOFLOW2_DELIVERY_VERIFIED` and the seven §7 criteria already
+  typed (~2060–2100) — `unloadings []` in both runs is the preempted
+  outcome of (a)+(b), never a missing row class. **Fix space of record
+  (the ticket-02 decision space)**: extend the ladder one interval
+  through anchor+60 (day 712,292) to observe the post-ETA arrival with
+  a 2–3-day settle margin while holding the authority line;
+  `schedule_version`/digest advance + the funds fence's two new
+  instants (the E113 walk across 712,289…712,292) are ticket-02's
+  composition; the delivered typing needs no code change — ticket-02's
+  delivered lock = acceptance of the existing
+  `CARGOFLOW2_DELIVERY_VERIFIED` class only. Residual UNKNOWN carried
+  UNKNOWN (the exact unload-latch instant vs the observation cadence —
+  the run's own receipts decide it, never assumed). Books: ticket file
+  (status done + the diagnosis of record) + this row + E128 + the
+  AI_HANDOFF tail; like-for-like retained-zone re-hash over the
+  c13-covered file set — 46,738 paths, 0 removed, 0 changed (the raw
+  scan additionally lists 1,082 runtime-owned `isolated/` /
+  `.runtime-cache` files never covered by the c13 generator's scan, on
+  disk since Sep 28/29 — no deletion, no rewrite, recorded honestly);
+  spec header flipped `ready-for-operator-review` → `ready-for-agent`.
+  Next frontier: tail ticket 02 (the offline delivered-cycle fix +
+  typing locks) — its own explicit operator approval, none granted by
+  this booking.

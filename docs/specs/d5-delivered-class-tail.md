@@ -1,6 +1,6 @@
 # Spec — D5 delivered-class tail (the E36 closure)
 
-**Status: `ready-for-operator-review` (draft 2026-11-06). Spec draft of
+**Status: `ready-for-agent` (draft 2026-11-06). Spec draft of
 record for the corridor freight lineage's one open finding: the
 COMPLETE-not-delivered class (E36), carried open through the PoC
 completion declaration (`docs/poc-completion-declaration-2026-11-06.md`)
