@@ -3031,3 +3031,38 @@ readiness, outside this round's PoC definition.
   method; ticket 06 still needs its explicit native-run grant (carried
   by the operator's full-tail direction); E36 and E114 stay open per
   their own rules.
+- 2026-11-06 — **tail ticket 04 done (the candidate-9 independent
+  review; E131; the fresh-context read-only re-derivation audit per
+  the per-round method; script + transcript
+  `/tmp/opencode/t04_c9_review.py` +
+  `/tmp/opencode/t04_c9_review_output.txt`; no repo write by the
+  audit, no staging rerun, no signing, no claim, no launch, no native
+  run; one commit, no push)**: **`READY-FOR-GATE-C` — 39 checks, 0
+  findings, exit 0, zero reconciliation debt** over the staged
+  candidate-9 bytes. The audit re-derived every binding from disk and
+  the live tree: staged plan policy == live
+  `cargoflow2_plan_policy(2, 2)` field-for-field; staged schedule ==
+  `cargoflow2_schedule(2)` re-digesting to its own `plan_digest`; the
+  instrument tables == their live arm derivations; seal == sidecar ==
+  `b29c03a4…9389fa` before == after; the freeze chain + D2 closure +
+  dependencies re-verified against `CARGOFLOW2_CLOSURE_ROOT`; the
+  depot prerequisite re-hashed on disk (`4df12e1f…9aab` prelaunch,
+  `183b2027…6ea6` after-save) with the staged source save re-verified
+  through the production surface; the candidate-8 failed bytes hold
+  their own staging-defect story (untouched) and the candidates 3–7
+  seal sweep all byte-equal. The delivered composition: the staged
+  26-row ladder ends `flow-12` / `finance-00` / `finish-00` at 60; the
+  authority bounds 5 + 60 == 65 and launch 712228 + 65 == 712293; the
+  pre-consumption root exactly the staged 4 entries with no
+  consumption marker; budgets 1 launch / 0 retries / 32 requests at
+  grid `d5-cargoflow2-ladder-grid-v2`; `binary_sha256` at the pinned
+  `276d5b69…904c`; authorization still `PENDING`. Audit-side honesty:
+  the first executions aborted on audit-side key-shape and path-join
+  mis-readings — nothing repo-side; the corrected script re-ran the
+  full table end-to-end to 39/39, first-pass transcripts overwritten
+  by the re-run, recorded not re-created. Next frontier: tail ticket
+  05 (the candidate-9 Gate C signature — the operator-held seed env
+  `CARGOFLOW_GATE_SEED` is the human-held input this gate consumes
+  in-session) — then ticket 06, the ONE launch, under the operator's
+  full-tail native-run direction; E36 and E114 stay open per their
+  own rules.
