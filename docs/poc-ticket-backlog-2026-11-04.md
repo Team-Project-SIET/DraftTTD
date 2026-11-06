@@ -3105,3 +3105,43 @@ readiness, outside this round's PoC definition.
   ONE native launch of candidate-9 under the combined grant's native
   authorization (one attempt, no retry, no reconnect); E36 and E114
   stay open per their own rules.
+- 2026-11-06 — **tail ticket 06 done (the ONE native launch of
+  candidate-9; E133; under the operator's combined in-session grant
+  "Grant Gate C + ONE launch — Recommended"; exactly one attempt, no
+  retry, no reconnect; outcome terminal, rc-verbatim, never stretched;
+  run transcript `/tmp/opencode/t06_c9_run.txt`; one commit, no
+  push)**: pre-launch gates re-verified fresh (no openttd process;
+  root 5 entries; seal == sidecar == `b29c03a4…9389fa`;
+  `verify_authorization` → record `0cbc505e…6095` at identity
+  `cbb63ff5…40c614`; binary pin `276d5b69…904c` re-digested; budgets
+  1/0/0). The ONE launch: exit 0, `returncode` 0, `native_launches` 1,
+  `connections` 1, `requests` 26, preflight PASS at run start;
+  `CLAIM.json` consumed single-use bound to seal + record + identity;
+  `LAUNCH-CONSUMED.json` written (`d5-native-launch-consume`). **The
+  outcome of record: verification `CARGOFLOW2_COMPLETE` with the
+  verdict `CARGOFLOW2_LOADED_NEVER_DELIVERED`** — the full 26-row
+  delivered ladder ran with zero halts (anchor 712232 at tick 289;
+  loads 5/10/15 latched at flow-08 day 712271; departure cargo 20
+  flow-09 day 712274; arrival_bay cargo 20 flow-12 day 712291;
+  finance-00 `FINANCE_VERIFIED` delivered 0 income 0; finish-00
+  `PHASE_STOPPED` with the vehicle RUNNING at the bay tile 50862
+  carrying load 20) while `unloadings` stayed empty and no bay
+  acceptance ever moved: a load was latched and carried to the bay,
+  but nothing unloaded inside the ladder. E36 stays open; delivered
+  -miss → ticket 07 proceeds. Post-consume certified: 68-entry
+  manifest OK, cleanup all-true (credential_removed, graceful_
+  attempted, reaped, sockets_closed, workspace_disposed), no openttd
+  process remains, workspace disposed, seal byte-equal after the run,
+  candidates 3–9 byte-pictures unchanged, `CONTEXT.md` pin intact.
+  **The finding of record carried to ticket 07**: the post-run
+  standalone `verify` refuses (`finance-00` / `finish-00` /
+  `flow-12` retained responses fail the readback ladder pins) because
+  the file-replay path parses retained responses WITHOUT the arm
+  inheritance the wire seam `parse_for` applies — the retained
+  requests carry the arm key `schedule_version` 2, the retained
+  responses never do (the composer never carries it, by design), so
+  the replay defaults to the v1 arm; the run-time reconciliation was
+  arm-correct (`verified: true`); no retained byte is wrong; the
+  E129-class verification-surface family, the failed verify
+  transcripts in `/tmp/opencode/` recorded, ticket-07 round to fix
+  the narrowest layer and re-reconcile.
