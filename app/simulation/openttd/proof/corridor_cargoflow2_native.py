@@ -73,6 +73,13 @@ from app.simulation.openttd.admin_crypto import AuthorizedKey
 from app.simulation.openttd.admin_protocol import AdminFrameDecoder, encode_admin_quit
 from app.simulation.openttd.corridor_cargoflow2 import (
     CARGOFLOW2_ARRIVE_MAX_DAYS,
+    CARGOFLOW2_DELIVERED_DAY_BUDGET,
+    CARGOFLOW2_DELIVERED_EXCHANGE_IDS,
+    CARGOFLOW2_DELIVERED_FLOW_OFFSETS,
+    CARGOFLOW2_DELIVERED_SCHEDULE_VERSION,
+    CARGOFLOW2_DELIVERED_SPAN_DAYS,
+    CARGOFLOW2_DELIVERED_TAIL_OFFSET,
+    CARGOFLOW2_DELIVERED_WAIT_DAY_CAP,
     CARGOFLOW2_ENGINE,
     CARGOFLOW2_ENGINE_MAX_COST,
     CARGOFLOW2_EXCHANGE_IDS,
@@ -86,6 +93,7 @@ from app.simulation.openttd.corridor_cargoflow2 import (
     CARGOFLOW2_PURCHASE_QUOTE,
     CARGOFLOW2_READ_ONLY_SCHEMA,
     CARGOFLOW2_REQUEST_BUDGET,
+    CARGOFLOW2_ROUTE_SECOND_ADMISSION,
     CARGOFLOW2_SCHEDULE_VERSION,
     CARGOFLOW2_SPAN_DAYS,
     CARGOFLOW2_TAIL_OFFSET,
@@ -93,11 +101,14 @@ from app.simulation.openttd.corridor_cargoflow2 import (
     CARGOFLOW2_WAIT_MAX_TICKS,
     MAX_CARGOFLOW2_REQUEST_BYTES,
     MAX_CARGOFLOW2_RESPONSE_BYTES,
+    PLANNED_CARGOFLOW2_DELIVERED_EXCHANGES,
     PLANNED_CARGOFLOW2_EXCHANGES,
     Cargoflow2FundsModel,
     Cargoflow2Plan,
     Cargoflow2Readback,
     Cargoflow2Request,
+    cargoflow2_delivered_plan,
+    cargoflow2_delivered_schedule_rows,
     cargoflow2_phase_outcome,
     cargoflow2_plan,
     cargoflow2_route_binding,
@@ -249,7 +260,11 @@ def _require_cargoflow2_plan(plan, pinned_digest: str | None = None) -> Cargoflo
             "the attempt plan carries an unknown schema version"
         ) from error
     expected_digest = (
-        cargoflow2_plan(binding=plan_binding).digest
+        (
+            cargoflow2_delivered_plan()
+            if plan.schedule_version == CARGOFLOW2_DELIVERED_SCHEDULE_VERSION
+            else cargoflow2_plan(binding=plan_binding)
+        ).digest
         if pinned_digest is None
         else pinned_digest
     )
@@ -258,14 +273,32 @@ def _require_cargoflow2_plan(plan, pinned_digest: str | None = None) -> Cargoflo
     return plan
 
 
-def cargoflow2_pipeline_plan(route_version: int | None = None) -> Cargoflow2Plan:
+def cargoflow2_pipeline_plan(
+    route_version: int | None = None,
+    schedule_version: int | None = None,
+) -> Cargoflow2Plan:
     """The pinned plan of record re-derived from the module's route pins.
 
     The default re-derives the route of record (v1) byte-equal to the
     recorded composition; a named registered binding id re-derives that
     binding's admitted plan under the same guard, and a foreign or
-    non-registry id refuses at the map lookup.
+    non-registry id refuses at the map lookup. ``schedule_version=2``
+    derives the delivered arm's own plan keyed by the (2, 2) pairing: a
+    route id that is not the second admission's, and any other schedule
+    version, refuses fail-closed before a plan is trusted.
     """
+    if schedule_version == CARGOFLOW2_DELIVERED_SCHEDULE_VERSION:
+        if route_version not in (
+            None,
+            CARGOFLOW2_ROUTE_SECOND_ADMISSION.route_version,
+        ):
+            raise Cargoflow2StagingError(
+                f"the delivered plan record rides the (2, 2) pairing: a "
+                f"route {route_version!r} label cannot borrow it"
+            )
+        return _require_cargoflow2_plan(cargoflow2_delivered_plan())
+    if schedule_version not in (None, 1):
+        raise ValueError(f"unknown cargo-flow delivery schedule version: {schedule_version!r}")
     if route_version is None:
         return _require_cargoflow2_plan(cargoflow2_plan())
     if not isinstance(route_version, int) or isinstance(route_version, bool):
@@ -277,23 +310,37 @@ def cargoflow2_pipeline_plan(route_version: int | None = None) -> Cargoflow2Plan
 # --- The pinned attempt schedule ---------------------------------------------
 
 
-def cargoflow2_schedule() -> list[dict]:
-    """The fixed 25 exchange lines as staged plan rows (design record §5.3).
+def cargoflow2_schedule(schedule_version: int | None = None) -> list[dict]:
+    """The staged ladder rows of one attempt arm (design record §5.3).
 
     Order and echoes refuse drift: the fixed freight-family instrument
-    chain runs first (``site-00`` … ``arrive-00``), then the twelve flow
-    rows at their exact pinned ladder offsets 0..55, then the two tail
-    rows in the ``flow-11`` economy day. Every row carries its own planned
-    echoes — the order rows pin their stop indexes with the pinned flags
-    to come, ``arrive-00`` pins its bounded 5-day watch, and every
-    flow/tail row pins its economy-day offset; every pre-vehicle row
-    stays at -1. The op ladder is this pipeline's own derivation of
-    record; the wire contract's trust anchor re-checks it position by
-    position when the staged request table derives (``corridor_cargoflow2``
-    is the trust anchor — the op derivation never leaves this module
-    unverified, and a drifted op is a staging error, never a run-time
-    rejection that is benignly retried).
+    chain runs first (``site-00`` … ``arrive-00``), then the flow rows at
+    their exact pinned ladder offsets — twelve at 0..55 in the v1 envelope,
+    thirteen at 0..60 with ``flow-12`` in the delivered arm — then the two
+    tail rows in their arm's own tail economy day. Every row carries its
+    own planned echoes — the order rows pin their stop indexes with the
+    pinned flags to come, ``arrive-00`` pins its bounded 5-day watch, and
+    every flow/tail row pins its economy-day offset; every pre-vehicle row
+    stays at -1. An unknown schedule version refuses here. The op ladder
+    is this pipeline's own derivation of record; the wire contract's
+    trust anchor re-checks it position by position when the staged request
+    table derives (``corridor_cargoflow2`` is the trust anchor — the op
+    derivation never leaves this module unverified, and a drifted op is a
+    staging error, never a run-time rejection that is benignly retried).
     """
+    delivered = schedule_version == CARGOFLOW2_DELIVERED_SCHEDULE_VERSION
+    if not delivered and schedule_version is not None:
+        raise ValueError(f"unknown cargo-flow delivery schedule version: {schedule_version!r}")
+    exchange_ids = CARGOFLOW2_DELIVERED_EXCHANGE_IDS if delivered else CARGOFLOW2_EXCHANGE_IDS
+    flow_offsets = CARGOFLOW2_DELIVERED_FLOW_OFFSETS if delivered else CARGOFLOW2_FLOW_OFFSETS
+    tail_offset = CARGOFLOW2_DELIVERED_TAIL_OFFSET if delivered else CARGOFLOW2_TAIL_OFFSET
+    planned = PLANNED_CARGOFLOW2_DELIVERED_EXCHANGES if delivered else PLANNED_CARGOFLOW2_EXCHANGES
+    span_days = CARGOFLOW2_DELIVERED_SPAN_DAYS if delivered else CARGOFLOW2_SPAN_DAYS
+    plan = (
+        cargoflow2_pipeline_plan(CARGOFLOW2_ROUTE_SECOND_ADMISSION.route_version, 2)
+        if delivered
+        else cargoflow2_pipeline_plan()
+    )
     planned_ops = {
         "site-00": "site",
         "engine-00": "engine",
@@ -308,13 +355,13 @@ def cargoflow2_schedule() -> list[dict]:
         "arrive-00": "arrive-watch",
     }
     schedule: list[dict] = []
-    for exchange in CARGOFLOW2_EXCHANGE_IDS:
+    for exchange in exchange_ids:
         op = planned_ops.get(exchange, exchange.rsplit("-", 1)[0])
         row = dict(exchange=exchange, op=op, offset=-1)
         if op == "flow":
-            row["offset"] = int(CARGOFLOW2_FLOW_OFFSETS[int(exchange.rsplit("-", 1)[1])])
+            row["offset"] = int(flow_offsets[int(exchange.rsplit("-", 1)[1])])
         elif op in ("finance", "finish"):
-            row["offset"] = int(CARGOFLOW2_TAIL_OFFSET)
+            row["offset"] = int(tail_offset)
         elif op == "order":
             row["order_index"] = 0 if exchange == "order-00" else 1
         elif op == "arrive-watch":
@@ -324,26 +371,24 @@ def cargoflow2_schedule() -> list[dict]:
     tail_rows = [row for row in schedule if row["op"] in ("finance", "finish")]
     order_rows = [row for row in schedule if row["op"] == "order"]
     if (
-        [row["exchange"] for row in schedule] != list(CARGOFLOW2_EXCHANGE_IDS)
-        or len(schedule) != PLANNED_CARGOFLOW2_EXCHANGES
+        [row["exchange"] for row in schedule] != list(exchange_ids)
+        or len(schedule) != planned
         or schedule[0]["op"] != "site"
         or schedule[0]["offset"] != -1
         or schedule[10]["exchange"] != "arrive-00"
         or schedule[11]["exchange"] != "flow-00"
-        or [row["offset"] for row in flow_rows] != list(CARGOFLOW2_FLOW_OFFSETS)
+        or [row["offset"] for row in flow_rows] != list(flow_offsets)
         or flow_rows[0]["offset"] != 0
-        or flow_rows[-1]["offset"] != CARGOFLOW2_SPAN_DAYS
-        or [row["offset"] for row in tail_rows] != [
-            CARGOFLOW2_TAIL_OFFSET,
-            CARGOFLOW2_TAIL_OFFSET,
+        or flow_rows[-1]["offset"] != span_days
+        or [row["offset"] for row in tail_rows]
+        != [
+            tail_offset,
+            tail_offset,
         ]
         or [row["order_index"] for row in order_rows] != [0, 1]
-        or [row["watch_days"] for row in schedule if row["op"] == "arrive-watch"] != [
-            CARGOFLOW2_ARRIVE_MAX_DAYS
-        ]
-        or CARGOFLOW2_ARRIVE_MAX_DAYS + CARGOFLOW2_SPAN_DAYS != int(
-            cargoflow2_pipeline_plan().day_budget
-        )
+        or [row["watch_days"] for row in schedule if row["op"] == "arrive-watch"]
+        != [CARGOFLOW2_ARRIVE_MAX_DAYS]
+        or CARGOFLOW2_ARRIVE_MAX_DAYS + span_days != int(plan.day_budget)
     ):
         raise Cargoflow2StagingError("the staged attempt schedule drifted from the wire contract")
     if any(row["op"] not in CARGOFLOW2_OPS for row in schedule):
@@ -379,18 +424,23 @@ def _cargoflow2_policy_route_version(policy: dict) -> int:
 def staged_cargoflow2_schedule(policy: dict) -> list[dict]:
     """The staged schedule one plan-policy record binds its digest to.
 
-    The attempt has one schedule version and one derivation: a staged
-    record naming a foreign version pairing (an unknown schedule version
-    or an unregistered route binding) is refused here before any schedule
-    can be trusted.
+    The attempt is keyed by its own record's (route_version,
+    schedule_version) pairing: the three admitted pairings — the two v1
+    arms and the delivered (2, 2) pairing — resolve their compiled ladder
+    rows here; a staged record naming a mis-paired pairing, an unknown
+    schedule version or an unregistered route binding is refused here
+    before any schedule can be trusted.
     """
-    if policy.get("schedule_version", 0) != 1:
-        raise ValueError(
-            f"plan record names an unknown cargo-flow delivery schedule "
-            f"version: {policy.get('schedule_version', 0)}"
+    schedule_version = policy.get("schedule_version", 1)
+    route_version = _cargoflow2_policy_route_version(policy)
+    pairing = (route_version, schedule_version)
+    if pairing not in ((1, 1), (2, 1), (2, 2)):
+        raise Cargoflow2StagingError(
+            f"plan record names a cargo-flow delivery attempt outside the "
+            f"admitted pairings: (route {route_version}, schedule "
+            f"{schedule_version})"
         )
-    _cargoflow2_policy_route_version(policy)
-    return cargoflow2_schedule()
+    return cargoflow2_schedule(schedule_version if schedule_version != 1 else None)
 
 
 # --- Hypotheses (retained E99 control), never facts ---------------------------
@@ -413,8 +463,7 @@ def cargoflow2_hypotheses() -> dict:
     ``RETAINED_PROBE_ABSENT`` — no hypothesis is invented.
     """
     receipt_path = (
-        PROJECT
-        / "artifacts/experiments/d5-corridor-cargoflow-native-candidate-1/result.json"
+        PROJECT / "artifacts/experiments/d5-corridor-cargoflow-native-candidate-1/result.json"
     )
     if not receipt_path.is_file():
         return dict(
@@ -512,7 +561,14 @@ def _cargoflow2_expected_world(plan: Cargoflow2Plan) -> dict:
         flow_span_days=int(plan.flow_span_days),
         day_budget=int(plan.day_budget),
         request_budget=plan.request_budget,
-        flow_offsets=[int(offset) for offset in CARGOFLOW2_FLOW_OFFSETS],
+        flow_offsets=[
+            int(offset)
+            for offset in (
+                CARGOFLOW2_DELIVERED_FLOW_OFFSETS
+                if plan.schedule_version == CARGOFLOW2_DELIVERED_SCHEDULE_VERSION
+                else CARGOFLOW2_FLOW_OFFSETS
+            )
+        ],
         statement=(
             "the staged attempt world is the consumed depot-mutation attempt "
             "after-save (world-pin version 3): the corridor pickup stop, the "
@@ -524,39 +580,68 @@ def _cargoflow2_expected_world(plan: Cargoflow2Plan) -> dict:
     )
 
 
-def _cargoflow2_ladder_grid() -> dict:
-    """The pinned ladder geometry of record as a policy grid (§5.3)."""
+def _cargoflow2_ladder_grid(schedule_version: int | None = None) -> dict:
+    """The pinned ladder geometry of one attempt arm as a policy grid (§5.3)."""
+    delivered = schedule_version == CARGOFLOW2_DELIVERED_SCHEDULE_VERSION
+    flow_offsets = CARGOFLOW2_DELIVERED_FLOW_OFFSETS if delivered else CARGOFLOW2_FLOW_OFFSETS
+    exchange_ids = CARGOFLOW2_DELIVERED_EXCHANGE_IDS if delivered else CARGOFLOW2_EXCHANGE_IDS
+    span_days = CARGOFLOW2_DELIVERED_SPAN_DAYS if delivered else CARGOFLOW2_SPAN_DAYS
+    tail_offset = CARGOFLOW2_DELIVERED_TAIL_OFFSET if delivered else CARGOFLOW2_TAIL_OFFSET
+    planned = PLANNED_CARGOFLOW2_DELIVERED_EXCHANGES if delivered else PLANNED_CARGOFLOW2_EXCHANGES
+    plan = (
+        cargoflow2_pipeline_plan(CARGOFLOW2_ROUTE_SECOND_ADMISSION.route_version, 2)
+        if delivered
+        else cargoflow2_pipeline_plan()
+    )
     return dict(
-        schema="d5-cargoflow2-ladder-grid-v1",
-        planned_exchanges=PLANNED_CARGOFLOW2_EXCHANGES,
-        fixed_exchanges=len(CARGOFLOW2_EXCHANGE_IDS) - len(CARGOFLOW2_FLOW_OFFSETS) - 2,
-        flow_samples=len(CARGOFLOW2_FLOW_OFFSETS),
+        schema=("d5-cargoflow2-ladder-grid-v2" if delivered else "d5-cargoflow2-ladder-grid-v1"),
+        planned_exchanges=planned,
+        fixed_exchanges=len(exchange_ids) - len(flow_offsets) - 2,
+        flow_samples=len(flow_offsets),
         tail_exchanges=2,
         cadence_days=5,
         arrival_bound_days=int(CARGOFLOW2_ARRIVE_MAX_DAYS),
-        span_days=int(CARGOFLOW2_SPAN_DAYS),
-        tail_offset=int(CARGOFLOW2_TAIL_OFFSET),
-        day_budget=int(cargoflow2_pipeline_plan().day_budget),
-        offsets=[int(offset) for offset in CARGOFLOW2_FLOW_OFFSETS],
+        span_days=int(span_days),
+        tail_offset=int(tail_offset),
+        day_budget=int(plan.day_budget),
+        offsets=[int(offset) for offset in flow_offsets],
         wait_ticks=int(CARGOFLOW2_WAIT_MAX_TICKS),
-        wait_day_cap=int(CARGOFLOW2_WAIT_DAY_CAP),
+        wait_day_cap=int(
+            CARGOFLOW2_DELIVERED_WAIT_DAY_CAP if delivered else CARGOFLOW2_WAIT_DAY_CAP
+        ),
         statement=(
-            "the equality-gated ladder: the arrival watch latches the anchor "
-            "once and is bounded at 5 economy days (a timeout is a terminal "
-            "ARRIVE_TIMEOUT, never a retry), every flow sample sleeps "
-            "in-package until the anchor + its exact pinned offset, and the "
-            "two tail exchanges ride the flow-11 economy day with no "
-            "in-package wait; overshoot, pause or clock regression fail "
-            "closed. Arrival-bound plus flow span exactly equals the "
-            "60-economy-day attempt authority, and that authority is "
-            "enforced twice: package-side against every ladder step's "
-            "target day and pipeline-side against the elapsed day ledger "
-            "before every send"
+            "the delivered ladder rides the settle margin of record: the "
+            "arrival watch latches the anchor once and is bounded at 5 "
+            "economy days (a timeout is a terminal ARRIVE_TIMEOUT, never a "
+            "retry), every one of the thirteen flow samples sleeps "
+            "in-package until the anchor + its exact pinned offset — "
+            "flow-12 at anchor+60 completes the delivery cycle inside the "
+            "settle margin — and the two tail exchanges ride the flow-12 "
+            "economy day with no in-package wait; overshoot, pause or "
+            "clock regression fail closed. Arrival-bound plus delivered "
+            "flow span exactly equals the 65-economy-day authority of "
+            "record, and that authority is enforced twice: package-side "
+            "against every ladder step's target day and pipeline-side "
+            "against the elapsed day ledger before every send"
+            if delivered
+            else (
+                "the equality-gated ladder: the arrival watch latches the anchor "
+                "once and is bounded at 5 economy days (a timeout is a terminal "
+                "ARRIVE_TIMEOUT, never a retry), every flow sample sleeps "
+                "in-package until the anchor + its exact pinned offset, and the "
+                "two tail exchanges ride the flow-11 economy day with no "
+                "in-package wait; overshoot, pause or clock regression fail "
+                "closed. Arrival-bound plus flow span exactly equals the "
+                "60-economy-day attempt authority, and that authority is "
+                "enforced twice: package-side against every ladder step's "
+                "target day and pipeline-side against the elapsed day ledger "
+                "before every send"
+            )
         ),
     )
 
 
-def cargoflow2_funds_model_gate() -> dict:
+def cargoflow2_funds_model_gate(schedule_version: int | None = None) -> dict:
     """The pinned financial-model construction of record (§4.1).
 
     The attempt's modeled trajectory is the production
@@ -567,7 +652,11 @@ def cargoflow2_funds_model_gate() -> dict:
     staged record must re-derive this exact table (footprint of the
     zero-residual fence of record).
     """
-    plan = cargoflow2_pipeline_plan()
+    plan = (
+        cargoflow2_pipeline_plan(CARGOFLOW2_ROUTE_SECOND_ADMISSION.route_version, 2)
+        if schedule_version == CARGOFLOW2_DELIVERED_SCHEDULE_VERSION
+        else cargoflow2_pipeline_plan()
+    )
     model = Cargoflow2FundsModel(
         start_funds=int(plan.start_funds), purchase_quote=int(plan.purchase_quote)
     )
@@ -611,8 +700,11 @@ def cargoflow2_funds_model_gate() -> dict:
     )
 
 
-def cargoflow2_plan_policy(route_version: int | None = None) -> dict:
-    """The authorized plan policy for the staged attempt candidate.
+def cargoflow2_plan_policy(
+    route_version: int | None = None,
+    schedule_version: int | None = None,
+) -> dict:
+    """The authorized plan policy for one attempt arm of a staged candidate.
 
     The default resolves the route binding of record and is byte-equal to
     the policy of record except for the explicit ``route_version`` field
@@ -620,17 +712,24 @@ def cargoflow2_plan_policy(route_version: int | None = None) -> dict:
     own versioned policy — the binding's id rides the policy as
     ``route_version`` next to the schedule version — and a binding whose
     ladder rows drift from the compiled ladder of record refuses before
-    staging. A foreign or non-registry id refuses at the map lookup.
+    staging. ``schedule_version=2`` derives the delivered (2, 2) arm —
+    its own 26-row ladder, delivered plan digests, raised grid and
+    delivered budgets; any other schedule version, and any mis-paired
+    route id for the delivered arm, refuses at the plan derivation. A
+    foreign or non-registry id refuses at the map lookup.
     """
-    route_version = (
-        CARGOFLOW2_SCHEDULE_VERSION if route_version is None else route_version
-    )
+    route_version = CARGOFLOW2_SCHEDULE_VERSION if route_version is None else route_version
     if not isinstance(route_version, int) or isinstance(route_version, bool):
         raise ValueError(f"unknown route binding id: {route_version!r}")
     binding = cargoflow2_route_binding(route_version)
-    plan = cargoflow2_pipeline_plan(binding.route_version)
-    schedule = cargoflow2_schedule()
-    if schedule != cargoflow2_schedule_rows(binding):
+    plan = cargoflow2_pipeline_plan(binding.route_version, schedule_version)
+    schedule = cargoflow2_schedule(schedule_version)
+    delivered = plan.schedule_version == CARGOFLOW2_DELIVERED_SCHEDULE_VERSION
+    if schedule != (
+        cargoflow2_delivered_schedule_rows(binding)
+        if delivered
+        else cargoflow2_schedule_rows(binding)
+    ):
         raise Cargoflow2StagingError(
             "the binding's ladder rows drifted from the compiled ladder of record"
         )
@@ -674,7 +773,11 @@ def cargoflow2_plan_policy(route_version: int | None = None) -> dict:
         schedule=schedule,
         plan_digest=plan_digest,
         plan_model_digest=plan.digest,
-        schedule_version=1,
+        schedule_version=int(
+            plan.schedule_version
+            if plan.schedule_version is not None
+            else CARGOFLOW2_SCHEDULE_VERSION
+        ),
         observations=[
             dict(
                 industry=int(plan.pickup_industry),
@@ -686,8 +789,8 @@ def cargoflow2_plan_policy(route_version: int | None = None) -> dict:
             ),
         ],
         hypotheses=cargoflow2_hypotheses(),
-        ladder_grid=_cargoflow2_ladder_grid(),
-        funds_model=cargoflow2_funds_model_gate(),
+        ladder_grid=_cargoflow2_ladder_grid(plan.schedule_version),
+        funds_model=cargoflow2_funds_model_gate(plan.schedule_version),
         world=expected_world,
         read_only=dict(
             schema=CARGOFLOW2_READ_ONLY_SCHEMA,
@@ -707,14 +810,21 @@ def cargoflow2_plan_policy(route_version: int | None = None) -> dict:
     )
 
 
-def cargoflow2_budgets() -> dict:
-    """The staged budget table for the attempt candidate."""
-    plan = cargoflow2_pipeline_plan()
+def cargoflow2_budgets(schedule_version: int | None = None) -> dict:
+    """The staged budget table for one attempt arm of the attempt candidate."""
+    delivered = schedule_version == CARGOFLOW2_DELIVERED_SCHEDULE_VERSION
+    plan = (
+        cargoflow2_pipeline_plan(CARGOFLOW2_ROUTE_SECOND_ADMISSION.route_version, 2)
+        if delivered
+        else cargoflow2_pipeline_plan()
+    )
     return dict(
         launches=1,
         connection_attempts=1,
         requests=CARGOFLOW2_REQUEST_BUDGET,
-        planned_exchanges=PLANNED_CARGOFLOW2_EXCHANGES,
+        planned_exchanges=(
+            PLANNED_CARGOFLOW2_DELIVERED_EXCHANGES if delivered else PLANNED_CARGOFLOW2_EXCHANGES
+        ),
         gsadmin_bytes=MAX_CARGOFLOW2_REQUEST_BYTES,
         response_bytes=MAX_CARGOFLOW2_RESPONSE_BYTES,
         retries=0,
@@ -724,7 +834,9 @@ def cargoflow2_budgets() -> dict:
         watch_seconds=freight_native.FREIGHT_WATCH_WALL_SECONDS,
         exchange_margin_seconds=CARGOFLOW2_EXCHANGE_MARGIN_SECONDS,
         watch_ticks=int(CARGOFLOW2_WAIT_MAX_TICKS),
-        wait_day_cap=int(CARGOFLOW2_WAIT_DAY_CAP),
+        wait_day_cap=int(
+            CARGOFLOW2_DELIVERED_WAIT_DAY_CAP if delivered else CARGOFLOW2_WAIT_DAY_CAP
+        ),
         day_budget=int(plan.day_budget),
         total_seconds=900,
         max_cost=int(CARGOFLOW2_ENGINE_MAX_COST),
@@ -876,18 +988,19 @@ def prepare_cargoflow2_candidate(
     *,
     prerequisite: Path | None = None,
     route_version: int | None = None,
+    schedule_version: int | None = None,
 ) -> PreparedProof:
     """Stage the fresh save-load composition; no process or connection.
 
     The default stages the route binding of record byte-equal to the
     recorded candidate composition; a named registered binding id stages
     that binding's admitted plan-policy composition (its id rides the
-    policy as ``route_version``), and a foreign or non-registry id refuses
-    as a staging error before any directory is created.
+    policy as ``route_version``), ``schedule_version=2`` stages the
+    delivered (2, 2) arm's own candidate, and a foreign id, mis-paired
+    delivered arm or non-registry id refuses as a staging error before
+    any directory is created.
     """
-    route_version = (
-        CARGOFLOW2_SCHEDULE_VERSION if route_version is None else route_version
-    )
+    route_version = CARGOFLOW2_SCHEDULE_VERSION if route_version is None else route_version
     if not isinstance(route_version, int) or isinstance(route_version, bool):
         raise Cargoflow2StagingError(f"unknown route binding id: {route_version!r}")
     try:
@@ -901,12 +1014,14 @@ def prepare_cargoflow2_candidate(
         raise Cargoflow2StagingError(
             "the attempt source world requires the pinned depot prerequisite"
         )
-    plan = cargoflow2_pipeline_plan(route_version)
-    schedule = cargoflow2_schedule()
-    policy = cargoflow2_plan_policy(route_version)
+    plan = cargoflow2_pipeline_plan(route_version, schedule_version)
+    schedule = cargoflow2_schedule(schedule_version)
+    policy = cargoflow2_plan_policy(route_version, schedule_version)
     if len(schedule) != len(plan.schedule):
         raise Cargoflow2StagingError("the scheduled attempt exchanges drifted")
-    if policy["schedule_version"] != 1:
+    if policy["schedule_version"] != int(
+        schedule_version if schedule_version is not None else CARGOFLOW2_SCHEDULE_VERSION
+    ):
         raise Cargoflow2StagingError("the staged attempt schedule derivation drifted")
     if sha256(BINARY) != BINARY_SHA256 or matching_processes(BINARY):
         raise Cargoflow2StagingError("pinned binary / exclusive runtime gate failed")
@@ -1134,23 +1249,35 @@ def cargoflow2_preflight(prepared: PreparedProof) -> dict:
     freight_native.require_frozen_d2_dependencies(metadata["frozen"], CARGOFLOW2_CLOSURE_ROOT)
     policy = metadata["plan_policy"]
     route_version = _cargoflow2_policy_route_version(policy)
-    plan = cargoflow2_pipeline_plan(route_version)
+    plan = cargoflow2_pipeline_plan(route_version, policy.get("schedule_version"))
     schedule = staged_cargoflow2_schedule(policy)
     if policy["schedule"] != schedule or policy["plan_digest"] != plan_digest_of(schedule):
         raise ValueError("the staged attempt schedule drifted from the compiled derivation")
     if policy["plan_model_digest"] != plan.digest:
         raise ValueError("the staged attempt plan digest drifted from the pinned plan")
-    if policy.get("schedule_version") != 1:
+    if policy.get("schedule_version", 1) != int(
+        plan.schedule_version if plan.schedule_version is not None else CARGOFLOW2_SCHEDULE_VERSION
+    ):
         raise ValueError("the staged attempt schedule version drifted")
+    arm_flow_offsets = (
+        CARGOFLOW2_DELIVERED_FLOW_OFFSETS
+        if plan.schedule_version == CARGOFLOW2_DELIVERED_SCHEDULE_VERSION
+        else CARGOFLOW2_FLOW_OFFSETS
+    )
+    arm_tail_offset = (
+        CARGOFLOW2_DELIVERED_TAIL_OFFSET
+        if plan.schedule_version == CARGOFLOW2_DELIVERED_SCHEDULE_VERSION
+        else CARGOFLOW2_TAIL_OFFSET
+    )
     for row in schedule:
         if row["op"] not in CARGOFLOW2_OPS:
             raise ValueError("a scheduled attempt row carries a foreign op")
         if row["op"] == "flow":
             index = int(row["exchange"].rsplit("-", 1)[1])
-            if row["offset"] != int(CARGOFLOW2_FLOW_OFFSETS[index]):
+            if row["offset"] != int(arm_flow_offsets[index]):
                 raise ValueError("a scheduled flow row drifted from its pinned ladder offset")
         elif row["op"] in ("finance", "finish"):
-            if row["offset"] != CARGOFLOW2_TAIL_OFFSET:
+            if row["offset"] != arm_tail_offset:
                 raise ValueError("a scheduled tail row drifted from its pinned economy day")
         elif row["op"] == "order":
             if row["order_index"] != (0 if row["exchange"] == "order-00" else 1):
@@ -1183,9 +1310,9 @@ def cargoflow2_preflight(prepared: PreparedProof) -> dict:
         ),
     ]:
         raise ValueError("the staged attempt observation kinds drifted")
-    if policy["ladder_grid"] != _cargoflow2_ladder_grid():
+    if policy["ladder_grid"] != _cargoflow2_ladder_grid(plan.schedule_version):
         raise ValueError("the staged attempt ladder grid drifted from the pinned geometry")
-    if policy["funds_model"] != cargoflow2_funds_model_gate():
+    if policy["funds_model"] != cargoflow2_funds_model_gate(plan.schedule_version):
         raise ValueError("the staged attempt funds-model pins drifted from the pinned fence")
     staged_hypotheses = policy["hypotheses"]
     expected_hypotheses = cargoflow2_hypotheses()
@@ -1197,7 +1324,7 @@ def cargoflow2_preflight(prepared: PreparedProof) -> dict:
     if expected_hypotheses.get("state") == "RETAINED_PROBE_REBOUND":
         if staged_hypotheses != expected_hypotheses:
             raise ValueError("the staged attempt hypothesis record drifted from the retained bytes")
-    if metadata.get("budgets") != cargoflow2_budgets():
+    if metadata.get("budgets") != cargoflow2_budgets(plan.schedule_version):
         raise ValueError("the staged attempt budget pins drifted")
     if metadata["public_key"] != prepared.public_key or metadata["binary_sha256"] != BINARY_SHA256:
         raise ValueError("the staged identity pins drifted")
@@ -1311,20 +1438,26 @@ def cargoflow2_exchange_timeout_seconds(*, budget_table: dict, op: str, offset: 
     budget at all.
     """
     request_seconds = float(budget_table["request_seconds"])
+    delivered = (
+        budget_table.get("planned_exchanges") == PLANNED_CARGOFLOW2_DELIVERED_EXCHANGES
+        and budget_table.get("day_budget") == CARGOFLOW2_DELIVERED_DAY_BUDGET
+    )
+    flow_offsets = CARGOFLOW2_DELIVERED_FLOW_OFFSETS if delivered else CARGOFLOW2_FLOW_OFFSETS
+    tail_offset = CARGOFLOW2_DELIVERED_TAIL_OFFSET if delivered else CARGOFLOW2_TAIL_OFFSET
+    tail_day = "flow-12" if delivered else "flow-11"
     if op == "arrive-watch":
         return float(budget_table["watch_seconds"]) + float(budget_table["exchange_margin_seconds"])
     if op == "flow":
-        if int(offset) not in CARGOFLOW2_FLOW_OFFSETS:
+        if int(offset) not in flow_offsets:
             raise ValueError("no delivery budget exists for a foreign ladder offset")
         if int(offset) > 0:
-            return (
-                float(budget_table["watch_seconds"])
-                + float(budget_table["exchange_margin_seconds"])
+            return float(budget_table["watch_seconds"]) + float(
+                budget_table["exchange_margin_seconds"]
             )
         return request_seconds
     if op in ("finance", "finish"):
-        if int(offset) != CARGOFLOW2_TAIL_OFFSET:
-            raise ValueError("the tail exchanges ride the flow-11 economy day of record")
+        if int(offset) != tail_offset:
+            raise ValueError(f"the tail exchanges ride the {tail_day} economy day of record")
         return request_seconds
     if op in ("site", "engine", "purchase", "vread", "order", "order-read", "monitor", "start"):
         return request_seconds
@@ -1360,6 +1493,10 @@ def _cargoflow2_exchange_request(
         delivery=int(plan.delivery),
         depot=int(plan.depot),
     )
+    # The delivered arm's requests name their (2, 2) pairing on the wire;
+    # the v1 envelope sends no arm key at all.
+    if plan.schedule_version is not None:
+        base["schedule_version"] = int(plan.schedule_version)
     if op == "site":
         return Cargoflow2Request(**base)
     base["engine"] = int(CARGOFLOW2_ENGINE)
@@ -1401,7 +1538,7 @@ def cargoflow2_request_table(
     """
     state = dict(vehicle=int(vehicle))
     rows: list[Cargoflow2Request] = []
-    for entry in cargoflow2_schedule():
+    for entry in cargoflow2_schedule(plan.schedule_version):
         request = _cargoflow2_exchange_request(entry, seal, plan, state)
         verify_request_against_cargoflow2_plan(request, plan=plan, seal=seal)
         rows.append(request)
@@ -1535,8 +1672,7 @@ def apply_cargoflow2_cleanup_outcome(result: dict, *, complete: bool) -> None:
             result,
             status="FAILED_CLEANUP",
             message=(
-                "ValueError: cleanup was not certified; no verified attempt "
-                "completion is possible"
+                "ValueError: cleanup was not certified; no verified attempt completion is possible"
             ),
         )
 
@@ -1572,7 +1708,8 @@ async def execute_cargoflow2_attempt(prepared: PreparedProof, backend) -> dict:
     backend.preflight(prepared)
     schedule: list[dict] = metadata["plan_policy"]["schedule"]
     plan = cargoflow2_pipeline_plan(
-        _cargoflow2_policy_route_version(metadata["plan_policy"])
+        _cargoflow2_policy_route_version(metadata["plan_policy"]),
+        metadata["plan_policy"].get("schedule_version"),
     )
     result: dict[str, Any] = dict(
         preflight="PASS",
@@ -1712,9 +1849,7 @@ async def execute_cargoflow2_attempt(prepared: PreparedProof, backend) -> dict:
                         "the attempt completion evidence drifted from the staged schedule"
                     )
                 if phase["anchor"] is None or not phase["samples"]:
-                    raise ValueError(
-                        "the native ladder anchor or the sampled series is missing"
-                    )
+                    raise ValueError("the native ladder anchor or the sampled series is missing")
                 write_json(
                     directory / "receipt.json",
                     dict(
@@ -1823,9 +1958,7 @@ def _parse_cargoflow2_frames(directory: Path):
             for kind, body in AdminFrameDecoder().feed_frames(frame):
                 if kind != SERVER_GAMESCRIPT:
                     continue
-                reply = decode_gamescript(
-                    body, max_payload_bytes=MAX_CARGOFLOW2_RESPONSE_BYTES
-                )
+                reply = decode_gamescript(body, max_payload_bytes=MAX_CARGOFLOW2_RESPONSE_BYTES)
                 if reply not in reply_positions:
                     reply_positions[reply] = index
                 replies.append(reply)
@@ -1894,16 +2027,21 @@ def verify_cargoflow2_attempt_identity(metadata: dict, *, plan) -> dict:
         raise ValueError("the retained attempt lacks its plan policy")
     route_version = _cargoflow2_policy_route_version(policy)
     _require_cargoflow2_plan(
-        plan, pinned_digest=cargoflow2_pipeline_plan(route_version).digest
+        plan,
+        pinned_digest=cargoflow2_pipeline_plan(
+            route_version, policy.get("schedule_version")
+        ).digest,
     )
     schedule = staged_cargoflow2_schedule(policy)
     if policy.get("schedule") != schedule or policy.get("plan_digest") != plan_digest_of(schedule):
         raise ValueError("the retained attempt schedule drifted from the compiled derivation")
     if policy.get("plan_model_digest") != plan.digest:
         raise ValueError("the retained plan digest drifted from the pinned attempt plan")
-    if policy.get("schedule_version") != 1:
+    if policy.get("schedule_version", 1) != int(
+        plan.schedule_version if plan.schedule_version is not None else CARGOFLOW2_SCHEDULE_VERSION
+    ):
         raise ValueError("the retained schedule version drifted")
-    if metadata.get("budgets") != cargoflow2_budgets():
+    if metadata.get("budgets") != cargoflow2_budgets(plan.schedule_version):
         raise ValueError("the retained budget contract drifted")
     if policy.get("max_cost") != int(CARGOFLOW2_ENGINE_MAX_COST):
         raise ValueError("the retained budget floated off the pinned cost authority")
@@ -1924,9 +2062,9 @@ def verify_cargoflow2_attempt_identity(metadata: dict, *, plan) -> dict:
         or policy.get("plan_model_digest") != plan.digest
     ):
         raise ValueError("the retained attempt plan pins drifted")
-    if policy.get("ladder_grid") != _cargoflow2_ladder_grid():
+    if policy.get("ladder_grid") != _cargoflow2_ladder_grid(plan.schedule_version):
         raise ValueError("the retained attempt ladder grid drifted from the pinned geometry")
-    if policy.get("funds_model") != cargoflow2_funds_model_gate():
+    if policy.get("funds_model") != cargoflow2_funds_model_gate(plan.schedule_version):
         raise ValueError("the retained funds-model pins drifted from the pinned fence")
     if policy.get("observations") != [
         dict(
@@ -1941,10 +2079,9 @@ def verify_cargoflow2_attempt_identity(metadata: dict, *, plan) -> dict:
         raise ValueError("the retained attempt observation kinds drifted")
     staged_hypotheses = policy.get("hypotheses")
     expected_hypotheses = cargoflow2_hypotheses()
-    if (
-        not isinstance(staged_hypotheses, dict)
-        or staged_hypotheses.get("state") != expected_hypotheses.get("state")
-    ):
+    if not isinstance(staged_hypotheses, dict) or staged_hypotheses.get(
+        "state"
+    ) != expected_hypotheses.get("state"):
         raise ValueError(
             f"the retained attempt hypothesis record drifted from its version derivation "
             f"({expected_hypotheses.get('state')})"
@@ -2019,13 +2156,18 @@ def verify_cargoflow2_attempt(directory: Path) -> dict:
     policy_replay = metadata["plan_policy"]
     route_version = _cargoflow2_policy_route_version(policy_replay)
     schedule = staged_cargoflow2_schedule(policy_replay)
-    plan = cargoflow2_pipeline_plan(route_version)
+    plan = cargoflow2_pipeline_plan(route_version, policy_replay.get("schedule_version"))
     if policy_replay["schedule"] != schedule or policy_replay["plan_digest"] != plan_digest_of(
         schedule
     ):
         raise ValueError("the staged attempt schedule drifted from the compiled derivation")
     planned_ids = {row["exchange"] for row in schedule}
-    if planned_ids != set(CARGOFLOW2_EXCHANGE_IDS) or len(schedule) != PLANNED_CARGOFLOW2_EXCHANGES:
+    delivered = plan.schedule_version == CARGOFLOW2_DELIVERED_SCHEDULE_VERSION
+    if planned_ids != set(
+        CARGOFLOW2_DELIVERED_EXCHANGE_IDS if delivered else CARGOFLOW2_EXCHANGE_IDS
+    ) or len(schedule) != (
+        PLANNED_CARGOFLOW2_DELIVERED_EXCHANGES if delivered else PLANNED_CARGOFLOW2_EXCHANGES
+    ):
         raise ValueError("the retained attempt schedule drifted from the wire contract")
     verify_cargoflow2_attempt_identity(metadata, plan=plan)
     result = json.loads((directory / "result.json").read_text())
@@ -2156,7 +2298,11 @@ def verify_cargoflow2_attempt(directory: Path) -> dict:
             raise ValueError("the verified completion's request inventory drifted")
         if phase["anchor"] is None or not phase["samples"]:
             raise ValueError("the verified completion lacks its own re-derived ladder evidence")
-        if sorted(int(offset) for offset in phase["samples"]) != list(CARGOFLOW2_FLOW_OFFSETS):
+        if sorted(int(offset) for offset in phase["samples"]) != list(
+            CARGOFLOW2_DELIVERED_FLOW_OFFSETS
+            if plan.schedule_version == CARGOFLOW2_DELIVERED_SCHEDULE_VERSION
+            else CARGOFLOW2_FLOW_OFFSETS
+        ):
             raise ValueError("the verified completion's sampled ladder inventory drifted")
         if result.get("cleanup_failure") is not None or result.get("verified") is not True:
             raise ValueError("the verified completion label contradicts its own result flags")

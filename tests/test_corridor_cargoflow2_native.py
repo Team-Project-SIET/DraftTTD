@@ -97,8 +97,19 @@ def test_attempt_schedule_is_the_pinned_ladder_of_record():
         [-1] * 11 + list(cf.CARGOFLOW2_FLOW_OFFSETS) + [cf.CARGOFLOW2_TAIL_OFFSET] * 2
     )
     assert [row["op"] for row in schedule] == (
-        ["site", "engine", "purchase", "vread", "order", "order", "order-read",
-         "monitor", "start", "vread", "arrive-watch"]
+        [
+            "site",
+            "engine",
+            "purchase",
+            "vread",
+            "order",
+            "order",
+            "order-read",
+            "monitor",
+            "start",
+            "vread",
+            "arrive-watch",
+        ]
         + ["flow"] * 12
         + ["finance", "finish"]
     )
@@ -109,23 +120,27 @@ def test_attempt_schedule_is_the_pinned_ladder_of_record():
     assert budgets["requests"] == 32 and budgets["planned_exchanges"] == 25
     assert budgets["max_cost"] == 5000 and budgets["total_seconds"] == 900
     # Instant exchanges keep the request budget; waits ride the window.
-    for op in ("site", "engine", "purchase", "vread", "order", "order-read",
-               "monitor", "start"):
-        assert work.cargoflow2_exchange_timeout_seconds(
-            budget_table=budgets, op=op, offset=-1
-        ) == budgets["request_seconds"]
-    assert work.cargoflow2_exchange_timeout_seconds(
-        budget_table=budgets, op="arrive-watch", offset=-1
-    ) == budgets["watch_seconds"] + budgets["exchange_margin_seconds"]
-    assert work.cargoflow2_exchange_timeout_seconds(
-        budget_table=budgets, op="flow", offset=0
-    ) == budgets["request_seconds"]
-    assert work.cargoflow2_exchange_timeout_seconds(
-        budget_table=budgets, op="flow", offset=5
-    ) == budgets["watch_seconds"] + budgets["exchange_margin_seconds"]
-    assert work.cargoflow2_exchange_timeout_seconds(
-        budget_table=budgets, op="finance", offset=55
-    ) == budgets["request_seconds"]
+    for op in ("site", "engine", "purchase", "vread", "order", "order-read", "monitor", "start"):
+        assert (
+            work.cargoflow2_exchange_timeout_seconds(budget_table=budgets, op=op, offset=-1)
+            == budgets["request_seconds"]
+        )
+    assert (
+        work.cargoflow2_exchange_timeout_seconds(budget_table=budgets, op="arrive-watch", offset=-1)
+        == budgets["watch_seconds"] + budgets["exchange_margin_seconds"]
+    )
+    assert (
+        work.cargoflow2_exchange_timeout_seconds(budget_table=budgets, op="flow", offset=0)
+        == budgets["request_seconds"]
+    )
+    assert (
+        work.cargoflow2_exchange_timeout_seconds(budget_table=budgets, op="flow", offset=5)
+        == budgets["watch_seconds"] + budgets["exchange_margin_seconds"]
+    )
+    assert (
+        work.cargoflow2_exchange_timeout_seconds(budget_table=budgets, op="finance", offset=55)
+        == budgets["request_seconds"]
+    )
     with pytest.raises(ValueError, match="foreign ladder offset"):
         work.cargoflow2_exchange_timeout_seconds(budget_table=budgets, op="flow", offset=56)
     with pytest.raises(ValueError, match="flow-11 economy day"):
@@ -487,9 +502,7 @@ def test_cargoflow2_exchange_refuses_malformed_truncated_and_stale_replies(tmp_p
     # can never become a measured delivery observation.
     with pytest.raises(ValueError):
         asyncio.run(
-            work.cargoflow2_exchange(
-                _FakeSession(_admin_frame(b"\x00junk\x00")), request, tmp_path
-            )
+            work.cargoflow2_exchange(_FakeSession(_admin_frame(b"\x00junk\x00")), request, tmp_path)
         )
 
 
@@ -521,8 +534,8 @@ def test_cargoflow2_frame_replay_parser(tmp_path):
         ["inbound", reply.hex()],
     ]
     (tmp_path / "frames.json").write_text(json.dumps(frames))
-    outbound, requests, replies, request_positions, reply_positions = (
-        work._parse_cargoflow2_frames(tmp_path)
+    outbound, requests, replies, request_positions, reply_positions = work._parse_cargoflow2_frames(
+        tmp_path
     )
     assert requests == [request]
     assert replies == [response]
@@ -539,47 +552,33 @@ def test_cargoflow2_frame_replay_parser(tmp_path):
 def test_day_authority_is_enforced_before_dispatch():
     # Instant fixed-chain exchanges never gate.
     for entry in SCHEDULE[:10]:
-        assert work._cargoflow2_day_authority(
-            entry, PLAN, elapsed_days=999, anchor=None
-        ) is None
+        assert work._cargoflow2_day_authority(entry, PLAN, elapsed_days=999, anchor=None) is None
     flow0 = SCHEDULE[EXCHANGES.index("flow-00")]
     flow11 = SCHEDULE[EXCHANGES.index("flow-11")]
     arrive = SCHEDULE[EXCHANGES.index("arrive-00")]
     finance = SCHEDULE[EXCHANGES.index("finance-00")]
     finish = SCHEDULE[EXCHANGES.index("finish-00")]
     # The elapsed economy-day ledger bound.
-    exceeded = work._cargoflow2_day_authority(
-        flow0, PLAN, elapsed_days=61, anchor=ANCHOR
-    )
+    exceeded = work._cargoflow2_day_authority(flow0, PLAN, elapsed_days=61, anchor=ANCHOR)
     assert exceeded is not None
     assert "exceeded" in exceeded
-    assert work._cargoflow2_day_authority(
-        finance, PLAN, elapsed_days=60, anchor=ANCHOR
-    ) is None  # the budget fits exactly at 60
+    assert (
+        work._cargoflow2_day_authority(finance, PLAN, elapsed_days=60, anchor=ANCHOR) is None
+    )  # the budget fits exactly at 60
     # The arrival watch's own 5-day bound.
-    assert work._cargoflow2_day_authority(
-        arrive, PLAN, elapsed_days=55, anchor=None
-    ) is None
-    unfittable = work._cargoflow2_day_authority(
-        arrive, PLAN, elapsed_days=56, anchor=None
-    )
+    assert work._cargoflow2_day_authority(arrive, PLAN, elapsed_days=55, anchor=None) is None
+    unfittable = work._cargoflow2_day_authority(arrive, PLAN, elapsed_days=56, anchor=None)
     assert unfittable is not None
     assert "cannot fit" in unfittable
     # A ladder row cannot be bounded before the anchor latches.
-    unbounded = work._cargoflow2_day_authority(
-        flow11, PLAN, elapsed_days=None, anchor=None
-    )
+    unbounded = work._cargoflow2_day_authority(flow11, PLAN, elapsed_days=None, anchor=None)
     assert unbounded is not None
     assert "bounded" in unbounded
-    unbounded = work._cargoflow2_day_authority(
-        finance, PLAN, elapsed_days=None, anchor=None
-    )
+    unbounded = work._cargoflow2_day_authority(finance, PLAN, elapsed_days=None, anchor=None)
     assert unbounded is not None
     assert "bounded" in unbounded
     # The ladder day rides the anchor exactly: flow-11 fits, offset 61 escapes.
-    assert work._cargoflow2_day_authority(
-        flow11, PLAN, elapsed_days=None, anchor=ANCHOR
-    ) is None
+    assert work._cargoflow2_day_authority(flow11, PLAN, elapsed_days=None, anchor=ANCHOR) is None
     escape = work._cargoflow2_day_authority(
         dict(exchange="flow-12", op="flow", offset=61),
         PLAN,
@@ -589,12 +588,8 @@ def test_day_authority_is_enforced_before_dispatch():
     assert escape is not None
     assert "escapes" in escape
     # The tail rows are ladder rows under the same anchor authority.
-    assert work._cargoflow2_day_authority(
-        finance, PLAN, elapsed_days=None, anchor=ANCHOR
-    ) is None
-    assert work._cargoflow2_day_authority(
-        finish, PLAN, elapsed_days=None, anchor=ANCHOR
-    ) is None
+    assert work._cargoflow2_day_authority(finance, PLAN, elapsed_days=None, anchor=ANCHOR) is None
+    assert work._cargoflow2_day_authority(finish, PLAN, elapsed_days=None, anchor=ANCHOR) is None
 
 
 # --- replay verification fail-closed behavior --------------------------------
@@ -681,9 +676,7 @@ def _claim_engine(tmp_path, staged):
     return target
 
 
-def test_attempt_replay_never_verifies_a_forced_label_without_authorization(
-    staged, tmp_path
-):
+def test_attempt_replay_never_verifies_a_forced_label_without_authorization(staged, tmp_path):
     target = _claim_engine(tmp_path, staged)
     metadata = json.loads((target / "PRELAUNCH.json").read_text())
     seal = sha256(target / "PRELAUNCH.json")
@@ -756,9 +749,7 @@ def test_identity_refuses_a_drifted_prerequisite_or_world_or_policy(staged):
         lambda m: m["prerequisite"].update(attempt="D5-F12-DEPOT-2"),
         lambda m: m["world"].update(save_sha256="9" * 64),
         lambda m: m["plan_policy"].update(max_cost=5),
-        lambda m: m["plan_policy"].update(
-            ladder_grid=dict(schema="d5-cargoflow2-ladder-grid-v1")
-        ),
+        lambda m: m["plan_policy"].update(ladder_grid=dict(schema="d5-cargoflow2-ladder-grid-v1")),
         lambda m: m["plan_policy"].update(
             hypotheses=dict(samples=[], state="RETAINED_PROBE_ABSENT")
         ),
@@ -812,9 +803,7 @@ def test_cargoflow2_exit_status_zero_only_for_the_verified_completion():
     )
     assert verdict_zero == 0
     assert (
-        work.cargoflow2_verdict_exit_status(
-            dict(verification="PHASE_HALTED_EVIDENCE_PRESERVED")
-        )
+        work.cargoflow2_verdict_exit_status(dict(verification="PHASE_HALTED_EVIDENCE_PRESERVED"))
         == 1
     )
 
@@ -840,9 +829,7 @@ def _consumed_cargoflow2_exchanges(seal: str):
         payload = template_readback.model_dump(mode="json", exclude_none=True)
         payload["plan"] = real_request.plan
         raw = json.dumps(payload, separators=(",", ":")).encode()
-        exchanges.append(
-            (real_request, cf.Cargoflow2Readback.parse_for(real_request, raw))
-        )
+        exchanges.append((real_request, cf.Cargoflow2Readback.parse_for(real_request, raw)))
     return exchanges
 
 
@@ -942,9 +929,7 @@ def consumed_attempt(tmp_path_factory):
     prepared.spec.workspace.close()
 
 
-def test_replay_verifies_a_fully_consumed_attempt_frame_sequence(
-    consumed_attempt, monkeypatch
-):
+def test_replay_verifies_a_fully_consumed_attempt_frame_sequence(consumed_attempt, monkeypatch):
     directory, exchanges, _ = consumed_attempt
     monkeypatch.setattr(work, "replay_authorization_state", lambda *a, **k: None)
     verdict = work.verify_cargoflow2_attempt(directory)
@@ -953,9 +938,7 @@ def test_replay_verifies_a_fully_consumed_attempt_frame_sequence(
     assert verdict["receipt"]["phase"]["anchor"] == ANCHOR
     assert verdict["receipt"]["phase"]["receipts"][0]["funds"] == FUNDS
     assert verdict["receipt"]["before_save_sha256"] == "9" * 64
-    assert verdict["receipt"]["phase"]["sampled_months"] == [
-        [1950, 1], [1950, 2], [1950, 3]
-    ]
+    assert verdict["receipt"]["phase"]["sampled_months"] == [[1950, 1], [1950, 2], [1950, 3]]
     phase = verdict["receipt"]["phase"]
     assert phase["verdict"]["verdict"] == "CARGOFLOW2_DELIVERY_VERIFIED"
     assert phase["series"]["stock_pickup"] == [-1] * 12
@@ -971,9 +954,7 @@ def test_replay_verifies_a_fully_consumed_attempt_frame_sequence(
     assert work.cargoflow2_verdict_exit_status(verdict) == 0
 
 
-def test_replay_fails_closed_on_a_tampered_retained_receipt(
-    consumed_attempt, monkeypatch
-):
+def test_replay_fails_closed_on_a_tampered_retained_receipt(consumed_attempt, monkeypatch):
     directory, _, _ = consumed_attempt
     monkeypatch.setattr(work, "replay_authorization_state", lambda *a, **k: None)
     before = json.loads((directory / "receipt.json").read_text())
@@ -1036,19 +1017,12 @@ def test_nut_pin_table_binds_to_the_python_attempt_schedule():
         r'\["([a-z-]+-\d\d)",\s*"([a-z-]+)",\s*(-1|\d+),\s*"([A-Z_]+)"\]',
         planned_match.group(1),
     )
-    assert (
-        [(exchange, op, int(offset)) for exchange, op, offset, _status in rows]
-        == [
-            (row["exchange"], row["op"], int(row["offset"]))
-            for row in work.cargoflow2_schedule()
-        ]
-    )
-    assert [
-        status
-        for _exchange, op, _offset, status in rows
-    ] == [
+    assert [(exchange, op, int(offset)) for exchange, op, offset, _status in rows] == [
+        (row["exchange"], row["op"], int(row["offset"])) for row in work.cargoflow2_schedule(2)
+    ]
+    assert [status for _exchange, op, _offset, status in rows] == [
         cf._CARGOFLOW2_SUCCESS_STATUS[cast(cf.Cargoflow2Op, row["op"])]
-        for row in work.cargoflow2_schedule()
+        for row in work.cargoflow2_schedule(2)
     ]
     for marker, name, value in (
         (r"\n    pickup = (\d+)", "pickup", cf.CARGOFLOW2_PICKUP_TILE),
@@ -1065,17 +1039,26 @@ def test_nut_pin_table_binds_to_the_python_attempt_schedule():
         (r"\n    ENGINE_MAX_COST = (\d+)", "ENGINE_MAX_COST", cf.CARGOFLOW2_ENGINE_MAX_COST),
         (r"\n    CAPACITY_PIN = (\d+)", "CAPACITY_PIN", cf.CARGOFLOW2_CAPACITY),
         (r"\n    SPEED_PIN = (\d+)", "SPEED_PIN", cf.CARGOFLOW2_MAX_SPEED),
-        (r"\n    RUNNING_DISPLAY_PIN = (\d+)", "RUNNING_DISPLAY_PIN",
-         cf.CARGOFLOW2_RUNNING_DISPLAY),
+        (
+            r"\n    RUNNING_DISPLAY_PIN = (\d+)",
+            "RUNNING_DISPLAY_PIN",
+            cf.CARGOFLOW2_RUNNING_DISPLAY,
+        ),
         (r"\n    OF_NONE = (\d+)", "OF_NONE", cf.CARGOFLOW2_ORDER_PICKUP_FLAGS),
         (r"\n    OF_NO_LOAD = (\d+)", "OF_NO_LOAD", cf.CARGOFLOW2_ORDER_DELIVERY_FLAGS),
         (r"\n    LAUNCH_DAY = (\d+)", "LAUNCH_DAY", cf.CARGOFLOW2_LAUNCH_DAY),
         (r"\n    ARRIVE_MAX_DAYS = (\d+)", "ARRIVE_MAX_DAYS", cf.CARGOFLOW2_ARRIVE_MAX_DAYS),
-        (r"\n    ARRIVE_DEADLINE = (\d+)", "ARRIVE_DEADLINE",
-         cf.CARGOFLOW2_LAUNCH_DAY + cf.CARGOFLOW2_ARRIVE_MAX_DAYS),
-        (r"\n    DAY_BUDGET = (\d+)", "DAY_BUDGET", cf.CARGOFLOW2_DAY_BUDGET),
-        (r"\n    AUTHORITY_LAST_DAY = (\d+)", "AUTHORITY_LAST_DAY",
-         cf.CARGOFLOW2_LAUNCH_DAY + cf.CARGOFLOW2_DAY_BUDGET),
+        (
+            r"\n    ARRIVE_DEADLINE = (\d+)",
+            "ARRIVE_DEADLINE",
+            cf.CARGOFLOW2_LAUNCH_DAY + cf.CARGOFLOW2_ARRIVE_MAX_DAYS,
+        ),
+        (r"\n    DAY_BUDGET = (\d+)", "DAY_BUDGET", cf.CARGOFLOW2_DELIVERED_DAY_BUDGET),
+        (
+            r"\n    AUTHORITY_LAST_DAY = (\d+)",
+            "AUTHORITY_LAST_DAY",
+            cf.CARGOFLOW2_LAUNCH_DAY + cf.CARGOFLOW2_DELIVERED_DAY_BUDGET,
+        ),
         (r"\n    WAIT_MAX_TICKS = (\d+)", "WAIT_MAX_TICKS", cf.CARGOFLOW2_WAIT_MAX_TICKS),
         (r"\n    LATCH_LIMIT = (\d+)", "LATCH_LIMIT", cf.CARGOFLOW2_LATCH_LIMIT),
         (r"\n    max_requests = (\d+)", "max_requests", cf.CARGOFLOW2_REQUEST_BUDGET),
@@ -1094,9 +1077,7 @@ def test_nut_running_cost_join_carries_no_second_shift():
     text = (work.CARGOFLOW2_PACKAGE / "main.nut").read_text()
     assert "(raw >> 8)" not in text
     assert "display != this.RUNNING_DISPLAY_PIN" in text
-    assert re.search(
-        r"local display = GSEngine\.GetRunningCost\(pinned\)", text
-    ) is not None
+    assert re.search(r"local display = GSEngine\.GetRunningCost\(pinned\)", text) is not None
 
 
 def test_attempt_bytes_never_parse_into_the_consumed_contract_families():
@@ -1292,9 +1273,7 @@ def test_identity_pairs_each_admitted_binding_with_its_own_plan(staged, staged_s
     pairing refuses at the pinned observations gate."""
     plan_two = cf.cargoflow2_plan(binding=cf.cargoflow2_route_binding(2))
     assert work.verify_cargoflow2_attempt_identity(metadata_of(staged), plan=PLAN)
-    assert work.verify_cargoflow2_attempt_identity(
-        metadata_of(staged_second), plan=plan_two
-    )
+    assert work.verify_cargoflow2_attempt_identity(metadata_of(staged_second), plan=plan_two)
     with pytest.raises(work.Cargoflow2StagingError, match="drifted from the pinned"):
         work.verify_cargoflow2_attempt_identity(metadata_of(staged_second), plan=PLAN)
     with pytest.raises(work.Cargoflow2StagingError, match="drifted from the pinned"):
@@ -1316,3 +1295,105 @@ def test_unconsumed_second_admission_candidate_verifies_fail_closed(staged_secon
     verdict = work.verify_cargoflow2_attempt(staged_second.directory)
     assert verdict["verification"] == "AUTHORIZATION_UNVERIFIED"
     assert verdict["authorization_state"] == "CLAIM_ABSENT"
+
+
+# --- The delivered-class tail (ticket 02): the v2-bound derivation ------------
+
+# Figures of record at the GREEN gate of record (never pre-assumed; each is
+# computed from the landed derivation against the retained E-records).
+_DELIVERED_SCHEDULE_DIGEST_OF_RECORD = (
+    "3132bfa0217f73025a474698e62d266722baf65eba6da6826bcf93c4385e0527"
+)
+
+
+def test_delivered_arm_policy_binds_the_v2_ladder_and_digest():
+    """The (2, 2) pairing's plan policy binds the delivered arm's own
+    derivation of record: the delivered 26-row schedule with its own digest,
+    schedule_version 2, the raised grid (planned exchanges 26, 13 flow
+    samples, span 60, tail 60, day budget 65) and world/funds offsets
+    carrying 60 — while the arm-1 defaults stay byte-equal across both
+    route bindings and the (1, 2) pairing refuses fail-closed."""
+    policy = work.cargoflow2_plan_policy(2, 2)
+    assert policy["route_version"] == 2 and policy["schedule_version"] == 2
+    plan = work.cargoflow2_pipeline_plan(2, 2)
+    assert plan.schedule_version == 2
+    assert policy["plan_model_digest"] == plan.digest
+    rows = policy["schedule"]
+    assert [row["exchange"] for row in rows] == list(cf.CARGOFLOW2_DELIVERED_EXCHANGE_IDS)
+    assert work.plan_digest_of(rows) == _DELIVERED_SCHEDULE_DIGEST_OF_RECORD
+    grid = policy["ladder_grid"]
+    assert grid["schema"] == "d5-cargoflow2-ladder-grid-v2"
+    assert grid["planned_exchanges"] == 26
+    assert grid["flow_samples"] == 13
+    assert grid["span_days"] == 60 and grid["tail_offset"] == 60
+    assert grid["day_budget"] == 65
+    assert grid["offsets"] == list(cf.CARGOFLOW2_DELIVERED_FLOW_OFFSETS)
+    world = policy["world"]
+    assert world["flow_offsets"] == list(cf.CARGOFLOW2_DELIVERED_FLOW_OFFSETS)
+    assert world["day_budget"] == 65
+    funds = policy["funds_model"]
+    assert funds["day_budget"] == 65 and funds["flow_span_days"] == 60
+    # Arm-1 stays byte-equal across both route bindings:
+    policy_one = work.cargoflow2_plan_policy()
+    policy_two = work.cargoflow2_plan_policy(2)
+    assert policy_one["schedule_version"] == policy_two["schedule_version"] == 1
+    assert (
+        policy_one["plan_digest"]
+        == policy_two["plan_digest"]
+        == (work.plan_digest_of(work.cargoflow2_schedule()))
+    )
+    assert policy_two["plan_model_digest"].startswith("e1cafb23")
+    assert work.cargoflow2_schedule(2) == rows
+    # The (1, 2) pairing refuses:
+    with pytest.raises(work.Cargoflow2StagingError, match="pairing"):
+        work.cargoflow2_plan_policy(1, 2)
+
+
+def test_delivered_staged_schedule_pairing_and_budgets():
+    """The staged-schedule record resolver pairs by the (route_version,
+    schedule_version) record itself: the delivered record resolves the
+    delivered 26-row ladder and its own budget envelope (26 planned
+    exchanges, 65-day authority), the v1 arm stays byte-equal, and a
+    mis-paired record refuses fail-closed before anything can be trusted."""
+    rows = work.staged_cargoflow2_schedule({"route_version": 2, "schedule_version": 2})
+    assert [row["exchange"] for row in rows] == list(cf.CARGOFLOW2_DELIVERED_EXCHANGE_IDS)
+    assert work.plan_digest_of(rows) == _DELIVERED_SCHEDULE_DIGEST_OF_RECORD
+    assert (
+        work.staged_cargoflow2_schedule({"route_version": 2, "schedule_version": 1})
+        == work.cargoflow2_schedule()
+    )
+    with pytest.raises(ValueError, match="pairing"):
+        work.staged_cargoflow2_schedule({"route_version": 1, "schedule_version": 2})
+    with pytest.raises(ValueError, match="pairing"):
+        work.staged_cargoflow2_schedule({"route_version": 2, "schedule_version": 3})
+    budgets_delivered = work.cargoflow2_budgets(2)
+    assert budgets_delivered["planned_exchanges"] == 26
+    assert budgets_delivered["day_budget"] == 65
+    budgets_one = work.cargoflow2_budgets()
+    assert budgets_one["planned_exchanges"] == 25 and budgets_one["day_budget"] == 60
+    # The delivered ladder's waits ride their own geometry at the delivered
+    # budgets; a foreign offset refuses in either arm:
+    assert (
+        work.cargoflow2_exchange_timeout_seconds(
+            budget_table=budgets_delivered, op="flow", offset=60
+        )
+        == budgets_delivered["watch_seconds"] + budgets_delivered["exchange_margin_seconds"]
+    )
+    assert (
+        work.cargoflow2_exchange_timeout_seconds(
+            budget_table=budgets_delivered, op="finance", offset=60
+        )
+        == budgets_delivered["request_seconds"]
+    )
+    with pytest.raises(ValueError, match="foreign ladder offset"):
+        work.cargoflow2_exchange_timeout_seconds(
+            budget_table=budgets_delivered, op="flow", offset=56
+        )
+    with pytest.raises(ValueError, match="tail exchanges"):
+        work.cargoflow2_exchange_timeout_seconds(
+            budget_table=budgets_delivered, op="finance", offset=55
+        )
+    with pytest.raises(ValueError, match="foreign ladder offset"):
+        work.cargoflow2_exchange_timeout_seconds(budget_table=budgets_one, op="flow", offset=56)
+    with pytest.raises(ValueError, match="flow-11 economy day"):
+        work.cargoflow2_exchange_timeout_seconds(budget_table=budgets_one, op="finance", offset=60)

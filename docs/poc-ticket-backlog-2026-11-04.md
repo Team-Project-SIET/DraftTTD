@@ -2935,3 +2935,65 @@ readiness, outside this round's PoC definition.
   Next frontier: tail ticket 02 (the offline delivered-cycle fix +
   typing locks) — its own explicit operator approval, none granted by
   this booking.
+- 2026-11-06 — **tail ticket 02 done (the offline delivered-cycle fix +
+  typing locks; E129; the round granted in-session as the frontier
+  instruction "do next move"; offline-only — no staging, no claim, no
+  signature, no launch, no native run; one commit, no push)**: the
+  delivered arm of record is keyed by the (route_version=2,
+  schedule_version=2) pairing, never a binding-id branch — the
+  26-exchange ladder lands `flow-12` at anchor+60 = day 712,292 (the
+  settle margin over the E128 bay-arrival ETA 712,289–712,290) with both
+  tail exchanges riding that same economy day, all inside the
+  65-economy-day day budget (authority last day 712,293 = 712,228 + 65);
+  the (1,2) pairing refuses pairwise everywhere and the (2,1) arm keeps
+  the v1 rows byte-equal on every surface. Arm mechanics of record:
+  `schedule_version` rides the plan, the requests and the readbacks as
+  the arm key, resolved always from the record's own field (the tail ids
+  are arm-ambiguous) — the handler never echoes it, `parse_for` injects
+  the correlated request's arm and a disagreeing frame refuses, and the
+  verification gates gained the arm-op map. A corridor-local canonical
+  encoder drops the None `schedule_version` key from the bytes, so every
+  v1 digest of record stays byte-equal — `REQUEST_PLAN_DIGEST`
+  `98d055c4…f506ca`, binding v1 `9a4a0778…93e45e`, binding v2
+  `26408e77…6b274`, the (2,1) plan `e1cafb23…c08b0`, v1 schedule digest
+  `5c0998f2…bf2d`; no fail-closed pin modified. **Figures of record
+  (computed at the GREEN gate, never assumed)**: delivered plan digest
+  `313879bd…216fda`, delivered schedule digest `3132bfa0…5e0527`
+  (26 rows, tails at 60), delivered funds-walk finish figure 488,069
+  (finance-00/flow-12/finish-00 all at day 712,292 tick 4,414), leg
+  charges 6 across flow-11 (day 712,287) → flow-12 (day 712,292), anchor
+  of record 712,232. **RED-first locks**: the five wire + two native
+  delivered locks observed RED pre-fix and GREEN post-fix; the verdict
+  lock replays the retained round-6/7 phases and types
+  `CARGOFLOW2_LOADED_NEVER_DELIVERED` (never the delivered class); the
+  funds-fence walk covers the unload leg (`_LEG_RUNNING_CHARGES` = 6).
+  **Arm-aware machinery of record**: the native pipeline gained
+  `cargoflow2_schedule(schedule_version)`, the staged-pairing set
+  {(1,1), (2,1), (2,2)} with a fail-closed mis-pairing refusal, ladder
+  grid `d5-cargoflow2-ladder-grid-v2`, arm-aware plan-policy/budgets/
+  prepare-preflight-verify gates and timeout function; the shipped
+  package `main.nut` advanced to the delivered composition (26 planned
+  rows, `DAY_BUDGET` 65, `AUTHORITY_LAST_DAY` 712293, the `flow-12`
+  row, tails echoing their own planned tail step, offset bound 55→60).
+  **Gates of record**: wire 90 + native 48 (both `-m "not openttd"`,
+  the corridor's new counts, +5 wire / +2 native delivered locks) + P07
+  pair 39/28 unchanged, combined run 205 passed; `ruff` clean on all
+  touched paths; `uvx ty` = the one pre-existing tolerated corridor
+  `connect` diagnostic + the 3 pre-existing analytics diagnostics, no
+  new findings; `git diff --check` clean; `CONTEXT.md` pin
+  `847d710a…984d` intact. Zone evidence: the tree's diff against
+  `5cdfb83` names exactly the planned files (wire module, native
+  module, shipped `main.nut`, wire tests, native tests, the ticket
+  book) plus the three booking files, no untracked files, zero
+  `artifacts/` bytes moved (the `/tmp/opencode` zone baseline was
+  absent when re-checked — /tmp cleaned between sessions; the
+  diff-names against the last committed tree carry the same claim,
+  recorded honestly). Books: ticket
+  `.scratch/d5-delivered-class-tail/issues/02-offline-fix-delivered-cycle.md`
+  (status done + all four checklist items checked with the full
+  evidence record) + this row + E129 + the AI_HANDOFF tail. **Next
+  frontier: tail ticket 03 (staging round 8 + the binding adjudication
+  carried in-session, spec default = v2 corner-swap) — its own explicit
+  operator approval, none granted by this round; ticket 06 needs its
+  own explicit native-run grant; E36 and E114 stay open per their own
+  rules.**

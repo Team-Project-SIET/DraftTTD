@@ -2,15 +2,19 @@
  * Additive: no existing frozen package is modified or imported — protocols
  * 8/9/10 stay historical instruments of record and the sat agent dispatches
  * protocol-11 tables through this package alone. The attempt is the fixed
- * 25-exchange schedule of record (docs/d5-cargoflow-delivery-design-2026-11-04.md
+ * 26-exchange delivered schedule of record
+ * (docs/d5-cargoflow-delivery-design-2026-11-04.md and the delivered-class
+ * tail spec
+ * docs/specs/d5-delivered-class-tail.md
  * §5.2/§5.3): the freight-family instrument chain (site re-pin, engine
  * census admission, quote-first purchase, two independent order readbacks,
  * monitor arming, start) follows the proven freight v2 op meanings; then
  * the new bounded first-arrival watch latches the ladder anchor at the
- * pickup stop, the twelve-sample flow ladder observes exactly anchor +
- * its planned offset every 5 economy days, and the two read-only tail
- * exchanges run in the flow-11 economy day — 25 requests inside the
- * 32-request budget.
+ * pickup stop, the thirteen-sample delivered flow ladder observes exactly
+ * anchor + its planned offset every 5 economy days (flow-12 at anchor+60
+ * is the settle margin that completes the delivery cycle), and the two
+ * read-only tail exchanges run in the delivered flow-12 economy day —
+ * 26 requests inside the 32-request budget.
  *
  * Observation set of a flow sample (§5.4): the E99 sample set (stockpiles,
  * waiting and planned families at both stops, monthly production and
@@ -34,10 +38,10 @@
  * regression = CLOCK_STALLED; both typed IN THE FLOW OP ONLY — the
  * arrive-watch maps the same window faults onto its own terminal
  * ARRIVE_TIMEOUT). A ladder step whose target day exceeds the launch-day
- * plus the 60-economy-day authority (712288) refuses AUTHORITY_EXCEEDED
- * before any wait (the dual-package/pipeline enforcement). The tail
- * exchanges run instantly after flow-11's response in the same economy
- * day and re-check the anchor arithmetic themselves.
+ * plus the 65-economy-day delivered authority (712293) refuses
+ * AUTHORITY_EXCEEDED before any wait (the dual-package/pipeline
+ * enforcement). The tail exchanges run instantly after flow-12's response
+ * in the same economy day and re-check the anchor arithmetic themselves.
  *
  * Financial fence: the funds model and its zero-residual reconciliation
  * are Python-side (§4); this package only echoes its measured funds at
@@ -141,28 +145,30 @@ class D5CargoFlow2Proof extends GSController {
     OF_NO_LOAD = 128
 
     /* Schedule boundaries of record (§5.3): the launch day L = 712228,
-     * the 5-day arrival bound (deadline day 712233) and the 60-day
-     * attempt authority (last admissible observation day 712288 =
-     * L + 60, enforced package-side before every ladder wait). */
+     * the 5-day arrival bound (deadline day 712233) and the delivered
+     * 65-day attempt authority (last admissible observation day 712293 =
+     * L + 65, enforced package-side before every ladder wait — the v1
+     * envelope's 60-day figures belong to the consumed v1 candidates,
+     * not to this package's ladder). */
     LAUNCH_DAY = 712228
     ARRIVE_MAX_DAYS = 5
     ARRIVE_DEADLINE = 712233
-    DAY_BUDGET = 60
-    AUTHORITY_LAST_DAY = 712288
+    DAY_BUDGET = 65
+    AUTHORITY_LAST_DAY = 712293
     /* Per-window caps: the tick cap is the live in-package ceiling; the
      * exact equality ladder itself is the day authority. */
     WAIT_MAX_TICKS = 2048
     /* Per-flow-sample latch bound (§5.3): overflow refuses, never truncates. */
     LATCH_LIMIT = 8
-    /* 25 planned exchanges, plus dispatcher slack only through unique ids:
+    /* 26 planned exchanges, plus dispatcher slack only through unique ids:
      * request 33 is the first one the dispatcher drops. */
     max_requests = 32
 
-    /* The fixed 25-exchange schedule: [request_id, op, offset echo,
-     * success status] — the third column mirrors the Python wire's
+    /* The fixed 26-exchange delivered schedule: [request_id, op, offset
+     * echo, success status] — the third column mirrors the Python wire's
      * request-offset table exactly (-1 everywhere off the ladder, the
-     * planned step on flow rows and the 55 tail step), and the fourth
-     * column is the contract's per-op success status. */
+     * planned step on flow rows and the delivered 60 tail step), and the
+     * fourth column is the contract's per-op success status. */
     cargoflow2_planned = [
         ["site-00", "site", -1, "READY"],
         ["engine-00", "engine", -1, "READY"],
@@ -187,8 +193,9 @@ class D5CargoFlow2Proof extends GSController {
         ["flow-09", "flow", 45, "READY"],
         ["flow-10", "flow", 50, "READY"],
         ["flow-11", "flow", 55, "READY"],
-        ["finance-00", "finance", 55, "FINANCE_VERIFIED"],
-        ["finish-00", "finish", 55, "PHASE_STOPPED"]
+        ["flow-12", "flow", 60, "READY"],
+        ["finance-00", "finance", 60, "FINANCE_VERIFIED"],
+        ["finish-00", "finish", 60, "PHASE_STOPPED"]
     ]
 
     /* Every observation field of the readback, in bridge-attach order;
@@ -242,6 +249,27 @@ class D5CargoFlow2Proof extends GSController {
         return false
     }
 
+    /* The tail request-shape rule (mirrored from the Python request
+     * validator): the id must be a planned finance or finish row and its
+     * offset echo must be exactly that row's planned ladder step — the
+     * tails ride their own planned economy day. */
+    function CargoFlow2TailOffsetOk(q) {
+        for (local i = 0; i < cargoflow2_planned.len(); i++)
+            if (cargoflow2_planned[i][0] == q.request_id &&
+                (q.op == "finance" || q.op == "finish") &&
+                cargoflow2_planned[i][1] == q.op &&
+                cargoflow2_planned[i][2] == q.offset) return true
+        return false
+    }
+
+    /* The planned tail ladder step of record: the finance row's own
+     * planned offset (the tails ride the delivered flow-12 economy day). */
+    function CargoFlow2TailStep() {
+        for (local i = 0; i < cargoflow2_planned.len(); i++)
+            if (cargoflow2_planned[i][1] == "finance") return cargoflow2_planned[i][2]
+        return -1
+    }
+
     /* Per-op request echo coherence, mirroring the Python validator's
      * quiet/pitched rules exactly; any incoherence is a malformed request
      * the dispatcher silently drops. Every non-site op ships the pinned
@@ -261,7 +289,7 @@ class D5CargoFlow2Proof extends GSController {
             q.order_flags > 255) return false
         if (typeof q.watch_days != "integer" || q.watch_days < -1 ||
             q.watch_days > 60) return false
-        if (typeof q.offset != "integer" || q.offset < -1 || q.offset > 55)
+        if (typeof q.offset != "integer" || q.offset < -1 || q.offset > 60)
             return false
         local quiet = q.expected_cost == 0 && q.order_index == -1 &&
             q.order_flags == -1 && q.watch_days == -1 && q.offset == -1
@@ -292,10 +320,12 @@ class D5CargoFlow2Proof extends GSController {
             return q.vehicle >= 0 && q.order_index == -1 &&
                 q.expected_cost == 0 && q.watch_days == -1 &&
                 q.offset >= 0 && CargoFlow2FlowOffsetOk(q)
-        /* finance / finish: the tail echoes the vehicle identity and the
-         * flow-11 ladder step 55 only. */
+        /* finance / finish: the tail echoes the vehicle identity and its
+         * planned tail ladder step only (the planned table's own tail
+         * economy day). */
         return q.vehicle >= 0 && q.order_index == -1 && q.order_flags == -1 &&
-            q.watch_days == -1 && q.offset == 55 && q.expected_cost == 0
+            q.watch_days == -1 && q.offset >= 0 &&
+            CargoFlow2TailOffsetOk(q) && q.expected_cost == 0
     }
 
     /* Corridor-pin defence in depth: a drifted pin echo (or a ladder-step
@@ -802,8 +832,8 @@ class D5CargoFlow2Proof extends GSController {
             return
         }
         local target = anchor + q.offset
-        /* Dual enforcement of the 60-day authority, package side: any
-         * ladder step whose target day exceeds the authority refuses
+        /* Dual enforcement of the delivered day authority, package side:
+         * any ladder step whose target day exceeds the authority refuses
          * before any wait. */
         if (target > this.AUTHORITY_LAST_DAY) {
             r.status = "AUTHORITY_EXCEEDED"
@@ -1062,12 +1092,13 @@ class D5CargoFlow2Proof extends GSController {
             r.status = "STALE_ADMISSION"
             return
         }
-        if (this.cargoflow_anchor + 55 > this.AUTHORITY_LAST_DAY) {
+        if (this.cargoflow_anchor + this.CargoFlow2TailStep()
+            > this.AUTHORITY_LAST_DAY) {
             r.status = "AUTHORITY_EXCEEDED"
             return
         }
         local day = GSDate.GetCurrentDate()
-        if (day != this.cargoflow_anchor + 55) {
+        if (day != this.cargoflow_anchor + this.CargoFlow2TailStep()) {
             r.status = "READBACK_MISMATCH"
             return
         }
@@ -1100,12 +1131,13 @@ class D5CargoFlow2Proof extends GSController {
             r.status = "STALE_ADMISSION"
             return
         }
-        if (this.cargoflow_anchor + 55 > this.AUTHORITY_LAST_DAY) {
+        if (this.cargoflow_anchor + this.CargoFlow2TailStep()
+            > this.AUTHORITY_LAST_DAY) {
             r.status = "AUTHORITY_EXCEEDED"
             return
         }
         local day = GSDate.GetCurrentDate()
-        if (day != this.cargoflow_anchor + 55) {
+        if (day != this.cargoflow_anchor + this.CargoFlow2TailStep()) {
             r.status = "READBACK_MISMATCH"
             return
         }
@@ -1135,7 +1167,7 @@ class D5CargoFlow2Proof extends GSController {
     function CargoFlow2Guard(r) {
         if (r.funds < -2147483648 || r.funds > 2147483647 || r.cost < 0 ||
             r.cost > 2147483647) throw "D5_RESPONSE_OUT_OF_BOUNDS"
-        if (r.offset < -1 || r.offset > 55) throw "D5_RESPONSE_OUT_OF_BOUNDS"
+        if (r.offset < -1 || r.offset > 60) throw "D5_RESPONSE_OUT_OF_BOUNDS"
         foreach (name in ["anchor", "tick", "day", "year"]) {
             if (!(name in r)) continue
             local v = r[name]

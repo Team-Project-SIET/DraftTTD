@@ -17,6 +17,15 @@ response, one instant), the quarter-income/delivered reads, the vehicle
 state echo and the cycle latches accumulated during the in-package wait
 (§5.3), all fail-closed in company mode, one company.
 
+The delivered-class tail (``docs/specs/d5-delivered-class-tail.md``)
+extends this contract arm-wise for the E36 closure: one 5-economy-day
+rung — ``flow-12`` at anchor+60, the settle margin that completes the
+delivery cycle — plus the two tails riding that same economy day
+compose the delivered arm keyed by the (2, 2) pairing (26 planned
+exchanges inside the 65-economy-day authority of record), carried by an
+optional ``schedule_version`` arm field on the plan, the requests and
+the readbacks; the v1 envelope of record above stays byte-equal.
+
 Protocol 11 stays additive over the number allocation of record (4
 construction, 5 freight v1, 6 accept-survey, 7 terrain survey, 8 freight
 v2, 9 box census, 10 dispatch probe): the GameScript bridge dispatches
@@ -90,6 +99,26 @@ from app.simulation.openttd.corridor_freight_v2 import (
     OF_NONE_V2,
 )
 
+
+def _cargoflow2_canonical_bytes(model: Contract) -> bytes:
+    """The corridor-local canonical bytes of record: the shared planning
+    envelope of record with one arm-key exception — the arm field
+    ``schedule_version`` disappears from the bytes whenever the model does
+    not name one, so every v1 digest of record stays byte-equal while the
+    delivered arm's bytes carry its own key. The canonical envelope itself
+    is untouched: it keeps the None of every other model verbatim."""
+    value = json.loads(canonical_bytes(model))
+    if value.get("schedule_version") is None:
+        value.pop("schedule_version", None)
+    return json.dumps(
+        value,
+        sort_keys=True,
+        ensure_ascii=False,
+        separators=(",", ":"),
+        allow_nan=False,
+    ).encode("utf-8")
+
+
 CARGOFLOW2_PROTOCOL = 11
 CARGOFLOW2_NAME = "cargoflow-delivery"
 MAX_CARGOFLOW2_REQUEST_BYTES = 512
@@ -138,9 +167,7 @@ CARGOFLOW2_START_FUNDS = FUNDS_AT_DEPOT_MUTATION_CLOSE
 CARGOFLOW2_FOUNDING_LOAN = 100000
 CARGOFLOW2_INTEREST_RATE = 2
 CARGOFLOW2_STATION_FEE = 25
-CARGOFLOW2_YEARLY_INTEREST = (
-    CARGOFLOW2_FOUNDING_LOAN * CARGOFLOW2_INTEREST_RATE // 100
-)
+CARGOFLOW2_YEARLY_INTEREST = CARGOFLOW2_FOUNDING_LOAN * CARGOFLOW2_INTEREST_RATE // 100
 DAYS_IN_ECONOMY_YEAR = 365
 DAY_TICKS = 74
 
@@ -159,9 +186,11 @@ CARGOFLOW2_CHARGE_SLOT = 1
 # The launch day of record: L = 712228 (Jan 6, 1950 — the save's current
 # date at load, pinned by E99's ``sample-00`` anchor at tick 17). The 1950
 # calendar base of record: day 712223 is Jan 1, 1950. The attempt can never
-# leave 1950 (its last admissible observation day is 712288 = L + 60 = the
-# worst-case ladder end, a normal early-March day), so the month-boundary
-# days that can fall inside an attempt span are enumerated exactly.
+# leave 1950 (its last admissible observation day is 712293 = L + 65, the
+# delivered ladder's own settle margin on March 12, 1950 — the v1 ladder's
+# worst-case end is 712288 = L + 60, a normal early-March day), so the
+# month-boundary days that can fall inside an attempt span are enumerated
+# exactly.
 CARGOFLOW2_LAUNCH_DAY = 712228
 _CALENDAR_BASE_DAY = 712223
 DAYS_IN_MONTH_1950 = (31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31)
@@ -177,6 +206,22 @@ CARGOFLOW2_TAIL_OFFSET = CARGOFLOW2_SPAN_DAYS
 CARGOFLOW2_WAIT_MAX_TICKS = 2048
 CARGOFLOW2_WAIT_DAY_CAP = CARGOFLOW2_DAY_BUDGET
 CARGOFLOW2_OFFSET_CAP = CARGOFLOW2_SPAN_DAYS
+# The delivered-class tail (the D5 delivered-class tail spec, ticket 02): the
+# extension rides the (route_version=2, schedule_version=2) pairing — one
+# extra 5-economy-day rung, ``flow-12`` at anchor+60, gives the cycle its own
+# completion stop. The loaded vehicle returns to its final stand with the
+# unload ETA at anchor+57..58, so the rung at anchor+60 = day L + 64 is the
+# settle margin of record, and both read-only tails move into that same
+# economy day (the 60-day v1 envelope above stays untouched: its ladder,
+# tails, 60-day budget and authority last day 712288).
+CARGOFLOW2_DELIVERED_SCHEDULE_VERSION = 2
+CARGOFLOW2_DELIVERED_FLOW_OFFSETS: tuple[int, ...] = CARGOFLOW2_FLOW_OFFSETS + (60,)
+CARGOFLOW2_DELIVERED_SPAN_DAYS = CARGOFLOW2_DELIVERED_FLOW_OFFSETS[-1]
+CARGOFLOW2_DELIVERED_TAIL_OFFSET = CARGOFLOW2_DELIVERED_SPAN_DAYS
+CARGOFLOW2_DELIVERED_DAY_BUDGET = CARGOFLOW2_ARRIVE_MAX_DAYS + CARGOFLOW2_DELIVERED_SPAN_DAYS
+PLANNED_CARGOFLOW2_DELIVERED_EXCHANGES = PLANNED_CARGOFLOW2_EXCHANGES + 1
+CARGOFLOW2_DELIVERED_OFFSET_CAP = CARGOFLOW2_DELIVERED_SPAN_DAYS
+CARGOFLOW2_DELIVERED_WAIT_DAY_CAP = CARGOFLOW2_DELIVERED_DAY_BUDGET
 # Per-flow-sample latch bound of record: a latch array that would overflow
 # its response budget refuses the exchange terminally (§5.3) — latches are
 # never truncated to fit. Eight latches of five economy days is the widest
@@ -295,10 +340,7 @@ _CARGOFLOW2_REFUSAL_STATUS = frozenset(
 _CARGOFLOW2_WINDOW_ECHO_STATUS = frozenset({"WINDOW_EXHAUSTED", "CLOCK_STALLED"})
 _CARGOFLOW2_WINDOW_ECHO_FIELDS = ("anchor", "tick", "day")
 _CARGOFLOW2_OFFSET_BY_ID: dict[str, int] = {
-    **{
-        f"flow-{index:02d}": offset
-        for index, offset in enumerate(CARGOFLOW2_FLOW_OFFSETS)
-    },
+    **{f"flow-{index:02d}": offset for index, offset in enumerate(CARGOFLOW2_FLOW_OFFSETS)},
     "finance-00": CARGOFLOW2_TAIL_OFFSET,
     "finish-00": CARGOFLOW2_TAIL_OFFSET,
 }
@@ -323,9 +365,7 @@ _CARGOFLOW2_TAIL_SEQUENCE: tuple[tuple[str, Cargoflow2Op], ...] = (
     ("finish-00", "finish"),
 )
 _CARGOFLOW2_SEQUENCE: tuple[tuple[str, Cargoflow2Op], ...] = (
-    _CARGOFLOW2_FIXED_SEQUENCE
-    + _CARGOFLOW2_FLOW_SEQUENCE
-    + _CARGOFLOW2_TAIL_SEQUENCE
+    _CARGOFLOW2_FIXED_SEQUENCE + _CARGOFLOW2_FLOW_SEQUENCE + _CARGOFLOW2_TAIL_SEQUENCE
 )
 CARGOFLOW2_EXCHANGE_IDS: tuple[str, ...] = tuple(
     exchange_id for exchange_id, _ in _CARGOFLOW2_SEQUENCE
@@ -336,19 +376,91 @@ _CARGOFLOW2_REQUEST_OFFSET_BY_ID: dict[str, int] = {
     for exchange_id in CARGOFLOW2_EXCHANGE_IDS
 }
 
-_MONTH_STARTS_1950 = tuple(
-    _CALENDAR_BASE_DAY + sum(DAYS_IN_MONTH_1950[:m]) for m in range(0, 12)
+# The delivered arm's own sequences of record: the same v1 shape with the
+# thirteenth flow row appended — every arm resolution comes from the
+# record's own ``schedule_version`` field, never from ids (the tail ids are
+# arm-ambiguous between the 55- and 60-day ladders).
+_CARGOFLOW2_DELIVERED_OP_BY_ID: dict[str, Cargoflow2Op] = dict(
+    _CARGOFLOW2_SEQUENCE
+    + tuple((exchange_id, "flow") for exchange_id in (f"flow-{len(CARGOFLOW2_FLOW_OFFSETS):02d}",))
 )
+_CARGOFLOW2_DELIVERED_OFFSET_BY_ID: dict[str, int] = {
+    **{
+        f"flow-{index:02d}": offset
+        for index, offset in enumerate(CARGOFLOW2_DELIVERED_FLOW_OFFSETS)
+    },
+    "finance-00": CARGOFLOW2_DELIVERED_TAIL_OFFSET,
+    "finish-00": CARGOFLOW2_DELIVERED_TAIL_OFFSET,
+}
+_CARGOFLOW2_DELIVERED_FLOW_SEQUENCE: tuple[tuple[str, Cargoflow2Op], ...] = tuple(
+    (f"flow-{index:02d}", "flow") for index in range(len(CARGOFLOW2_DELIVERED_FLOW_OFFSETS))
+)
+_CARGOFLOW2_DELIVERED_SEQUENCE: tuple[tuple[str, Cargoflow2Op], ...] = (
+    _CARGOFLOW2_FIXED_SEQUENCE + _CARGOFLOW2_DELIVERED_FLOW_SEQUENCE + _CARGOFLOW2_TAIL_SEQUENCE
+)
+CARGOFLOW2_DELIVERED_EXCHANGE_IDS: tuple[str, ...] = tuple(
+    exchange_id for exchange_id, _ in _CARGOFLOW2_DELIVERED_SEQUENCE
+)
+_CARGOFLOW2_DELIVERED_REQUEST_OFFSET_BY_ID: dict[str, int] = {
+    exchange_id: _CARGOFLOW2_DELIVERED_OFFSET_BY_ID.get(exchange_id, -1)
+    for exchange_id in CARGOFLOW2_DELIVERED_EXCHANGE_IDS
+}
+
+
+def _cargoflow2_arm_offset_map(
+    schedule_version: int | None,
+) -> dict[str, int]:
+    """The readback ladder offset map of one attempt arm, keyed by the
+    record's own ``schedule_version`` (an unnamed arm is the v1 arm)."""
+    return (
+        _CARGOFLOW2_DELIVERED_OFFSET_BY_ID
+        if schedule_version == CARGOFLOW2_DELIVERED_SCHEDULE_VERSION
+        else _CARGOFLOW2_OFFSET_BY_ID
+    )
+
+
+def _cargoflow2_arm_request_offset_map(
+    schedule_version: int | None,
+) -> dict[str, int]:
+    """The request ladder offset map of one attempt arm, resolved the same
+    way."""
+    return (
+        _CARGOFLOW2_DELIVERED_REQUEST_OFFSET_BY_ID
+        if schedule_version == CARGOFLOW2_DELIVERED_SCHEDULE_VERSION
+        else _CARGOFLOW2_REQUEST_OFFSET_BY_ID
+    )
+
+
+def _cargoflow2_arm_op_by_id(
+    schedule_version: int | None,
+) -> dict[str, Cargoflow2Op]:
+    """The exchange id → op map of one attempt arm, resolved the same way."""
+    return (
+        _CARGOFLOW2_DELIVERED_OP_BY_ID
+        if schedule_version == CARGOFLOW2_DELIVERED_SCHEDULE_VERSION
+        else _CARGOFLOW2_OP_BY_ID
+    )
+
+
+_MONTH_STARTS_1950 = tuple(_CALENDAR_BASE_DAY + sum(DAYS_IN_MONTH_1950[:m]) for m in range(0, 12))
 # Boundaries of record as literals: the derived starts must equal these
 # (the _assert_cargoflow2_calendar cross-check below), and this literal
 # form keeps the §4 guard foldable for the type checker.
 CARGOFLOW2_MONTH_BOUNDARY_DAYS: tuple[int, ...] = (
-    712254, 712282, 712313, 712343, 712374, 712404,
-    712435, 712466, 712496, 712527, 712557,
+    712254,
+    712282,
+    712313,
+    712343,
+    712374,
+    712404,
+    712435,
+    712466,
+    712496,
+    712527,
+    712557,
 )
 _CARGOFLOW2_MONTH_INSTALLMENT_BY_DAY: dict[int, int] = {
-    boundary: CARGOFLOW2_YEARLY_INTEREST * (m + 1) // 12
-    - CARGOFLOW2_YEARLY_INTEREST * m // 12
+    boundary: CARGOFLOW2_YEARLY_INTEREST * (m + 1) // 12 - CARGOFLOW2_YEARLY_INTEREST * m // 12
     for m, boundary in enumerate(CARGOFLOW2_MONTH_BOUNDARY_DAYS, start=1)
 }
 if (
@@ -371,14 +483,41 @@ if (
     or CARGOFLOW2_PICKUP_SID != 0
     or CARGOFLOW2_BAY_SID != 2
     or _CARGOFLOW2_FIXED_SEQUENCE[-1][1] != "arrive-watch"
-    or CARGOFLOW2_MONTH_BOUNDARY_DAYS != (
-        712254, 712282, 712313, 712343, 712374, 712404,
-        712435, 712466, 712496, 712527, 712557,
+    or CARGOFLOW2_MONTH_BOUNDARY_DAYS
+    != (
+        712254,
+        712282,
+        712313,
+        712343,
+        712374,
+        712404,
+        712435,
+        712466,
+        712496,
+        712527,
+        712557,
     )
 ):
-    raise RuntimeError(
-        "cargo-flow delivery schedule drifted from the pinned observations"
-    )
+    raise RuntimeError("cargo-flow delivery schedule drifted from the pinned observations")
+if (
+    len(CARGOFLOW2_DELIVERED_EXCHANGE_IDS) != PLANNED_CARGOFLOW2_DELIVERED_EXCHANGES
+    or len(set(CARGOFLOW2_DELIVERED_EXCHANGE_IDS)) != PLANNED_CARGOFLOW2_DELIVERED_EXCHANGES
+    or len(CARGOFLOW2_DELIVERED_FLOW_OFFSETS) != 13
+    or CARGOFLOW2_DELIVERED_FLOW_OFFSETS[:12] != CARGOFLOW2_FLOW_OFFSETS
+    or _CARGOFLOW2_DELIVERED_OFFSET_BY_ID["flow-12"] != 60
+    or _CARGOFLOW2_DELIVERED_OFFSET_BY_ID["finance-00"] != 60
+    or CARGOFLOW2_DELIVERED_SPAN_DAYS != 60
+    or CARGOFLOW2_ARRIVE_MAX_DAYS + CARGOFLOW2_DELIVERED_SPAN_DAYS
+    != CARGOFLOW2_DELIVERED_DAY_BUDGET
+    or CARGOFLOW2_DELIVERED_DAY_BUDGET != 65
+    or CARGOFLOW2_LAUNCH_DAY + CARGOFLOW2_DELIVERED_DAY_BUDGET != 712293
+    or PLANNED_CARGOFLOW2_DELIVERED_EXCHANGES > CARGOFLOW2_REQUEST_BUDGET
+    or CARGOFLOW2_DELIVERED_EXCHANGE_IDS[:23] != CARGOFLOW2_EXCHANGE_IDS[:23]
+    or CARGOFLOW2_DELIVERED_EXCHANGE_IDS[23:24] != ("flow-12",)
+    or CARGOFLOW2_DELIVERED_EXCHANGE_IDS[24:] != CARGOFLOW2_EXCHANGE_IDS[23:]
+    or len(_CARGOFLOW2_DELIVERED_OP_BY_ID) != PLANNED_CARGOFLOW2_DELIVERED_EXCHANGES
+):
+    raise RuntimeError("the delivered cargo-flow ladder drifted from its pinned observations")
 if max(MAX_CARGOFLOW2_REQUEST_BYTES, MAX_CARGOFLOW2_RESPONSE_BYTES) > max(
     MAX_CARGOFLOW2_SEND_BYTES, MAX_GAMESCRIPT_PAYLOAD_BYTES
 ):
@@ -415,7 +554,9 @@ Cargoflow2SignedClock = Annotated[StrictInt, Field(ge=-1, le=2147483647)]
 Cargoflow2WatchDays = Annotated[StrictInt, Field(ge=-1, le=CARGOFLOW2_DAY_BUDGET)]
 Cargoflow2OrderIndex = Annotated[StrictInt, Field(ge=-1, le=1)]
 Cargoflow2EchoFlags = Annotated[StrictInt, Field(ge=-1, le=255)]
-Cargoflow2EchoOffset = Annotated[StrictInt, Field(ge=-1, le=CARGOFLOW2_OFFSET_CAP)]
+# The echo offset domain covers both arms' ladders (55 and 60): the arm map
+# of record, not this bound, names a request's planned ladder step.
+Cargoflow2EchoOffset = Annotated[StrictInt, Field(ge=-1, le=CARGOFLOW2_DELIVERED_OFFSET_CAP)]
 Cargoflow2VehicleState = Literal[
     "INVALID",
     "IN_DEPOT",
@@ -489,7 +630,7 @@ class Cargoflow2RouteBinding(Contract):
 
     @property
     def digest(self) -> str:
-        return hashlib.sha256(canonical_bytes(self)).hexdigest()
+        return hashlib.sha256(_cargoflow2_canonical_bytes(self)).hexdigest()
 
     @model_validator(mode="after")
     def coherent(self) -> Cargoflow2RouteBinding:
@@ -505,16 +646,12 @@ class Cargoflow2RouteBinding(Contract):
                 "60-economy-day attempt authority (the equality-gated ladder)"
             )
         if self.flow_span_days != CARGOFLOW2_FLOW_OFFSETS[-1]:
-            raise ValueError(
-                "a route binding rides the pinned 12-sample flow ladder of record"
-            )
+            raise ValueError("a route binding rides the pinned 12-sample flow ladder of record")
         if self.launch_day <= _CALENDAR_BASE_DAY or (
-            self.launch_day + CARGOFLOW2_DAY_BUDGET
-            > _CALENDAR_BASE_DAY + sum(DAYS_IN_MONTH_1950)
+            self.launch_day + CARGOFLOW2_DAY_BUDGET > _CALENDAR_BASE_DAY + sum(DAYS_IN_MONTH_1950)
         ):
             raise ValueError(
-                "the binding's attempt clock escapes the pinned 1950 "
-                "boundary enumeration of record"
+                "the binding's attempt clock escapes the pinned 1950 boundary enumeration of record"
             )
         return self
 
@@ -714,8 +851,7 @@ def cargoflow2_route_binding(
     """
     if route_version not in CARGOFLOW2_ROUTE_BINDINGS:
         raise ValueError(
-            f"no registered corridor route binding carries route binding id "
-            f"{route_version}"
+            f"no registered corridor route binding carries route binding id {route_version}"
         )
     return CARGOFLOW2_ROUTE_BINDINGS[route_version]
 
@@ -732,8 +868,7 @@ def cargoflow2_register_route_binding(binding: Cargoflow2RouteBinding) -> None:
     """
     if binding.route_version in CARGOFLOW2_ROUTE_BINDINGS:
         raise ValueError(
-            f"the corridor route binding id {binding.route_version} is "
-            f"already registered"
+            f"the corridor route binding id {binding.route_version} is already registered"
         )
     CARGOFLOW2_ROUTE_BINDINGS[binding.route_version] = binding
 
@@ -755,9 +890,7 @@ def cargoflow2_schedule_rows(binding: Cargoflow2RouteBinding) -> list[dict]:
         binding.flow_span_days != CARGOFLOW2_FLOW_OFFSETS[-1]
         or binding.arrive_max_days + binding.flow_span_days != CARGOFLOW2_DAY_BUDGET
     ):
-        raise ValueError(
-            "the route binding does not ride the equality-gated ladder of record"
-        )
+        raise ValueError("the route binding does not ride the equality-gated ladder of record")
     schedule: list[dict] = []
     for exchange in CARGOFLOW2_EXCHANGE_IDS:
         op = _CARGOFLOW2_OP_BY_ID[exchange]
@@ -783,9 +916,7 @@ def cargoflow2_schedule_rows(binding: Cargoflow2RouteBinding) -> list[dict]:
         != [int(binding.arrive_max_days)]
         or any(row["op"] not in CARGOFLOW2_OPS for row in schedule)
     ):
-        raise RuntimeError(
-            "the route binding's staged schedule drifted from the ladder of record"
-        )
+        raise RuntimeError("the route binding's staged schedule drifted from the ladder of record")
     return schedule
 
 
@@ -845,7 +976,11 @@ class Cargoflow2Plan(Contract):
     DEFAULT): every route-derived pin validates against that binding's own
     values, so a plan carrying one binding's pins under another binding's
     version label refuses here — cross-version composition drift fails
-    closed before any derived value can lean on it.
+    closed before any derived value can lean on it. The optional
+    ``schedule_version`` arm field names the delivered extension: a plan
+    that names it must be the second admission's own (2, 2) composition
+    (26 planned exchanges inside the 65-economy-day delivered authority);
+    with it absent the plan rides the v1 envelope of record byte-exactly.
     """
 
     schema_version: Literal[1, 2] = 1
@@ -871,24 +1006,24 @@ class Cargoflow2Plan(Contract):
     arrive_max_days: Annotated[StrictInt, Field(ge=1, le=CARGOFLOW2_DAY_BUDGET)]
     flow_span_days: Annotated[StrictInt, Field(ge=1, le=CARGOFLOW2_DAY_BUDGET)]
     schedule: tuple[StrictStr, ...]
+    schedule_version: Annotated[StrictInt, Field(ge=1)] | None = None
     request_budget: Annotated[StrictInt, Field(gt=0, le=CARGOFLOW2_REQUEST_BUDGET)] = (
         CARGOFLOW2_REQUEST_BUDGET
     )
-    day_budget: Annotated[StrictInt, Field(ge=1, le=CARGOFLOW2_DAY_BUDGET)] = (
-        CARGOFLOW2_DAY_BUDGET
-    )
+    # The field bound only trims absurd values; the arm fences below carry
+    # the exact 60/65 authority of record.
+    day_budget: Annotated[StrictInt, Field(ge=1, le=DAYS_IN_ECONOMY_YEAR)] = CARGOFLOW2_DAY_BUDGET
 
     @property
     def digest(self) -> str:
-        return hashlib.sha256(canonical_bytes(self)).hexdigest()
+        return hashlib.sha256(_cargoflow2_canonical_bytes(self)).hexdigest()
 
     @model_validator(mode="after")
     def coherent(self) -> Cargoflow2Plan:
         binding = CARGOFLOW2_ROUTE_BINDINGS.get(self.schema_version)
         if binding is None:
             raise ValueError(
-                f"no registered corridor route binding carries plan version "
-                f"{self.schema_version}"
+                f"no registered corridor route binding carries plan version {self.schema_version}"
             )
         if self.company != binding.company or self.cargo != binding.cargo:
             raise ValueError("the delivery attempt observes company 0 with cargo 1")
@@ -920,14 +1055,31 @@ class Cargoflow2Plan(Contract):
             raise ValueError("launch day drifted from the pinned clock of record")
         if self.arrive_max_days != binding.arrive_max_days:
             raise ValueError("the arrival bound drifted from its pinned 5 days")
-        if self.flow_span_days != binding.flow_span_days:
+        if self.schedule_version == CARGOFLOW2_DELIVERED_SCHEDULE_VERSION:
+            if self.schema_version != CARGOFLOW2_ROUTE_SECOND_ADMISSION.route_version:
+                raise ValueError(
+                    "the delivered composition rides the second admitted route's (2, 2) pairing"
+                )
+            if self.flow_span_days != CARGOFLOW2_DELIVERED_SPAN_DAYS:
+                raise ValueError("flow span drifted from the pinned 60-day delivered ladder")
+            if self.schedule != CARGOFLOW2_DELIVERED_EXCHANGE_IDS:
+                raise ValueError("schedule drifted from the planned 26 exchanges")
+        elif self.flow_span_days != binding.flow_span_days:
             raise ValueError("flow span drifted from the pinned 55-day ladder")
-        if self.schedule != CARGOFLOW2_EXCHANGE_IDS:
+        elif self.schedule != CARGOFLOW2_EXCHANGE_IDS:
             raise ValueError("schedule drifted from the planned 25 exchanges")
         if self.pickup_sid == self.bay_sid:
             raise ValueError("the two observed stops must carry distinct station ids")
         if self.pickup_industry == self.bay_industry:
             raise ValueError("the two observed industries must be distinct")
+        if self.schedule_version == CARGOFLOW2_DELIVERED_SCHEDULE_VERSION:
+            if self.day_budget != CARGOFLOW2_DELIVERED_DAY_BUDGET:
+                raise ValueError(
+                    "a delivered attempt carries the 65-economy-day authority of record"
+                )
+        else:
+            if self.day_budget != CARGOFLOW2_DAY_BUDGET:
+                raise ValueError("a v1 attempt carries the 60-day authority of record")
         if self.arrive_max_days + self.flow_span_days > self.day_budget:
             raise ValueError(
                 "the arrival bound plus flow span must fit the 60-day attempt authority"
@@ -973,6 +1125,105 @@ def cargoflow2_plan(
     )
 
 
+def cargoflow2_delivered_plan(
+    binding: Cargoflow2RouteBinding | None = None,
+) -> Cargoflow2Plan:
+    """The delivered 26-row plan of record, keyed by the (2, 2) pairing.
+
+    The delivered arm of the second admitted route: the (2, 1) v1-row
+    derivation above stays byte-equal, and this factory derives its own
+    composition — the 26-row delivered ladder with schedule_version 2
+    inside the 65-economy-day day budget (the settle margin that gives the
+    cycle its own completion stop). The binding that names any other
+    route id, and the default arm's route, never borrow it: the delivered
+    extension rides the second admission alone.
+    """
+    resolved = (
+        binding
+        if binding is not None
+        else cargoflow2_route_binding(CARGOFLOW2_ROUTE_SECOND_ADMISSION.route_version)
+    )
+    if resolved.route_version != CARGOFLOW2_ROUTE_SECOND_ADMISSION.route_version:
+        raise ValueError("the delivered plan rides the second admitted route's (2, 2) pairing")
+    return Cargoflow2Plan(
+        schema_version=resolved.route_version,
+        company=resolved.company,
+        cargo=resolved.cargo,
+        pickup=resolved.pickup,
+        pickup_front=resolved.pickup_front,
+        delivery=resolved.delivery,
+        delivery_front=resolved.delivery_front,
+        depot=resolved.depot,
+        depot_front=resolved.depot_front,
+        pickup_sid=resolved.pickup_sid,
+        bay_sid=resolved.bay_sid,
+        pickup_industry=resolved.pickup_industry,
+        bay_industry=resolved.bay_industry,
+        engine=resolved.engine,
+        start_funds=resolved.start_funds,
+        purchase_quote=resolved.purchase_quote,
+        founding_loan=resolved.founding_loan,
+        interest_rate=resolved.interest_rate,
+        station_fee=resolved.station_fee,
+        launch_day=resolved.launch_day,
+        arrive_max_days=resolved.arrive_max_days,
+        flow_span_days=CARGOFLOW2_DELIVERED_SPAN_DAYS,
+        schedule=CARGOFLOW2_DELIVERED_EXCHANGE_IDS,
+        schedule_version=CARGOFLOW2_DELIVERED_SCHEDULE_VERSION,
+        day_budget=CARGOFLOW2_DELIVERED_DAY_BUDGET,
+    )
+
+
+def cargoflow2_delivered_schedule_rows(
+    binding: Cargoflow2RouteBinding,
+) -> list[dict]:
+    """The delivered ladder rows of the (2, 2) pairing (design record §5.3).
+
+    The fixed instrument chain runs first (``site-00`` … ``arrive-00``),
+    then the thirteen flow rows at their pinned delivered offsets 0..60
+    (``flow-12`` at anchor+60, the settle margin), then the two tail rows
+    in the delivered span's own economy day. The rows derive their keys
+    from the (2, 2) pairing of record; a binding of any other pairing
+    refuses, so a delivered schedule can never be composed from a foreign
+    arm's boundaries.
+    """
+    if (
+        binding.route_version != CARGOFLOW2_ROUTE_SECOND_ADMISSION.route_version
+        or binding.flow_span_days != CARGOFLOW2_FLOW_OFFSETS[-1]
+        or binding.arrive_max_days + binding.flow_span_days != CARGOFLOW2_DAY_BUDGET
+    ):
+        raise ValueError(
+            "the delivered ladder rows ride the second admitted route's (2, 2) pairing"
+        )
+    schedule: list[dict] = []
+    for exchange in CARGOFLOW2_DELIVERED_EXCHANGE_IDS:
+        op = _CARGOFLOW2_DELIVERED_OP_BY_ID[exchange]
+        row = dict(exchange=exchange, op=op, offset=-1)
+        if op == "flow":
+            row["offset"] = int(CARGOFLOW2_DELIVERED_FLOW_OFFSETS[int(exchange.rsplit("-", 1)[1])])
+        elif op in ("finance", "finish"):
+            row["offset"] = int(CARGOFLOW2_DELIVERED_TAIL_OFFSET)
+        elif op == "order":
+            row["order_index"] = 0 if exchange == "order-00" else 1
+        elif op == "arrive-watch":
+            row["watch_days"] = int(binding.arrive_max_days)
+        schedule.append(row)
+    if (
+        [row["exchange"] for row in schedule] != list(CARGOFLOW2_DELIVERED_EXCHANGE_IDS)
+        or len(schedule) != PLANNED_CARGOFLOW2_DELIVERED_EXCHANGES
+        or [row["offset"] for row in schedule if row["op"] == "flow"]
+        != list(CARGOFLOW2_DELIVERED_FLOW_OFFSETS)
+        or [row["offset"] for row in schedule if row["op"] in ("finance", "finish")]
+        != [int(CARGOFLOW2_DELIVERED_TAIL_OFFSET)] * 2
+        or [row["order_index"] for row in schedule if row["op"] == "order"] != [0, 1]
+        or [row["watch_days"] for row in schedule if row["op"] == "arrive-watch"]
+        != [int(binding.arrive_max_days)]
+        or any(row["op"] not in CARGOFLOW2_OPS for row in schedule)
+    ):
+        raise RuntimeError("the delivered schedule drifted from its pinned ladder composition")
+    return schedule
+
+
 class Cargoflow2Request(Contract):
     """One protocol-11 exchange request (fixed correlation stride).
 
@@ -1000,9 +1251,14 @@ class Cargoflow2Request(Contract):
     order_flags: Cargoflow2EchoFlags = -1
     watch_days: Cargoflow2WatchDays = -1
     offset: Cargoflow2EchoOffset = -1
+    # The arm key of record: absent = the v1 envelope of record, 2 = the
+    # delivered (2, 2) pairing. The shipped handler checks only the named
+    # correlation members and tolerates this extra member.
+    schedule_version: Annotated[StrictInt, Field(ge=1)] | None = None
 
     @model_validator(mode="after")
     def coherent(self) -> Cargoflow2Request:
+        delivered = self.schedule_version == CARGOFLOW2_DELIVERED_SCHEDULE_VERSION
         quiet = (
             self.expected_cost == 0
             and self.order_index == -1
@@ -1050,9 +1306,7 @@ class Cargoflow2Request(Contract):
                 or self.offset != -1
                 or self.order_flags != wanted_flags
             ):
-                raise ValueError(
-                    "order requests pin one stop index with its pinned order flags"
-                )
+                raise ValueError("order requests pin one stop index with its pinned order flags")
         elif self.op == "arrive-watch":
             if (
                 not pitched
@@ -1061,21 +1315,21 @@ class Cargoflow2Request(Contract):
                 or self.offset != -1
                 or self.expected_cost != 0
             ):
-                raise ValueError(
-                    "arrive-watch echoes the vehicle identity and its 5-day bound"
-                )
+                raise ValueError("arrive-watch echoes the vehicle identity and its 5-day bound")
         elif self.op in ("finance", "finish"):
+            tail_offset = CARGOFLOW2_DELIVERED_TAIL_OFFSET if delivered else CARGOFLOW2_TAIL_OFFSET
+            tail_day = "flow-12" if delivered else "flow-11"
             if (
                 not pitched
                 or self.expected_cost != 0
                 or self.watch_days != -1
                 or self.order_index != -1
                 or self.order_flags != -1
-                or self.offset != CARGOFLOW2_TAIL_OFFSET
+                or self.offset != tail_offset
             ):
                 raise ValueError(
                     f"{self.op} echoes the vehicle identity and ladder step "
-                    f"{CARGOFLOW2_TAIL_OFFSET} (the flow-11 economy day of record)"
+                    f"{tail_offset} (the {tail_day} economy day of record)"
                 )
         elif self.op == "flow":
             if (
@@ -1085,8 +1339,10 @@ class Cargoflow2Request(Contract):
                 or self.watch_days != -1
             ):
                 raise ValueError("flow echoes the vehicle identity and its ladder step")
-            if self.request_id not in _CARGOFLOW2_OFFSET_BY_ID or self.offset != (
-                _CARGOFLOW2_OFFSET_BY_ID[self.request_id]
+            flow_offsets = _cargoflow2_arm_offset_map(self.schedule_version)
+            if (
+                self.request_id not in flow_offsets
+                or self.offset != (flow_offsets[self.request_id])
             ):
                 raise ValueError("flow offset drifted from its planned ladder step")
         else:  # "order-read", "monitor", "start", "finance", "finish"
@@ -1095,11 +1351,9 @@ class Cargoflow2Request(Contract):
         return self
 
     def to_bytes(self) -> bytes:
-        raw = canonical_bytes(self)
+        raw = _cargoflow2_canonical_bytes(self)
         if len(raw) > MAX_CARGOFLOW2_REQUEST_BYTES:
-            raise ValueError(
-                f"cargo-flow 2 request exceeds {MAX_CARGOFLOW2_REQUEST_BYTES} bytes"
-            )
+            raise ValueError(f"cargo-flow 2 request exceeds {MAX_CARGOFLOW2_REQUEST_BYTES} bytes")
         return raw
 
 
@@ -1178,9 +1432,7 @@ _CARGOFLOW2_SUBSETS: dict[Cargoflow2Op, frozenset[str]] = {
         ("owner", "location", "capacity", "cargo", "state", "in_depot", "speed", "load")
     ),
     "order": frozenset(("dest", "flags", "goto")),
-    "order-read": frozenset(
-        ("order_len", "dest0", "flags0", "goto0", "dest1", "flags1", "goto1")
-    ),
+    "order-read": frozenset(("order_len", "dest0", "flags0", "goto0", "dest1", "flags1", "goto1")),
     "monitor": frozenset(("pickup_amount", "delivery_amount")),
     "start": frozenset(("state", "speed")),
     "arrive-watch": frozenset(("anchor", "location", "load", "latches")),
@@ -1248,6 +1500,11 @@ class Cargoflow2Readback(Contract):
     funds: SignedMoney
     cost: Money
     income: SignedMoney | None = None
+    # The correlated arm key of record — never echoed by the handler's
+    # response composer (its ``r`` table copies explicit keys only), so
+    # ``parse_for`` injects the request's own arm before validation and a
+    # disagreeing raw frame refuses.
+    schedule_version: Annotated[StrictInt, Field(ge=1)] | None = None
 
     anchor: Cargoflow2Clock | None = None
     tick: Cargoflow2Clock | None = None
@@ -1310,20 +1567,16 @@ class Cargoflow2Readback(Contract):
     delivered: Cargoflow2Amount | None = None
     last_accepted: Cargoflow2SignedClock | None = None
     stop_issued: StrictBool | None = None
-    latches: tuple[Cargoflow2Latch, ...] | None = Field(
-        None, max_length=CARGOFLOW2_LATCH_LIMIT
-    )
+    latches: tuple[Cargoflow2Latch, ...] | None = Field(None, max_length=CARGOFLOW2_LATCH_LIMIT)
 
     @property
     def digest(self) -> str:
-        return hashlib.sha256(canonical_bytes(self)).hexdigest()
+        return hashlib.sha256(_cargoflow2_canonical_bytes(self)).hexdigest()
 
     @classmethod
     def parse_for(cls, request: Cargoflow2Request, raw: bytes):
         if len(raw) > MAX_CARGOFLOW2_RESPONSE_BYTES:
-            raise ValueError(
-                f"cargo-flow 2 response exceeds {MAX_CARGOFLOW2_RESPONSE_BYTES} bytes"
-            )
+            raise ValueError(f"cargo-flow 2 response exceeds {MAX_CARGOFLOW2_RESPONSE_BYTES} bytes")
 
         def unique(pairs):
             result = {}
@@ -1338,6 +1591,10 @@ class Cargoflow2Readback(Contract):
         # as a list, so parse plane normalizes it to the latch tuples.
         if isinstance(value.get("latches"), list):
             value["latches"] = tuple(value["latches"])
+        # The response composer never carries the arm key, so the readback
+        # inherits the correlated request's arm before validation.
+        if request.schedule_version is not None:
+            value.setdefault("schedule_version", request.schedule_version)
         criteria = cls.model_validate(value)
         # phase echoes — engine, vehicle, expected_cost, order/flags/watch —
         # are NOT echoed-and-compared here, because the reply legitimately
@@ -1352,6 +1609,8 @@ class Cargoflow2Readback(Contract):
         for key in ("pickup", "delivery", "depot"):
             if getattr(criteria, key) != getattr(request, key):
                 raise ValueError("cargo-flow 2 response pin mismatch")
+        if criteria.schedule_version != request.schedule_version:
+            raise ValueError("cargo-flow 2 response arm mismatch")
         return criteria
 
     @model_validator(mode="after")
@@ -1359,17 +1618,14 @@ class Cargoflow2Readback(Contract):
         if self.op not in _CARGOFLOW2_SUCCESS_STATUS:
             raise ValueError("unknown cargo-flow 2 op")
         subset = _CARGOFLOW2_SUBSETS[self.op]
-        present = {
-            field for field in _CARGOFLOW2_FIELDS if getattr(self, field) is not None
-        }
+        present = {field for field in _CARGOFLOW2_FIELDS if getattr(self, field) is not None}
         income_present = self.income is not None
         status = self.status
         if status == _CARGOFLOW2_SUCCESS_STATUS[self.op]:
             outside = present - subset - {"tick", "day"}
             if outside:
                 raise ValueError(
-                    f"{self.op} readback carries fields outside its subset: "
-                    f"{sorted(outside)}"
+                    f"{self.op} readback carries fields outside its subset: {sorted(outside)}"
                 )
             missing = subset - present
             if missing:
@@ -1398,8 +1654,12 @@ class Cargoflow2Readback(Contract):
 
     def _check_ladder_clock(self) -> None:
         """Ladder arithmetic of record: flow steps and tail share the anchor."""
-        expected = _CARGOFLOW2_OFFSET_BY_ID.get(self.request_id)
+        expected = _cargoflow2_arm_offset_map(self.schedule_version).get(self.request_id)
         if self.op in ("flow", "finance", "finish"):
+            if expected is None:
+                raise ValueError(
+                    f"ladder readback id {self.request_id} is not a planned exchange of its own arm"
+                )
             if self.anchor is None or self.day is None:
                 raise ValueError("a ladder readback must carry its anchored clock")
             if self.day - self.anchor != expected:
@@ -1415,20 +1675,14 @@ class Cargoflow2Readback(Contract):
                 raise ValueError("site readback must not name an engine or vehicle")
             if self.status == "READY" and self.cargo != CARGOFLOW2_CARGO:
                 raise ValueError("the site readback re-pins the corridor cargo")
-            if (
-                self.status == "READY"
-                and (self.pickup_sid, self.bay_sid) != (
-                    CARGOFLOW2_PICKUP_SID,
-                    CARGOFLOW2_BAY_SID,
-                )
+            if self.status == "READY" and (self.pickup_sid, self.bay_sid) != (
+                CARGOFLOW2_PICKUP_SID,
+                CARGOFLOW2_BAY_SID,
             ):
                 raise ValueError("the site readback re-pins the corridor station ids")
-            if (
-                self.status == "READY"
-                and (self.pickup_industry, self.bay_industry) != (
-                    CARGOFLOW2_PICKUP_IND,
-                    CARGOFLOW2_BAY_IND,
-                )
+            if self.status == "READY" and (self.pickup_industry, self.bay_industry) != (
+                CARGOFLOW2_PICKUP_IND,
+                CARGOFLOW2_BAY_IND,
             ):
                 raise ValueError("the site readback re-pins the corridor industries")
         elif self.op == "engine":
@@ -1448,26 +1702,20 @@ class Cargoflow2Readback(Contract):
                 # raw is script-unreachable and refuses here of record.
                 assert self.running_cost is not None
                 if self.running_cost != CARGOFLOW2_RUNNING_DISPLAY:
-                    raise ValueError(
-                        "the engine running cost disagrees with its display figure"
-                    )
+                    raise ValueError("the engine running cost disagrees with its display figure")
         elif self.op == "purchase":
             if self.order_index != -1 or self.watch_days != -1 or self.offset != -1:
                 raise ValueError("purchase readback must not carry phase echoes")
             if self.status == "BUILT":
                 if self.engine != CARGOFLOW2_ENGINE or self.vehicle < 0:
-                    raise ValueError(
-                        "built purchase must name the pinned engine and vehicle"
-                    )
+                    raise ValueError("built purchase must name the pinned engine and vehicle")
                 if self.cost != CARGOFLOW2_PURCHASE_QUOTE:
                     raise ValueError("built purchase must cost its pinned quote")
             elif self.status in _CARGOFLOW2_REFUSAL_STATUS and self.vehicle != -1:
                 raise ValueError("refused purchase must not name a vehicle")
         elif self.op in _CARGOFLOW2_POST_PURCHASE_OPS:
             if self.engine != CARGOFLOW2_ENGINE or self.vehicle < 0:
-                raise ValueError(
-                    "post-purchase readbacks echo the pinned engine and vehicle"
-                )
+                raise ValueError("post-purchase readbacks echo the pinned engine and vehicle")
         if self.op != "order" and self.order_index != -1:
             raise ValueError("order echoes carry stop indexes")
         if self.op == "order" and self.status == "ORDERED":
@@ -1478,11 +1726,7 @@ class Cargoflow2Readback(Contract):
             )
             if self.flags is None or self.flags != wanted:
                 raise ValueError("the ordered order echoes its pinned flags")
-            wanted_dest = (
-                CARGOFLOW2_PICKUP_TILE
-                if self.order_index == 0
-                else CARGOFLOW2_BAY_TILE
-            )
+            wanted_dest = CARGOFLOW2_PICKUP_TILE if self.order_index == 0 else CARGOFLOW2_BAY_TILE
             if self.dest is None or self.dest != wanted_dest:
                 raise ValueError("the ordered order echoes its pinned stop tile")
         if self.op == "order-read" and self.status == "ORDER_SET_VERIFIED":
@@ -1515,18 +1759,16 @@ class Cargoflow2Readback(Contract):
             if self.latches[0].kind != "arrival_pickup":
                 raise ValueError("the anchored arrival's latch is the pickup arrival")
             if self.latches[0].day != self.day or self.latches[0].tick != self.tick:
-                raise ValueError(
-                    "the arrival latch's instant is its own observation instant"
-                )
+                raise ValueError("the arrival latch's instant is its own observation instant")
         if self.op == "flow" and self.status == "READY":
             if self.latches is not None and len(self.latches) > CARGOFLOW2_LATCH_LIMIT:
                 raise ValueError("the latch array exceeds its response budget bound")
-        if self.op == "finish" and self.status == "PHASE_STOPPED" and (
-            self.stop_issued is not False
+        if (
+            self.op == "finish"
+            and self.status == "PHASE_STOPPED"
+            and (self.stop_issued is not False)
         ):
-            raise ValueError(
-                "the finish exchange issues no command in this attempt's schedule"
-            )
+            raise ValueError("the finish exchange issues no command in this attempt's schedule")
 
 
 def verify_request_against_cargoflow2_plan(
@@ -1549,7 +1791,9 @@ def verify_request_against_cargoflow2_plan(
         raise ValueError("request pins drifted from the planned corridor")
     if request.request_id not in plan.schedule:
         raise ValueError("request id drifted from the planned schedule")
-    if _CARGOFLOW2_OP_BY_ID[request.request_id] != request.op:
+    if request.schedule_version != plan.schedule_version:
+        raise ValueError("request arm drifted from the planned schedule version")
+    if _cargoflow2_arm_op_by_id(plan.schedule_version)[request.request_id] != request.op:
         raise ValueError("request op drifted from its planned position")
 
 
@@ -1596,9 +1840,7 @@ class Cargoflow2FundsModel:
         # record: the cursor starts one lattice step before the session
         # (the launch day's own event, tick −25 under T0 = 48), silent —
         # pre-unstop events bill nothing and take no state change.
-        self._next_charge_tick = (
-            CARGOFLOW2_DAY_ROLL_ANCHOR + CARGOFLOW2_CHARGE_SLOT - DAY_TICKS
-        )
+        self._next_charge_tick = CARGOFLOW2_DAY_ROLL_ANCHOR + CARGOFLOW2_CHARGE_SLOT - DAY_TICKS
         self._run_period_start: int | None = None
 
     def admit_running_cost(self, display: int) -> None:
@@ -1609,9 +1851,7 @@ class Cargoflow2FundsModel:
         if self.running_cost is not None:
             raise ValueError("the running cost was already pinned at its exchange")
         if display != self.running_display:
-            raise ValueError(
-                "the running cost is inconsistent with its display figure"
-            )
+            raise ValueError("the running cost is inconsistent with its display figure")
         self.running_cost = display
 
     def _day_running_cost(self, rt: int) -> int:
@@ -1646,9 +1886,7 @@ class Cargoflow2FundsModel:
         self.started = (day, tick)
         self._run_period_start = tick + 1
 
-    def advance(
-        self, exchange_id: str, day: int, tick: int, income: int
-    ) -> int:
+    def advance(self, exchange_id: str, day: int, tick: int, income: int) -> int:
         """Reconcile the modeled funds up to one observation instant.
 
         Charge application order: the charge events of the E113 lattice up
@@ -1667,9 +1905,10 @@ class Cargoflow2FundsModel:
         daily: list[tuple[int, int, int]] = []
         while self._next_charge_tick <= tick:
             event_tick = self._next_charge_tick
-            event_day = CARGOFLOW2_LAUNCH_DAY + 1 + (
-                (event_tick - CARGOFLOW2_DAY_ROLL_ANCHOR - CARGOFLOW2_CHARGE_SLOT)
-                // DAY_TICKS
+            event_day = (
+                CARGOFLOW2_LAUNCH_DAY
+                + 1
+                + ((event_tick - CARGOFLOW2_DAY_ROLL_ANCHOR - CARGOFLOW2_CHARGE_SLOT) // DAY_TICKS)
             )
             if self.started is not None and self.running_cost is not None:
                 count_start = self._run_period_start
@@ -1700,8 +1939,10 @@ class Cargoflow2FundsModel:
             self.baseline_income = income
             delta = 0
         else:
-            delta = income - self.baseline_income - sum(
-                prior_delta for _, _, _, prior_delta in self.income_deltas
+            delta = (
+                income
+                - self.baseline_income
+                - sum(prior_delta for _, _, _, prior_delta in self.income_deltas)
             )
         self.funds += delta
         self.income_deltas.append((exchange_id, day, tick, delta))
@@ -1791,9 +2032,7 @@ def _cargoflow2_read_step(
     if readback.status != _CARGOFLOW2_SUCCESS_STATUS[request.op]:
         raise ValueError(f"cargo-flow 2 exchange {expected} ended {readback.status}")
     if readback.cost != 0 and request.op != "purchase":
-        raise ValueError(
-            "cargo-flow 2 exchanges outside the purchase observe at zero cost"
-        )
+        raise ValueError("cargo-flow 2 exchanges outside the purchase observe at zero cost")
     if state["model"] is None:
         state["model"] = Cargoflow2FundsModel(
             start_funds=plan.start_funds, purchase_quote=plan.purchase_quote
@@ -1893,23 +2132,15 @@ def _cargoflow2_read_step(
             for latch in sample["latches"]:
                 kind = latch["kind"]
                 if kind == "arrival_pickup":
-                    state["pickup_arrivals"].append(
-                        dict(exchange=readback.request_id, **latch)
-                    )
+                    state["pickup_arrivals"].append(dict(exchange=readback.request_id, **latch))
                 elif kind == "arrival_bay":
-                    state["bay_arrivals"].append(
-                        dict(exchange=readback.request_id, **latch)
-                    )
+                    state["bay_arrivals"].append(dict(exchange=readback.request_id, **latch))
                 elif kind == "load":
                     state["loads"].append(dict(exchange=readback.request_id, **latch))
                 elif kind == "departure":
-                    state["departures"].append(
-                        dict(exchange=readback.request_id, **latch)
-                    )
+                    state["departures"].append(dict(exchange=readback.request_id, **latch))
                 elif kind == "unload":
-                    state["unloadings"].append(
-                        dict(exchange=readback.request_id, **latch)
-                    )
+                    state["unloadings"].append(dict(exchange=readback.request_id, **latch))
             # The tail rows carry their own slim evidence shapes: the finance
             # sample is the delivered/last-accepted reads of record; the
             # finish sample is the certified cleanup state of record. Neither
@@ -1960,7 +2191,7 @@ def _cargoflow2_read_step(
         op=request.op,
         plan_digest=plan.digest,
         seal=seal,
-        offset=_CARGOFLOW2_REQUEST_OFFSET_BY_ID[request.request_id],
+        offset=_cargoflow2_arm_request_offset_map(request.schedule_version)[request.request_id],
         status=readback.status,
         funds=readback.funds,
         income=readback.income,
@@ -2025,8 +2256,7 @@ def cargoflow2_verdict(
     trans_ok = any(int(samples[offset]["trans_pickup"]) > 0 for offset in flow_keys)
     stock_bay_series = [int(samples[offset]["stock_bay"]) for offset in flow_keys]
     bay_rise = any(
-        stock_bay_series[i] - stock_bay_series[i - 1] > 0
-        for i in range(1, len(stock_bay_series))
+        stock_bay_series[i] - stock_bay_series[i - 1] > 0 for i in range(1, len(stock_bay_series))
     )
     bay_drain_after_rise = any(
         stock_bay_series[j] - stock_bay_series[i] < 0
@@ -2034,9 +2264,7 @@ def cargoflow2_verdict(
         if stock_bay_series[i] - stock_bay_series[i - 1] > 0
         for j in range(i + 1, len(stock_bay_series))
     )
-    income_ok = any(
-        delta > 0 for _, _, _, delta in _income_deltas_by_offset(samples)
-    )
+    income_ok = any(delta > 0 for _, _, _, delta in _income_deltas_by_offset(samples))
     loaded_ok = any(int(row["cargo"]) > 0 for row in loads)
     departed_ok = any(int(row["cargo"]) > 0 for row in departures)
     unloaded_ok = any(int(row["cargo"]) > 0 for row in unloadings)
@@ -2124,9 +2352,7 @@ def _income_deltas_by_offset(samples: dict) -> list[tuple[int, int, int, int]]:
             delta = income - baseline
         baseline = income
         sample = samples[offset]
-        deltas.append(
-            (offset, int(sample["funds"]), int(sample["income"]), delta)
-        )
+        deltas.append((offset, int(sample["funds"]), int(sample["income"]), delta))
     return deltas
 
 
@@ -2163,9 +2389,7 @@ def cargoflow2_phase_outcome(
             continue
         try:
             receipts.append(
-                _cargoflow2_read_step(
-                    state, request, readback, plan=plan, seal=prelaunch_digest
-                )
+                _cargoflow2_read_step(state, request, readback, plan=plan, seal=prelaunch_digest)
             )
         except Exception as error:  # noqa: BLE001 - fail closed on any defect
             failed = dict(
@@ -2183,9 +2407,9 @@ def cargoflow2_phase_outcome(
     plan_ids = plan.schedule
     verified_label = failed["label"] if failed is not None else None
     pending = (
-        list(plan_ids[state["index"]:])
+        list(plan_ids[state["index"] :])
         if failed is None
-        else list(plan_ids[plan_ids.index(verified_label) + 1:])
+        else list(plan_ids[plan_ids.index(verified_label) + 1 :])
     )
     samples = state["samples"]
     series = _cargoflow2_series(samples) if samples else {}
@@ -2201,17 +2425,12 @@ def cargoflow2_phase_outcome(
         finance=state["finance"],
     )
     verdict = dict(verdict)
-    if (
-        failed is not None
-        and "funds diverged" in failed["error"]
-    ):
+    if failed is not None and "funds diverged" in failed["error"]:
         verdict = dict(
             verdict="CARGOFLOW2_FUNDS_DIVERGED",
             statement=failed["error"],
         )
-    calendar = sorted(
-        {(int(sample["year"]), int(sample["month"])) for sample in samples.values()}
-    )
+    calendar = sorted({(int(sample["year"]), int(sample["month"])) for sample in samples.values()})
     return dict(
         schema=CARGOFLOW2_OUTCOME_SCHEMA,
         seal=prelaunch_digest,

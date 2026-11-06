@@ -563,9 +563,7 @@ _DRIVER = {"vehicle": -1}
 
 def make_request(entry_index: int) -> cf.Cargoflow2Request:
     """Build one planned protocol-11 request at its driver state of record."""
-    return work._cargoflow2_exchange_request(
-        SCHEDULE[entry_index], PRELAUNCH, PLAN, _DRIVER
-    )
+    return work._cargoflow2_exchange_request(SCHEDULE[entry_index], PRELAUNCH, PLAN, _DRIVER)
 
 
 def parse_from(request: cf.Cargoflow2Request, payload: dict) -> cf.Cargoflow2Readback:
@@ -583,8 +581,7 @@ def drive(vm: SQVM, request: cf.Cargoflow2Request) -> cf.Cargoflow2Readback:
     vm.execute("::sniffer.last = last_reply_json();")
     raw = vm_root(vm)["sniffer"]["last"]
     assert len(raw.encode()) <= cf.MAX_CARGOFLOW2_RESPONSE_BYTES, (
-        f"response for {request.request_id} exceeds "
-        f"{cf.MAX_CARGOFLOW2_RESPONSE_BYTES} bytes"
+        f"response for {request.request_id} exceeds {cf.MAX_CARGOFLOW2_RESPONSE_BYTES} bytes"
     )
     return cf.Cargoflow2Readback.parse_for(request, raw.encode())
 
@@ -629,9 +626,7 @@ def sweep_days(vm: SQVM, rate: int) -> None:
     vm.execute(f"::day_rate = {rate};")
 
 
-def run_probe_vm() -> tuple[
-    SQVM, list[tuple[cf.Cargoflow2Request, cf.Cargoflow2Readback]], dict
-]:
+def run_probe_vm() -> tuple[SQVM, list[tuple[cf.Cargoflow2Request, cf.Cargoflow2Readback]], dict]:
     """The exact 25 planned exchanges in order (the production path offline).
 
     The stub's own funds arithmetic (``cargoflow2_stub_fees``) is the world's
@@ -692,9 +687,7 @@ def _exchange_day(row: dict, *, arrival_day: int) -> int:
     return cf.CARGOFLOW2_LAUNCH_DAY
 
 
-def _exchange_tick(
-    row: dict, *, start_tick: int, arrival_tick: int, sample_tick: int
-) -> int:
+def _exchange_tick(row: dict, *, start_tick: int, arrival_tick: int, sample_tick: int) -> int:
     """The E113 law-consistent observation tick of one exchange row.
 
     Base rows read on the launch day before the day's own event window
@@ -735,9 +728,7 @@ def funds_walk(
     one exchange (the diverge knob) re-arms the fence and halts.
     """
     income_by_id = dict(income_by_id or {})
-    model = cf.Cargoflow2FundsModel(
-        start_funds=cf.CARGOFLOW2_START_FUNDS, purchase_quote=QUOTE
-    )
+    model = cf.Cargoflow2FundsModel(start_funds=cf.CARGOFLOW2_START_FUNDS, purchase_quote=QUOTE)
     observed: dict[str, int] = {}
     for exchange_id in cf.CARGOFLOW2_EXCHANGE_IDS:
         row = SCHEDULE_BY_ID[exchange_id]
@@ -768,9 +759,7 @@ SCHEDULE_BY_ID = {row["exchange"]: row for row in SCHEDULE}
 CARGOFLOW2_FLOW_ROW_IDS = tuple(f"flow-{index:02d}" for index in range(1, 12))
 
 
-def _latch(
-    kind: cf.Cargoflow2LatchKind, day: int, tick: int, cargo: int
-) -> cf.Cargoflow2Latch:
+def _latch(kind: cf.Cargoflow2LatchKind, day: int, tick: int, cargo: int) -> cf.Cargoflow2Latch:
     return cf.Cargoflow2Latch(kind=kind, day=day, tick=tick, cargo=cargo)
 
 
@@ -822,9 +811,7 @@ def built_ladder(
         if income_at is not None and index >= income_at:
             base_income += income_step
         income_series.append(base_income)
-    income_by_id = {
-        f"flow-{index:02d}": int(income) for index, income in enumerate(income_series)
-    }
+    income_by_id = {f"flow-{index:02d}": int(income) for index, income in enumerate(income_series)}
     observed, _ = funds_walk(
         income_by_id,
         start_tick=start_tick,
@@ -843,9 +830,7 @@ def built_ladder(
         if at is None:
             continue
         day = arrival_day + int(cf.CARGOFLOW2_FLOW_OFFSETS[at])
-        latches_by_id.setdefault(at, []).append(
-            _latch(kind, day, sample_tick, latch_cargo)
-        )
+        latches_by_id.setdefault(at, []).append(_latch(kind, day, sample_tick, latch_cargo))
 
     ladder: list[tuple[cf.Cargoflow2Request, cf.Cargoflow2Readback]] = []
     state = dict(vehicle=-1)
@@ -930,9 +915,7 @@ def built_ladder(
                 anchor=arrival_day,
                 location=cf.CARGOFLOW2_PICKUP_TILE,
                 load=0,
-                latches=(
-                    _latch("arrival_pickup", arrival_day, arrival_tick, 0),
-                ),
+                latches=(_latch("arrival_pickup", arrival_day, arrival_tick, 0),),
             )
         elif op == "flow":
             cost = 0
@@ -965,8 +948,7 @@ def built_ladder(
                 prod_pickup=104,
                 prod_bay=-1,
                 trans_pickup=(
-                    trans_amount
-                    if trans_from is not None and findex >= int(trans_from) else 0
+                    trans_amount if trans_from is not None and findex >= int(trans_from) else 0
                 ),
                 trans_bay=0,
                 location=(cf.CARGOFLOW2_BAY_TILE if moved else cf.CARGOFLOW2_PICKUP_TILE),
@@ -1106,10 +1088,22 @@ def test_status_family_of_record():
     }
     assert cf._CARGOFLOW2_SUCCESS_STATUS == expected_success
     refusals = {
-        "INVALID_COMPANY", "INVALID_SITE", "NO_ENGINE", "UNAVAILABLE_ENGINE",
-        "ENGINE_PIN_MISMATCH", "INSUFFICIENT_FUNDS", "COST_LIMIT", "COST_CHANGED",
-        "PAUSED", "ALREADY_ATTEMPTED", "STALE_ADMISSION", "UNSUPPORTED_NATIVE_FACT",
-        "READBACK_MISMATCH", "OUT_OF_ORDER", "ARRIVE_TIMEOUT", "AUTHORITY_EXCEEDED",
+        "INVALID_COMPANY",
+        "INVALID_SITE",
+        "NO_ENGINE",
+        "UNAVAILABLE_ENGINE",
+        "ENGINE_PIN_MISMATCH",
+        "INSUFFICIENT_FUNDS",
+        "COST_LIMIT",
+        "COST_CHANGED",
+        "PAUSED",
+        "ALREADY_ATTEMPTED",
+        "STALE_ADMISSION",
+        "UNSUPPORTED_NATIVE_FACT",
+        "READBACK_MISMATCH",
+        "OUT_OF_ORDER",
+        "ARRIVE_TIMEOUT",
+        "AUTHORITY_EXCEEDED",
         "LATCH_OVERFLOW",
     }
     assert cf._CARGOFLOW2_REFUSAL_STATUS == frozenset(refusals)
@@ -1196,8 +1190,15 @@ def test_request_echo_slots_of_record():
             continue
         assert request.engine == cf.CARGOFLOW2_ENGINE, row
         if row["op"] in (
-            "vread", "order", "order-read", "monitor", "start",
-            "arrive-watch", "flow", "finance", "finish",
+            "vread",
+            "order",
+            "order-read",
+            "monitor",
+            "start",
+            "arrive-watch",
+            "flow",
+            "finance",
+            "finish",
         ):
             assert request.vehicle == VEHICLE, row
         else:
@@ -1215,20 +1216,21 @@ def test_worst_case_request_byte_audit_is_315():
 def test_request_verifier_accepts_the_clean_table():
     table = work.cargoflow2_request_table(PLAN, PRELAUNCH, vehicle=VEHICLE)
     for request in table:
-        cf.verify_request_against_cargoflow2_plan(
-            request, plan=PLAN, seal=PRELAUNCH
-        )
+        cf.verify_request_against_cargoflow2_plan(request, plan=PLAN, seal=PRELAUNCH)
 
 
-@pytest.mark.parametrize("field, value", [
-    ("plan", OTHER_PLAN),
-    ("company", 1),
-    ("pickup", 45749),
-    ("delivery", 50863),
-    ("depot", 45488),
-    ("request_id", "site-x0"),
-    ("op", "vread"),
-])
+@pytest.mark.parametrize(
+    "field, value",
+    [
+        ("plan", OTHER_PLAN),
+        ("company", 1),
+        ("pickup", 45749),
+        ("delivery", 50863),
+        ("depot", 45488),
+        ("request_id", "site-x0"),
+        ("op", "vread"),
+    ],
+)
 def test_request_verifier_refusals(field, value):
     request = work.cargoflow2_request_table(PLAN, PRELAUNCH, vehicle=VEHICLE)[0]
     drifted = request.model_copy(update={field: value})
@@ -1238,15 +1240,16 @@ def test_request_verifier_refusals(field, value):
 
 def test_request_identity_domain_refusals():
     rows = [
-        base_request(request_id="x" * 33),                     # request_id ceiling
-        base_request(plan="short"),                            # 64-hex seal shape
-        base_request(plan="A" * 64),                           # uppercase hex
-        base_request(op="sample"),                             # protocol-11 op family
-        base_request(engine=cf.CARGOFLOW2_ENGINE),             # site must stay quiet
-        base_request(offset=0),                                # site must stay quiet
+        base_request(request_id="x" * 33),  # request_id ceiling
+        base_request(plan="short"),  # 64-hex seal shape
+        base_request(plan="A" * 64),  # uppercase hex
+        base_request(op="sample"),  # protocol-11 op family
+        base_request(engine=cf.CARGOFLOW2_ENGINE),  # site must stay quiet
+        base_request(offset=0),  # site must stay quiet
         base_request(op="vread", engine=123, vehicle=1, expected_cost=5),
-        base_request(op="purchase", engine=123, expected_cost=4429, max_cost=5000,
-                     order_index=0),                           # purchase phase echoes
+        base_request(
+            op="purchase", engine=123, expected_cost=4429, max_cost=5000, order_index=0
+        ),  # purchase phase echoes
         base_request(op="purchase", engine=123, expected_cost=4430, max_cost=5000),
         base_request(op="purchase", engine=123, expected_cost=4429, max_cost=4000),
     ]
@@ -1257,21 +1260,28 @@ def test_request_identity_domain_refusals():
 
 def test_request_position_refusals():
     rows = [
-        base_request(op="engine", engine=123, vehicle=1),      # engine never pitched
-        base_request(op="order", engine=123, vehicle=1,
-                     order_index=1, order_flags=cf.CARGOFLOW2_ORDER_PICKUP_FLAGS),
-        base_request(op="arrive-watch", engine=123, vehicle=1,
-                     watch_days=6, order_index=-1),
-        base_request(op="flow", engine=123, vehicle=VEHICLE, watch_days=5,
-                     order_index=-1),                          # flow offsets pinned per id
-        base_request(op="flow-01", request_id="flow-01", engine=123,
-                     vehicle=VEHICLE, offset=6),               # ladder arithmetic of record
-        base_request(op="finance", request_id="finance-00", engine=123,
-                     vehicle=VEHICLE, offset=54),              # tail offsets pinned
-        base_request(op="finish", request_id="finish-00", engine=123,
-                     vehicle=VEHICLE, offset=54),
-        base_request(op="order-read", request_id="order-read-00", engine=123,
-                     vehicle=VEHICLE, order_index=0),          # phase echo quiet rows
+        base_request(op="engine", engine=123, vehicle=1),  # engine never pitched
+        base_request(
+            op="order",
+            engine=123,
+            vehicle=1,
+            order_index=1,
+            order_flags=cf.CARGOFLOW2_ORDER_PICKUP_FLAGS,
+        ),
+        base_request(op="arrive-watch", engine=123, vehicle=1, watch_days=6, order_index=-1),
+        base_request(
+            op="flow", engine=123, vehicle=VEHICLE, watch_days=5, order_index=-1
+        ),  # flow offsets pinned per id
+        base_request(
+            op="flow-01", request_id="flow-01", engine=123, vehicle=VEHICLE, offset=6
+        ),  # ladder arithmetic of record
+        base_request(
+            op="finance", request_id="finance-00", engine=123, vehicle=VEHICLE, offset=54
+        ),  # tail offsets pinned
+        base_request(op="finish", request_id="finish-00", engine=123, vehicle=VEHICLE, offset=54),
+        base_request(
+            op="order-read", request_id="order-read-00", engine=123, vehicle=VEHICLE, order_index=0
+        ),  # phase echo quiet rows
     ]
     for payload in rows:
         with pytest.raises(ValidationError):
@@ -1315,9 +1325,18 @@ def test_parse_success_requires_the_full_observation_set():
     ladder = built_ladder()
     by_id = {request.request_id: (request, readback) for request, readback in ladder}
     for exchange_id in (
-        "site-00", "engine-00", "purchase-00", "vread-00", "order-00",
-        "order-read-00", "monitor-00", "start-00", "arrive-00", "flow-04",
-        "finance-00", "finish-00",
+        "site-00",
+        "engine-00",
+        "purchase-00",
+        "vread-00",
+        "order-00",
+        "order-read-00",
+        "monitor-00",
+        "start-00",
+        "arrive-00",
+        "flow-04",
+        "finance-00",
+        "finish-00",
     ):
         request, readback = by_id[exchange_id]
         fields = cf._CARGOFLOW2_SUBSETS[readback.op]
@@ -1335,11 +1354,14 @@ def test_parse_success_requires_the_full_observation_set():
 
 def test_refusal_frames_carry_no_observation_set():
     request = work.cargoflow2_request_table(PLAN, PRELAUNCH, vehicle=VEHICLE)[0]
-    refusal = parse_from(request, dict(
-        readback_body(request.op, request.request_id, status="PAUSED"),
-        funds=FUNDS,
-        cost=0,
-    ))
+    refusal = parse_from(
+        request,
+        dict(
+            readback_body(request.op, request.request_id, status="PAUSED"),
+            funds=FUNDS,
+            cost=0,
+        ),
+    )
     assert refusal.status == "PAUSED"
 
     payload = refusal.model_dump(mode="json")
@@ -1390,11 +1412,22 @@ def flow_request() -> cf.Cargoflow2Request:
 def test_window_echoes_parse_and_outside_fields_refuse():
     request = flow_request()
     # A refused flow frame still echoes its pinned phase pair.
-    window = parse_from(request, readback_body(
-        "flow", "flow-04", status="WINDOW_EXHAUSTED",
-        engine=cf.CARGOFLOW2_ENGINE, vehicle=VEHICLE, offset=request.offset,
-        plan=PRELAUNCH, anchor=ANCHOR, tick=48, day=ANCHOR + 20, funds=FUNDS,
-    ))
+    window = parse_from(
+        request,
+        readback_body(
+            "flow",
+            "flow-04",
+            status="WINDOW_EXHAUSTED",
+            engine=cf.CARGOFLOW2_ENGINE,
+            vehicle=VEHICLE,
+            offset=request.offset,
+            plan=PRELAUNCH,
+            anchor=ANCHOR,
+            tick=48,
+            day=ANCHOR + 20,
+            funds=FUNDS,
+        ),
+    )
     assert window.status == "WINDOW_EXHAUSTED"
 
     payload = window.model_dump(mode="json")
@@ -1407,19 +1440,35 @@ def test_window_echoes_parse_and_outside_fields_refuse():
     with pytest.raises(ValidationError, match="outside its window echo subset"):
         cf.Cargoflow2Readback.model_validate(payload)
 
-    stalled = parse_from(request, readback_body(
-        "flow", "flow-04", status="CLOCK_STALLED",
-        engine=cf.CARGOFLOW2_ENGINE, vehicle=VEHICLE, offset=request.offset,
-        plan=PRELAUNCH, anchor=ANCHOR, tick=48, day=ANCHOR + 21, funds=FUNDS,
-    ))
+    stalled = parse_from(
+        request,
+        readback_body(
+            "flow",
+            "flow-04",
+            status="CLOCK_STALLED",
+            engine=cf.CARGOFLOW2_ENGINE,
+            vehicle=VEHICLE,
+            offset=request.offset,
+            plan=PRELAUNCH,
+            anchor=ANCHOR,
+            tick=48,
+            day=ANCHOR + 21,
+            funds=FUNDS,
+        ),
+    )
     assert stalled.status == "CLOCK_STALLED"
 
     # The window echo family belongs to flow exchanges alone.
     with pytest.raises(ValidationError, match="window echo family belongs to flow"):
-        cf.Cargoflow2Readback.model_validate(dict(
-            readback_body("site", "site-00", status="WINDOW_EXHAUSTED"),
-            anchor=ANCHOR, tick=1, day=ANCHOR, funds=FUNDS,
-        ))
+        cf.Cargoflow2Readback.model_validate(
+            dict(
+                readback_body("site", "site-00", status="WINDOW_EXHAUSTED"),
+                anchor=ANCHOR,
+                tick=1,
+                day=ANCHOR,
+                funds=FUNDS,
+            )
+        )
 
 
 def test_ready_ladder_day_is_checked_against_the_anchor():
@@ -1454,39 +1503,44 @@ def test_ready_ladder_day_is_checked_against_the_anchor():
     assert readback.anchor is None and readback.day == ANCHOR
 
 
-@pytest.mark.parametrize("op, tweak, needle", [
-    ("site", dict(vehicle=1), "site readback must not name an engine or vehicle"),
-    ("site", dict(cargo=0), "the site readback re-pins the corridor cargo"),
-    ("site", dict(bay_sid=3), "the site readback re-pins the corridor station ids"),
-    ("site", dict(bay_industry=2), "the site readback re-pins the corridor industries"),
-    ("engine", dict(price=4430), "the engine readback echoes its pinned price"),
-    # The E111 inversion regression lock: a 256-scaled raw-sized running
-    # cost refuses the readback (the old second-shift arithmetic would
-    # have accepted it); any wrong display figure refuses the same way.
-    ("engine", dict(running_cost=107776), "the engine running cost disagrees"),
-    ("engine", dict(running_cost=420), "the engine running cost disagrees"),
-    ("engine", dict(vehicle=1), "engine readback must not name a vehicle"),
-    ("purchase", dict(vehicle=-1), "built purchase must name the pinned engine and vehicle"),
-    ("purchase", dict(cost=4000), "built purchase must cost its pinned quote"),
-    ("vread", dict(vehicle=-1), "post-purchase readbacks echo the pinned engine and vehicle"),
-    ("vread", dict(engine=-1), "post-purchase readbacks echo the pinned engine and vehicle"),
-    ("order", dict(flags=128), "the ordered order echoes its pinned flags"),
-    ("order", dict(dest=50862), "the ordered order echoes its pinned stop tile"),
-    ("order-read", dict(order_len=3), "the two-order loop carries exactly two orders"),
-    ("order-read", dict(flags0=128), "order 0 drifted from the pinned pickup stop"),
-    ("order-read", dict(flags1=0), "order 1 drifted from the pinned delivery bay"),
-    ("arrive-watch", dict(anchor=ANCHOR - 1), "the arrival anchor is the arrival instant"),
-    ("arrive-watch", dict(location=50862), "the first arrival latches at the pinned pickup stop"),
-    ("arrive-watch", dict(load=5), "the first arrival carries the empty load of record"),
-    ("arrive-watch", dict(latches=()), "the anchored arrival carries its own latch"),
-    ("finish", dict(stop_issued=True), "the finish exchange issues no command in this attempt"),
-])
+@pytest.mark.parametrize(
+    "op, tweak, needle",
+    [
+        ("site", dict(vehicle=1), "site readback must not name an engine or vehicle"),
+        ("site", dict(cargo=0), "the site readback re-pins the corridor cargo"),
+        ("site", dict(bay_sid=3), "the site readback re-pins the corridor station ids"),
+        ("site", dict(bay_industry=2), "the site readback re-pins the corridor industries"),
+        ("engine", dict(price=4430), "the engine readback echoes its pinned price"),
+        # The E111 inversion regression lock: a 256-scaled raw-sized running
+        # cost refuses the readback (the old second-shift arithmetic would
+        # have accepted it); any wrong display figure refuses the same way.
+        ("engine", dict(running_cost=107776), "the engine running cost disagrees"),
+        ("engine", dict(running_cost=420), "the engine running cost disagrees"),
+        ("engine", dict(vehicle=1), "engine readback must not name a vehicle"),
+        ("purchase", dict(vehicle=-1), "built purchase must name the pinned engine and vehicle"),
+        ("purchase", dict(cost=4000), "built purchase must cost its pinned quote"),
+        ("vread", dict(vehicle=-1), "post-purchase readbacks echo the pinned engine and vehicle"),
+        ("vread", dict(engine=-1), "post-purchase readbacks echo the pinned engine and vehicle"),
+        ("order", dict(flags=128), "the ordered order echoes its pinned flags"),
+        ("order", dict(dest=50862), "the ordered order echoes its pinned stop tile"),
+        ("order-read", dict(order_len=3), "the two-order loop carries exactly two orders"),
+        ("order-read", dict(flags0=128), "order 0 drifted from the pinned pickup stop"),
+        ("order-read", dict(flags1=0), "order 1 drifted from the pinned delivery bay"),
+        ("arrive-watch", dict(anchor=ANCHOR - 1), "the arrival anchor is the arrival instant"),
+        (
+            "arrive-watch",
+            dict(location=50862),
+            "the first arrival latches at the pinned pickup stop",
+        ),
+        ("arrive-watch", dict(load=5), "the first arrival carries the empty load of record"),
+        ("arrive-watch", dict(latches=()), "the anchored arrival carries its own latch"),
+        ("finish", dict(stop_issued=True), "the finish exchange issues no command in this attempt"),
+    ],
+)
 def test_readback_echo_coherence_gates(op, tweak, needle):
     by_id = {request.request_id: (request, readback) for request, readback in built_ladder()}
     exchange_id = next(
-        identifier
-        for identifier, (_request, readback) in by_id.items()
-        if readback.op == op
+        identifier for identifier, (_request, readback) in by_id.items() if readback.op == op
     )
     request, readback = by_id[exchange_id]
     payload = readback.model_dump(mode="json")
@@ -1593,8 +1647,19 @@ def test_funds_walk_running_rows_of_record():
         (712232, 74, 1),
     ]
     assert all(row[1] == 74 for rid, day_rows in rows.items() for row in day_rows[1:])
-    assert list(rows) == ["flow-01", "flow-02", "flow-03", "flow-04", "flow-05", "flow-06",
-                          "flow-07", "flow-08", "flow-09", "flow-10", "flow-11"]
+    assert list(rows) == [
+        "flow-01",
+        "flow-02",
+        "flow-03",
+        "flow-04",
+        "flow-05",
+        "flow-06",
+        "flow-07",
+        "flow-08",
+        "flow-09",
+        "flow-10",
+        "flow-11",
+    ]
     assert model.fraction in range(256)
 
 
@@ -1707,20 +1772,14 @@ def test_funds_model_refusals():
     with pytest.raises(ValueError, match="already pinned"):
         warm.admit_running_cost(ENGINE_RUNNING_DISPLAY)
     with pytest.raises(ValueError, match="inconsistent with its display figure"):
-        Cargoflow2FundsModel(start_funds=FUNDS, purchase_quote=QUOTE).admit_running_cost(
-            420
-        )
+        Cargoflow2FundsModel(start_funds=FUNDS, purchase_quote=QUOTE).admit_running_cost(420)
     # The E111 inversion regression lock: the pinned display surface never
     # widens back to a 256-scaled raw — a raw-sized value refuses, never
     # admits (the old second-shift arithmetic would have accepted it).
     with pytest.raises(ValueError, match="inconsistent with its display figure"):
-        Cargoflow2FundsModel(start_funds=FUNDS, purchase_quote=QUOTE).admit_running_cost(
-            107776
-        )
+        Cargoflow2FundsModel(start_funds=FUNDS, purchase_quote=QUOTE).admit_running_cost(107776)
     with pytest.raises(ValueError, match="inconsistent with its display figure"):
-        Cargoflow2FundsModel(start_funds=FUNDS, purchase_quote=QUOTE).admit_running_cost(
-            0
-        )
+        Cargoflow2FundsModel(start_funds=FUNDS, purchase_quote=QUOTE).admit_running_cost(0)
 
     warm.debit_purchase()
     assert warm.funds == FUNDS - QUOTE
@@ -1754,9 +1813,7 @@ def test_funds_walk_income_attr_of_record():
 
 
 def phase_of(ladder):
-    return cf.cargoflow2_phase_outcome(
-        ladder, prelaunch_digest=PRELAUNCH, plan=PLAN
-    )
+    return cf.cargoflow2_phase_outcome(ladder, prelaunch_digest=PRELAUNCH, plan=PLAN)
 
 
 def test_built_ladder_default_typed_delivery_verified():
@@ -1770,20 +1827,32 @@ def test_built_ladder_default_typed_delivery_verified():
     assert phase["arrival"]["tick"] == 40
 
 
-@pytest.mark.parametrize("knobs, expected", [
-    ({}, "CARGOFLOW2_DELIVERY_VERIFIED"),
-    (dict(wait_from=None, load_at=None, bay_at=None, unload_at=None,
-            trans_from=None, income_at=None), "CARGOFLOW2_QUEUE_NEVER_FILLED"),
-    (dict(bay_at=None, unload_at=None), "CARGOFLOW2_LOADED_NEVER_DELIVERED"),
-    (dict(stock_bay=[0, 0, 0, 0, 5, 10, 10, 10, 10, 10, 10, 10]),
-        "CARGOFLOW2_CONSUMPTION_UNOBSERVED"),
-    (dict(trans_from=None, trans_amount=0), "CARGOFLOW2_GATE_UNDECIDED_INCOMPLETE"),
-    (dict(income_at=None, income_step=0),
-        "CARGOFLOW2_GATE_UNDECIDED_INCOMPLETE"),
-    (dict(finance_ok=False), "CARGOFLOW2_GATE_UNDECIDED_INCOMPLETE"),
-    (dict(load_at=2, depart_at=3, bay_at=4, unload_at=4),
-        "CARGOFLOW2_DELIVERY_VERIFIED"),
-])
+@pytest.mark.parametrize(
+    "knobs, expected",
+    [
+        ({}, "CARGOFLOW2_DELIVERY_VERIFIED"),
+        (
+            dict(
+                wait_from=None,
+                load_at=None,
+                bay_at=None,
+                unload_at=None,
+                trans_from=None,
+                income_at=None,
+            ),
+            "CARGOFLOW2_QUEUE_NEVER_FILLED",
+        ),
+        (dict(bay_at=None, unload_at=None), "CARGOFLOW2_LOADED_NEVER_DELIVERED"),
+        (
+            dict(stock_bay=[0, 0, 0, 0, 5, 10, 10, 10, 10, 10, 10, 10]),
+            "CARGOFLOW2_CONSUMPTION_UNOBSERVED",
+        ),
+        (dict(trans_from=None, trans_amount=0), "CARGOFLOW2_GATE_UNDECIDED_INCOMPLETE"),
+        (dict(income_at=None, income_step=0), "CARGOFLOW2_GATE_UNDECIDED_INCOMPLETE"),
+        (dict(finance_ok=False), "CARGOFLOW2_GATE_UNDECIDED_INCOMPLETE"),
+        (dict(load_at=2, depart_at=3, bay_at=4, unload_at=4), "CARGOFLOW2_DELIVERY_VERIFIED"),
+    ],
+)
 def test_verdict_knob_matrix(knobs, expected):
     ladder = built_ladder(**knobs)
     for _request, readback in ladder:
@@ -1804,7 +1873,7 @@ def test_funds_divergence_halt_and_typing():
     # earlier receipts are preserved; the diverged row keeps no receipt and
     # flow-04..finish stay pending
     assert len(phase["receipts"]) == EXCHANGES.index("flow-03")
-    assert phase["pending"] == list(EXCHANGES[EXCHANGES.index("flow-03") + 1:])
+    assert phase["pending"] == list(EXCHANGES[EXCHANGES.index("flow-03") + 1 :])
 
 
 def test_malformed_element_halts():
@@ -1815,7 +1884,7 @@ def test_malformed_element_halts():
     assert phase["failed"]["label"] == "flow-05"
     assert phase["failed"]["status"] == "MALFORMED"
     assert phase["failed"]["error"] == "torn frame bytes"
-    assert phase["pending"] == list(EXCHANGES[index + 1:])
+    assert phase["pending"] == list(EXCHANGES[index + 1 :])
 
 
 def test_wrong_seal_halts_with_verbatim_refusal():
@@ -1825,10 +1894,8 @@ def test_wrong_seal_halts_with_verbatim_refusal():
     ladder[index] = (request.model_copy(update={"plan": OTHER_PLAN}), readback)
     phase = phase_of(ladder)
     assert phase["failed"]["label"] == "vread-00"
-    assert phase["failed"]["error"] == (
-        "request plan digest is not the staged prelaunch seal"
-    )
-    assert phase["pending"] == list(EXCHANGES[index + 1:])
+    assert phase["failed"]["error"] == ("request plan digest is not the staged prelaunch seal")
+    assert phase["pending"] == list(EXCHANGES[index + 1 :])
 
 
 def test_out_of_order_halts_with_verbatim_refusal():
@@ -1838,10 +1905,8 @@ def test_out_of_order_halts_with_verbatim_refusal():
     ladder[index] = (ladder[index - 1][0], ladder[index][1])
     phase = phase_of(ladder)
     assert phase["failed"]["label"] == "order-00"
-    assert phase["failed"]["error"] == (
-        "cargo-flow 2 exchange out of order: expected order-01"
-    )
-    assert phase["pending"] == list(EXCHANGES[EXCHANGES.index("order-01"):])
+    assert phase["failed"]["error"] == ("cargo-flow 2 exchange out of order: expected order-01")
+    assert phase["pending"] == list(EXCHANGES[EXCHANGES.index("order-01") :])
 
 
 def test_non_purchase_cost_halts():
@@ -1855,7 +1920,7 @@ def test_non_purchase_cost_halts():
     assert phase["failed"]["error"] == (
         "cargo-flow 2 exchanges outside the purchase observe at zero cost"
     )
-    assert phase["pending"] == list(EXCHANGES[index + 1:])
+    assert phase["pending"] == list(EXCHANGES[index + 1 :])
 
 
 def test_truncated_ladder_never_manufactures_success():
@@ -2099,10 +2164,16 @@ def test_route_binding_selector_and_map_of_record():
     assert cf.CARGOFLOW2_ROUTE_BINDINGS[2] is cf.CARGOFLOW2_ROUTE_SECOND_ADMISSION
     assert binding.route_version == 1
     assert (binding.pickup, binding.pickup_front, binding.pickup_sid, binding.pickup_industry) == (
-        45748, 45747, 0, 0,
+        45748,
+        45747,
+        0,
+        0,
     )
     assert (binding.delivery, binding.delivery_front, binding.bay_sid, binding.bay_industry) == (
-        50862, 50863, 2, 1,
+        50862,
+        50863,
+        2,
+        1,
     )
     assert (binding.depot, binding.depot_front) == (45487, 45743)
     assert (binding.company, binding.cargo, binding.engine) == (0, 1, 123)
@@ -2190,14 +2261,17 @@ def test_nondefault_route_binding_derives_its_own_schedule_plan_and_pin_table(
     assert plan_two.schema_version == 2
     assert plan_two.schedule == cf.CARGOFLOW2_EXCHANGE_IDS
     assert (plan_two.pickup, plan_two.pickup_front) == (
-        route_two.pickup, route_two.pickup_front,
+        route_two.pickup,
+        route_two.pickup_front,
     )
     assert (plan_two.delivery, plan_two.delivery_front) == (
-        route_two.delivery, route_two.delivery_front,
+        route_two.delivery,
+        route_two.delivery_front,
     )
     assert (plan_two.pickup_sid, plan_two.bay_sid) == (route_two.pickup_sid, route_two.bay_sid)
     assert (plan_two.pickup_industry, plan_two.bay_industry) == (
-        route_two.pickup_industry, route_two.bay_industry,
+        route_two.pickup_industry,
+        route_two.bay_industry,
     )
     assert plan_two.engine == route_two.engine == 124
     assert plan_two.start_funds == route_two.start_funds == 475000
@@ -2218,8 +2292,10 @@ def test_nondefault_route_binding_derives_its_own_schedule_plan_and_pin_table(
     assert table_two["RUNNING_DISPLAY_PIN"] == 500
     assert (table_two["BAY_SID"], table_two["BAY_IND"]) == (3, 1)
     assert table_two["delivery"] == 51119
-    assert (table_two["LAUNCH_DAY"], table_two["ARRIVE_MAX_DAYS"]) == \
-        (route_two.launch_day, route_two.arrive_max_days)
+    assert (table_two["LAUNCH_DAY"], table_two["ARRIVE_MAX_DAYS"]) == (
+        route_two.launch_day,
+        route_two.arrive_max_days,
+    )
     for name, value in (
         ("PICKUP_SID", 0),
         ("CARGOFLOW2_COMPANY", 0),
@@ -2265,9 +2341,7 @@ def test_funds_model_wiring_follows_its_own_binding(route_two: cf.Cargoflow2Rout
     assert not model_two.purchase_paid and model_two.income_deltas == []
     model_two.admit_running_cost(route_two.engine_running_display)  # its own census
     with pytest.raises(ValueError, match="inconsistent with its display figure"):
-        cf.cargoflow2_funds_model(route_two).admit_running_cost(
-            cf.CARGOFLOW2_RUNNING_DISPLAY
-        )
+        cf.cargoflow2_funds_model(route_two).admit_running_cost(cf.CARGOFLOW2_RUNNING_DISPLAY)
 
     model_one = cf.cargoflow2_funds_model(cf.cargoflow2_route_binding())
     assert model_one.funds == cf.CARGOFLOW2_START_FUNDS == 489650
@@ -2288,3 +2362,167 @@ def test_funds_model_wiring_follows_its_own_binding(route_two: cf.Cargoflow2Rout
     # recorded walk rides the default-wired model's display figure.
     assert model_one.funds == funds_walk({})[0]["site-00"] - model_one.purchase_quote * 0
 
+
+# --- The delivered-class tail (ticket 02): the v2-bound derivation ------------
+
+# Figures of record at the GREEN gate of record (never pre-assumed; each is
+# computed from the landed derivation against the retained E-records).
+DELIVERED_PLAN_DIGEST_OF_RECORD = "313879bd6b87a17effc30c893b4fb6bb61624124ffdb5e804f4a3a8ab9216fda"
+_DELIVERED_SCHEDULE_DIGEST_OF_RECORD = (
+    "3132bfa0217f73025a474698e62d266722baf65eba6da6826bcf93c4385e0527"
+)
+_DELIVERED_FUNDS_FIGURE_OF_RECORD = 488069
+_LEG_RUNNING_CHARGES = 6
+_DELIVERED_ANCHOR = 712232  # the anchor of record (both consumed rounds)
+
+
+def test_delivered_ladder_lock_fails_without_the_cycle_completion_stop():
+    """The delivered-class lock of record: the delivered arm cannot exist
+    without the cycle-completion observation stop riding the ladder. The v1
+    25-exchange ladder of record ends flow-11, finance-00 and finish-00 on
+    the anchor+55 economy day (712287) with no flow-12 row anywhere, so a
+    schedule_version=2 composition keyed by the (2, 2) pairing derives its
+    own 26-row ladder of record: flow-12 rides the next 5-economy-day rung
+    (anchor+60 = day 712292, the settle margin) and both tails move into
+    that same economy day; the (1, 2) pairing cannot borrow it."""
+    binding = cf.cargoflow2_route_binding(2)
+    rows = cf.cargoflow2_delivered_schedule_rows(binding)
+    assert [row["exchange"] for row in rows] == list(cf.CARGOFLOW2_DELIVERED_EXCHANGE_IDS)
+    assert len(rows) == cf.PLANNED_CARGOFLOW2_DELIVERED_EXCHANGES == 26
+    assert cf.CARGOFLOW2_DELIVERED_FLOW_OFFSETS == tuple(range(0, 61, 5))
+    assert list(cf.CARGOFLOW2_DELIVERED_FLOW_OFFSETS) == list(cf.CARGOFLOW2_FLOW_OFFSETS) + [60]
+    offsets = {row["exchange"]: row["offset"] for row in rows}
+    assert offsets["flow-11"] == 55 and offsets["flow-12"] == 60
+    assert (
+        offsets["finance-00"] == offsets["finish-00"] == cf.CARGOFLOW2_DELIVERED_TAIL_OFFSET == 60
+    )
+    # The v1 ladder of record carries no cycle-completion stop:
+    v1_rows = cf.cargoflow2_schedule_rows(binding)
+    v1_ids = [row["exchange"] for row in v1_rows]
+    assert v1_ids == list(cf.CARGOFLOW2_EXCHANGE_IDS)
+    assert "flow-12" not in v1_ids
+    v1_offsets = {row["exchange"]: row["offset"] for row in v1_rows}
+    assert v1_offsets["finance-00"] == v1_offsets["finish-00"] == 55
+    # ... and the (1, 2) pairing is refused fail-closed:
+    with pytest.raises(ValueError, match="pairing"):
+        cf.cargoflow2_delivered_schedule_rows(cf.cargoflow2_route_binding())
+
+
+def test_delivered_authority_lock():
+    """The delivered authority of record rides the standing equality-gated
+    parameterization: the arrival bound 5 plus the delivered flow span 60 is
+    the delivered 65-economy-day authority, whose last admissible observation
+    day is 712293 = L + 65; the arm's figures are exact-equality gated (a
+    shorter or longer authority, a foreign span or a mis-paired route id
+    refuses) while the v1 envelope of record stays 60."""
+    plan = cf.cargoflow2_delivered_plan()
+    assert plan.schema_version == 2 and plan.schedule_version == 2
+    assert plan.arrive_max_days == 5 and plan.flow_span_days == 60
+    assert plan.day_budget == cf.CARGOFLOW2_DELIVERED_DAY_BUDGET == 65
+    assert cf.CARGOFLOW2_DELIVERED_DAY_BUDGET == plan.arrive_max_days + plan.flow_span_days
+    assert plan.launch_day + plan.day_budget == 712293
+    assert cf.CARGOFLOW2_DAY_BUDGET == 60  # the v1 envelope of record is untouched
+    dump = plan.model_dump(mode="json")
+    dump["schedule"] = tuple(dump["schedule"])
+    short = dict(dump, day_budget=60)
+    with pytest.raises(ValidationError, match="authority"):
+        cf.Cargoflow2Plan.model_validate(short)
+    long = dict(dump, day_budget=66)
+    with pytest.raises(ValidationError, match="authority"):
+        cf.Cargoflow2Plan.model_validate(long)
+    spanned = dict(dump, flow_span_days=55)
+    with pytest.raises(ValidationError, match="drifted from the pinned"):
+        cf.Cargoflow2Plan.model_validate(spanned)
+    paired = dict(dump, schema_version=1)
+    with pytest.raises(ValidationError, match="second admitted route"):
+        cf.Cargoflow2Plan.model_validate(paired)
+
+
+def test_delivered_plan_digests_lock_the_byte_equal_v1s():
+    """The delivered plan is a NEW figure of record keyed by the (2, 2)
+    pairing, and every v1 digest of record stays byte-equal whatever the
+    extension lands: the route-1 plan of record, the (2, 1) second-admission
+    v1-row plan and the binding digests of record."""
+    delivered = cf.cargoflow2_delivered_plan()
+    assert delivered.schedule == cf.CARGOFLOW2_DELIVERED_EXCHANGE_IDS
+    assert delivered.digest == DELIVERED_PLAN_DIGEST_OF_RECORD
+    # The consumed v1 figures of record stay byte-equal:
+    assert cf.cargoflow2_plan().digest == REQUEST_PLAN_DIGEST
+    second = cf.cargoflow2_plan(binding=cf.cargoflow2_route_binding(2))
+    assert second.schedule_version is None
+    assert second.digest.startswith("e1cafb23")
+    assert cf.cargoflow2_route_binding(2).digest.startswith("26408e77")
+
+
+def test_delivered_verdict_never_fires_on_the_terminal_class():
+    """The verdict lock accepts nothing the round-6/7 outcome class passes:
+    replaying the two retained native COMPLETE phases' own evidence through
+    the verdict of record — loads latched, loaded departure, no unloaded
+    amount anywhere inside the ladder, finance delivered 0 — types
+    CARGOFLOW2_LOADED_NEVER_DELIVERED exactly, so the delivered
+    verification stays unreachable for their evidence shape."""
+    for name in ("candidate-6", "candidate-7"):
+        phase = json.loads(
+            (
+                REPO
+                / "artifacts"
+                / "experiments"
+                / f"d5-corridor-cargoflow2-native-{name}"
+                / "result.json"
+            ).read_text()
+        )["phase"]
+        verdict = cf.cargoflow2_verdict(
+            samples={int(offset): sample for offset, sample in phase["samples"].items()},
+            anchor=phase["anchor"],
+            loads=phase["loads"],
+            departures=phase["departures"],
+            unloadings=phase["unloadings"],
+            pickup_arrivals=phase["pickup_arrivals"],
+            bay_arrivals=phase["bay_arrivals"],
+            finance=phase["finance"],
+        )
+        assert verdict["verdict"] == "CARGOFLOW2_LOADED_NEVER_DELIVERED"
+        assert verdict["verdict"] != "CARGOFLOW2_DELIVERY_VERIFIED"
+
+
+def test_delivered_funds_fence_walks_the_unload_leg():
+    """The E113 fence walk covers the delivered unload leg: the delivered
+    ladder's two new fence instants — flow-12 and the both tails on the
+    settle day 712292 = anchor+60 — reconcile the standing charge lattice
+    fail-closed (the walk refuses on any unmodeled term), the delivery
+    income delta at the delivery rung charges the standing quarter-income
+    mechanism, and the leg's bills come only from its own economy days."""
+    exchange_ids = cf.CARGOFLOW2_DELIVERED_EXCHANGE_IDS
+    rows = cf.cargoflow2_delivered_schedule_rows(cf.cargoflow2_route_binding(2))
+    row_by_id = {row["exchange"]: row for row in rows}
+    # The leg's observation days of record (§5.3 + E117/E129):
+    for exchange_id in ("flow-12", "finance-00", "finish-00"):
+        assert _exchange_day(row_by_id[exchange_id], arrival_day=_DELIVERED_ANCHOR) == 712292
+    # §4 income vector of record extended by one delivery delta at the leg:
+    income = {f"flow-{index:02d}": max(0, index - 1) * 300 for index in range(13)}
+    income["finance-00"] = 3300
+    income["finish-00"] = 3300
+    model = cf.Cargoflow2FundsModel(start_funds=cf.CARGOFLOW2_START_FUNDS, purchase_quote=QUOTE)
+    observed: dict[str, int] = {}
+    for exchange_id in exchange_ids:
+        row = row_by_id[exchange_id]
+        day = _exchange_day(row, arrival_day=_DELIVERED_ANCHOR)
+        tick = _exchange_tick(
+            row,
+            start_tick=TICK_OF_RECORD,
+            arrival_tick=40,
+            sample_tick=70,
+        )
+        earned = int(income.get(exchange_id, 0))
+        if row["op"] == "purchase":
+            model.advance(exchange_id, day, tick, earned)
+            model.debit_purchase()
+        else:
+            observed[exchange_id] = model.advance(exchange_id, day, tick, earned)
+        if row["op"] == "engine":
+            model.admit_running_cost(ENGINE_RUNNING_DISPLAY)
+        elif row["op"] == "start":
+            model.start_vehicle(day, tick)
+    assert observed["finance-00"] == observed["finish-00"]
+    assert observed["flow-12"] == observed["flow-11"] + 300 - _LEG_RUNNING_CHARGES
+    assert observed["finish-00"] == _DELIVERED_FUNDS_FIGURE_OF_RECORD
