@@ -2509,3 +2509,39 @@ readiness, outside this round's PoC definition.
   `PRELAUNCH PASS` first attempt + standalone `preflight` + pre-auth
   `CLAIM_ABSENT`), the fresh review round, Gate C, and the ONE launch —
   tickets 11–13 unchanged blocked.
+- 2026-11-06 — T-010 staging round: ROUND-7 STAGED (candidate-7, the
+  v2-carrying composition; staging approved in-session, one commit; no
+  push, no claim, no signature, no launch, no native run). The round
+  identity advanced candidate-6 → candidate-7 at the module's
+  round-identity constant (one site + truthful lineage comment:
+  candidates 1–2 consumed with verdicts; 3–4 seal-superseded,
+  staged-never-launched; candidate-5 terminal halt-class history;
+  candidate-6 terminal COMPLETE-not-delivered history; candidate-7
+  composes from the widened tree carrying the adjudicated second
+  admission), the CLI gained its `--route-version` option (default =
+  the route binding of record, byte-equal for the v1 rounds), and the
+  candidate of record was composed once: `prepare
+  artifacts/experiments/d5-corridor-cargoflow2-native-candidate-7
+  --route-version 2` → `PRELAUNCH PASS` first attempt (exit 0),
+  standalone `preflight` → `PREFLIGHT PASS` (exit 0), pre-auth `verify`
+  → `AUTHORIZATION_UNVERIFIED` / `CLAIM_ABSENT` (exit 1). Figures of
+  record: seal `9c5f7272…e19257` (sidecar byte-equal); `route_version 2`
+  / `schedule_version 1` in the staged plan policy (ladder schema
+  `d5-cargoflow2-ladder-grid-v1`); plan-model digest `e1cafb23…c08b0`
+  (binding 2's own admitted plan — the corner-swap competing route);
+  staged schedule digest `5c0998f2…bf2d` (the one ladder, unchanged);
+  frozen chain 3,502 entries; prerequisite D5-F12-DEPOT-3 after-save
+  `183b2027…6ea6` re-verified on disk; budgets 1 launch / 0 retries /
+  32 requests; hypothesis state `RETAINED_PROBE_REBOUND`; no
+  CLAIM.json / AUTHORIZATION.json / launch artifact anywhere in the
+  candidate root (correct pre-consumption state). Staged source: the
+  widened tree (commit `8fc8c26` + the identity advance). Transcripts
+  `/tmp/opencode/c7_stage_output.txt`, `c7_preflight_output.txt`,
+  `c7_verify_output.txt`. Native suite re-run after the identity
+  advance: 46 passed. Standing gates (each its own explicit operator
+  approval, none granted): the fresh independent review round
+  (`READY-FOR-GATE-C`), Gate C, the ONE launch (the corner edge
+  50351<->50352 rides the attempted route as its typed open
+  precondition — a preserved halt class on the ONE launch is terminal
+  for candidate-7 and re-enters via ticket 05's mechanism); tickets
+  11–13 unchanged blocked.

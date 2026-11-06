@@ -1270,7 +1270,7 @@ def test_staged_compositions_pin_the_record_chain(staged, staged_second):
         metadata1["candidate_directory"]
         == metadata2["candidate_directory"]
         == work.CARGOFLOW2_CANDIDATE_DIRECTORY
-        == "d5-corridor-cargoflow2-native-candidate-6"
+        == "d5-corridor-cargoflow2-native-candidate-7"
     )
     for name in ("retained_directory", "source_save", "save_sha256", "expected_welcome"):
         assert metadata2["world"][name] == metadata1["world"][name], name

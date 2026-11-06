@@ -180,18 +180,21 @@ D5_CARGOFLOW2_PRELAUNCH_SCHEMA = "d5-cargoflow2-prelaunch-v1"
 D5_CARGOFLOW2_LAUNCH_CONSUMED_SCHEMA = freight_native.D5_FREIGHT_LAUNCH_CONSUMED_SCHEMA
 D5_CARGOFLOW2_PREREQUISITE_SCHEMA = freight_v2_native.D5_FREIGHT_V2_PREREQUISITE_SCHEMA
 
-# Candidate directory of record (round-identity constant; round-6 of
-# record — identity advanced candidate-5 → candidate-6 BY this staging
+# Candidate directory of record (round-identity constant; round-7 of
+# record — identity advanced candidate-6 → candidate-7 BY this staging
 # action, one operator-approved action of record). Lineage of record:
 # candidates 1–2 consumed with native verdicts of record; candidates 3–4
 # seal-superseded by freeze-pin debts — both staged, never signed,
 # claimed or launched; candidate-5 consumed terminal history (launched
 # once 2026-11-05, halt of record at `arrive-00` on the funds-residual
 # class, the halt-class loop E112→E114 answered and the doc freeze E115
-# landed); the reconciliation-debt method of record is a fresh round
-# from the current tree, never a relabel. Candidate-6 composes from the
-# settled post-settle-then-freeze tree.
-CARGOFLOW2_CANDIDATE_DIRECTORY = "d5-corridor-cargoflow2-native-candidate-6"
+# landed); candidate-6 consumed terminal history (launched once
+# 2026-11-05 with the round-6 verdict of record `CARGOFLOW2_LOADED_
+# NEVER_DELIVERED` — the COMPLETE-not-delivered class, E116); the
+# reconciliation-debt method of record is a fresh round from the current
+# tree, never a relabel. Candidate-7 composes from the widened tree and
+# carries the adjudicated second admission (binding id 2) per E120.
+CARGOFLOW2_CANDIDATE_DIRECTORY = "d5-corridor-cargoflow2-native-candidate-7"
 
 # Prerequisite lineage of record: the pinned, consumed, replay-verified
 # depot-mutation attempt (D5-F12-DEPOT-3 after-save, world-pin version 3),
@@ -2255,6 +2258,15 @@ def _argument_parser() -> argparse.ArgumentParser:
     parser.add_argument("command", choices=("prepare", "preflight", "run", "verify"))
     parser.add_argument("directory", type=Path)
     parser.add_argument("--prerequisite", type=Path, default=PINNED_PREREQUISITE)
+    parser.add_argument(
+        "--route-version",
+        type=int,
+        default=CARGOFLOW2_SCHEDULE_VERSION,
+        help=(
+            "the registered corridor route binding id the staged attempt "
+            "composes (the default stages the route binding of record)"
+        ),
+    )
     return parser
 
 
@@ -2263,7 +2275,9 @@ def main():
     args = parser.parse_args()
     directory = args.directory.resolve()
     if args.command == "prepare":
-        prepared = prepare_cargoflow2_candidate(directory, prerequisite=args.prerequisite)
+        prepared = prepare_cargoflow2_candidate(
+            directory, prerequisite=args.prerequisite, route_version=args.route_version
+        )
         cargoflow2_preflight(prepared)
         print("PRELAUNCH PASS", directory)
     elif args.command == "preflight":

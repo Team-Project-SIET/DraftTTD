@@ -13,11 +13,19 @@ never bypasses them.
 
 **Status:** ready-for-agent
 
-- [ ] Fresh round identity of record: new candidate directory constant per
+- [x] Fresh round identity of record: new candidate directory constant per
       the staging precedent; the staged composition carries the selected
-      route binding with staged↔source byte-correspondence
-- [ ] Prerequisite pins re-verified on disk (depot-mutation after-save
-      world lineage, binary/OpenGFX pins, funds floor of record)
+      route binding with staged↔source byte-correspondence — the round
+      identity advanced candidate-6 → candidate-7 (one constant + lineage
+      comment, 2026-11-06); the staged composition carries the adjudicated
+      second admission (`route_version = 2` beside `schedule_version = 1`)
+      with the staged↔source correspondence held by the freeze chain
+      (3,502 entries — PRELAUNCH PASS first attempt, E121)
+- [x] Prerequisite pins re-verified on disk (depot-mutation after-save
+      world lineage, binary/OpenGFX pins, funds floor of record) — the
+      preflight of the staged candidate-7 re-derived the pinned depot
+      prerequisite (D5-F12-DEPOT-3 after-save `183b2027…6ea6`), the pinned
+      binary pin and the funds floor of record (PREFLIGHT PASS, E121)
 - [ ] The gate ladder executes once in order — staging (PRELAUNCH PASS,
       standalone preflight PASS, pre-auth verify CLAIM_ABSENT) → independent
       read-only review (READY-FOR-GATE-C, zero reconciliation debt) →
@@ -110,3 +118,45 @@ default byte-equal everywhere:
   identity, preflight, review, Gate C, launch, route-read probe — every
   ladder gate of this ticket remains its own explicit operator
   approval, none granted by the widening round.
+
+**Staging round of record (2026-11-06, granted in-session; ONE commit
+carrying the identity advance + the CLI option + books; the staged bytes
+live under the evidence zone per the retained-artifact convention; no
+push, no claim, no signature, no launch, no native run):** the round
+identity advanced candidate-6 → candidate-7 at the module's own
+round-identity constant (one site, lineage comment truthfully carried:
+candidates 1–2 consumed with verdicts; 3–4 seal-superseded, staged
+never-launched; candidate-5 terminal halt-class history; candidate-6
+terminal COMPLETE-not-delivered history; candidate-7 composes from the
+widened tree and carries the adjudicated second admission), the CLI
+gained its honest `--route-version` option (default = the route binding
+of record, byte-equal behavior for the v1 rounds), and the staged
+candidate of record was composed once: `prepare
+artifacts/experiments/d5-corridor-cargoflow2-native-candidate-7
+--route-version 2` → **PRELAUNCH PASS first attempt** (exit 0), the
+standalone `preflight` re-run → **PREFLIGHT PASS** (exit 0), and the
+pre-auth `verify` → **AUTHORIZATION_UNVERIFIED / CLAIM_ABSENT** (exit
+1). Figures of record: seal `9c5f727200efa7b896ab2b8016d5183b1f1ee62baf
+f7bfa204eb60bf01e19257` (PRELAUNCH.sha256 sidecar byte-equal);
+`route_version = 2` / `schedule_version = 1` in the staged plan policy
+(ladder schema `d5-cargoflow2-ladder-grid-v1`); plan-model digest
+`e1cafb23…c08b0` (binding 2's own admitted plan — the corner-swap
+competing route of record); staged schedule digest `5c0998f2…bf2d` (the
+one ladder of record, unchanged); frozen chain 3,502 entries;
+prerequisite D5-F12-DEPOT-3 after-save `183b2027…6ea6` (the pinned
+world of record, re-verified on disk); budgets 1 launch / 0 retries /
+32 requests; hypothesis state `RETAINED_PROBE_REBOUND`; no CLAIM.json,
+no AUTHORIZATION.json, no launch artifact anywhere in the candidate
+root (correct pre-consumption state, manually verified). The staged
+source is the widened tree (commit `8fc8c26` + this round's identity
+advance). Transcripts: `/tmp/opencode/c7_stage_output.txt`,
+`/tmp/opencode/c7_preflight_output.txt`, `/tmp/opencode/
+c7_verify_output.txt` (the offline-staging transcript convention).
+
+**Standing gates after this round (each its own explicit operator
+approval, none granted):** the fresh independent review round
+(`READY-FOR-GATE-C` method of record), the Gate C signature round, and
+the ONE launch round — the launch carries the corner edge 50351↔50352
+as its typed open precondition (a preserved halt class on the ONE
+launch is terminal for candidate-7 and re-enters via ticket 05's
+mechanism); tickets 11–13 remain blocked behind them.
