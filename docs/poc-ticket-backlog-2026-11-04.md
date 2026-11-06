@@ -3264,3 +3264,43 @@ readiness, outside this round's PoC definition.
   authorization. THE DELIVERED-CLASS TAIL BOOKS CLOSE HERE: tickets
   01–08 done, the declaration addendum landed (E135), the README
   how-to-run landed; nothing else open on this tail.
+- 2026-11-06 — **production round ticket 01 done (the candidate-11
+  staging + independent review; E136; under the operator's in-session
+  directive "now I want it can play on real OpenTTD pls do it … goal is
+  do the production not demo" — the combined grant for the round: this
+  ticket, the Gate C + ONE launch ticket, the reconciliation ticket; one
+  commit, no push)**: the staging-defect find of record — the round's
+  first staging (`…candidate-10`) composed exit 0 `PRELAUNCH PASS` over
+  the delivered arm but carried the un-bumped round-identity badge
+  (`candidate_directory` literal `…candidate-9` over the
+  `…candidate-10` tree; the per-round badge convention candidates
+  6→7→8→9 missed its move); its staged bytes preserved at that
+  failed-identity state (seal `a01a5929…f8da68`), never signed, claimed
+  or launched, never relabeled or regenerated (the candidate-8
+  precedent), and after the fix its `preflight` refuses through the
+  frozen-source gate — fail-closed, recorded. The fix:
+  `CARGOFLOW2_CANDIDATE_DIRECTORY` advanced candidate-9 → candidate-11
+  (supersession = fresh identity only), lineage comment extended,
+  pinned test literal moved; suites green (native 49/49, planning
+  18/18), `ruff` clean. Candidate-11 staged fresh: `PRELAUNCH PASS`
+  exit 0, badge == constant == disk, seal `a6aa529f…4473c564` (full:
+  `a6aa529f9b153f9c5647275a9d8bda98c2f4059ce797a8810422a5384473c564`) ==
+  sidecar, root exactly the 4 staged entries, no consumption marker.
+  The independent review (script + transcript `/tmp/opencode/t01_c11_
+  review.py` + `_output.txt`; read-only): **`READY-FOR-GATE-C` — 40
+  checks, 0 findings, exit 0** — staged policy == live
+  `cargoflow2_plan_policy(2, 2)` zero-diff, the 26-row delivered ladder
+  with the full 0..60 offsets, authority bounds held, plan digests
+  byte-equal to the records of record (`3132bfa0…5e0527`,
+  `313879bd…16fda`), instrument tables == live derivations, freeze-pin
+  chain + D2 closure + dependencies re-verified, the v1 digest set of
+  record byte-equal (`98d055c4…f506ca`, `9a4a0778…93e45e`,
+  `26408e77…6b274`, `e1cafb23…c08b0`, `5c0998f2…bf2d`), the depot
+  prerequisite re-hashed on disk (`4df12e1f…9aab`,
+  `183b2027…6ea6`) with the staged source save re-verified, all prior
+  candidates' seals byte-equal (3–10 sweep), candidates
+  7/8/9/10 identity literals absent, binary `276d5b69…904c`, budgets
+  1/0/32, world mode `PREREQUISITE_ATTEMPT_SOURCE_SAVE_LOAD`,
+  authorization `PENDING`. Next frontier: round ticket 02 — Gate C
+  signature then the ONE launch, under the round grant; E36 and E114
+  stay open per their own rules.

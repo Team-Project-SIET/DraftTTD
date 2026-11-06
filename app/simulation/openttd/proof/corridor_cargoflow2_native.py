@@ -212,8 +212,17 @@ D5_CARGOFLOW2_PREREQUISITE_SCHEMA = freight_v2_native.D5_FREIGHT_V2_PREREQUISITE
 # rerun. Candidate-9 composes from the arm-fixed tree and carries the
 # ticket-02 delivered arm (the (2, 2) pairing) on the adjudicated second
 # admission (binding id 2, the spec default the v2 corner-swap) per
-# E129.
-CARGOFLOW2_CANDIDATE_DIRECTORY = "d5-corridor-cargoflow2-native-candidate-9"
+# E129. Candidate-10 staged superseded by its own staging defect of
+# record — the 2026-11-06 production round's first staging reused the
+# un-bumped candidate-9 identity badge, so its staged metadata
+# (`candidate_directory`) named candidate-9 over the fresh
+# `…candidate-10` tree; the staged bytes stay preserved at that
+# failed-identity state (`PRELAUNCH PASS` exit 0, seal `a01a5929…f8da68`),
+# never signed, claimed or launched, never relabeled or regenerated.
+# Candidate-11 composes from this badge-fixed tree and carries the same
+# delivered arm (the (2, 2) pairing) on the operator's in-session
+# production-round directive of 2026-11-06.
+CARGOFLOW2_CANDIDATE_DIRECTORY = "d5-corridor-cargoflow2-native-candidate-11"
 
 # Prerequisite lineage of record: the pinned, consumed, replay-verified
 # depot-mutation attempt (D5-F12-DEPOT-3 after-save, world-pin version 3),
