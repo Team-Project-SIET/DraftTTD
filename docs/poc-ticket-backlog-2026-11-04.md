@@ -2770,3 +2770,62 @@ readiness, outside this round's PoC definition.
   replay closure; T-021b; blocked by 11 — now satisfied) — its own
   explicit operator approval, none granted by this round; ticket 13
   unchanged blocked behind 12.
+- 2026-11-06 — T-021b TICKET-12 COMPLETE — THE P07 REPLAY CLOSURE LANDED
+  (the round granted in-session as the frontier instruction "do Ticket
+  12"; offline reporting only; one commit; no push, no staging, no claim,
+  no signature, no launch, no native run): **three fresh sibling outputs
+  of record** under `artifacts/experiments/p07-replay-d5-corridor-2026-11-06/`
+  (`round3-depot-chain/` ← `d5-corridor-depot-mutation-native-candidate-3`,
+  `route-v1-round6/` ← `d5-corridor-cargoflow2-native-candidate-6`,
+  `route-v2-round7/` ← `d5-corridor-cargoflow2-native-candidate-7`), each
+  by one `analyze-native-attempts` invocation (the command of record
+  booked in REPRODUCE.md); the retained zone re-hash proved byte-stable
+  (46,723 historical files before == after, only the 15 fresh output
+  files added). **The replay widening** (`app/experiments/native_attempt_analytics.py`,
+  insert-only): the generation-agnostic `phase.receipts` reader (depot +
+  corridor generations; the D2/D3/D4 `phase.completed` reader
+  byte-untouched), the retained `funds_chain` join, optional
+  `funds_before`/`funds_after`/`seed`/`finance`/`route_version` fields,
+  and the ADR-0001 label note appended to the document limitations
+  (OBSERVED reads / DERIVED labeled / CONTROLLED pinned / UNKNOWN stays;
+  script-tick instants never steady-state; revenue never reported as
+  profit). **Figures of record replayed**: depot chain 6 receipt rows
+  with the zero-residual funds chain joined (founding funds 489650);
+  both corridor rounds 25 receipt rows with the funds echo at every
+  exchange instant (round-7 [485217 … 484770], round-6 the same with
+  484986 at the offset-35 one-unit divergence of record
+  (484986 vs 484985 — carried verbatim, never reconciled by hand)); the
+  finance close funds 484769 / income 0 / delivered 0 copied verbatim
+  into both corridor outputs with the finance day/tick figures as
+  script-tick instants of record; statuses copied verbatim
+  (`NATIVE_DEPOT_MUTATION_COMPLETE`, `NATIVE_CARGOFLOW2_COMPLETE` ×2
+  verified true). **Attribution asserted** (round audit
+  `/tmp/opencode/c12_p07_replay_audit.py`, transcript
+  `/tmp/opencode/c12_p07_replay_audit_output.txt`, 64/64 PASS 0 FAIL):
+  per-attempt prelaunch == sidecar seals (`e929d7b2…ec49` round-6 vs
+  `9c5f7272…e19257` round-7), result digests re-hashed on disk, world
+  save shas of record (the two corridor arms bind the same pinned
+  corridor world; the depot lineage's world stays distinct), seed 17
+  carried verbatim, plan digest `5c0998f2…bf2d` byte-equal across both
+  arms, plan-model digests distinct (v1 `98d055c4…f506ca`,
+  v2 `e1cafb23…c08b0`), route-version identities (round-6
+  pre-parameterization, round-7 `route_version 2`); the
+  attempt-identity guard's refusal of two shared-`attempt_id` directories
+  in one invocation IS the no-conflation property of record — round-6
+  and round-7 replay as two separate arms, no pooled comparison, no
+  comparison artifact, the fixed-demo baseline never sourced and
+  byte-untouched; failed plannings (the staged-superseded corridor
+  candidates 3–4) entered no report and keep their diagnostics in the
+  books. **Gates**: `tests/test_native_attempt_analytics.py` 39 passed
+  (five new inserts), `tests/test_performance_insights.py` 28 passed,
+  corridor trio 142 passed (wire 85 + VM 11 + native 46);
+  `ruff check` clean; `uvx ty check` = the 3 pre-existing analytics
+  diagnostics of record (lines 346/348/778, untouched regions, present
+  at HEAD, count unchanged); `git diff --check` clean; `CONTEXT.md` pin
+  `847d710a…984d` intact. Books: the three outputs + ticket
+  `12-p07-replay-closure.md` + this row + E126 + AI_HANDOFF tail +
+  REPRODUCE.md command block. NEXT FRONTIER: ticket 13 (PoC completion
+  declaration, T-022) — its own explicit operator approval, none granted
+  by this round; its "delivered receipts of both attempts" evidence item
+  needs the operator's adjudication before assembly (rounds 6–7 are both
+  COMPLETE-not-delivered).

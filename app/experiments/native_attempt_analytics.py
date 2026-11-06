@@ -1,13 +1,20 @@
 """Offline run-level analytics over retained native execution attempt records.
 
 This layer answers: what did each retained bounded native attempt (D2 clearing,
-D3 clearing/terraforming, D4 road+station corridors) plan and execute at
-run level, how do the attempts of one milestone lineage compare, and what do
-the retained records say about the effect of plan-schedule revisions between
-attempts. It consumes the retained ``PRELAUNCH.json``, ``result.json`` and
-``cleanup.json`` records plus consumption markers, never verifies native
-evidence again, never launches anything, never connects to AdminPort, never
-re-runs a consumed attempt identity and never issues requests.
+D3 clearing/terraforming, D4 road+station corridors, D5 depot mutation, D5
+corridor protocol-11 freight) plan and execute at run level, how do the
+attempts of one milestone lineage compare, and what do the retained records
+say about the effect of plan-schedule revisions between attempts. It consumes
+the retained ``PRELAUNCH.json``, ``result.json``, ``cleanup.json`` and
+``runtime-identity.json`` records plus consumption markers, never verifies
+native evidence again, never launches anything, never connects to AdminPort,
+never re-runs a consumed attempt identity and never issues requests.
+
+The reporting labels follow the funds taxonomy of record (ADR-0001): a
+retained receipt read is OBSERVED, arithmetic over such reads is DERIVED and
+labeled, contract-pinned budgets and ceilings stay CONTROLLED, and anything
+the retained bytes do not state stays UNKNOWN — unexplained movement is never
+reclassified, and revenue is never reported as profit.
 
 Discipline inherited from the project's existing analytics modules:
 
@@ -45,6 +52,7 @@ SCHEMA_VERSION = 1
 REQUIRED_DOCUMENT = "PRELAUNCH.json"
 RESULT_DOCUMENT = "result.json"
 CLEANUP_DOCUMENT = "cleanup.json"
+RUNTIME_IDENTITY_DOCUMENT = "runtime-identity.json"
 CONSUMED_MARKER = "LAUNCH-CONSUMED.json"
 CLAIM_FILE = "CLAIM.json"
 CLEANUP_FLAG_NAMES = ("reaped", "sockets_closed", "workspace_disposed", "credential_removed")
@@ -87,12 +95,22 @@ _AFTER_SAVE_NOTE = (
     "not by this analytics layer."
 )
 
+_LABEL_NOTE = (
+    "Reporting labels follow ADR-0001: retained receipt reads are OBSERVED, "
+    "arithmetic over such reads is DERIVED and always labeled, retained "
+    "budgets and ceilings are CONTROLLED, and anything unmeasured is UNKNOWN;"
+    " any day or tick figure is a script-tick instant of the pinned observation"
+    " script, never steady-state throughput, and revenue is never reported as "
+    "profit."
+)
+
 _BASE_LIMITATIONS = (
     COMPARISON_POLICY,
     STATUS_NOTE,
     UNKNOWN_NOTE,
     _FAILURE_NOTE,
     _AFTER_SAVE_NOTE,
+    _LABEL_NOTE,
     "Attempt directories are read-only inputs; this layer writes only its own output directory.",
 )
 
@@ -110,6 +128,7 @@ class AttemptPlanned(Contract):
     response_bytes_budget: int | None = None
     per_op_max_cost: int | None = None
     schedule_version: int | None = None
+    route_version: int | None = None
     planned_route_pairs: int | None = None
 
 
@@ -170,6 +189,8 @@ class AttemptOp(Contract):
     tiles: int | None = None
     verification: str | None = None
     error: str | None = None
+    funds_before: int | None = None
+    funds_after: int | None = None
 
 
 class AttemptAnalytics(Contract):
@@ -192,6 +213,8 @@ class AttemptAnalytics(Contract):
     record_status: AttemptRecordStatus
     cleanup: CleanupObservation
     ops: tuple[AttemptOp, ...] = ()
+    seed: int | None = None
+    finance: dict[str, Any] | None = None
     derived: dict[str, Any] = {}
 
 
@@ -334,6 +357,7 @@ def _planned_from_plan_policy(prelaunch: dict) -> AttemptPlanned:
         response_bytes_budget=_int_or_none(budgets.get("response_bytes")),
         per_op_max_cost=_int_or_none(plan_policy.get("max_cost")),
         schedule_version=_int_or_none(plan_policy.get("schedule_version")),
+        route_version=_int_or_none(plan_policy.get("route_version")),
         planned_route_pairs=_int_or_none(route.get("expected_pairs")),
     )
 
@@ -358,6 +382,57 @@ def _executed_from_result(result: dict) -> AttemptExecuted:
         funds_at_inspect=_int_or_none(attribution.get("funds_at_inspect")),
         funds_at_exec=_int_or_none(attribution.get("funds_at_exec")),
     )
+
+
+def _phase_receipt_rows(phase: dict) -> tuple[AttemptOp, ...]:
+    """The retained per-exchange phase receipts (depot-mutation + cargoflow2).
+
+    Every retained generation since D5-F12 carries ``phase.receipts`` rows;
+    the D2/D3/D4 ``phase.completed`` form stays on its own reader above. The
+    funds chain (when the generation retains one) joins by exchange id; the
+    receipt's own funds echo fills ``funds_after``.
+    """
+    receipts = phase.get("receipts")
+    if not isinstance(receipts, list) or not receipts:
+        return ()
+    chain: dict[str, tuple[int, int]] = {}
+    for row in phase.get("funds_chain") or []:
+        if not isinstance(row, dict):
+            continue
+        exchange = _str_or_none(row.get("exchange"))
+        before = _int_or_none(row.get("funds_before"))
+        after = _int_or_none(row.get("funds_after"))
+        if exchange is not None and before is not None and after is not None:
+            chain[exchange] = (before, after)
+    rows: list[AttemptOp] = []
+    for receipt in receipts:
+        if not isinstance(receipt, dict):
+            continue
+        request_id = _str_or_none(receipt.get("request_id"))
+        chain_pair = chain.get(request_id or "")
+        before, after = chain_pair if chain_pair is not None else (None, None)
+        rows.append(
+            AttemptOp(
+                label=request_id,
+                evidence_state="RECEIPT",
+                kind=_str_or_none(receipt.get("kind")),
+                operation=_str_or_none(receipt.get("op")),
+                execution_status=_str_or_none(receipt.get("status")),
+                execution_request_id=request_id,
+                cost=_int_or_none(receipt.get("cost")),
+                native_quote=_int_or_none(receipt.get("native_quote")),
+                verification=_str_or_none(receipt.get("verification")),
+                funds_before=before,
+                funds_after=(
+                    after
+                    if chain_pair is not None
+                    else _int_or_none(receipt.get("funds"))
+                ),
+            )
+        )
+    if not rows:
+        return ()
+    return tuple(rows)
 
 
 def _ops_from_result(result: dict) -> tuple[AttemptOp, ...]:
@@ -387,6 +462,7 @@ def _ops_from_result(result: dict) -> tuple[AttemptOp, ...]:
     halt = halt if isinstance(halt, dict) else {}
     failed = phase.get("failed")
     failed = failed if isinstance(failed, dict) else {}
+    rows.extend(_phase_receipt_rows(phase))
     label = failed.get("label") or halt.get("label")
     error = failed.get("error") or halt.get("error")
     if label is not None or error is not None:
@@ -525,6 +601,19 @@ def _load_attempt(source: Path) -> AttemptAnalytics:
         success_ops = len(receipt_rows) or executed.per_record_built_ops
     plan_policy_present = bool(plan_policy)
     cleanup = _cleanup_observation(root)
+    seed: int | None = None
+    runtime_identity_path = root / RUNTIME_IDENTITY_DOCUMENT
+    if runtime_identity_path.is_file():
+        runtime_identity = _read_json(runtime_identity_path)
+        if not isinstance(runtime_identity, dict):
+            raise ValueError(
+                f"{RUNTIME_IDENTITY_DOCUMENT}: malformed retained document: object required"
+            )
+        welcome = runtime_identity.get("welcome")
+        welcome = welcome if isinstance(welcome, dict) else {}
+        seed = _int_or_none(welcome.get("seed"))
+    finance_document = (phase_document or {}).get("finance")
+    finance = finance_document if isinstance(finance_document, dict) else None
     planned_ops = planned.ops
     totals: dict[str, Any] = {
         "executed_ops_with_receipt": receipt_backed_ops,
@@ -569,6 +658,8 @@ def _load_attempt(source: Path) -> AttemptAnalytics:
         record_status=record_status,
         cleanup=cleanup,
         ops=ops,
+        seed=seed,
+        finance=finance,
         derived=dict(sorted(totals.items())),
     )
 
@@ -811,6 +902,8 @@ def analyze_attempts(sources: list[Path], output: Path) -> dict:
                 "tiles",
                 "verification",
                 "error",
+                "funds_before",
+                "funds_after",
             )
         )
         for attempt in document.attempts:
@@ -829,6 +922,8 @@ def analyze_attempts(sources: list[Path], output: Path) -> dict:
                         row.tiles,
                         row.verification,
                         row.error,
+                        row.funds_before,
+                        row.funds_after,
                     )
                 )
     (output / "execution-report.md").write_text(render_markdown(document) + "\n")
@@ -893,7 +988,9 @@ def render_markdown(document: AttemptAnalyticsDocument) -> str:
             ("Workspace", _fmt(attempt.workspace)),
             ("Plan digest", "`" + (attempt.plan_digest or UNKNOWN) + "`"),
             ("Source world sha256", "`" + (attempt.source_world_sha256 or UNKNOWN) + "`"),
+            ("Seed (runtime record, verbatim)", _fmt(attempt.seed)),
             ("Schedule version", _fmt(planned.schedule_version)),
+            ("Route version (record)", _fmt(planned.route_version)),
             ("Planned ops", _fmt(planned.ops)),
             ("Planned ops by kind", json.dumps(planned.by_kind) if planned.by_kind else UNKNOWN),
             ("Planned run tiles", _fmt(planned.run_tiles)),
@@ -952,8 +1049,27 @@ def render_markdown(document: AttemptAnalyticsDocument) -> str:
             ("Consumption marker (LAUNCH-CONSUMED.json)", _fmt(attempt.consumption_marker_present)),
             ("CLAIM.json present", _fmt(attempt.claim_file_present)),
         )
+        finance_rows: tuple[tuple[str, str], ...] = ()
+        if attempt.finance is not None:
+            finance_rows = (
+                ("Finance funds (record)", _fmt(attempt.finance.get("funds"))),
+                ("Finance income (record, verbatim)", _fmt(attempt.finance.get("income"))),
+                ("Finance delivered (record, verbatim)", _fmt(attempt.finance.get("delivered"))),
+                ("Finance day (script day, record)", _fmt(attempt.finance.get("day"))),
+                ("Finance tick (script tick, record)", _fmt(attempt.finance.get("tick"))),
+                (
+                    "Finance last accepted (record)",
+                    _fmt(attempt.finance.get("last_accepted")),
+                ),
+            )
         unknown_fields = 0
-        for field, value in (*identity_rows, *executed_rows, *derived_rows, *outcome_rows):
+        for field, value in (
+            *identity_rows,
+            *executed_rows,
+            *derived_rows,
+            *outcome_rows,
+            *finance_rows,
+        ):
             if value == UNKNOWN:
                 unknown_fields += 1
             lines.append(f"| {field} | {escape(str(value))} |")
@@ -965,15 +1081,19 @@ def render_markdown(document: AttemptAnalyticsDocument) -> str:
             )
             lines.append("")
         if attempt.ops:
-            lines.append("| Op row | State | Op id | Operation | Cost | Quote | Verification |")
-            lines.append("|---|---|---|---|---|---|---|")
+            lines.append(
+                "| Op row | State | Op id | Operation | Cost | Quote "
+                "| Verification | Funds before | Funds after |"
+            )
+            lines.append("|---|---|---|---|---|---|---|---|---|")
             for row in attempt.ops:
                 lines.append(
                     f"| {escape(_fmt(row.label))} | {row.evidence_state} "
                     f"| {escape(_fmt(row.execution_request_id))} "
                     f"| {escape(_fmt(row.operation))} "
                     f"| {_fmt(row.cost)} | {_fmt(row.native_quote)} "
-                    f"| {escape(_fmt(row.verification))} |"
+                    f"| {escape(_fmt(row.verification))} "
+                    f"| {_fmt(row.funds_before)} | {_fmt(row.funds_after)} |"
                 )
             lines.append("")
     lines.append("## Milestone lineage comparisons")

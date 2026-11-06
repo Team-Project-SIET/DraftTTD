@@ -1133,3 +1133,38 @@ This attempt is terminal COMPLETE and consumed: never re-run `run` on
 this candidate. The authoritative post-mutation world of record for the
 downstream freight lineage (R3 reload + R4 freight v3) is
 `artifacts/experiments/d5-corridor-depot-mutation-native-candidate-3/after.sav`.
+
+## 2026-11-06 — ticket-12 P07 replay closure (commands of record)
+
+The corridor lineage's terminal receipts replay into the three fresh sibling
+output directories of record (offline, read-only over the retained attempt
+trees; regenerate only into a NEW output directory — never into a retained
+one):
+
+```bash
+.venv/bin/python -m app.experiments.cli analyze-native-attempts \
+  artifacts/experiments/d5-corridor-depot-mutation-native-candidate-3 \
+  --output artifacts/experiments/p07-replay-d5-corridor-2026-11-06/round3-depot-chain
+
+.venv/bin/python -m app.experiments.cli analyze-native-attempts \
+  artifacts/experiments/d5-corridor-cargoflow2-native-candidate-6 \
+  --output artifacts/experiments/p07-replay-d5-corridor-2026-11-06/route-v1-round6
+
+.venv/bin/python -m app.experiments.cli analyze-native-attempts \
+  artifacts/experiments/d5-corridor-cargoflow2-native-candidate-7 \
+  --output artifacts/experiments/p07-replay-d5-corridor-2026-11-06/route-v2-round7
+```
+
+The arm refuses two directories with the same attempt id in one invocation —
+round-6 and round-7 (both `D5-CARGOFLOW-2`) replay as separate siblings of
+record, never pooled. Labels travel per ADR-0001; the funds echoes and the
+verbatim finance blocks ride the receipt rows; the offset-35 one-unit funds
+divergence of record (round-6 484986 vs round-7 484985) stands carried
+verbatim.
+
+Focused replay gate of record:
+
+```bash
+.venv/bin/pytest tests/test_native_attempt_analytics.py \
+  tests/test_performance_insights.py
+```

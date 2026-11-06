@@ -298,6 +298,225 @@ def test_corridor_run_metrics(tmp_path: Path):
     assert document.counts["consumed_attempts"] == 1
 
 
+def d5_cargoflow2_prelaunch(exchanges: int = 4, max_cost: int = 5000) -> dict:
+    return {
+        "attempt": "D5-CARGOFLOW-2",
+        "budgets": {"launches": 1, "planned_exchanges": exchanges, "requests": 32},
+        "kind": "cargoflow2",
+        "milestone": "D5-CARGOFLOW",
+        "plan_policy": {
+            "ladder_grid": "d5-cargoflow2-ladder-grid-v1",
+            "max_cost": max_cost,
+            "plan_digest": PLAN_DIGEST,
+            "schedule": [{} for _ in range(exchanges)],
+            "schedule_version": 1,
+        },
+        "workspace": "/isolated/ws",
+        "world": {
+            "mode": "PREREQUISITE_ATTEMPT_SOURCE_SAVE_LOAD",
+            "save_sha256": WORLD,
+        },
+    }
+
+
+def corridor_exchange_receipt(label: str, *, op: str, funds: int) -> dict:
+    return {
+        "anchor": 712228,
+        "day": 712228,
+        "funds": funds,
+        "income": 0,
+        "offset": 0,
+        "op": op,
+        "plan_digest": PLAN_DIGEST,
+        "request_id": label,
+        "schema": "cargoflow-exchange-receipt-v1",
+        "seal": "d" * 64,
+        "status": "READY",
+        "tick": 12,
+    }
+
+
+def d5_cargoflow2_result(labels: list[str], funds: list[int]) -> dict:
+    return {
+        "cleanup_complete": True,
+        "command_accepted": True,
+        "connections": 1,
+        "exchanges": list(labels),
+        "halt": None,
+        "last_status": "PHASE_STOPPED",
+        "native_launches": 1,
+        "phase": {
+            "anchor": 712228,
+            "finance": {"delivered": 0, "funds": 484920, "income": 0, "last_accepted": 0},
+            "funds_model": {"income_deltas": [], "running_cost": 0, "running_costs": []},
+            "pending": [],
+            "receipts": [
+                corridor_exchange_receipt(label, op=op, funds=funds)
+                for label, op, funds in zip(labels, ("site", "flow", "flow", "finance"), funds)
+            ],
+            "schema": "cargoflow-phase-outcome-v1",
+        },
+        "preflight": "PASS",
+        "requests": len(labels),
+        "returncode": 0,
+        "state_changed": True,
+        "status": "NATIVE_CARGOFLOW2_COMPLETE",
+        "verified": True,
+    }
+
+
+def d5_depot_prelaunch(receipts: int = 2) -> dict:
+    return {
+        "attempt": "D5-F12-DEPOT-3",
+        "budgets": {"expected_funds": 490257, "launches": 1, "max_cost": 3000},
+        "kind": "depot-mutation",
+        "milestone": "D5-F12-DEPOT",
+        "plan_policy": {
+            "max_cost": 3000,
+            "plan_digest": PLAN_DIGEST,
+            "schedule": [{} for _ in range(receipts)],
+            "schedule_version": 6,
+        },
+        "workspace": "/isolated/ws",
+        "world": {
+            "mode": "PREREQUISITE_ATTEMPT_SOURCE_SAVE_LOAD",
+            "save_sha256": WORLD,
+        },
+    }
+
+
+def d5_depot_result() -> dict:
+    return {
+        "command_accepted": True,
+        "connections": 1,
+        "last_status": "DEPOT_MUTATION_COMPLETE",
+        "native_launches": 1,
+        "phase": {
+            "funds": 489650,
+            "funds_chain": [
+                {"cost": 0, "exchange": "before-00", "funds_after": 490257, "funds_before": 490257},
+                {"cost": 60, "exchange": "demo-00", "funds_after": 490197, "funds_before": 490257},
+            ],
+            "pending": [],
+            "receipts": [
+                {
+                    "cost": 0,
+                    "funds": 490257,
+                    "op": "observe",
+                    "request_id": "before-00",
+                    "status": "READY",
+                    "verification": "READY_LAST_SCREEN_VALID",
+                },
+                {
+                    "cost": 60,
+                    "funds": 490197,
+                    "op": "demolish",
+                    "request_id": "demo-00",
+                    "status": "NATIVE_STATE_CHANGED",
+                    "verification": "NATIVE_STATE_CHANGED",
+                },
+            ],
+            "schema": "company-depot-mutation-outcome-v1",
+            "state_changed": True,
+            "verification": "DEPOT_MUTATION_COMPLETE",
+        },
+        "preflight": "PASS",
+        "requests": 6,
+        "returncode": 0,
+        "state_changed": True,
+        "status": "NATIVE_DEPOT_MUTATION_COMPLETE",
+        "verified": True,
+    }
+
+
+def test_d5_cargoflow2_generation_receipts_replay(tmp_path: Path):
+    """Corridor receipts: exchange rows + verbatim funds echoes and finance."""
+    labels = ["site-00", "flow-00", "flow-01", "finance-00"]
+    result = d5_cargoflow2_result(labels, [490257, 490257, 490256, 484920])
+    root = write_attempt(tmp_path / "a", d5_cargoflow2_prelaunch(), result)
+    (root / "runtime-identity.json").write_text(
+        json.dumps({"encrypted": True, "pid": 42, "welcome": {"revision": "15.3", "seed": 17}})
+    )
+    attempt = _load(root)
+    assert [row.label for row in attempt.ops] == labels
+    assert all(row.evidence_state == "RECEIPT" for row in attempt.ops)
+    assert all(row.kind is None for row in attempt.ops)
+    assert [row.operation for row in attempt.ops] == ["site", "flow", "flow", "finance"]
+    assert [row.funds_after for row in attempt.ops] == [490257, 490257, 490256, 484920]
+    assert all(row.funds_before is None for row in attempt.ops)
+    assert attempt.finance == {"delivered": 0, "funds": 484920, "income": 0, "last_accepted": 0}
+    assert attempt.seed == 17
+    assert attempt.record_status.status == "NATIVE_CARGOFLOW2_COMPLETE"
+    assert attempt.record_status.verified is True
+    assert attempt.derived["receipt_backed_ops"] == 4
+    assert attempt.derived["evidence_prefix_fraction"] == 1.0
+    document = build_analytics_document((attempt,))
+    assert document.counts["verified_outcomes"] == 1
+    assert document.counts["attempt_total"] == 1
+    report = render_markdown(document)
+    assert "Finance funds (record)" in report
+    assert "Funds before | Funds after" in report
+    assert "| flow-01 | RECEIPT" in report
+    note = next(item for item in document.limitations if "ADR-0001" in item)
+    assert "OBSERVED" in note and "DERIVED" in note
+    csv_rows = Path(analyze_attempts([root], tmp_path / "out")["ops_csv"]).read_text().splitlines()
+    assert csv_rows[0].endswith("funds_before,funds_after")
+    assert csv_rows[1].endswith(",,490257")
+
+
+def test_d5_corridor_funds_echo_absent_stays_unknown(tmp_path: Path):
+    """A receipt without a funds echo keeps the funds UNKNOWN, never zero."""
+    labels = ["site-00", "flow-00"]
+    result = d5_cargoflow2_result(labels, [490257, 490257])
+    del result["phase"]["receipts"][1]["funds"]
+    root = write_attempt(tmp_path / "a", d5_cargoflow2_prelaunch(), result)
+    attempt = _load(root)
+    assert attempt.ops[0].funds_after == 490257
+    assert attempt.ops[1].funds_after is None
+
+
+def test_d5_corridor_receipt_without_status_stays_unknown(tmp_path: Path):
+    """An exchange receipt lacking its status carries UNKNOWN, never a guess."""
+    result = d5_cargoflow2_result(["site-00"], [490257])
+    result["phase"]["receipts"][0]["status"] = None
+    root = write_attempt(tmp_path / "a", d5_cargoflow2_prelaunch(), result)
+    attempt = _load(root)
+    assert attempt.ops[0].execution_status is None
+    assert attempt.ops[0].funds_after == 490257
+
+
+def test_d5_depot_generation_receipts_replay(tmp_path: Path):
+    """Depot-mutation receipts: per-op costs join the retained funds chain."""
+    result = d5_depot_result()
+    root = write_attempt(tmp_path / "a", d5_depot_prelaunch(), result)
+    attempt = _load(root)
+    assert [row.label for row in attempt.ops] == ["before-00", "demo-00"]
+    assert [row.evidence_state for row in attempt.ops] == ["RECEIPT", "RECEIPT"]
+    assert [row.operation for row in attempt.ops] == ["observe", "demolish"]
+    assert [row.cost for row in attempt.ops] == [0, 60]
+    assert attempt.ops[0].funds_before == 490257 and attempt.ops[0].funds_after == 490257
+    assert attempt.ops[1].funds_before == 490257 and attempt.ops[1].funds_after == 490197
+    assert attempt.record_status.status == "NATIVE_DEPOT_MUTATION_COMPLETE"
+    assert attempt.derived["op_cost_total"] == 60
+    assert attempt.derived["evidence_prefix_fraction"] == 1.0
+    document = build_analytics_document((attempt,))
+    assert document.counts["verified_outcomes"] == 1
+    report = render_markdown(document)
+    assert "| demo-00 | RECEIPT" in report
+
+
+def test_labels_of_record_follow_adr_0001(tmp_path: Path):
+    """The limitation note carries the OBSERVED/DERIVED/CONTROLLED/UNKNOWN rule."""
+    result = d5_cargoflow2_result(["site-00"], [490257])
+    root = write_attempt(tmp_path / "a", d5_cargoflow2_prelaunch(), result)
+    document = build_analytics_document((_load(root),))
+    note = next(item for item in document.limitations if "ADR-0001" in item)
+    assert "OBSERVED" in note and "DERIVED" in note
+    assert "CONTROLLED" in note and "UNKNOWN" in note
+    assert "revenue is never reported as profit" in note
+    assert "script-tick" in note
+
+
 def test_unverified_attempt_never_counts_as_success(tmp_path: Path):
     result = corridor_result(six_receipts()[:1], halt_label="op-01", halt_error="admission refused")
     root = write_attempt(tmp_path / "a", corridor_prelaunch(), result)
