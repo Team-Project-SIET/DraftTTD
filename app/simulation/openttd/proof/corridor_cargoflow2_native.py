@@ -2225,22 +2225,28 @@ def verify_cargoflow2_attempt(directory: Path) -> dict:
             raise ValueError(f"a duplicate delivery request_id: {query.request_id}")
         seen_ids.add(query.request_id)
     response_map = {}
+    queries_by_id = {query.request_id: query for query in file_queries}
     for path in paths:
         response_path = path.with_name(path.name.replace("-request.json", "-response.json"))
         if response_path.is_file():
             response_map[path.read_bytes()] = response_path.read_bytes()
     for path in sorted(directory.glob("*-response.json")):
         exchange_id = path.name[: -len("-response.json")]
+        # E133: the response composer never carries the arm key, so the
+        # replay inherits the correlated retained request's arm exactly
+        # as the wire seam parse_for does — a raw re-parse would default
+        # to the v1 arm and refuse the delivered-ladder responses.
+        query = queries_by_id.get(exchange_id)
+        if query is None:
+            raise ValueError("the retained response file lacks its request")
         try:
-            readback = Cargoflow2Readback.model_validate_json(path.read_bytes())
+            readback = Cargoflow2Readback.parse_for(query, path.read_bytes())
         except ValueError as error:
             raise ValueError(
                 f"the retained response file is not a parseable readback: {path.name}"
             ) from error
         if readback.request_id != exchange_id:
             raise ValueError("the retained response file identity does not match its payload")
-        if not (directory / (exchange_id + "-request.json")).is_file():
-            raise ValueError("the retained response file lacks its request")
     for raw, response in response_map.items():
         if outbound.count(encode_cargoflow2_request(raw)) != 1 or replies.count(response) != 1:
             raise ValueError("the retained exchange lacks unique secure-session frame evidence")

@@ -481,6 +481,56 @@ def test_cargoflow2_exchange_persists_request_and_response_pair(tmp_path):
     assert parsed.status == readback.status
 
 
+def test_delivered_replay_inherits_the_retained_request_arm():
+    """The E133 replay defect of record, pinned at the readback resolution:
+    retained responses never carry the arm key (the response composer
+    never echoes it), so the replay surface must inherit the correlated
+    retained request's arm exactly as the wire seam parse_for does; a raw
+    model_validate_json re-parse defaults to the v1 arm and refuses the
+    delivered-ladder rows (finance-00 at 60 over the v1 tail 55)."""
+    plan = work.cargoflow2_pipeline_plan(2, 2)
+    schedule = work.cargoflow2_schedule(2)
+    request = work.cargoflow2_request_table(plan, PRELAUNCH, vehicle=VEHICLE)[
+        [row["exchange"] for row in schedule].index("finance-00")
+    ]
+    assert request.schedule_version == 2
+    wire = json.dumps(
+        dict(
+            protocol=11,
+            op="finance",
+            request_id="finance-00",
+            plan=request.plan,
+            company=request.company,
+            max_cost=request.max_cost,
+            pickup=request.pickup,
+            delivery=request.delivery,
+            depot=request.depot,
+            engine=request.engine,
+            vehicle=request.vehicle,
+            expected_cost=request.expected_cost,
+            order_index=request.order_index,
+            order_flags=request.order_flags,
+            watch_days=request.watch_days,
+            offset=request.offset,
+            status="FINANCE_VERIFIED",
+            funds=1,
+            cost=0,
+            income=0,
+            anchor=int(cf.CARGOFLOW2_LAUNCH_DAY) + 4,
+            tick=4711,
+            day=int(cf.CARGOFLOW2_LAUNCH_DAY) + 64,
+            delivered=0,
+            last_accepted=0,
+        ),
+        separators=(",", ":"),
+    ).encode()
+    parsed = cf.Cargoflow2Readback.parse_for(request, wire)
+    assert parsed.status == "FINANCE_VERIFIED"
+    assert parsed.schedule_version == 2
+    with pytest.raises(ValueError, match="planned ladder step 55"):
+        cf.Cargoflow2Readback.model_validate_json(wire)
+
+
 def test_cargoflow2_exchange_refuses_malformed_truncated_and_stale_replies(tmp_path):
     request = cargoflow2_request(0)
 

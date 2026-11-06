@@ -3145,3 +3145,46 @@ readiness, outside this round's PoC definition.
   E129-class verification-surface family, the failed verify
   transcripts in `/tmp/opencode/` recorded, ticket-07 round to fix
   the narrowest layer and re-reconcile.
+- 2026-11-06 — **tail ticket 07 done (the delivered-class
+  reconciliation; E134; the round that fixed the E133 find at the
+  narrowest layer and re-reconciled; driver
+  `/tmp/opencode/t07_c9_reconcile.py` + transcript
+  `/tmp/opencode/t07_c9_reconcile_output.txt`; one replay invocation,
+  read-only; no native action, no candidate writes; one commit, no
+  push)**: (1) the verification-surface fix of record —
+  `verify_cargoflow2_attempt`'s response-file replay loop now inherits
+  the arm from the correlated retained request exactly as the wire
+  seam `parse_for` does (the composer never carries the arm key;
+  retained requests carry `schedule_version` 2, retained responses
+  never do) — the narrowest ~5-line layer, no retained byte touched,
+  v1-candidate replay math untouched, the new regression chip
+  `test_delivered_replay_inherits_the_retained_request_arm` pins the
+  defect class of record at the readback resolution (`parse_for`
+  accepts the delivered finance pair at tail 60; a raw re-parse
+  refuses at the v1 tail 55); native suite 49/49, planning suite
+  18/18, `ruff` clean, `uvx ty` at the pre-existing LSP diagnostic
+  ceiling. (2) the fixed surface's re-reconcile: production `verify`
+  on candidate-9 → `CARGOFLOW2_COMPLETION_VERIFIED` exit 0 with the
+  phase verdict verbatim `CARGOFLOW2_LOADED_NEVER_DELIVERED` — no
+  relabel, no stretch. (3) the offline truth replay — **`T09-CLASS
+  RECONCILIATION PASS` 14 PASS / 0 FAIL**: load → departure → arrival
+  → unload-attraction → bay-acceptance reconciled rows-verbatim
+  (loads 5/10/15 at flow-08 day 712271; departure cargo 20 flow-09 day
+  712274 tick 3395; bay arrivals cargo 0 flow-04 day 712250 tick 1674
+  and cargo 20 flow-12 day 712291 tick 4646; `unloadings` empty — the
+  chain stops after the bay arrival; bay acceptance never moved:
+  finance delivered 0 income 0 last_accepted 0); the funds fence via
+  the engine of record zero-residual at every observed instant
+  (running cost 421 exact under the E113/E114 lattice, purchase debit
+  4429 whole-unit, walk 489650 → 484764 over 26 receipts, every income
+  delta 0); ADR-0001 labels travel (OBSERVED retained rows, DERIVED
+  attribute sums, UNKNOWN the E114 rail); every quoted day figure
+  rides its script tick. Audit-side honesty: the first passes aborted
+  on the driver's own drafting defects and a schema-key mis-read —
+  corrected in-session, retained evidence never touched, the failed
+  transcripts overwritten by the final corrected run. The
+  delivered-miss branch of record: the delivered class did NOT land —
+  E36 stays open for ticket 08; the E114 comparison twin 484775 vs
+  native close 484764 rides read-only and stays UNKNOWN. Next
+  frontier: tail ticket 08 (the E36 closure addendum) — the completion
+  declaration records the open state per its own rule.
