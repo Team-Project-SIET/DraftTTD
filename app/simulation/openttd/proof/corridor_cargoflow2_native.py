@@ -86,6 +86,7 @@ from app.simulation.openttd.corridor_cargoflow2 import (
     CARGOFLOW2_PURCHASE_QUOTE,
     CARGOFLOW2_READ_ONLY_SCHEMA,
     CARGOFLOW2_REQUEST_BUDGET,
+    CARGOFLOW2_SCHEDULE_VERSION,
     CARGOFLOW2_SPAN_DAYS,
     CARGOFLOW2_TAIL_OFFSET,
     CARGOFLOW2_WAIT_DAY_CAP,
@@ -99,6 +100,8 @@ from app.simulation.openttd.corridor_cargoflow2 import (
     Cargoflow2Request,
     cargoflow2_phase_outcome,
     cargoflow2_plan,
+    cargoflow2_route_binding,
+    cargoflow2_schedule_rows,
     verify_request_against_cargoflow2_plan,
 )
 from app.simulation.openttd.gamescript_transport import (
@@ -217,29 +220,55 @@ class Cargoflow2StagingError(freight_v2_native.FreightV2StagingError):
 # --- Migration-safety: the pipeline is cargoflow2-plan typed ---------------
 
 
-def _require_cargoflow2_plan(plan) -> Cargoflow2Plan:
-    """Refuse anything that is not the pinned ``Cargoflow2Plan``.
+def _require_cargoflow2_plan(plan, pinned_digest: str | None = None) -> Cargoflow2Plan:
+    """Refuse anything that is not an admitted corridor route plan.
 
     The other pipeline plans share several field names with a
     ``Cargoflow2Plan``; every attempt entry point guards here so a freight,
     survey, census or dispatch-probe plan can never be staged, sealed,
-    executed or replayed as a delivery attempt, and so the single attempt
-    plan can never drift from its pinned derivation.
+    executed or replayed as a delivery attempt, and so a single attempt
+    plan can never drift from the admitted route bindings of record: the
+    plan's schema version must name a registered binding id, and the plan
+    digest must equal that binding's own guarded factory derivation (a
+    drifted field with an admitted schema label refuses here too). The
+    default pin is the plan's own binding; an explicit ``pinned_digest``
+    pins the plan to exactly one binding's derivation — the per-policy
+    pairing the verify gates ride.
     """
     if not isinstance(plan, Cargoflow2Plan):
         raise Cargoflow2StagingError(
             "the cargo-flow delivery attempt accepts a Cargoflow2Plan only"
         )
-    if plan.schema_version != 1:
-        raise Cargoflow2StagingError("the attempt plan carries an unknown schema version")
-    if plan.digest != cargoflow2_plan().digest:
+    try:
+        plan_binding = cargoflow2_route_binding(plan.schema_version)
+    except (TypeError, ValueError) as error:
+        raise Cargoflow2StagingError(
+            "the attempt plan carries an unknown schema version"
+        ) from error
+    expected_digest = (
+        cargoflow2_plan(binding=plan_binding).digest
+        if pinned_digest is None
+        else pinned_digest
+    )
+    if plan.digest != expected_digest:
         raise Cargoflow2StagingError("the attempt plan drifted from the pinned observations")
     return plan
 
 
-def cargoflow2_pipeline_plan() -> Cargoflow2Plan:
-    """The single pinned plan of record re-derived from the module pins."""
-    return _require_cargoflow2_plan(cargoflow2_plan())
+def cargoflow2_pipeline_plan(route_version: int | None = None) -> Cargoflow2Plan:
+    """The pinned plan of record re-derived from the module's route pins.
+
+    The default re-derives the route of record (v1) byte-equal to the
+    recorded composition; a named registered binding id re-derives that
+    binding's admitted plan under the same guard, and a foreign or
+    non-registry id refuses at the map lookup.
+    """
+    if route_version is None:
+        return _require_cargoflow2_plan(cargoflow2_plan())
+    if not isinstance(route_version, int) or isinstance(route_version, bool):
+        raise ValueError(f"unknown route binding id: {route_version!r}")
+    plan_binding = cargoflow2_route_binding(route_version)
+    return _require_cargoflow2_plan(cargoflow2_plan(binding=plan_binding))
 
 
 # --- The pinned attempt schedule ---------------------------------------------
@@ -319,18 +348,45 @@ def cargoflow2_schedule() -> list[dict]:
     return schedule
 
 
+def _cargoflow2_policy_route_version(policy: dict) -> int:
+    """The route binding id one plan policy names, resolved fail-closed.
+
+    The plan policy of record carries its own route binding id next to the
+    schedule version. A retained pre-parameterization policy (every
+    consumed cargo-flow candidate of record) carries none and resolves the
+    default route binding of record through the same registry; a foreign
+    or non-registry naming refuses here before any derivation trusts the
+    record.
+    """
+    if "route_version" in policy:
+        version = policy["route_version"]
+        if isinstance(version, bool) or not isinstance(version, int):
+            raise ValueError("the plan policy's route binding id is not a registry id")
+    else:
+        version = CARGOFLOW2_SCHEDULE_VERSION
+    try:
+        cargoflow2_route_binding(version)
+    except ValueError as error:
+        raise ValueError(
+            f"the plan policy names an unregistered route binding id: {version}"
+        ) from error
+    return version
+
+
 def staged_cargoflow2_schedule(policy: dict) -> list[dict]:
     """The staged schedule one plan-policy record binds its digest to.
 
     The attempt has one schedule version and one derivation: a staged
-    record naming a foreign version pairing is refused here before any
-    schedule can be trusted.
+    record naming a foreign version pairing (an unknown schedule version
+    or an unregistered route binding) is refused here before any schedule
+    can be trusted.
     """
     if policy.get("schedule_version", 0) != 1:
         raise ValueError(
             f"plan record names an unknown cargo-flow delivery schedule "
             f"version: {policy.get('schedule_version', 0)}"
         )
+    _cargoflow2_policy_route_version(policy)
     return cargoflow2_schedule()
 
 
@@ -552,10 +608,29 @@ def cargoflow2_funds_model_gate() -> dict:
     )
 
 
-def cargoflow2_plan_policy() -> dict:
-    """The authorized plan policy for the staged attempt candidate."""
-    plan = cargoflow2_pipeline_plan()
+def cargoflow2_plan_policy(route_version: int | None = None) -> dict:
+    """The authorized plan policy for the staged attempt candidate.
+
+    The default resolves the route binding of record and is byte-equal to
+    the policy of record except for the explicit ``route_version`` field
+    the parameterization adds; a named registered binding	id derives its
+    own versioned policy — the binding's id rides the policy as
+    ``route_version`` next to the schedule version — and a binding whose
+    ladder rows drift from the compiled ladder of record refuses before
+    staging. A foreign or non-registry id refuses at the map lookup.
+    """
+    route_version = (
+        CARGOFLOW2_SCHEDULE_VERSION if route_version is None else route_version
+    )
+    if not isinstance(route_version, int) or isinstance(route_version, bool):
+        raise ValueError(f"unknown route binding id: {route_version!r}")
+    binding = cargoflow2_route_binding(route_version)
+    plan = cargoflow2_pipeline_plan(binding.route_version)
     schedule = cargoflow2_schedule()
+    if schedule != cargoflow2_schedule_rows(binding):
+        raise Cargoflow2StagingError(
+            "the binding's ladder rows drifted from the compiled ladder of record"
+        )
     plan_digest = plan_digest_of(schedule)
     if (
         not schedule
@@ -568,6 +643,7 @@ def cargoflow2_plan_policy() -> dict:
         raise Cargoflow2StagingError("the attempt schedule must begin with the site pin")
     expected_world = _cargoflow2_expected_world(plan)
     return dict(
+        route_version=int(binding.route_version),
         company=plan.company,
         target_tile=int(CARGOFLOW2_PICKUP_TILE),
         max_cost=int(CARGOFLOW2_ENGINE_MAX_COST),
@@ -793,17 +869,38 @@ def staged_cargoflow2_composition() -> tuple[dict[str, bytes], str, int]:
 
 
 def prepare_cargoflow2_candidate(
-    directory: Path, *, prerequisite: Path | None = None
+    directory: Path,
+    *,
+    prerequisite: Path | None = None,
+    route_version: int | None = None,
 ) -> PreparedProof:
-    """Stage the fresh save-load composition; no process or connection."""
-    plan = _require_cargoflow2_plan(cargoflow2_plan())
+    """Stage the fresh save-load composition; no process or connection.
+
+    The default stages the route binding of record byte-equal to the
+    recorded candidate composition; a named registered binding id stages
+    that binding's admitted plan-policy composition (its id rides the
+    policy as ``route_version``), and a foreign or non-registry id refuses
+    as a staging error before any directory is created.
+    """
+    route_version = (
+        CARGOFLOW2_SCHEDULE_VERSION if route_version is None else route_version
+    )
+    if not isinstance(route_version, int) or isinstance(route_version, bool):
+        raise Cargoflow2StagingError(f"unknown route binding id: {route_version!r}")
+    try:
+        cargoflow2_route_binding(route_version)
+    except ValueError as error:
+        raise Cargoflow2StagingError(
+            f"the staged attempt plan derivation refused: {error}"
+        ) from error
     prerequisite = Path(PINNED_PREREQUISITE if prerequisite is None else prerequisite).resolve()
     if prerequisite != PINNED_PREREQUISITE:
         raise Cargoflow2StagingError(
             "the attempt source world requires the pinned depot prerequisite"
         )
+    plan = cargoflow2_pipeline_plan(route_version)
     schedule = cargoflow2_schedule()
-    policy = cargoflow2_plan_policy()
+    policy = cargoflow2_plan_policy(route_version)
     if len(schedule) != len(plan.schedule):
         raise Cargoflow2StagingError("the scheduled attempt exchanges drifted")
     if policy["schedule_version"] != 1:
@@ -1033,7 +1130,8 @@ def cargoflow2_preflight(prepared: PreparedProof) -> dict:
     freight_native.require_frozen_d2_closure(metadata["frozen"], CARGOFLOW2_CLOSURE_ROOT)
     freight_native.require_frozen_d2_dependencies(metadata["frozen"], CARGOFLOW2_CLOSURE_ROOT)
     policy = metadata["plan_policy"]
-    plan = cargoflow2_pipeline_plan()
+    route_version = _cargoflow2_policy_route_version(policy)
+    plan = cargoflow2_pipeline_plan(route_version)
     schedule = staged_cargoflow2_schedule(policy)
     if policy["schedule"] != schedule or policy["plan_digest"] != plan_digest_of(schedule):
         raise ValueError("the staged attempt schedule drifted from the compiled derivation")
@@ -1470,7 +1568,9 @@ async def execute_cargoflow2_attempt(prepared: PreparedProof, backend) -> dict:
     )
     backend.preflight(prepared)
     schedule: list[dict] = metadata["plan_policy"]["schedule"]
-    plan = cargoflow2_pipeline_plan()
+    plan = cargoflow2_pipeline_plan(
+        _cargoflow2_policy_route_version(metadata["plan_policy"])
+    )
     result: dict[str, Any] = dict(
         preflight="PASS",
         native_launches=0,
@@ -1786,10 +1886,13 @@ def verify_cargoflow2_attempt_identity(metadata: dict, *, plan) -> dict:
     staged_source = Path(metadata.get("workspace", "")) / "source.sav"
     if staged_source.is_file():
         verify_staged_source_save({"save_sha256": binding["save_sha256"]}, staged_source)
-    _require_cargoflow2_plan(plan)
     policy = metadata.get("plan_policy")
     if not isinstance(policy, dict):
         raise ValueError("the retained attempt lacks its plan policy")
+    route_version = _cargoflow2_policy_route_version(policy)
+    _require_cargoflow2_plan(
+        plan, pinned_digest=cargoflow2_pipeline_plan(route_version).digest
+    )
     schedule = staged_cargoflow2_schedule(policy)
     if policy.get("schedule") != schedule or policy.get("plan_digest") != plan_digest_of(schedule):
         raise ValueError("the retained attempt schedule drifted from the compiled derivation")
@@ -1911,8 +2014,9 @@ def verify_cargoflow2_attempt(directory: Path) -> dict:
             ),
         )
     policy_replay = metadata["plan_policy"]
+    route_version = _cargoflow2_policy_route_version(policy_replay)
     schedule = staged_cargoflow2_schedule(policy_replay)
-    plan = cargoflow2_pipeline_plan()
+    plan = cargoflow2_pipeline_plan(route_version)
     if policy_replay["schedule"] != schedule or policy_replay["plan_digest"] != plan_digest_of(
         schedule
     ):

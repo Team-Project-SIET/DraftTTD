@@ -30,3 +30,83 @@ never bypasses them.
       example route
 - [ ] Every sub-step's ledger row + status-log entry; `git diff --check`
       clean; `CONTEXT.md` pin intact; no commit/push
+
+**Adjudication of record (2026-11-06, explicit operator decision "Carry
+v2, competing route").** Ticket 09's selection of record (E119) points at
+the delivered route of record (v1 — the delivered route's descriptive
+duplicate), while this ticket's own goal sentence ends the corridor finding
+"with the delivered receipts of a second route" and the spec's M8 rule
+states that descriptive duplicates do not count and the E36 finding closes
+only when a genuinely competing executable route carries native receipts.
+Both readings cannot hold — carrying the selection (v1) can never close
+E36, and carrying v2 contradicts the literal "optimizer-selected route
+carried" — so the ticket text is superseded by an explicit operator
+adjudication, exactly the ticket-06 reframe precedent: **the attempt of
+this ticket carries the second admission (v2, the corner-swap competing
+route, binding id 2)**; the selection artifact of record stays pointing at
+the v1 arm (never relabeled); the refused-but-admitted v2 arm is
+adjudicated to the attempt lane; E36's closure condition lives in the
+spec's own rule and closes only on the competing route's native receipts.
+
+**Widening round of record (2026-11-06, granted as the first sub-step of
+the adjudicated plan; ONE commit covered by the round grant per the
+established round convention — no push, no staging, no claim, no
+signature, no launch, no native run):** the native pipeline of record
+(`app/simulation/openttd/proof/corridor_cargoflow2_native.py`) was widened
+from v1-locked to route-binding-parameterized, keeping the fail-closed
+default byte-equal everywhere:
+
+- **Landing surface (one binding-resolution thread):** the attempt plan
+  guard (`_require_cargoflow2_plan`) now resolves a plan's schema version
+  through the route registry of record and pins its digest to that
+  binding's own guarded factory derivation, with an optional explicit
+  exact pin for the per-policy pairing the verify gates ride;
+  `cargoflow2_pipeline_plan(route_version)` derives the named binding's
+  admitted plan (default stays the route of record, byte-equal); a new
+  `_cargoflow2_policy_route_version` resolver reads the plan policy's own
+  `route_version` (absent fields — every retained pre-parameterization
+  candidate of record — resolve the default through the same registry,
+  and foreign, string, None or bool namings refuse);
+  `staged_cargoflow2_schedule` binds the pairing too; the staged plan
+  policy carries `route_version` next to the unchanged
+  `schedule_version = 1` and cross-locks its ladder rows against the
+  binding's own wire derivation; `prepare_cargoflow2_candidate(...,
+  route_version=...)`, the preflight, the single-attempt identity verify,
+  the replay verify and the run executor all resolve the binding from the
+  staged record's own policy and pin the exact plan-pairing.
+- **The five default-derivation pin tables stay as they are, by proof:**
+  the schedule gate, the E99 hypothesis record, the ladder grid, the
+  funds-model fence and the budget table derive no plan digest and are
+  byte-equal across both admitted bindings (asserted in the new
+  composition-of-record test) — they are the binding-shared instrument.
+- **Nothing else in the repo changed**: the wire contract module
+  (`corridor_cargoflow2.py`) was untouched — its binding family,
+  registry, import guard and per-binding factories (ticket 07/08 surface)
+  already provide everything the widened pipeline consumes; the staged
+  candidate directory constant stays `d5-corridor-cargoflow2-native-candidate-6`
+  until this ticket's own identity-advance staging round  bumps the round
+  identity as a separate operator gate.
+- **Figures of record:** route-binding digests unchanged (v1
+  `9a4a0778…93e45e`, v2 `26408e77…6b274`); plan digests of record (v1
+  `98d055c4…f506ca` REQUEST_PLAN_DIGEST, plan v2 `e1cafb23…c08b0`); the
+  staged schedule digest of the one ladder of record stays
+  `5c0998f2…bf2d` — the ladder rows are byte-equal across bindings.
+- **Tests:** the ladder-of-record test advanced truthfully to carry the
+  second admission's ladder invariance; seven new tests insert the
+  parameterization of record (second-admission policy composition,
+  fail-closed resolver table, unregistered-schema-version refusal, the
+  two-admission staged-composition pin chain, per-binding identity/plan
+  pairing with crossed-pairing refusals, second-admission preflight
+  re-derivation, unconsumed second-admission fail-closed verify).
+- **Verification figures:** suites 142 passed (85 wire + 46 native + 11
+  VM — the native suite is 39 + the 7 new) in one run; `ruff check` clean
+  on both touched paths; `uvx ty check` clean on the test path and
+  reports ONE pre-existing diagnostic on the native pipeline path (the
+  `connect` override report at the untouched backend-override region —
+  present at HEAD before this round; recorded, not introduced, not
+  silenced); `git diff --check` clean; `CONTEXT.md` pin
+  `847d710a…984d` intact; the evidence zone byte-untouched.
+- **Not performed this round:** staging, staging seal, fresh round
+  identity, preflight, review, Gate C, launch, route-read probe — every
+  ladder gate of this ticket remains its own explicit operator
+  approval, none granted by the widening round.

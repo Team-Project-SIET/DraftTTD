@@ -1145,7 +1145,8 @@ def test_route_binding_ladder_matches_the_pipeline_of_record():
     """The contract module's parameterized schedule derivation, built with
     the DEFAULT binding, reproduces the pipeline's staged ladder rows of
     record byte-for-byte, and the staged plan policy keeps binding the v1
-    schedule version of record."""
+    schedule version of record; the admitted second binding composes the
+    same ladder instrument under its own route version of record."""
     default = cf.cargoflow2_route_binding()
     assert default.route_version == cf.CARGOFLOW2_SCHEDULE_VERSION == 1
     rows = cf.cargoflow2_schedule_rows(default)
@@ -1153,3 +1154,165 @@ def test_route_binding_ladder_matches_the_pipeline_of_record():
     assert work.plan_digest_of(rows) == _SCHEDULE_DIGEST_OF_RECORD
     policy = work.cargoflow2_plan_policy()
     assert policy["schedule_version"] == cf.CARGOFLOW2_SCHEDULE_VERSION
+    second = cf.cargoflow2_route_binding(2)
+    assert second.route_version == 2
+    assert cf.cargoflow2_schedule_rows(second) == rows
+    policy_two = work.cargoflow2_plan_policy(2)
+    assert policy_two["schedule_version"] == cf.CARGOFLOW2_SCHEDULE_VERSION == 1
+    assert policy_two["plan_digest"] == work.plan_digest_of(rows)
+
+
+# --- the route-binding parameterization: both admitted compositions ----------
+
+
+def test_second_admission_policy_composition_of_record():
+    """Ticket 08's admitted second route binding composes the attempt plan
+    policy of record under the widened parameterization: its policy rides
+    route binding id 2 next to the unchanged schedule version of record,
+    derives its own admitted plan digest through the guarded factory, and
+    carries every binding-shared stage pin byte-equal to the route binding
+    of record's composition — the ladder, the funds fence, the world pins
+    and the hypothesis record never mix route identities."""
+    policy1, policy2 = work.cargoflow2_plan_policy(), work.cargoflow2_plan_policy(2)
+    assert policy1["route_version"] == 1 and policy2["route_version"] == 2
+    assert policy1["schedule_version"] == policy2["schedule_version"] == 1
+    assert policy2["schedule"] == policy1["schedule"]
+    assert policy2["plan_digest"] == policy1["plan_digest"] == _SCHEDULE_DIGEST_OF_RECORD
+    binding_two = cf.cargoflow2_route_binding(2)
+    assert policy2["plan_model_digest"] == cf.cargoflow2_plan(binding=binding_two).digest
+    assert policy2["plan_model_digest"] != policy1["plan_model_digest"]
+    assert policy2["plan_model_digest"].startswith("e1cafb23")
+    for shared in (
+        "company",
+        "target_tile",
+        "max_cost",
+        "command",
+        "command_statement",
+        "stale_rule",
+        "identity",
+        "observations",
+        "hypotheses",
+        "ladder_grid",
+        "funds_model",
+        "world",
+        "read_only",
+    ):
+        assert policy2[shared] == policy1[shared], shared
+
+
+def test_plan_policy_resolver_and_refusals_of_record(tmp_path):
+    """The fail-closed resolver table: a pre-parameterization policy
+    resolves the route binding of record, a policy naming a registered
+    binding resolves that binding, and a foreign, string, bool or absent
+    registry naming refuses; the pipeline plan and the staging entry point
+    refuse a foreign id before any directory exists."""
+    assert work._cargoflow2_policy_route_version({}) == 1
+    assert work._cargoflow2_policy_route_version({"route_version": 2}) == 2
+    for bad, match in (
+        ({"route_version": 3}, "unregistered route binding id"),
+        ({"route_version": "2"}, "is not a registry id"),
+        ({"route_version": None}, "is not a registry id"),
+        ({"route_version": True}, "is not a registry id"),
+    ):
+        with pytest.raises(ValueError, match=match):
+            work._cargoflow2_policy_route_version(bad)
+    with pytest.raises(ValueError, match="no registered corridor route binding"):
+        work.cargoflow2_pipeline_plan(3)
+    with pytest.raises(work.Cargoflow2StagingError, match="plan derivation refused"):
+        work.prepare_cargoflow2_candidate(tmp_path / "refused", route_version=3)
+    assert not (tmp_path / "refused").exists()
+
+
+def test_require_gate_refuses_a_plan_with_an_unregistered_schema_version():
+    """The attempt plan guard resolves the plan's schema version through
+    the route registry of record: a registered binding's plan derives its
+    digest through the guarded factory, and a plan naming an unregistered
+    schema version refuses before its digest can be trusted."""
+    plan_two = cf.cargoflow2_plan(binding=cf.cargoflow2_route_binding(2))
+    assert work._require_cargoflow2_plan(plan_two).digest == plan_two.digest
+    assert work._require_cargoflow2_plan(PLAN).digest == PLAN.digest
+    crossed = PLAN.model_copy(update={"schema_version": 3})
+    with pytest.raises(work.Cargoflow2StagingError, match="unknown schema version"):
+        work._require_cargoflow2_plan(crossed)
+
+
+@pytest.fixture
+def staged_second(tmp_path_factory):
+    prepared = work.prepare_cargoflow2_candidate(
+        tmp_path_factory.mktemp("cargoflow2-staging-second") / "candidate",
+        route_version=2,
+    )
+    yield prepared
+    prepared.spec.workspace.close()
+
+
+def test_staged_compositions_pin_the_record_chain(staged, staged_second):
+    """The two admitted route compositions stage the same attempt lineage
+    under their own route binding ids: identical prerequisite, world and
+    instrument pins with the plan-model digests of their own admitted
+    bindings, and the schedule digest of the one ladder of record."""
+    metadata1, metadata2 = metadata_of(staged), metadata_of(staged_second)
+    for shared in (
+        "schema",
+        "kind",
+        "milestone",
+        "prerequisite",
+        "budgets",
+        "expected_readback",
+        "bootstrap_command",
+        "cleanup",
+        "cross_schedule_guard",
+    ):
+        assert metadata2[shared] == metadata1[shared], shared
+    assert metadata2["execution_command"][:-1] == metadata1["execution_command"][:-1]
+    assert metadata1["execution_command"][-1] != metadata2["execution_command"][-1]
+    assert (
+        metadata1["candidate_directory"]
+        == metadata2["candidate_directory"]
+        == work.CARGOFLOW2_CANDIDATE_DIRECTORY
+        == "d5-corridor-cargoflow2-native-candidate-6"
+    )
+    for name in ("retained_directory", "source_save", "save_sha256", "expected_welcome"):
+        assert metadata2["world"][name] == metadata1["world"][name], name
+    policy1, policy2 = metadata1["plan_policy"], metadata2["plan_policy"]
+    assert policy1["route_version"] == 1 and policy2["route_version"] == 2
+    assert policy2["schedule"] == policy1["schedule"]
+    assert policy2["plan_digest"] == policy1["plan_digest"]
+    assert policy2["plan_model_digest"] != policy1["plan_model_digest"]
+    assert policy1["plan_model_digest"] == PLAN.digest
+    binding_two = cf.cargoflow2_route_binding(2)
+    assert policy2["plan_model_digest"] == cf.cargoflow2_plan(binding=binding_two).digest
+    assert metadata2["workspace"] != metadata1["workspace"]
+
+
+def test_identity_pairs_each_admitted_binding_with_its_own_plan(staged, staged_second):
+    """The single-attempt identity verifier pins one plan policy to the
+    plan derivation of the registered binding that policy names: each
+    admitted binding verifies against its own plan, and every crossed
+    pairing refuses at the pinned observations gate."""
+    plan_two = cf.cargoflow2_plan(binding=cf.cargoflow2_route_binding(2))
+    assert work.verify_cargoflow2_attempt_identity(metadata_of(staged), plan=PLAN)
+    assert work.verify_cargoflow2_attempt_identity(
+        metadata_of(staged_second), plan=plan_two
+    )
+    with pytest.raises(work.Cargoflow2StagingError, match="drifted from the pinned"):
+        work.verify_cargoflow2_attempt_identity(metadata_of(staged_second), plan=PLAN)
+    with pytest.raises(work.Cargoflow2StagingError, match="drifted from the pinned"):
+        work.verify_cargoflow2_attempt_identity(metadata_of(staged), plan=plan_two)
+
+
+def test_cargoflow2_preflight_re_derives_the_second_admission(staged_second):
+    """The offline launch-boundary rehearsal re-derives every binding of a
+    second-admission composition from the module pins and accepts it: the
+    route pairing resolves through the registry, the ladder and the world
+    pins re-derive binding-invariance, and the attempt identity stays the
+    one delivery lineage of record."""
+    work.cargoflow2_preflight(staged_second)
+    policy = metadata_of(staged_second)["plan_policy"]
+    assert policy["route_version"] == 2 and policy["schedule_version"] == 1
+
+
+def test_unconsumed_second_admission_candidate_verifies_fail_closed(staged_second):
+    verdict = work.verify_cargoflow2_attempt(staged_second.directory)
+    assert verdict["verification"] == "AUTHORIZATION_UNVERIFIED"
+    assert verdict["authorization_state"] == "CLAIM_ABSENT"

@@ -2445,3 +2445,67 @@ readiness, outside this round's PoC definition.
   approval gates (a fresh round identity + the full stage/review/sign/
   launch ladder), none granted by this round; tickets 11–13 unchanged
   blocked.
+- 2026-11-06 — T-010 widening round (M8 tail: the adjudicated route
+  attempt's running surface; code round granted in-session, one commit,
+  no push, no staging, no claim, no signature, no launch, no native run):
+  **operator adjudication first** — ticket 09's selection of record (E119)
+  points at the v1 arm (the delivered route's descriptive duplicate),
+  while ticket 10's goal sentence ends E36 "with the delivered receipts of
+  a second route" and the spec's M8 rule says duplicates do not count;
+  both readings cannot hold, so the operator adjudicated explicitly ("Carry
+  v2, competing route", the ticket-06 reframe precedent): **the attempt of
+  ticket 10 carries the second admission (v2, the corner-swap competing
+  route, binding id 2)**; the selection artifact of record stays pointing
+  at v1 (never relabeled); E36 closes only per the spec's own rule — on
+  the competing route's native receipts. **Widening landing surface
+  (round of record)**: the native pipeline of record
+  (`app/simulation/openttd/proof/corridor_cargoflow2_native.py`) widened
+  from v1-locked to route-binding-parameterized with the fail-closed
+  default byte-equal — the attempt plan guard resolves the plan's schema
+  version through the route registry of record and pins its digest to
+  that binding's guarded factory derivation (optional exact pin for the
+  per-policy pairing); `cargoflow2_pipeline_plan(route_version)` derives
+  the named binding's admitted plan (default v1 byte-equal); the plan
+  policy gains its own `route_version` beside the unchanged
+  `schedule_version = 1` (backed by a new resolver that falls back to the
+  route of record for absent fields — every retained pre-parameterization
+  candidate of record — and refuses foreign/string/None/bool namings);
+  the staged schedule gate binds the pairing; the policy cross-locks its
+  ladder rows against the binding's wire derivation;
+  `prepare_cargoflow2_candidate(..., route_version=...)`, preflight, the
+  single-attempt identity verify, the replay verify and the run executor
+  resolve the binding from the staged record's own policy. The five
+  default-derivation pin tables (schedule gate, E99 hypothesis record,
+  ladder grid, funds fence, budgets) stay untouched — by proof
+  (byte-equal across both admitted bindings, asserted in the new
+  composition test) they derive no plan digest and are the
+  binding-shared instrument. The wire contract module was untouched
+  (ticket 07/08 surface already provides the family); the staged
+  candidate directory constant stays
+  `d5-corridor-cargoflow2-native-candidate-6` until ticket 10's own
+  identity-advance staging round. **Figures of record**: binding digests
+  unchanged (v1 `9a4a0778…93e45e`, v2 `26408e77…6b274`); plan digests
+  (v1 `98d055c4…f506ca`, plan v2 `e1cafb23…c08b0`); the staged schedule
+  digest of the one ladder of record stays `5c0998f2…bf2d` — the ladder
+  rows are byte-equal across bindings. **Tests**: the ladder-of-record
+  test advanced truthfully (second admission's ladder invariance) + seven
+  new inserts (second-admission policy composition, fail-closed resolver
+  table, unregistered-schema-version refusal, the two-admission staged
+  pin chain, per-binding identity/plan pairing with crossed-pairing
+  refusals, second-admission preflight re-derivation, unconsumed
+  second-admission fail-closed verify). **Verification figures**: suites
+  142 passed (85 wire + 46 native + 11 VM; native 39 + 7 new); `ruff
+  check` clean on both touched paths; `uvx ty check` clean on the test
+  path and reporting ONE pre-existing diagnostic on the native path (the
+  `connect` override report at the untouched backend-override region —
+  present at HEAD before the round; recorded, not introduced, not
+  silenced); `git diff --check` clean; `CONTEXT.md` pin `847d710a…984d`
+  intact; evidence zone byte-untouched; `artifacts/` untouched. Not
+  performed this round: staging, seal, fresh round identity, preflight,
+  review, Gate C, launch, route-read probe — every ladder gate its own
+  explicit operator approval, none granted by this round. Next ladder
+  frontiers (each its own approval): the identity-advance staging round
+  (candidate-7 at the second admission's v2-carrying composition,
+  `PRELAUNCH PASS` first attempt + standalone `preflight` + pre-auth
+  `CLAIM_ABSENT`), the fresh review round, Gate C, and the ONE launch —
+  tickets 11–13 unchanged blocked.
