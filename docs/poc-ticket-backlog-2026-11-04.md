@@ -2597,3 +2597,51 @@ readiness, outside this round's PoC definition.
   precondition — a preserved halt class on the ONE launch is terminal
   for candidate-7 and re-enters via ticket 05's mechanism); tickets
   11–13 unchanged blocked.
+- 2026-11-06 — T-010 GATE C (signing approval in-session, one action)
+  executed and booked — the operator's Option-1 signature over the
+  reviewed round-7 candidate-7 via the production signing surface only:
+  one signing operation, first invocation, zero refusals, zero
+  re-writes; no staging rerun, no claim, no launch, no native run; the
+  books commit covered by the same grant. Pre-write refusal gates held
+  (gate surface absent; live seal == sidecar == operator-approved
+  `9c5f727200efa7b896ab2b8016d5183b1f1ee62baff7bfa204eb60bf01e19257`;
+  authorization payload digest
+  `f1d210cf17704fd1ad21d706160d1d6d03d417e0fa7585ac6a3d30a3e41df15c`
+  staged == production re-derivation; the attempted scope binding this
+  round's own staged identity — route_version 2 beside schedule_version
+  1, plan digest `5c0998f2…bf2d`, attempt `D5-CARGOFLOW-2`); seed
+  mechanics of record (the operator-held armored PKCS#8 PEM's 48-byte
+  DER final-32 RFC 8032 seed window, memory-only, env-only
+  `CARGOFLOW_GATE_SEED`, never printed/filed/argument-passed — the PEM
+  shape verified pre-run without reading or printing the key bytes any
+  further; `public_from_seed` == pinned anchor
+  `5063982bd28d48573705f334ed4f396618c4930ce21083789dfbbf13a564880f`;
+  operator key identity unchanged of record
+  `sha256-ed25519-public-key:cbb63ff58f17f13df3e1be0735fad18497e3a0c6ad6b5dd55491d708ae40c614`
+  — a wrong extraction would have refused before any write);
+  `AUTHORIZATION.json` written exactly once — record sha256 of record
+  `24ccab3ec5b1140cb2c008eda7217810f4612aa4254e8bd98166813a3d9b6417`,
+  production `verify_authorization` PASS against the seeded anchor
+  (record digest bound; the seed-window variables dropped from the
+  driver's memory immediately after the write); post-write read-only
+  state: root exactly 5 entries (no CLAIM/LAUNCH-CONSUMED), seal
+  byte-equal after the write, all seven candidates' PRELAUNCH
+  byte-pictures before == after, `preflight` `PREFLIGHT PASS` exit 0
+  with the authorization present, standalone `verify` still
+  `AUTHORIZATION_UNVERIFIED`/`CLAIM_ABSENT` exit 1 by design (the
+  claim mints at the launch boundary only); seed env unset + empty
+  verified at the end in a fresh shell; no candidate bytes beyond the
+  authorization record touched; `git diff --check` clean; driver
+  `/tmp/opencode/gate_c_cargoflow2_c7.py` + transcript
+  `/tmp/opencode/gate_c_c7_output.txt` (+ CLI gate transcripts
+  `/tmp/opencode/gate_c_c7_preflight_output.txt`,
+  `gate_c_c7_verify_output.txt`) outside the repo. Books: ticket
+  `03-round7-gate-c-signing.md` + ticket-10 record + this row, one
+  commit. The candidate-7 authorization grant is single-use and the
+  launch is NOT granted: NEXT GATE — ticket 10's ONE launch (the only
+  true native-run gate of this ticket; needs an explicit in-session
+  native-run approval; one attempt, no retry, no reconnect; the corner
+  edge 50351<->50352 rides the staged route as its typed open
+  precondition — a preserved halt class is terminal for candidate-7
+  and re-enters via ticket 05's mechanism; the binary resolves from
+  the harness pin, no env export); tickets 11–13 unchanged blocked.
