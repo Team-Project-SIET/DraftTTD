@@ -3354,3 +3354,37 @@ readiness, outside this round's PoC definition.
   `CONTEXT.md` pin `847d710a…` intact. Next frontier: round ticket
   03 — the production verify + the offline truth reconciliation
   driver, books + E138, then the README update.
+- 2026-11-06 — **production round ticket 03 done (the production
+  verify + the offline truth reconciliation over candidate-11's ONE
+  launch; E138; under the round grant; one commit; no repo code
+  change; no push)**: the production verify (the E134
+  arm-inheritance-fixed verifier in the tree) exited 0 with
+  `CARGOFLOW2_COMPLETION_VERIFIED` and its independent replay
+  re-derived `CARGOFLOW2_COMPLETE` with the phase verdict
+  `CARGOFLOW2_LOADED_NEVER_DELIVERED` verbatim, arm-correct,
+  figure-for-figure with the launch (anchor 712232 tick 291; the
+  four loads; the departure flow-09 20 day 712274 tick 3397; the bay
+  arrivals flow-04 0 day 712251 tick 1676 and flow-12 20 day 712291
+  tick 4648; `unloadings` []; finance day 712292 funds 484764 tick
+  4711; finish-00 `PHASE_STOPPED` RUNNING speed 36 tick 4712;
+  running cost 421). The reconciliation driver
+  (`/tmp/opencode/t03_c11_reconcile.py` + `_output.txt`, read-only,
+  fresh from the t07 pattern with candidate-11 constants):
+  **`T09-CLASS RECONCILIATION PASS — 18 PASS / 0 FAIL` exit 0** — the
+  chain rows verbatim (three flow-08 loads 5/10/15 day 712271 ticks
+  3173/3193/3213 plus the NEW flow-09 20-load day 712272 tick 3233;
+  the departure; the bay arrivals; the chain stops at the bay
+  arrival with `unloadings` empty and the bay acceptance never
+  moving), the ADR-0001 funds fence zero-residual at every observed
+  instant via the driver's ONE offline replay over the retained
+  request/response files (arm-correct `parse_for`), the observed
+  funds walk 489650 → 484764 over 26 receipts with the purchase
+  instant 489650 → 485221 at tick 17 (purchase 4429), every engine
+  income delta 0 (26 deltas), D1 running-cost 421 exact, the script-
+  tick discipline 26/26, the E114 twin figure read-only UNKNOWN
+  (twin 484775 vs native 484764). E36/E114 disposition of the round:
+  E36 stays OPEN (the same delivered arm, not a genuinely competing
+  route; the miss is twice-reproduced on fresh identities —
+  candidate-9 E131–E135, candidate-11 E136–E138) and E114 stays
+  UNKNOWN. Next frontier: the README how-to-run update, then the
+  round is closed.
