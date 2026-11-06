@@ -2645,3 +2645,77 @@ readiness, outside this round's PoC definition.
   precondition — a preserved halt class is terminal for candidate-7
   and re-enters via ticket 05's mechanism; the binary resolves from
   the harness pin, no env export); tickets 11–13 unchanged blocked.
+- 2026-11-06 — T-010 ROUND-7 ONE LAUNCH (native-run approval
+  in-session via the explicit gate option per the round-6 launch
+  precedent, one action) executed and booked — the single native
+  launch of the Gate-C-signed candidate-7 via the production pipeline
+  CLI, ONE invocation, no retry, no reconnect, **rc 0
+  `NATIVE_CARGOFLOW2_COMPLETE`** (`verified: true,
+  cleanup_complete: true, state_changed: true, halt: null`; 1 native
+  launch / 1 connection / 25 requests, command accepted, last status
+  `PHASE_STOPPED`; binary resolved from the harness filesystem pin —
+  no env export — sha re-verified at run start with the no-processes
+  pre-check). The 25-exchange ladder ran true end-to-end: site-00
+  READY 489650 → engine-00 READY → purchase-00 BUILT 485221 (quote
+  4429 exact) → vreads READ → orders ORDERED + ORDER_SET_VERIFIED →
+  monitor ARMED → start-00 STARTED → arrive-00 ANCHORED (712232, 289)
+  485217 → flow-00..flow-11 READY with the native funds series
+  [485217, 485212, 485206, 485201, 485195, 484997, 484991, 484985,
+  484980, 484974, 484776, 484770] → finance-00 FINANCE_VERIFIED 484769
+  income 0 delivered 0 → finish-00 PHASE_STOPPED; **no halt class
+  fired anywhere in the ladder**. Delivery verdict of record,
+  verbatim: `CARGOFLOW2_LOADED_NEVER_DELIVERED` ("a load was latched,
+  but no unloaded amount reached the bay acceptance chain inside the
+  ladder") — the round-6 terminal COMPLETE-not-delivered class
+  carried by the adjudicated v2 arm: empty bay arrival 712250
+  (flow-04, at the bay 50862), pickup arrival 712270 (flow-08), loads
+  5/10/15 latched at 712271 (flow-08), loaded departure 20 t at 712274
+  (flow-09), the delivery leg in transit at finish (location 50095,
+  RUNNING, load 20) with `unloadings: []`. Native divergence of the
+  two admitted routes observed: round-7's empty bay arrival on the v2
+  arm is one day earlier than round-6's on the delivered v1 arm
+  (712250 vs the round-6 record's 712251 — same endpoints); the funds
+  series differs from round-6's by exactly one unit at offset 35
+  (484985 vs 484986) — never reconciled by hand, never fudged. The
+  corner edge 50351<->50352 (the v2 typed open precondition): not a
+  pinned observation instant; the vehicle drove the staged v2 order
+  path across its full outbound + return span un-halted with observed
+  positions 45748, 45744, 47791, 49839, 50862, 50095, 48047, 45743,
+  45748, 45743, 47791, 50095 — the v2 arm's native end-to-end
+  driveability (protocol-complete, sealed, un-halted) is native
+  evidence of record while the strict direct corner-tile observation
+  stays open. Single-use claim consumed exactly once: `CLAIM.json`
+  bound `prelaunch_digest 9c5f7272…e19257` /
+  `authorization_sha256 24ccab3e…6417` / operator identity
+  `sha256-ed25519-public-key:cbb63ff5…40c614` (`consumed: true,
+  launches_allowed: 1, retries: 0`); `LAUNCH-CONSUMED.json` present
+  binding the same record. Post-run read-only replay: production
+  `verify` re-run `CARGOFLOW2_COMPLETION_VERIFIED` exit 0
+  (`before_save_sha256 d16ceeec…f5e71`, phase seal == the round's
+  seal `9c5f7272…e19257`, plan digest `e1cafb23…c08b0`, sampled months
+  1950-01..03, the funds-model walk reconciled inside the verified
+  outcome). Post-consume state certified: root exactly 68 entries;
+  run artifact manifest re-hashed 66/66 OK (0 missing, 0 mismatched);
+  certified cleanup all-true (pid 14346 quit→reaped rc 0, game port
+  56209 / admin port 58985 listener + connection closed,
+  `remaining_processes: []`, workspace disposed, credentials removed
+  — verified at the OS level: no openttd process remains); candidates
+  1–7 PRELAUNCH seals == sidecars (candidate-7's seal byte-equal after
+  the run); no second launch, no relabel, historical zones
+  byte-untouched; `git diff --check` clean; `CONTEXT.md` pin
+  `847d710a…984d` intact. Transcripts `/tmp/opencode/
+  c7_launch_output.txt`, `c7_launch_verify_output.txt` (outside the
+  repo). Books: ticket `04-round7-one-launch.md` + ticket-10 record
+  (items 1–4 + ledger closed, item 5 unchecked by its own rule) + this
+  row, one commit. TICKET-10 TERMINAL STATE: the full ladder executed
+  in order under its per-gate approvals; the outcome is the
+  COMPLETE-not-delivered class (round-6's class, carried by the v2
+  arm); **E36 stays OPEN** — it closes only per the spec's rule (a
+  genuinely competing executable route with native DELIVERED receipts;
+  the delivered-receipts state was not reached — a succeeding round
+  would need fresh operator direction on a fresh round identity); the
+  one-day-earlier bay arrival + the un-halted full-ladder drive stand
+  as the v2 arm's native executable-divergence evidence. NEXT
+  FRONTIER: tickets 11–13 unblocked (11 funds-taxonomy ADR, 12 P07
+  replay closure, 13 PoC completion declaration) — each needs its own
+  explicit operator approval, none granted by this round.
