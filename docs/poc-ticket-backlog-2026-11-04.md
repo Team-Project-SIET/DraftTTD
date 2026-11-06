@@ -3236,3 +3236,31 @@ readiness, outside this round's PoC definition.
   `git diff --check` clean. THE DELIVERED-CLASS TAIL IS COMPLETE:
   tickets 01–08 walked under per-round gates; the deliverable class
   stands re-proven with E36 carried open by its own rule.
+- 2026-11-06 — **README how-to-run landed (the tail's booked frontier
+  closed; docs-only round, no repo code touched, one commit, no
+  push)**: README.md gained the "How to run the program" section — the
+  two honest ways to run the program: (1) the offline pipeline (no
+  OpenTTD needed): stage a fresh delivered-arm candidate with
+  `app.simulation.openttd.proof.corridor_cargoflow2_native prepare <new
+  dir> --route-version 2 --schedule-version 2` → `PRELAUNCH PASS`,
+  re-validate with `preflight` → `PREFLIGHT PASS`, and replay the
+  retained one-launch evidence with `verify` on the consumed
+  candidate-9 → exit 0 `CARGOFLOW2_COMPLETION_VERIFIED` with the phase
+  verdict verbatim `CARGOFLOW2_LOADED_NEVER_DELIVERED` (the delivered
+  -miss record, E36 open); the v1 arm stages by omitting the two flags
+  (byte-equal to candidates 6 and 7); staging depends on the retained
+  `artifacts/` lineage Git ignores — a fresh clone reports missing
+  evidence, not broken code; commands of record live in REPRODUCE.md.
+  (2) the native demo and native launches (operator-gated): the
+  graphical demo (`app.openttd_demo`) needs `OPENTTD_BINARY`
+  (`276d5b69…904c`) and `OPENTTD_OPENGFX_ARCHIVE` (`43a0c1da…03be`)
+  exported before Python starts; a corridor native launch runs at most
+  once per candidate, never authorized by prepare/preflight — Gate C
+  signing (one `AUTHORIZATION.json` write, operator-held key never
+  stored here), claim minted and consumed at the launch boundary,
+  outcome terminal either way, no retry/reconnect/relabel; candidate-9
+  is consumed, its record retained, not rerunnable; further attempts
+  need a fresh candidate, review, signature and explicit operator
+  authorization. THE DELIVERED-CLASS TAIL BOOKS CLOSE HERE: tickets
+  01–08 done, the declaration addendum landed (E135), the README
+  how-to-run landed; nothing else open on this tail.

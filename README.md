@@ -33,6 +33,64 @@ See the [demo guide](examples/openttd-demo/README.md) for installation, spectato
 controls, results, troubleshooting, and limits. Full OPEX and ROI remain UNKNOWN.
 Arbitrary-world planning and larger networks are not verified MVP capabilities.
 
+## How to run the program
+
+There are two ways to run this program, and everything below runs offline
+except an explicitly authorized native launch.
+
+### Offline pipeline (no OpenTTD needed)
+
+The D5 corridor deliverable pipeline (Cargoflow-2) lives in
+`app/simulation/openttd/proof/corridor_cargoflow2_native.py`. It stages a
+candidate, validates it, and later replays the retained evidence — all
+without launching the game:
+
+```bash
+# 1. Stage a fresh delivered-arm candidate offline into a NEW directory:
+.venv/bin/python -m app.simulation.openttd.proof.corridor_cargoflow2_native \
+  prepare artifacts/experiments/d5-corridor-cargoflow2-native-<new-name> \
+  --route-version 2 --schedule-version 2
+# -> PRELAUNCH PASS
+
+# 2. Re-validate the staged candidate (still offline):
+.venv/bin/python -m app.simulation.openttd.proof.corridor_cargoflow2_native \
+  preflight artifacts/experiments/d5-corridor-cargoflow2-native-<new-name>
+# -> PREFLIGHT PASS
+
+# 3. Replay the retained one-launch evidence (offline, read-only):
+.venv/bin/python -m app.simulation.openttd.proof.corridor_cargoflow2_native \
+  verify artifacts/experiments/d5-corridor-cargoflow2-native-candidate-9
+# -> exit 0, CARGOFLOW2_COMPLETION_VERIFIED, with the phase verdict
+#    CARGOFLOW2_LOADED_NEVER_DELIVERED — the verbatim delivered-miss record
+#    of the retained run; open item E36 stays open by its own rule
+```
+
+Omit `--route-version 2 --schedule-version 2` to stage the historical v1 arm
+instead: its 25-row ladder stays byte-equal to the recorded candidates 6 and
+7. Staging depends on the retained prerequisite lineage under `artifacts/`,
+which Git ignores — on a fresh clone the lineage evidence is missing and the
+checks report that, rather than the code being broken. The exact commands of
+record live in [REPRODUCE.md](REPRODUCE.md).
+
+### Native demo and native launches (operator-gated)
+
+The playable graphical demo (`python -m app.openttd_demo`, Quick start above)
+needs `OPENTTD_BINARY` (the pinned OpenTTD 15.3 binary, sha256
+`276d5b69…904c`) and `OPENTTD_OPENGFX_ARCHIVE` (OpenGFX 8.0, sha256
+`43a0c1da…03be`) exported before Python starts.
+
+A native launch of a staged corridor candidate runs **at most once per
+candidate** and is never authorized by preparation or preflight: the operator
+signs the candidate at Gate C (one `AUTHORIZATION.json` write from the
+operator-held key, which is not stored in this repository), the launch claim
+mints and is consumed at the launch boundary, and the outcome is terminal
+either way — no retry, no reconnect, no relabel. Candidate-9's claim is
+consumed: its delivered-arm ladder completed with
+`CARGOFLOW2_LOADED_NEVER_DELIVERED` (loads latched and carried to the bay,
+zero unloadings, zero bay acceptance), and that record is retained, not
+rerunnable. Any further native attempt needs its own fresh candidate,
+independent review, signature and explicit operator authorization.
+
 ## Random World & Scalable Logistics
 
 An opt-in bounded 256×256 native random generator and dynamic P08/P05 planning,
