@@ -2829,3 +2829,32 @@ readiness, outside this round's PoC definition.
   by this round; its "delivered receipts of both attempts" evidence item
   needs the operator's adjudication before assembly (rounds 6–7 are both
   COMPLETE-not-delivered).
+- 2026-11-06 — T-022 TICKET-13 COMPLETE — THE POC COMPLETION DECLARATION OF
+  RECORD LANDED; **PHASE A TERMINALLY CLOSED** (the round granted in-session
+  as the frontier instruction "do next Ticket"; offline assembly only; one
+  commit; no push, no staging, no claim, no signature, no launch, no native
+  run): **the operator adjudicated the "delivered receipts of both
+  attempts" item BEFORE assembly** per the ticket-06/ticket-10 precedents —
+  satisfied by the COMPLETE-not-delivered class of record (rounds 6–7
+  `NATIVE_CARGOFLOW2_COMPLETE` verified true, verdict
+  `CARGOFLOW2_LOADED_NEVER_DELIVERED`, no freight-DELIVERED receipt in the
+  lineage; E36 carried open by its own rule), never silently reinterpreted.
+  **The declaration of record** `docs/poc-completion-declaration-2026-11-06.md`
+  assembled the corridor receipts verbatim, the ≥2-routes record with the
+  selection artifact (E118/E119: two distinct simple paths, v1 selected
+  `corridor-b2f80f46513436a102005f10`, digest `b2f80f46…1f7131`), ADR-0001
+  (E125), the replayed reports + 64/64 audit (E126); **fresh preconditions
+  this round**: corridor trio 142 exit 0 + P07 pair 67 exit 0, authority
+  manifest re-verified == `CONTEXT.md` (pin `847d710a…984d`), full retained
+  seal sweep **40/40 sealed / 0 mismatch / 32 consumed markers**, retained
+  zone byte-stable vs the ticket-12 close (0 added/removed/changed);
+  **acceptance checklist one-by-one with anchors PASS**; **E127 appended
+  after the operator's in-session landing confirmation** ("Confirm — land
+  the declaration"), every prior row preserved; spec
+  `docs/specs/d5-corridor-poc-tail.md` **discharged**; roadmap
+  `docs/roadmap-and-scope-2026-11-05.md` §2 FD-A-2 … FD-A-6 walked under
+  per-round operator gates — Phase A terminally closed with E36 and the
+  E114 cross-reality UNKNOWN carried open, observed not resolved; nothing
+  post-PoC opened without its own explicit authorization. No next
+  frontier — the backlog's round-tail (tickets 1–13) is exhausted; any
+  successor work is a new spec under a new explicit operator round.
