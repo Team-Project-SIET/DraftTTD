@@ -2858,3 +2858,23 @@ readiness, outside this round's PoC definition.
   post-PoC opened without its own explicit authorization. No next
   frontier — the backlog's round-tail (tickets 1–13) is exhausted; any
   successor work is a new spec under a new explicit operator round.
+- 2026-11-06 — CLOSE-OUT CORRECTION (operator-authorized in-session as the
+  answer to the loose-end question after the ticket-13 landing): the two
+  round-3 gate stubs that still read `ready-for-agent` —
+  `01-round3…`-lineage gate files
+  `.scratch/d5-corridor-poc-tail/issues/03-round3-gate-c-signing.md` and
+  `04-round3-one-launch.md` — re-stamped **terminal-by-supersession**: the
+  round-3 review's verdict of record `REVIEW-FINDINGS` 45/46 + the
+  post-review ticket-07 parameterization made the staged candidate-3 seal
+  (`42f6bbaf…e41d`) stale (freeze-pin refusal by design); the gates never
+  ran, never will run at that identity (superseded identities are never
+  re-staged, signed, or launched), their checklists stay unchecked as the
+  honest record; the cycle re-entered at round-5 (gates 01/02/03/04 all
+  done, terminal COMPLETE-not-delivered E116, reconciliation E117), the
+  tail closed at tickets 08–13, Phase A terminally closed at ticket 13
+  (E127, commit `7588674`). No new evidence class — this row is the
+  ticket-ledger record of the correction; no E-row, no code, no artifacts
+  touched; offline only, no native run, one commit, no push. With this
+  correction no file under `.scratch/d5-corridor-poc-tail/issues/` reads
+  `ready-for-agent`: the backlog's ticket set is exhausted, every frontier
+  closed.

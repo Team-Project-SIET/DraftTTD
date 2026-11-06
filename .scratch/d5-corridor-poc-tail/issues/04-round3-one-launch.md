@@ -12,7 +12,21 @@ record — never a retry, a reconnect, a relabel or a relaunch.
 **Blocked by:** 03 (Round-3 Gate C signature) — the operator launch approval
 is the separate in-session gate that authorizes it.
 
-**Status:** ready-for-agent
+**Status:** terminal-by-supersession (2026-11-06, operator-authorized
+close-out round) — the one launch this ticket describes never reached and
+will never run at its round identity: the round-3 review's verdict of
+record was `REVIEW-FINDINGS` 45/46, and the post-review ticket-07
+parameterization made the freshly staged candidate-3 seal
+(`42f6bbaf…e41d`) stale — the freeze-pin machinery refused the post-07
+composition by design (the round-3 staging row + the
+`docs/poc-ticket-backlog-2026-11-04.md` status log carry the
+supersession of record). A seal-superseded candidate is never signed,
+never launched, never relabeled — no native run exists for this identity
+and none was ever authorized. The cycle re-entered at round-5, whose gate
+files (01/02/03/04 round-5) are all `done` with the round terminal
+COMPLETE-not-delivered (E116), reconciliation E117, and the tail closed at
+tickets 08–13. Nothing in this file's checklist ever executed; the items
+below stay unchecked as the honest record of a gate that cannot run.
 
 - [ ] Pre-launch gates re-verified fresh (no server process, gate surface
       shape, seal == sidecar == approved seal, authorization verified through

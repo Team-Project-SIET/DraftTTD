@@ -11,7 +11,19 @@ post-state verification.
 **Blocked by:** 02 (Round-3 independent review) — the operator signing
 approval is the in-session gate that authorizes it.
 
-**Status:** ready-for-agent
+**Status:** terminal-by-supersession (2026-11-06, operator-authorized
+close-out round) — this gate never reached and will never run at its round
+identity: the round-3 review's verdict of record was `REVIEW-FINDINGS`
+45/46, and the post-review ticket-07 parameterization made the freshly
+staged candidate-3 seal (`42f6bbaf…e41d`) stale — the freeze-pin
+machinery refused the post-07 composition by design (the round-3 staging
+row + the `docs/poc-ticket-backlog-2026-11-04.md` status log carry the
+supersession of record). Superseded round identities are never re-staged,
+never signed, never launched. The cycle re-entered at round-5, whose gate
+files (01/02/03/04 round-5) are all `done` with the round terminal
+COMPLETE-not-delivered (E116), reconciliation E117, and the tail closed at
+tickets 08–13. Nothing in this file's checklist ever executed; the items
+below stay unchecked as the honest record of a gate that cannot run.
 
 - [ ] Pre-write refusal gates hold: gate surface absent (no
       AUTHORIZATION/CLAIM/LAUNCH-CONSUMED/terminal artifacts), live seal ==
