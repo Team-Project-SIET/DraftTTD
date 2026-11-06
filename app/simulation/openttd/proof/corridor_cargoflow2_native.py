@@ -191,21 +191,29 @@ D5_CARGOFLOW2_PRELAUNCH_SCHEMA = "d5-cargoflow2-prelaunch-v1"
 D5_CARGOFLOW2_LAUNCH_CONSUMED_SCHEMA = freight_native.D5_FREIGHT_LAUNCH_CONSUMED_SCHEMA
 D5_CARGOFLOW2_PREREQUISITE_SCHEMA = freight_v2_native.D5_FREIGHT_V2_PREREQUISITE_SCHEMA
 
-# Candidate directory of record (round-identity constant; round-7 of
-# record — identity advanced candidate-6 → candidate-7 BY this staging
+# Candidate directory of record (round-identity constant; round-8 of
+# record — identity advanced candidate-8 → candidate-9 BY this staging
 # action, one operator-approved action of record). Lineage of record:
 # candidates 1–2 consumed with native verdicts of record; candidates 3–4
 # seal-superseded by freeze-pin debts — both staged, never signed,
 # claimed or launched; candidate-5 consumed terminal history (launched
 # once 2026-11-05, halt of record at `arrive-00` on the funds-residual
 # class, the halt-class loop E112→E114 answered and the doc freeze E115
-# landed); candidate-6 consumed terminal history (launched once
-# 2026-11-05 with the round-6 verdict of record `CARGOFLOW2_LOADED_
-# NEVER_DELIVERED` — the COMPLETE-not-delivered class, E116); the
-# reconciliation-debt method of record is a fresh round from the current
-# tree, never a relabel. Candidate-7 composes from the widened tree and
-# carries the adjudicated second admission (binding id 2) per E120.
-CARGOFLOW2_CANDIDATE_DIRECTORY = "d5-corridor-cargoflow2-native-candidate-7"
+# landed); candidates 6–7 consumed terminal history (launched once each
+# 2026-11-05/06 with the verdict of record `CARGOFLOW2_LOADED_NEVER_
+# DELIVERED` — the COMPLETE-not-delivered class, E116/E124); candidate-8
+# staged superseded by its own staging defect of record — its prepare
+# pinned the v1 arm's budget and expected-readback pins over the
+# delivered (2, 2) policy (planned_exchanges 25 over the 26-row ladder)
+# and the staged-attempt preflight stage refused it; the staged bytes
+# stay preserved at their failed state, never signed, claimed or
+# launched, never relabeled or regenerated; the reconciliation-debt
+# method of record is a fresh identity from the settled tree, never a
+# rerun. Candidate-9 composes from the arm-fixed tree and carries the
+# ticket-02 delivered arm (the (2, 2) pairing) on the adjudicated second
+# admission (binding id 2, the spec default the v2 corner-swap) per
+# E129.
+CARGOFLOW2_CANDIDATE_DIRECTORY = "d5-corridor-cargoflow2-native-candidate-9"
 
 # Prerequisite lineage of record: the pinned, consumed, replay-verified
 # depot-mutation attempt (D5-F12-DEPOT-3 after-save, world-pin version 3),
@@ -844,7 +852,10 @@ def cargoflow2_budgets(schedule_version: int | None = None) -> dict:
     )
 
 
-def cargoflow2_expected_readback_policy() -> dict:
+def cargoflow2_expected_readback_policy(schedule_version: int | None = None) -> dict:
+    """The expected readback story for one attempt arm of the candidate."""
+    delivered = schedule_version == CARGOFLOW2_DELIVERED_SCHEDULE_VERSION
+    planned = PLANNED_CARGOFLOW2_DELIVERED_EXCHANGES if delivered else PLANNED_CARGOFLOW2_EXCHANGES
     return dict(
         chain=(
             "the fixed instrument chain is the freight-family chain of "
@@ -894,10 +905,11 @@ def cargoflow2_expected_readback_policy() -> dict:
             "INCOMPLETE"
         ),
         receipt=(
-            "CARGOFLOW2_COMPLETE only after all 25 exchanges verify in "
-            "execution order with certified cleanup; a refused, missing, "
-            "malformed, out-of-order, stale, divergent or inconclusive "
-            "exchange leaves the attempt incomplete forever"
+            "CARGOFLOW2_COMPLETE only after all "
+            f"{planned} exchanges verify in execution order with "
+            "certified cleanup; a refused, missing, malformed, "
+            "out-of-order, stale, divergent or inconclusive exchange "
+            "leaves the attempt incomplete forever"
         ),
     )
 
@@ -1148,7 +1160,7 @@ def prepare_cargoflow2_candidate(
                 "saves nothing itself"
             ),
             plan_policy=policy,
-            expected_readback=cargoflow2_expected_readback_policy(),
+            expected_readback=cargoflow2_expected_readback_policy(schedule_version),
             bootstrap_command=f"start_ai {STAGED_AI_DIRECTORY}",
             execution_command=[
                 str(PROJECT / ".venv/bin/python"),
@@ -1157,7 +1169,7 @@ def prepare_cargoflow2_candidate(
                 "run",
                 str(directory),
             ],
-            budgets=cargoflow2_budgets(),
+            budgets=cargoflow2_budgets(schedule_version),
             cleanup=[
                 "close secure session",
                 "quit and reap process",
@@ -2413,6 +2425,17 @@ def _argument_parser() -> argparse.ArgumentParser:
             "composes (the default stages the route binding of record)"
         ),
     )
+    parser.add_argument(
+        "--schedule-version",
+        type=int,
+        default=None,
+        help=(
+            "the delivery arm the staged attempt composes: 2 stages the "
+            "delivered (route_version, schedule_version) = (2, 2) arm of "
+            "record; the default (omitted) stages the v1 envelope, whose "
+            "25-row ladder stays byte-equal to the recorded candidates"
+        ),
+    )
     return parser
 
 
@@ -2422,7 +2445,10 @@ def main():
     directory = args.directory.resolve()
     if args.command == "prepare":
         prepared = prepare_cargoflow2_candidate(
-            directory, prerequisite=args.prerequisite, route_version=args.route_version
+            directory,
+            prerequisite=args.prerequisite,
+            route_version=args.route_version,
+            schedule_version=args.schedule_version,
         )
         cargoflow2_preflight(prepared)
         print("PRELAUNCH PASS", directory)
