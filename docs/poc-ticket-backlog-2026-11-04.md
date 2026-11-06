@@ -2542,6 +2542,58 @@ readiness, outside this round's PoC definition.
   approval, none granted): the fresh independent review round
   (`READY-FOR-GATE-C`), Gate C, the ONE launch (the corner edge
   50351<->50352 rides the attempted route as its typed open
+  50351<->50352 rides the attempted route as its typed open
+  precondition — a preserved halt class on the ONE launch is terminal
+  for candidate-7 and re-enters via ticket 05's mechanism); tickets
+  11–13 unchanged blocked.
+- 2026-11-06 — T-010 review round: **READY-FOR-GATE-C (21/21, exit 0;
+  zero findings, zero reconciliation debt)** (candidate-7, the
+  v2-carrying composition; review approved in-session, one commit; no
+  push, no staging rerun, no signing, no claim, no launch, no native
+  run; no repo write by the audit). A fresh per-round audit script
+  (`/tmp/opencode/c7_review.py`; transcript
+  `/tmp/opencode/c7_review_output.txt`; script + transcript outside the
+  repo tree; never the candidate-bound old script) re-derived every
+  binding from disk and the live widened tree against the staged bytes:
+  round identity candidate-7, no consumed round-6 identity on any
+  staged byte, retained candidate-6 record byte-intact (nothing
+  relabeled); lineage quartet at the module pins; seal `9c5f7272…e19257`
+  == sidecar == the staging figure (before == after the audit); the
+  freeze-pin chain re-derived clean with the D2 source closure and
+  dependency inventory re-verified against `CARGOFLOW2_CLOSURE_ROOT`;
+  the staged GameScript identity byte-checked the live re-derived
+  save-restore composition; the v2-carrying derivation held —
+  `route_version 2` beside `schedule_version 1`, plan-model digest
+  `e1cafb23…c08b0` == binding 2's own live guarded factory derivation,
+  the staged schedule the one ladder of record (`5c0998f2…bf2d`,
+  `cargoflow2_schedule()` == the wire module's
+  `cargoflow2_schedule_rows(binding 2)`); the staged plan policy equal
+  to the full live `cargoflow2_plan_policy(2)` field-for-field (zero
+  diff); the five binding-shared instrument tables (hypothesis record,
+  funds fence, ladder grid, world pins, read-only fence) byte-equal
+  across both admitted bindings' live derivations — the E120
+  invariance promise now evidenced by audit; metadata expected-readback
+  and budgets equal to their live derivations (1 launch / 1 connection
+  / 0 retries / 32 requests); prerequisite `D5-F12-DEPOT-3` after-save
+  `183b2027…6ea6` with the staged source save re-verified on disk; the
+  candidate root exactly the staged 4 entries, pre-consumption, no
+  CLAIM / AUTHORIZATION / LAUNCH-CONSUMED / result marker anywhere; the
+  pinned binary re-digested `276d5b69…904c`; the production preflight
+  re-ran clean (`PREFLIGHT PASS`, exit 0). Audit-side honesty: the
+  first execution aborted 10/21 (exit 1) on an audit-side
+  mis-placement of the expected-readback axis (staged at the metadata
+  level beside the budgets, not inside the plan policy); nothing
+  repo-side touched, the corrected script re-ran the full table
+  end-to-end to 21/21, and the first-pass transcript (one output path,
+  overwritten by the re-run) is not retained — recorded, not
+  re-created. The review book of record:
+  `.scratch/d5-corridor-poc-tail/issues/02-round7-independent-review.md`
+  formed for the round per the ticket-02 review precedent.
+  `git diff --check` clean; `CONTEXT.md` pin `847d710a…984d` intact.
+  Next gate: Gate C (the Option-1 signature round bound to the fresh
+  seal `9c5f7272…e19257`, one write, its own explicit operator
+  approval, none granted by this round), then the ONE launch (the
+  corner edge 50351<->50352 rides the staged route as its typed open
   precondition — a preserved halt class on the ONE launch is terminal
   for candidate-7 and re-enters via ticket 05's mechanism); tickets
   11–13 unchanged blocked.
