@@ -3304,3 +3304,53 @@ readiness, outside this round's PoC definition.
   authorization `PENDING`. Next frontier: round ticket 02 — Gate C
   signature then the ONE launch, under the round grant; E36 and E114
   stay open per their own rules.
+- 2026-11-06 — **production round ticket 02 done (the Gate C
+  signature + the ONE native launch of the delivered arm on
+  candidate-11; E137; under the round grant of ticket 01; one commit;
+  no repo code change; no push)**: Gate C held exactly once — the
+  pre-write refusal gates all held (root the 4 staged entries, live
+  seal == sidecar == `a6aa529f…4473c564` hard-asserted pre-write,
+  `public_from_seed` == the pinned anchor, operator key identity
+  unchanged `cbb63ff5…40c614`, scope binding candidate-11 with plan
+  digest `3132bfa0…5e0527`, the payload digest staged == production
+  re-derivation `945b28d3…b4181d4`); the seed parsed from the
+  operator-held PEM in memory (final-32 RFC 8032 window), carried
+  env-only `CARGOFLOW_GATE_SEED`, never printed/filed/argv; ONE
+  sigop, ONE `AUTHORIZATION.json` write; the production
+  `verify_authorization` PASS with the record digest bound
+  (`c6ff5a9c…40ddf1`); the seed dropped from process memory
+  immediately after the write. Post-sign gates: the prelaunch
+  byte-equal sweep candidates 3–11 re-run byte-equal (the seal never
+  changed by a signature), `PREFLIGHT PASS`, the standalone `verify`
+  refused `CLAIM_ABSENT` exit 1 by design. THE ONE launch executed
+  exactly once: exit 0 `NATIVE_CARGOFLOW2_COMPLETE` rc 0,
+  native_launches 1, connections 1, requests 26 over the full
+  26-exchange ladder, state_changed true, halt null, last_status
+  `PHASE_STOPPED`; full run JSON `/tmp/opencode/t03_c11_run.txt`.
+  The phase outcome figures of record: anchor 712232 tick 291; loads
+  5/10/15 @flow-08 day 712271 (ticks 3173/3193/3213) plus a NEW
+  20-load @flow-09 day 712272 tick 3233 (four loads this round;
+  candidate-9 had three); the departure 20 @flow-09 day 712274 tick
+  3397; the bay arrivals 0 @flow-04 day 712251 tick 1676 and
+  20 @flow-12 day 712291 tick 4648; finance day 712292 delivered 0
+  income 0 funds 484764 tick 4711; `unloadings` [] EMPTY verbatim;
+  the finish-00 vehicle RUNNING (load 20, location 50862, speed 36)
+  at the last sample; sampled months 1950-01/02/03, prod_pickup 104,
+  trans_pickup 67, wait_pickup 0→126; funds sampling 485217→484765;
+  verification `CARGOFLOW2_COMPLETE` with the phase verdict
+  **`CARGOFLOW2_LOADED_NEVER_DELIVERED`** ("a load was latched, but
+  no unloaded amount reached the bay acceptance chain inside the
+  ladder" — verbatim) — the delivered-miss reproduces on the fresh
+  staging, twice-reproduced now (candidate-9, candidate-11); E36
+  stays open (same delivered arm, not a genuinely competing route),
+  E114 stays UNKNOWN. Post-run state: `CLAIM.json` consumed (1/0),
+  `LAUNCH-CONSUMED.json` at `d5-native-launch-consumed` binding
+  seal + record + identity, the artifact manifest sha-verified
+  68/68 via `sha256sum -c` (one transcript note: the first in-chat
+  probe mis-parsed the 2-column manifest rows and printed 68 bogus
+  mismatches; corrected end-to-end in-session; retained bytes never
+  touched), cleanup all-true, no `openttd` process, the seal
+  byte-equal post-run, the sweep byte-equal post-run, the
+  `CONTEXT.md` pin `847d710a…` intact. Next frontier: round ticket
+  03 — the production verify + the offline truth reconciliation
+  driver, books + E138, then the README update.
