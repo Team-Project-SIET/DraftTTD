@@ -3066,3 +3066,42 @@ readiness, outside this round's PoC definition.
   in-session) — then ticket 06, the ONE launch, under the operator's
   full-tail native-run direction; E36 and E114 stay open per their
   own rules.
+- 2026-11-06 — **tail ticket 05 done (the candidate-9 Gate C signature;
+  E132; the operator's combined in-session grant "Grant Gate C + ONE
+  launch — Recommended" covering this round and the ONE native launch
+  of ticket 06 with no further pausing; fresh round-bound signer driver
+  `/tmp/opencode/gate_c_cargoflow2_c9.py`, transcript
+  `/tmp/opencode/gate_c_c9_output.txt`; ONE signing operation, first
+  invocation, zero refusals, zero re-writes; one commit, no push)**:
+  pre-write refusal gates all held BEFORE any write — the gate surface
+  absent (root exactly the 4 staged entries), the live seal == sidecar
+  == the operator-approved seal `b29c03a4…9389fa` hard-asserted, the
+  authorization payload digest of record `14cec703…76b40` staged ==
+  production re-derivation, and the attempted scope binding this
+  round's staged identity (candidate-9 at the lineage constant, route
+  2 beside schedule 2, plan digest `3132bfa0…5e0527`, attempt
+  `D5-CARGOFLOW-2`). Seed mechanics exactly as the rounds of record
+  ran them: the operator-held armored PKCS#8 PEM
+  (`~/.local/share/openttd-operator/operator-private.pem`, 48-byte DER
+  carrying the final-32 RFC 8032 seed window) parsed in memory only,
+  never printed, never filed, never passed on any command line, carried
+  memory-only, env-only `CARGOFLOW_GATE_SEED` (base64); pre-write
+  `public_from_seed(seed)` == the pinned anchor `5063982b…880f` and
+  the operator key identity unchanged of record
+  `sha256-ed25519-public-key:cbb63ff5…40c614`. `AUTHORIZATION.json`
+  written exactly once — record sha256 of record
+  `0cbc505e…6095` (full:
+  `0cbc505eec734e604a2d14ffa97db172007536c99855bc71c6a9de64181b6095`);
+  production `verify_authorization` passes against the seeded anchor
+  (record digest bound: True); no signing ever repeated; the
+  seed-window variables dropped from the driver's memory immediately
+  after the write and the env unset. Post-write read-only state: root
+  = 5 entries, seal byte-equal after the write, `preflight` →
+  `PREFLIGHT PASS` exit 0 with the authorization present, standalone
+  `verify` still `AUTHORIZATION_UNVERIFIED` / `CLAIM_ABSENT` exit 1 by
+  design (the claim mints at the launch boundary only), seed env unset
+  + empty in a fresh shell, and all seven candidates' PRELAUNCH
+  byte-pictures before == after. Next frontier: tail ticket 06 — the
+  ONE native launch of candidate-9 under the combined grant's native
+  authorization (one attempt, no retry, no reconnect); E36 and E114
+  stay open per their own rules.
