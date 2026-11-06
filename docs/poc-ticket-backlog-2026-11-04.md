@@ -2719,3 +2719,54 @@ readiness, outside this round's PoC definition.
   FRONTIER: tickets 11–13 unblocked (11 funds-taxonomy ADR, 12 P07
   replay closure, 13 PoC completion declaration) — each needs its own
   explicit operator approval, none granted by this round.
+- 2026-11-06 — T-021a TICKET-11 COMPLETE — THE FUNDS TAXONOMY DECISION
+  OF RECORD LANDED (the draft round granted in-session as the frontier
+  instruction "do Ticket 11"; the draft surfaced the decision options
+  and the operator confirmation session held in-session with the
+  operator adopting the record via the explicit gate option "Confirm
+  decision of record"; one commit; no push, no mutation, no native
+  run): **ADR-0001 landed CONFIRMED DECISION OF RECORD**
+  (`docs/adr/0001-funds-taxonomy-of-record.md`; the first ADR-class
+  record of the repo per the lazy-ADR convention; no `CONTEXT.md`
+  change — the decision adds no new shared term; the status section
+  carries the confirmation: supersession-only thereafter). **The
+  taxonomy of record in seven decisions**: D1 the charge set {vehicle
+  purchase, monthly loan interest, station-value fee, road-vehicle
+  running cost} with one category per mechanism and NO
+  per-calendar-day OPEX bucket — running cost bills at every charge
+  event of the E113 event lattice of record (the `T0+1+74k` spread
+  slots, the 8.8 carry, the uint8-wrap borrow kernel unchanged); D2
+  income measured never modeled (engine readback at the observation
+  instants, per-span attribution); D3 OPEX = OBSERVED native cash
+  deltas only, with the four label classes of record spelled —
+  OBSERVED (retained receipt reads), DERIVED (any arithmetic on
+  observed/derived inputs; labeled, cited, recomputable; never the
+  truth class), CONTROLLED (pinned inputs the contract controls —
+  world pins, budgets, schedules, seeded constants; cited to their
+  pins; never evidence that the world did anything), UNKNOWN
+  (unestablished facts; never reclassified, never filled); D4
+  unexplained movement stays UNKNOWN and closes by the fence
+  (divergence → halt), never by the taxonomy; D5 revenue never profit
+  (margins DERIVED with inputs cited; the round-6/round-7
+  COMPLETE-not-delivered terminals reported as observed); D6 the
+  zero-residual fence carries into every replay (a replay failure
+  reports a finding, never normalizes); D7 reporting rules (identity
+  attribution travels, labels travel, milestone rates as script-tick
+  rates, fresh sibling outputs, no historical output overwritten).
+  **Rejected alternatives recorded with reasons**: calendar-day OPEX
+  bucketing (contradicts the E113 event law; the round-5 `arrive-00`
+  day-frame residual is the recorded example), nearest-exchange charge
+  allocation (the borrow kernel's whole-unit wrap miscounts outside
+  per-event billing), DERIVED aggregates as the OPEX truth class, and
+  revenue-as-profit. **Evidence anchors bound**: the round-3-class
+  depot-chain receipts (`D5-F12-DEPOT-3` pin `183b2027…6ea6`), the
+  round-6 corridor receipts (E116/E117, the charge set live-true), the
+  round-7 corridor second-route receipts (E124, `running_cost 421`
+  exact, every income delta engine-read 0), the spec's M7 "Funds
+  taxonomy" + "Reporting closure" blocks, and the design record
+  §4.2–4.4. `git diff --check` clean; `CONTEXT.md` pin
+  `847d710a…984d` intact. Books: ADR-0001 + ticket
+  `11-funds-taxonomy-adr.md` + this row. NEXT FRONTIER: ticket 12 (P07
+  replay closure; T-021b; blocked by 11 — now satisfied) — its own
+  explicit operator approval, none granted by this round; ticket 13
+  unchanged blocked behind 12.
