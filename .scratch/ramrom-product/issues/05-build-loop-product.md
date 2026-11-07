@@ -143,6 +143,25 @@ inherited lint fixes); `uvx ty check` clean on all six touched paths.
 
 ## Native proof still owed by this ticket (per-attempt grant required)
 
+### Attempt E145 (2026-11-07): granted two-cycle attempt failed typed pre-launch; repaired offline same day (E146)
+
+The one granted attempt of the command of record below failed typed before
+any OpenTTD launch:
+
+```
+Demo startup/run failed: STAGING_SEAM_DRIFT: delivery.nut seam drequests>=87 matched 0 times, expected 1
+```
+
+Retained directory `artifacts/demos/playable-demo-7b178d7093d9452a8f4d08806efa1b60`
+(graphics-identity + empty `isolated/`; no runtime bytes beyond staging).
+Root cause: the loop-scaled seam was stamped into `delivery.nut` before
+`stage_random`, whose seam audit anchors the pre-stage shape; repaired
+offline (E146) — pre-stage seam restored, `stage_random` now stamps the
+scaled floor via keyword `seam_requests`, and the reopen-verify replica
+recomposes with `loop_cycles`. The staging audit now passes offline
+end-to-end for `--cycles 2` (tests in `test_random_capture_budgets.py`).
+**The next attempt needs a fresh explicit operator grant.**
+
 1. ONE operator grant: the loop command of record below runs `--cycles 2`.
 2. The first cycle delivers ≥1 verified service on screen; the second cycle
    reconnects once and verifies its own delivery (or the world types

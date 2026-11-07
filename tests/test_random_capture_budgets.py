@@ -60,6 +60,56 @@ def test_stage_random_refuses_unknown_seam_shape(tmp_path):
         stage_random(removed, budget)
 
 
+def test_loop_staging_keeps_the_audited_pre_stage_seam():
+    """E145 repro: loop composition must not pre-scale the delivery seam the
+    stage's own seam-shape audit anchors on; the scaled run-level floor is
+    stamped by the stage itself."""
+    budget = DemoBudgets(max_relationships=16)
+    base = native.staged_package(True, True, True, network_service_limit=3)
+    for name in ("delivery.nut", "main.nut"):
+        assert base[name].count(b"drequests>=87") == 1
+        assert base[name].count(b"drequests>=174") == 0
+    staged = stage_random(base, budget.model_dump(), seam_requests=174)
+    for name in ("delivery.nut", "main.nut"):
+        assert staged[name].count(b"drequests>=174") == 1
+        assert staged[name].count(b"drequests>=87") == 0
+    # loop_cycles=1 stamps the same value the retained proven composition writes.
+    assert stage_random(base, budget.model_dump(), seam_requests=29 * 3) == stage_random(
+        base, budget.model_dump()
+    )
+
+
+def test_staged_package_loop_cycles_stamps_the_scaled_seam():
+    """The composition of record with --cycles 2 completes staging and stamps
+    the scaled floor; the verify replica recomposes the same bytes."""
+    budget = DemoBudgets(max_relationships=16)
+    loop = native.staged_package(
+        True,
+        True,
+        True,
+        network_service_limit=3,
+        random_budget=budget.model_dump(),
+        loop_cycles=2,
+    )
+    expected = stage_random(
+        native.staged_package(True, True, True, network_service_limit=3),
+        budget.model_dump(),
+        seam_requests=174,
+    )
+    assert loop == expected
+    single = native.staged_package(
+        True, True, True, network_service_limit=3, random_budget=budget.model_dump()
+    )
+    assert loop["delivery.nut"] != single["delivery.nut"]
+    assert (
+        loop["delivery.nut"].replace(b"drequests>=174", b"drequests>=87")
+        == (single["delivery.nut"])
+    )
+    from app.simulation.openttd.proof.freight_delivery import network_budgets
+
+    assert network_budgets(3, random_budget=budget.model_dump(), loop_cycles=2)["requests"] == 174
+
+
 def test_prepare_preflight_seals_explicit_capture_limits(tmp_path):
     budgets = DemoBudgets(max_relationships=2, capture_seconds=7)
     prepared = native.prepare(

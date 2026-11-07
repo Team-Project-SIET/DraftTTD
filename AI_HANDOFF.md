@@ -423,6 +423,53 @@ cycle delivering ≥1 verified service, per-cycle replay
 `INCOMPLETE_EVIDENCE` decision gains its first new native evidence under the
 new pacing.
 
+## 2026-11-07 native attempt E145 — GRANTED ATTEMPT FAILED TYPED PRE-LAUNCH (staging seam drift)
+
+Operator granted ONE two-cycle attempt of record this session. The attempt
+ran the exact command of record (`--cycles 2`, seed 2026, towns 3,
+industries 3, headless, stop-on-delivery) under the pinned binary and
+OpenGFX archive. **Terminal result: typed FAIL before any OpenTTD launch and
+before any AdminPort connection** — `Demo startup/run failed:
+STAGING_SEAM_DRIFT: delivery.nut seam drequests>=87 matched 0 times,
+expected 1`, exit code 1. Run directory retained untouched:
+`artifacts/demos/playable-demo-7b178d7093d9452a8f4d08806efa1b60` (only
+`graphics-identity.json` and an empty `isolated/` staging tree; no runtime
+workspace, no runtime-identity, no process ever started). No retry, no
+second launch, no relabeling; the grant is consumed by the attempt of
+record. Root cause recorded under E146 and fixed offline the same day.
+
+## 2026-11-07 E146 — loop staging seam fix (offline; E143/E144's scaled composition broke the stage's own audit)
+
+Root cause: since the E143 round, the network composition stamped the
+loop-scaled floor (`network_budgets(..., loop_cycles)["requests"]` = 174)
+into `delivery.nut` **before** `stage_random` ran, but `stage_random`'s
+seam-shape audit (`_SEAM_COUNTS`) anchors the pre-stage template on the
+proven serial-executor shape (`drequests>=87` once in `delivery.nut`,
+once in `main.nut`) and stamps the final run-level floor itself. Every
+`--cycles 2` staging thus died typed `STAGING_SEAM_DRIFT` pre-launch — the
+E143 path was never integration-exercised, and no offline test composed the
+full package at `loop_cycles=2`. Fix of record: composition restores the
+legacy per-run pre-stage seam byte-for-byte
+(`f"drequests>={network_budgets(network_service_limit)['requests']}"`,
+audited shape intact), `stage_random` takes a keyword-only
+`seam_requests` (default keeps the
+retained-copy-compatible `29*limit` behavior; loop attempts pass the
+network-scaled value, stamping `drequests>=174` in `delivery.nut` and
+`main.nut` post-stage), and the reopen-verify replica now recomposes with
+`loop_cycles=m.get("loop_cycles", 1)` (a second drift in the same family:
+without it every loop attempt would later trip "stale delivery package").
+Byte-parity at `loop_cycles=1` asserted against the proven composition.
+New offline tests: `test_loop_staging_keeps_the_audited_pre_stage_seam`,
+`test_staged_package_loop_cycles_stamps_the_scaled_seam` in
+`tests/test_random_capture_budgets.py` (256 passed with the full adjacent
+tuple of record: capture budgets, demo-random-native, native network,
+network-world-preparation, loops, scenario capital, canonical persistence
+and transport, continuous, finance, demo, delivery, network). ruff/format/
+`py_compile`/`git diff --check` clean; `uvx ty check` clean on the three
+touched paths. **Next action is again the operator's:** the E145 grant is
+consumed; a fresh explicit grant is required before the next attempt of
+record (same command; the staging path now passes its audit offline).
+
 ## 2026-11-07 loop verify/record fix-round addendum (offline, E144; corrects E143's false verify claims)
 
 This addendum supersedes the verification claims of the addendum above where
@@ -437,9 +484,7 @@ the verify prologue omitted `loop_cycles` (every cycle verify failed typed
 retrievable per-connection recording, so no loop attempt could have satisfied
 that command. No scientific conclusion ever rested on the false claims —
 no native loop attempt had been run — so the failures were Implementation
-Level and are repaired, never relabeled.
-
-**What this round added (all offline):** per-cycle `loop-cycle-{k}`
+Level and are repaired, never relabeled.**What this round added (all offline):** per-cycle `loop-cycle-{k}`
 recordings now hold their own `frames.json` (root-frame slice per the sealed
 `loop-cycle.json` marker), a sliced
 `qualification-prefix-frames.json`, a scoped `result.json`/`cycle-result.json`

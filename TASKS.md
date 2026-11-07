@@ -3324,3 +3324,43 @@ sources: `app/simulation/openttd/proof/freight_delivery.py` `8011b1c2a3c39240`,
   budget; abandon semantics exercised offline only.
 
 Evidence index E144.
+
+### 2026-11-07 — granted native attempt E145: typed terminal pre-launch (staging seam drift) + same-day offline repair E146
+
+The operator granted exactly one two-cycle attempt of the Phase C loop
+command of record. **The attempt failed typed before any OpenTTD launch and
+before any AdminPort connection**: `ValueError: STAGING_SEAM_DRIFT:
+delivery.nut seam drequests>=87 matched 0 times, expected 1` from
+`stage_random`'s `_SEAM_COUNTS` pre-stage audit; exit code 1; retained run
+directory `artifacts/demos/playable-demo-7b178d7093d9452a8f4d08806efa1b60`
+(`graphics-identity.json` + empty `isolated/`; no workspace, no
+runtime-identity, no process). No retry, no relabeling; the grant is
+consumed by the attempt of record. Working tree sha256 prefixes of the fix:
+`app/demo_random_native.py` `258ba9dbe19c7284`,
+`app/simulation/openttd/proof/freight_delivery.py` `2cce3070c125bd41`,
+`tests/test_random_capture_budgets.py` `4c27ff878a285ae2`.
+
+- **Root cause (E143-era):** composition stamped the loop-scaled floor
+  `drequests>=174` into `delivery.nut` before `stage_random`, whose
+  `_SEAM_COUNTS` audit anchors the pre-stage template on the proven
+  serial-executor shape (87 once in `delivery.nut`, once in `main.nut`) and
+  stamps the final floor itself. No offline test ever composed the full
+  package at `loop_cycles=2`, so the drift survived the offline rounds.
+- **Fix:** composition restores the legacy per-run pre-stage seam;
+  `stage_random(out, budgets, *, seam_requests=None)` stamps the final
+  run-level floor (loop attempts pass
+  `network_budgets(...)["requests"]` = 174; default keeps byte parity with
+  the retained frozen-source copy); the reopen-verify replica recomposes
+  with `loop_cycles=m.get("loop_cycles", 1)` (second drift of the same
+  family: without it every loop attempt would trip "stale delivery
+  package").
+- **Offline tests:** 2 new staging tests (the E145 repro + the scaled-seam
+  composition of record); adjacent suites of record 256 passed (incl. the
+  retained frozen-source `stage_random` byte-parity); ruff/format/
+  `py_compile`/`git diff --check` clean; `uvx ty check` clean on the three
+  touched paths.
+- **Native remainder (grant-gated):** the E145 grant is consumed; a fresh
+  explicit operator grant is required before the next attempt of record
+  (same command of record; preflight now includes the staging audit).
+
+Evidence index E145 + E146.

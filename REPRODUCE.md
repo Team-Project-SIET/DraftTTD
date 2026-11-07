@@ -1395,3 +1395,50 @@ uvx ty check app/openttd_demo.py \
 
 The native command of record and its per-cycle verify command remain exactly
 the addendum #2 block above; nothing changed there.
+
+## 2026-11-07 addendum #4 — E145 attempt failed pre-launch; E146 staging seam fix (checked)
+
+The ONE granted `--cycles 2` attempt of record died typed before launch:
+`STAGING_SEAM_DRIFT: delivery.nut seam drequests>=87 matched 0 times,
+expected 1`. Retained immutable directory:
+`artifacts/demos/playable-demo-7b178d7093d9452a8f4d08806efa1b60`. Root
+cause and repair recorded in `AI_HANDOFF.md` (E145/E146),
+`EVIDENCE_INDEX.md` (rows E145, E146) and the ticket-05 file.
+
+```bash
+# Staging suites of record touched by the repair (all green together,
+# incl. the retained frozen-source stage_random byte-parity test)
+.venv/bin/pytest tests/test_random_capture_budgets.py \
+  tests/test_demo_random_native.py tests/test_native_freight_network.py \
+  tests/test_network_world_preparation.py tests/test_freight_loops.py \
+  tests/test_scenario_capital.py tests/test_freight_canonical_persistence.py \
+  tests/test_freight_canonical_transport.py tests/test_freight_continuous.py \
+  tests/test_freight_finance.py tests/test_openttd_demo.py \
+  tests/test_freight_delivery.py tests/test_freight_network.py
+# → 256 passed (2 new staging tests: audited pre-stage seam + scaled
+#   --cycles 2 composition of record)
+
+# Touch-path hygiene (this round's files)
+.venv/bin/ruff check app/demo_random_native.py \
+  app/simulation/openttd/proof/freight_delivery.py \
+  tests/test_random_capture_budgets.py
+.venv/bin/ruff format --check app/demo_random_native.py \
+  app/simulation/openttd/proof/freight_delivery.py \
+  tests/test_random_capture_budgets.py
+.venv/bin/python -m py_compile app/demo_random_native.py \
+  app/simulation/openttd/proof/freight_delivery.py
+git diff --check
+uvx ty check app/demo_random_native.py \
+  app/simulation/openttd/proof/freight_delivery.py \
+  tests/test_random_capture_budgets.py
+# → all clean; ty "All checks passed!"
+
+# Offline staging preflight now part of the preflight of record (no launch):
+# the full composition of record completes the stage audit and stamps the
+# scaled floor (asserted by the two new tests; the CLI prelaunch path runs
+# the same composition before any process starts).
+```
+
+The native command of record and the per-cycle verify command are unchanged
+from addenda #2/#3. The next attempt requires a fresh explicit operator
+grant.

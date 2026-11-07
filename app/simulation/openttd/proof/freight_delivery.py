@@ -365,11 +365,7 @@ def staged_package(
         )
         out["delivery.nut"] = out["delivery.nut"].replace(
             b"drequests>=26",
-            (
-                "drequests>={}".format(
-                    network_budgets(network_service_limit, loop_cycles=loop_cycles)["requests"]
-                )
-            ).encode(),
+            f"drequests>={network_budgets(network_service_limit)['requests']}".encode(),
         )
         out["delivery.nut"] = out["delivery.nut"].replace(
             b"GSVehicleList().Count()!=1", b"GSVehicleList().Count()!=ExpectedVehicleCount()"
@@ -468,8 +464,12 @@ def staged_package(
     if random_budget is not None:
         from app.demo_random_native import stage_random
 
-        network_budgets(requested_limit, random_budget=random_budget, loop_cycles=loop_cycles)
-        out = stage_random(out, random_budget)
+        # The pre-stage package keeps the audited serial-executor seam; the
+        # stage stamps the final run-level floor, scaled for loop attempts.
+        seam_requests = network_budgets(
+            requested_limit, random_budget=random_budget, loop_cycles=loop_cycles
+        )["requests"]
+        out = stage_random(out, random_budget, seam_requests=seam_requests)
     return out
 
 
@@ -1259,6 +1259,7 @@ def preflight(p):
         m.get("network_service_limit", 2),
         m.get("continuous_years"),
         random_budget=m.get("random_budget"),
+        loop_cycles=m.get("loop_cycles", 1),
     ).items():
         if data != (p.spec.workspace.game / "RoadFreightProof" / name).read_bytes():
             raise ValueError("stale delivery package")
