@@ -376,3 +376,26 @@ supersession decision.
 
 The final documentation/architecture review is recorded in
 [review.md](docs/handoff/2026-10-17/review.md).
+
+## 2026-11-07 Phase C addendum (offline; no runtime authority consumed or granted)
+
+Project Phase C ran offline in this session and left two deliverables, both
+recorded in [docs/phase-c-reconciliation-feasibility-2026-11-07.md](docs/phase-c-reconciliation-feasibility-2026-11-07.md)
+with the ledger rows `2026-11-07` in TASKS.md, E142 in EVIDENCE_INDEX.md and
+the checked commands in REPRODUCE.md. FD-C-1: the Oct-18/25 V1/V2 semantic
+reconciliation chain was re-derived byte-exactly from the retained seed-17
+census (77 definitional + 6 temporal, 0 contradictions; ADR-012/013 derived
+P08 binding `allowed=true`, `p08_complete=false`; sealed fusion verdict
+untouched). FD-C-2: the new typed decision engine
+`app/planning/phase_c_feasibility.py` (offline CLI, policy
+`phase-c-feasibility/1`) derives the Random World feasibility decision of
+record `INCOMPLETE_EVIDENCE` into the git-ignored derived directory
+`artifacts/experiments/phase-c-feasibility-2026-11-07/` (byte-deterministic
+across independent derivations). No Random World delivery was delivered or
+proven; no observed-world infeasibility is claimed anywhere because every
+recorded bounded random-world search was truncated. The recorded next
+operator decision is the capture-pacing design (ticket-03 family), then a
+fresh gated native capture round — per-attempt fences in
+[the roadmap](docs/roadmap-and-scope-2026-11-05.md) still govern every
+launch. Full offline regression (53 sealed legacy reds) remains the
+wayfinder EXIT gate, not this round's subject.

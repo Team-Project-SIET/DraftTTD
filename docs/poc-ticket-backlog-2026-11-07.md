@@ -64,3 +64,46 @@ operator.
   clock during fact capture (recorded in the diagnostic), or an equivalent
   pacing boundary. No further native attempt is scheduled without a fresh
   per-attempt operator grant.
+
+## Status log (2026-11-07, Project Phase C offline round — FD-C-1/FD-C-2)
+
+- Offline only: no OpenTTD launch, no AdminPort connection, no candidate
+  staging or signing, no claim consumption, no native receipt, no
+  `artifacts/` byte modified; one commit, no push. Full record:
+  [docs/phase-c-reconciliation-feasibility-2026-11-07.md](phase-c-reconciliation-feasibility-2026-11-07.md).
+- **FD-C-1 verified rather than rebuilt.** The 2026-10-18/10-25
+  reconciliation chain (policy `vacant-projection-1`, ADR-012/013) was
+  re-derived from the retained seed-17 census inputs: five reports
+  byte-equal (reconciliation `c1cfa970…`, ADR-012 `221ce926…`, ADR-013
+  `7616f626…`, combined rebinding `079fce64…`, ADR-012-only rebinding
+  `c9d11d41…`) and the 19-tile unknown-occupancy diagnosis (`66ed07cc…`)
+  JSON-value-identical only (retained serialization came from a one-off
+  driver) — counts 83→77 definitional + 6 temporal + 0 contradictions +
+  0 unresolved, sealed `SOURCE_SAVE_FUSION REJECTED` and retained
+  `INCOMPLETE_TILE_CLASSIFICATION` untouched, 19 UNKNOWN tiles map to
+  `TERRAIN_MODIFICATION` in the derived planning layer only
+  (`p08_binding.allowed=true`, `p08_complete=false`). Focused suites 83
+  passed.
+- **FD-C-2 built and offline-verified.** New typed decision engine
+  `app/planning/phase_c_feasibility.py` `phase-c-feasibility/1`)
+  with ten required dimensions, the five outcome classes under a
+  deterministic precedence (`UNSUPPORTED_CAPABILITY` > completed-search
+  `INFEASIBLE_FOR_OBSERVED_WORLD` > `SEPARATE_SCOPE_EXTENSION` >
+  `INCOMPLETE_EVIDENCE` > `FEASIBLE_…`), a typed P05 prerequisite gate
+  mirroring `freight_native_network.py:178`, single-domain evidence rows
+  that refuse Candidate-11/D5/fixed-scenario domains at construction
+  (both as strings and by set-disjointness), fail-closed absence rows
+  carrying real file digests, and limits regex-pinned against their own
+  source bytes (drift refuses). 48 focused tests green.
+- **Decision of record**: `artifacts/experiments/phase-c-feasibility-
+  2026-11-07/feasibility-decision-report.json` (sha256 `67183cf6…31fa4`)
+  — outcome **`INCOMPLETE_EVIDENCE`**: 2 VERIFIED dimensions
+  (industry_cargo_compatibility, supported_map_search_limits), 8 PARTIAL,
+  27 digest-pinned rows, zero observed-world-infeasibility rows (every
+  recorded bounded random-world search was truncated). Recommended next
+  action: the capture-pacing design decision (ticket-03 family) under the
+  roadmap fences, then a fresh gated native capture round.
+- Verification ledger: both suites 131 passed; ruff/format/`py_compile`
+  clean on touched paths; `git diff --check` clean; `ty` reports 1
+  diagnostic on the touched files (deliberate runtime-validated refusal,
+  counted, never repaired).

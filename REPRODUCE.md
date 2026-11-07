@@ -1231,3 +1231,49 @@ either — each launch claim is single-use and consumed
 `d5-native-launch-consumed` at its ONE authorized launch; a further native
 attempt needs its own staged candidate, independent review, Gate C signature
 and explicit operator authorization.
+
+## 2026-11-07 addendum — Project Phase C offline verification (FD-C-1 / FD-C-2, checked)
+
+Offline only: no OpenTTD launch, no AdminPort connection, no candidate work,
+no `artifacts/` mutation. Record doc:
+[docs/phase-c-reconciliation-feasibility-2026-11-07.md](docs/phase-c-reconciliation-feasibility-2026-11-07.md).
+
+```bash
+# FD-C-1 re-derivation (byte-compares to the retained reports of record)
+.venv/bin/python -m app.simulation.openttd.v2_semantic_reconciliation \
+  artifacts/demos/playable-demo-698799a2dfb146948fd2983ff2032253/network-facts-0.json \
+  artifacts/demos/classification-exec-seed17-3a8f9e46 \
+  /tmp/opencode/fdc1_recheck \
+  --apply-adr-012 --apply-adr-013 --rebind-p08
+# → verdict SEMANTICALLY_RECONCILED_TEMPORAL_UNRESOLVED; raw_gate=83,
+#   definitional=77, temporal=6, contradictions=0, unresolved=0; the four
+#   retained reports digest-equal (c1cfa970…, 221ce926…, 7616f626…,
+#   079fce64…); p08-policy-rebinding c9d11d41… byte-equal; the
+#   unknown-occupancy diagnosis 66ed07cc… JSON-value-equal only.
+
+# FD-C-2 decision of record (derived output, git-ignored artifacts dir)
+.venv/bin/python -m app.planning.phase_c_feasibility \
+  artifacts/experiments/phase-c-feasibility-2026-11-07 \
+  --project-root /home/fed/codes/softdev2
+# → outcome INCOMPLETE_EVIDENCE, 19 inputs; report JSON sha256
+#   67183cf6…31fa4, Markdown sha256 edeac983…5dab; two independent
+#   derivations are byte-equal.
+
+# Focused suites of record (131 tests total)
+.venv/bin/pytest tests/test_v2_semantic_reconciliation.py \
+  tests/test_census_authority_policy.py \
+  tests/test_p08_policy_rebinding.py \
+  tests/test_p08_v2_snapshot.py
+# → 83 passed
+.venv/bin/pytest tests/test_phase_c_feasibility.py
+# → 48 passed (retained-evidence pins skip honestly when evidence absent)
+
+# Touch-path hygiene
+.venv/bin/ruff check app/planning/phase_c_feasibility.py tests/test_phase_c_feasibility.py
+.venv/bin/ruff format --check app/planning/phase_c_feasibility.py tests/test_phase_c_feasibility.py
+.venv/bin/python -m py_compile app/planning/phase_c_feasibility.py tests/test_phase_c_feasibility.py
+git diff --check
+uvx ty check app/planning/phase_c_feasibility.py tests/test_phase_c_feasibility.py
+# → ruff/format/compile/diff-check clean; ty 1 diagnostic (deliberate
+#   runtime-validated refusal in the test file; counted, never repaired).
+```

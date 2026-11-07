@@ -3158,3 +3158,52 @@ re-open a freight attempt.
   chain approval, recorded here as this round's authorization shape.
 
 Evidence index E99.
+
+### 2026-11-07 — Project Phase C offline round: FD-C-1 verified, FD-C-2 built + decided (E142)
+
+Offline only: no OpenTTD launch, no AdminPort connection, no candidate
+staging/signing/claim, no native receipt; retained `artifacts/` bytes
+untouched (digests re-verified); one commit, no push. Record doc of record:
+[docs/phase-c-reconciliation-feasibility-2026-11-07.md](docs/phase-c-reconciliation-feasibility-2026-11-07.md).
+
+- **FD-C-1 (reconciliation record-of-record):** verified, not rebuilt.
+  Independent re-derivation from the retained seed-17 census inputs
+  reproduced the 2026-10-18/10-25 chain byte-exactly — reconciliation
+  `c1cfa970…`, ADR-012 `221ce926…`, ADR-013 `7616f626…`, combined
+  rebinding `079fce64…`, ADR-012-only rebinding `c9d11d41…` — with 83
+  disagreements → 77 definitional + 6 temporal (43951/47286/47288/48042/
+  48309/51378) + 0 contradictions + 0 unresolved, and `p08_binding
+  .allowed=true` for planning-classification only (`p08_complete=false`,
+  19 UNKNOWN → `TERRAIN_MODIFICATION` in the derived layer; the 19-tile
+  diagnosis `66ed07cc…` JSON-value-identical, retained serialization was
+  a one-off driver). Focused suites 83 passed.
+- **FD-C-2 (Random World feasibility decision):** new engine
+  `app/planning/phase_c_feasibility.py` (committed sha256 prefix
+  `c585874d9c547ae5…`; policy `phase-c-feasibility/1`): ten required
+  dimensions; five outcome classes with deterministic precedence;
+  typed single-domain evidence rows with the prohibited
+  Candidate-11/D5/fixed-scenario set refused at construction;
+  completed-search-only `INFEASIBLE_FOR_OBSERVED_WORLD` rows (verbatim
+  tag, direct flag refused); typed P05 prerequisite gate
+  (`UNKNOWN_CANDIDATE_COUNT`/`EMPTY_CANDIDATE_SET`/`INVALID_CANDIDATE_SET`
+  /`ADMISSIBLE`) mirroring `freight_native_network.py:178`;
+  fail-closed unobserved rows carrying real digests; limits regex-pinned
+  against their own bytes. 48 focused tests green.
+- **Decision of record** `artifacts/experiments/phase-c-feasibility-
+  2026-11-07/` (JSON sha256 `67183cf6…31fa4`, MD `edeac983…5dab`):
+  outcome `INCOMPLETE_EVIDENCE` — 2 VERIFIED dimensions
+  (industry_cargo_compatibility, supported_map_search_limits), 8 PARTIAL,
+  19 digest-pinned present inputs, 27 rows, zero observed-world-
+  infeasibility rows because every recorded bounded random-world search
+  was truncated (`search_truncated true`); P05 gate refusal
+  `EMPTY_CANDIDATE_SET` recorded from the seed-2026 terminal.
+- **Recommended next action carried by the report:** the capture-pacing
+  design decision (ticket-03 family, e.g. pause-the-clock capture) under
+  the roadmap fences, then a fresh gated native capture round; no
+  feasibility flip without new native evidence.
+- **Verification:** suites 83 + 48 = 131 passed; ruff/format clean
+  (touched paths); `py_compile` clean; `git diff --check` clean; `ty`
+  1 diagnostic on the touched files (deliberate runtime-validated
+  refusal; counted, never repaired).
+
+Evidence index E142.
