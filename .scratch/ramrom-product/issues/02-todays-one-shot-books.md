@@ -1,7 +1,7 @@
 # 02 — Books: the two one-shot results of 2026-11-07
 
 Type: task
-Status: open
+Status: resolved
 Blocked by: none
 
 ## Question
@@ -19,3 +19,11 @@ close; one attempt, no retry). The row belongs in the ledger
 (`docs/poc-ticket-backlog-*.md`) and both run facts ride the map's
 reading (the second run is the soft-close evidence). No relabeling, no
 regeneration, no repo code change; one commit.
+
+## Answer
+
+Resolved. Ledger file of record `docs/poc-ticket-backlog-2026-11-07.md`
+(status log carries both runs and the ticket-01 resolution); evidence
+rows E139 (seed-2026 typed NO_FEASIBLE_SERVICES) and E140 (seed-42
+operator-close abort) appended to `EVIDENCE_INDEX.md`. One commit, local
+only, no push, no artifacts byte touched.
