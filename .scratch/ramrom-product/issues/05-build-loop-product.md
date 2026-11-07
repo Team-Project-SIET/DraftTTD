@@ -160,7 +160,28 @@ offline (E146) — pre-stage seam restored, `stage_random` now stamps the
 scaled floor via keyword `seam_requests`, and the reopen-verify replica
 recomposes with `loop_cycles`. The staging audit now passes offline
 end-to-end for `--cycles 2` (tests in `test_random_capture_budgets.py`).
-**The next attempt needs a fresh explicit operator grant.**
+### E147 (2026-11-08): the staging lifecycle proven offline end-to-end
+
+The E146 repair is pinned by lifecycle tests, not unit seams alone
+(E147 in `EVIDENCE_INDEX.md`; `REPRODUCE.md` addendum #5; TASKS ledger
+row). New offline tests only, `tests/test_random_capture_budgets.py`
+(sha256 prefix `f6a432e2b771231b`): the full `prepare`+`preflight`
+lifecycle at `--cycles 2` with the command-of-record capture profile
+(sealed budgets 174/66/66,690/2400/384; scaled seam `drequests>=174` once
+per file in BOTH the workspace package and the frozen-source `staged/`
+bytes; no claim); the `--cycles 1` lifecycle byte-parity with the retained
+proven composition (whole staged package); a spy pinning the stage
+call-site contract `seam_requests == network_budgets(...)["requests"]` for
+`loop_cycles` 1/2/8 (87/174/696 — composition-side scaling cannot silently
+diverge from the audited stage or the sealed budget); boundary pins for
+the two-service legacy seam (58) and the audited pre-stage shape at k=2/8.
+Staging suite 13 passed; adjacent tuple 260 passed; planning tuple
+120 passed + 1 self-skipped native-gated proof.
+
+**Verdict: `OFFLINE FIX VERIFIED` / `NATIVE VERIFICATION PENDING`** — the
+staging path provably passes its audit offline for every cycle depth; the
+world, capture pacing, reconnect and loop recordings remain unproven
+natively; the next attempt requires a fresh explicit operator grant.
 
 1. ONE operator grant: the loop command of record below runs `--cycles 2`.
 2. The first cycle delivers ≥1 verified service on screen; the second cycle

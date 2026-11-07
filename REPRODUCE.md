@@ -1442,3 +1442,44 @@ uvx ty check app/demo_random_native.py \
 The native command of record and the per-cycle verify command are unchanged
 from addenda #2/#3. The next attempt requires a fresh explicit operator
 grant.
+
+## 2026-11-08 addendum #5 — E147: `--cycles 2` staging lifecycle proven offline (checked)
+
+Offline only; no launch, no AdminPort, no claim, no `artifacts/` mutation.
+The E146 repair is pinned end-to-end; no app code changed. Records:
+`EVIDENCE_INDEX.md` row E147, TASKS ledger row, ticket-05 section.
+
+```bash
+# Staging suite (now 13 offline tests incl. the four lifecycle pins)
+.venv/bin/pytest tests/test_random_capture_budgets.py
+# → 13 passed
+
+# Suites of record (all green together):
+# adjacent tuple (E146's 13-file tuple)
+.venv/bin/pytest tests/test_random_capture_budgets.py \
+  tests/test_demo_random_native.py tests/test_native_freight_network.py \
+  tests/test_network_world_preparation.py tests/test_freight_loops.py \
+  tests/test_scenario_capital.py tests/test_freight_canonical_persistence.py \
+  tests/test_freight_canonical_transport.py tests/test_freight_continuous.py \
+  tests/test_freight_finance.py tests/test_openttd_demo.py \
+  tests/test_freight_delivery.py tests/test_freight_network.py
+# → 260 passed
+# planning tuple
+.venv/bin/pytest tests/test_planning_execution.py tests/test_planning_transport.py \
+  tests/test_freight_planning.py tests/p07_proof_harness.py \
+  tests/test_planning_transport_live.py
+# → 120 passed, 1 skipped (the live P03 proof self-skips without --run-openttd)
+
+# Hygiene (touched path)
+.venv/bin/ruff check tests/test_random_capture_budgets.py
+.venv/bin/ruff format --check tests/test_random_capture_budgets.py
+.venv/bin/python -m py_compile tests/test_random_capture_budgets.py
+git diff --check
+uvx ty check tests/test_random_capture_budgets.py
+# → all clean; ty "All checks passed!"
+```
+
+The documented 53-legacy-red FULL regression stays the wayfinder EXIT gate
+(not this round's gate). The native command of record and per-cycle verify
+command remain unchanged from addenda #2/#3; the next attempt requires a
+fresh explicit operator grant.

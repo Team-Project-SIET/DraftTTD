@@ -3364,3 +3364,59 @@ consumed by the attempt of record. Working tree sha256 prefixes of the fix:
   (same command of record; preflight now includes the staging audit).
 
 Evidence index E145 + E146.
+
+### 2026-11-08 — E147: `--cycles 2` staging lifecycle proven offline end-to-end
+
+Offline only; no launch, no AdminPort, no claim, no `artifacts/` mutation;
+one commit, no push. The E146 repair is now pinned by end-to-end lifecycle
+tests, not unit seams alone. Working tree sha256 prefix of the touched
+source: `tests/test_random_capture_budgets.py` `f6a432e2b771231b` (no app
+code changed this round).
+
+- **Lifecycle trace verified of record:** (1) initial composition
+  `staged_package` keeps the legacy per-profile pre-stage seams (87 for the
+  random-forced three-service profile, 58 for the two-service non-random
+  profile); (2) `prepare` seals
+  `m["budgets"] = network_budgets(..., loop_cycles=k)` into
+  `PRELAUNCH.json` under the gates
+  (`network + planner + demo + random_world`, no continuous); (3)
+  `stage_random` first runs the `_SEAM_COUNTS` audit on the audited
+  pre-stage bytes, then stamps the final run-level floor
+  (`drequests>=29·3·k`) once per file plus the planner/256-map seams; (4)
+  `preflight` recomputes the sealed budgets with the metadata's own
+  `loop_cycles`, verifies the frozen sources, and recomposes the workspace
+  package with `loop_cycles=m.get("loop_cycles", 1)` (the "stale delivery
+  package" check) — the E146 keyword `seam_requests` threads the same
+  sealed value; (5) the verify side reads the same composition through the
+  frozen-source `staged/` correspondence.
+- **New offline tests (4):** `--cycles 2` full
+  `prepare`+`preflight` lifecycle with the command-of-record capture
+  profile (budgets 174/66/66,690/2400/384 pinned; scaled seam exactly once
+  per file in BOTH the workspace package and the frozen-source `staged/`
+  bytes; zero 87-residue; no claim);
+  `--cycles 1` byte-parity lifecycle (workspace bytes == the retained
+  proven `stage_random(base)` output; `preflight` recomputes the same
+  budgets object); the `stage_random` call-site contract captured through
+  a spy (`seam_requests == network_budgets(...)["requests"]` for k=1,2,8 —
+  the composition-side scaling cannot silently diverge from the audited
+  stage); boundary/profile pins (two-service legacy seam 58; pre-stage
+  audit shape holds for k=2 and k=8 — stamped 174/696 exactly once).
+- **Suites of record:** staging suite 13 passed; the full adjacent tuple
+  (capture budgets, demo-random-native, native network,
+  network-world-preparation, loops, scenario capital, canonical
+  persistence/transport, continuous, finance, demo, delivery, network) —
+  260 passed; the planning-side tuple (planning execution, planning
+  transport, freight planning, P07 proof harness, planning transport live)
+  — 120 passed + 1 self-skipped native-gated proof. The documented
+  53-legacy-red FULL regression stays the wayfinder EXIT gate (not this
+  round's gate).
+- **Hygiene:** ruff/format/`py_compile`/`git diff --check` clean;
+  `uvx ty check` clean on the touched path.
+- **Status:** `OFFLINE FIX VERIFIED` — the complete `--cycles 2`
+  composition, sealing, staging audit, preflight recomposition and frozen
+  correspondence are deterministic offline. `NATIVE VERIFICATION PENDING`:
+  the world, capture pacing, reconnect and loop recordings remain unproven
+  natively; the E145 grant is consumed and the next attempt of record
+  requires a fresh explicit operator grant.
+
+Evidence index E147.

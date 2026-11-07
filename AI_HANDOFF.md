@@ -523,3 +523,42 @@ identical response bytes across cycles (accepted); reconnect establishment
 never natively exercised; two-cycle pacing budget; abandon semantics
 exercised offline only. FD-C-2's `INCOMPLETE_EVIDENCE` (E142) flips only on
 completed bounded native search evidence.
+
+## 2026-11-08 E147 addendum — `--cycles 2` staging lifecycle proven offline end-to-end
+
+The E146 fix is pinned by lifecycle tests, not unit seams alone, on
+2026-11-08 (offline; no launch, no claim, no `artifacts/` mutation; one
+commit, no push). Record: E147 in `EVIDENCE_INDEX.md`, TASKS ledger row,
+`REPRODUCE.md` addendum #5. No app code changed; new tests only in
+`tests/test_random_capture_budgets.py` (prefix `f6a432e2b771231b`).
+
+The lifecycle trace of record walks the whole path deterministically:
+composition (`staged_package`, legacy pre-stage seams 87/58 per profile) →
+PRELAUNCH sealing (`m["budgets"] = network_budgets(..., loop_cycles=k)`) →
+random staging (`stage_random`: `_SEAM_COUNTS` audit first, then the final
+scaled floor stamped once per file via `seam_requests` =
+`network_budgets(...)["requests"]`) → preflight recomposition (budgets
+recomputed with the metadata's `loop_cycles`; recomposed workspace bytes
+must equal the workspace package, else "stale delivery package") → verify
+side through the frozen-source `staged/` correspondence.
+
+Coverage that makes silent divergence impossible instead of unlikely: the
+`--cycles 2` full `prepare`+`preflight` lifecycle pins the sealed budgets
+(174/66/66,690/2400/384) and the scaled seam once per file in both the
+workspace package and the frozen-source `staged/` bytes; the `--cycles 1`
+lifecycle asserts byte parity with the retained proven composition across
+the whole staged package; a spy pins the stage call-site contract
+(`seam_requests ==` the sealed scaled budget) for `loop_cycles` 1/2/8 (→
+87/174/696); boundary pins cover the two-service legacy seam (58) and the
+audited pre-stage shape at k=2/k=8 (stamped 174/696 exactly once).
+
+Suites of record: staging 13 passed; adjacent tuple 260 passed; planning
+tuple 120 passed + 1 self-skipped native-gated proof; the 53-legacy-red
+FULL regression remains the wayfinder EXIT gate, not this round's gate.
+Hygiene clean (ruff/format/`py_compile`/`git diff --check`/`ty`).
+
+**Verdict: `OFFLINE FIX VERIFIED` / `NATIVE VERIFICATION PENDING`.** The
+staging path provably cannot ship drifted seam bytes offline; the world,
+capture pacing, reconnect and loop recordings remain unproven natively.
+The E145 grant is consumed; the next attempt of record needs a fresh
+explicit operator grant (command of record unchanged).
