@@ -351,6 +351,25 @@ def main(argv=None):
     parser.add_argument("--max-candidates", type=int)
     parser.add_argument("--planning-seconds", type=int)
     parser.add_argument(
+        "--capture-tiles",
+        type=int,
+        choices=(256, 512, 2048),
+        default=2048,
+        help="Widened ramrom capture seal of record (2048); 512 pins the legacy demo shape",
+    )
+    parser.add_argument(
+        "--capture-seconds",
+        type=int,
+        default=120,
+        help="Capture wall-clock budget per relationship (1..180 seconds)",
+    )
+    parser.add_argument(
+        "--capture-pad",
+        type=int,
+        default=6,
+        help="Extra growth per side on the shorter capture axis, 2048 profile (0..32)",
+    )
+    parser.add_argument(
         "--source", type=Path, help="Existing demo evidence directory, for offline report only"
     )
     parser.add_argument(
@@ -371,8 +390,15 @@ def main(argv=None):
         args.max_candidates,
         args.planning_seconds,
     )
-    if any(v is not None for v in random_values) and not args.random_world:
+    capture_nondefault = (
+        args.capture_tiles != 2048 or args.capture_seconds != 120 or args.capture_pad != 6
+    )
+    if (any(v is not None for v in random_values) or capture_nondefault) and not args.random_world:
         parser.error("world/planner settings require --random-world")
+    if not 1 <= args.capture_seconds <= 180:
+        parser.error("--capture-seconds must be between 1 and 180")
+    if not 0 <= args.capture_pad <= 32:
+        parser.error("--capture-pad must be between 0 and 32")
     if args.source is not None and args.command not in ("report", "compare"):
         parser.error("--source is only valid with report/compare")
     if args.command == "report" and (args.source is None or args.random_world):
@@ -417,6 +443,9 @@ def main(argv=None):
                         max_vehicles=args.max_vehicles,
                         max_relationships=args.max_candidates,
                         planning_seconds=args.planning_seconds,
+                        capture_tile_limit=args.capture_tiles,
+                        capture_seconds=args.capture_seconds,
+                        capture_edge_pad=args.capture_pad,
                     ).items()
                     if v is not None
                 }

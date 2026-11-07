@@ -45,7 +45,12 @@ def bounded_relationships(world, metadata=None):
         admitted = []
         for relationship in discovered.relationships:
             try:
-                relationship_region(world, relationship, budgets.capture_tile_limit)
+                relationship_region(
+                    world,
+                    relationship,
+                    budgets.capture_tile_limit,
+                    edge_pad=budgets.capture_edge_pad,
+                )
             except ValueError as error:
                 src, dst, cargo = relationship
                 reason = (

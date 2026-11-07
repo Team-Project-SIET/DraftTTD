@@ -33,6 +33,9 @@ in-session grant.
 - World settings of record for the product: map 256×256, climate
   temperate, terrain type 0 (flat), towns 3, industries 3, start 1950
   (the world's native epoch), seed always recorded (0..4294967294).
+- Spec of record for the design tickets:
+  `docs/specs/ramrom-product.md` (§1 product, §2 feasibility fix, §3
+  loop architecture, §4 out of scope).
 - The seed-42 demo fix (33 construction mutations, 3 P05 services, then
   the operator closed the window mid-run — typed FAILED) is evidence for
   the soft-close clause, not a defect to relabel.
@@ -43,19 +46,21 @@ in-session grant.
 ## Decisions so far
 
 - [Why no ramrom seed qualified: the NO_FEASIBLE_SERVICES diagnosis](issues/01-feasibility-diagnosis.md): findings file `.scratch/ramrom-product/research/01-feasibility-diagnosis.md`; failure is capture-seal geometry (silent distance gate) + detour-free strips severed by a town-road band, NOT engines/planner; CP-SAT never invoked; discovery truncated at the 16-relationship cap.
+- [Books for the two 2026-11-07 native one-shots](issues/02-todays-one-shot-books.md): E139 (seed-2026, typed `NO_FEASIBLE_SERVICES`) and E140 (seed-42, operator window-close abort) recorded at their own identities; the abort is the soft-close evidence, never a relabeled defect.
+- [Widen the capture seal (feasibility fix)](issues/03-feasibility-fix-decision.md): `capture_tile_limit` gains 2048 (new profile `random-rectangle-2048-v1`, 512-v1/256 byte-compatible), spare budget grows the shorter capture axis with a `capture_edge_pad` (default 6), every typed rejection stays honest, command-of-record defaults `--capture-tiles 2048 --capture-seconds 120 --capture-pad 6`. Implemented with offline tests; native proof runs await per-attempt grants.
+- [Continuous-world loop architecture](issues/04-loop-architecture.md): one cycle = fresh qualified-month read → P05/CP-SAT → execution → verified deliveries on the same alive world (never stale facts); reconnect per cycle under the one-attempt-per-connect discipline; soft cycle ends (delivery-verified / ended-by-operator / time budget); the company keeps funds and vehicles (each cycle's save is the next cycle's before); fresh seed after 2 consecutive zero-service cycles; per-cycle receipts, diagnostic and HTML report. Build = ticket 05.
 
 ## Not yet specified
 
 <!-- graduated to tickets as the frontier advances -->
 
-- Legacy-53 diagnosis scope: sharp only after ticket 03 decides what the
-  feasibility work touches (if the engine changes rip into the old
-  controlled-e2e fixtures, the legacy reds shrink or move).
-- The seed battery of record: which seeds certify "predictably produces
-  services" (offline fixture seeds + native proof seeds) — specifiable
-  once ticket 03 fixes the acceptance bar.
-- Product command surface and docs (README how-to, REPRODUCE commands of
-  record) — graduates after ticket 04 fixes the loop architecture.
+- Legacy-53 re-read stays exit-gate fog: the feasibility fix landed in
+  the random-world capture/region surfaces (demo_random, supplemental
+  facts, classification census, runtime planning) and the touched
+  suites are green, so no legacy controlled-e2e red moved; the 53 stay
+  sealed until the full regression, which runs only once the map's
+  remaining tasks are closed (the prior /tmp regression capture
+  expired; a fresh run is required then).
 
 ## Out of scope
 

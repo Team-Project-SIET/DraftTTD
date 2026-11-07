@@ -101,21 +101,25 @@ authorization.
 
 ## Random World & Scalable Logistics
 
-An opt-in bounded 256×256 native random generator and dynamic P08/P05 planning,
-terminal monitoring and P07 charts/history/comparisons are implemented locally.
-Seed 17 verified native generation, discovery and spectator inspection, but its
-smoke remains FAILED: no services constructed/delivered and P05 did not run.
-The new 512-tile rectangular capture correction is controlled/offline only;
-actual Seed 17 route feasibility awaits fresh native facts and authorization.
-Its Tile Classification V2 census completed natively on 2026-10-18 (90/90
-pages, 450/450 tiles, schema-2 AdminPort, staged AI + GameScript startup,
-cleanup PASS), but the SOURCE_SAVE_FUSION correspondence verdict is REJECTED:
-83 projected-flag disagreements, nothing fused, the 19 historically UNKNOWN
-tiles stay UNKNOWN and the P08 diagnosis stays `INCOMPLETE_TILE_CLASSIFICATION`.
+The random-world line is the product (`docs/specs/ramrom-product.md`): a
+recorded ramrom seed generates one 256×256 temperate flat 1950-01-01 world
+(towns 3, industries 3), the planner analyzes its assets (industries,
+materials, yields), P05/CP-SAT selects services, and the game plays live in
+the spectator GUI. The 2026-11-07 diagnosis (E139) proved the historical
+`NO_FEASIBLE_SERVICES` funnel was capture-seal geometry, not the planner: the
+widened capture seal of record (2048-tile perpendicular-grown rectangles,
+`--capture-tiles 2048 --capture-seconds 120 --capture-pad 6`, the new
+`run --random-world` defaults) replaces the 512-tile distance gate while
+keeping every typed rejection honest.
+Native proof runs (seed 2026 re-certification and the seed 7/8/9 battery)
+require separate per-attempt authorization; seed 17's historical smoke stays
+FAILED and is never relabeled.
 Fixed Scenario remains the stable default. See [random-world documentation](docs/random-world-demo.md),
 [distance support](docs/random-world-distance-support.md),
-[the V2 completion record](docs/p08-classification-v2-native-capture-completion.md) and the
-[vendor-neutral AI handoff](AI_HANDOFF.md) for current dirty-worktree scope.
+[the V2 completion record](docs/p08-classification-v2-native-capture-completion.md),
+[the product spec](docs/specs/ramrom-product.md),
+[the feasibility diagnosis](.scratch/ramrom-product/research/01-feasibility-diagnosis.md)
+and the [vendor-neutral AI handoff](AI_HANDOFF.md) for current dirty-worktree scope.
 
 ## Research reference and historical milestones
 
@@ -1557,5 +1561,10 @@ The fixed playable demo remains the default. Explicit `--random-world` adds nati
 256×256 generation settings and bounded observed-world P08/P05 planning. Terminal
 status and P07 reports include operational history, expense/UNKNOWN labels and
 revenue/throughput charts. Offline `report` and `compare` commands reuse retained
-evidence. See [random mode, interfaces and limitations](docs/random-world-demo.md).
-Native random-world validation requires separate authorization.
+evidence. See [random mode, interfaces and limitations](docs/random-world-demo.md),
+[distance support](docs/random-world-distance-support.md) and
+[the V2 completion record](docs/p08-classification-v2-native-capture-completion.md).
+Native random-world validation requires separate per-attempt authorization; the
+production command of record is `python -m app.openttd_demo run --random-world
+--seed N` (widened 2048-tile capture seal by default; see
+[the product spec](docs/specs/ramrom-product.md)).

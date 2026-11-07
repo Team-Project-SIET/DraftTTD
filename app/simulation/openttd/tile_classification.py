@@ -632,9 +632,11 @@ def tile_flags(index: TileClassificationIndex) -> dict[int, int]:
 
 SWEEP_VERSION = "tile-classification-sweep-v1"
 
-# Derived from MAX_TILES(256)/MAX_COVERAGE(512): a 450-tile Seed 17 region
-# needs 90 pages; the limit is the same census ceiling, never silently grown.
-CLASSIFICATION_MAX_REGION_TILES = 512
+# Derived from MAX_TILES(256): a 450-tile Seed 17 region needs 90 pages; the
+# ceiling is the shared census plan cap, explicitly widened for the ramrom
+# production 2048-tile profile (docs/specs/ramrom-product.md §2). Retained
+# records stay valid; nothing is silently reinterpreted.
+CLASSIFICATION_MAX_REGION_TILES = 2048
 CLASSIFICATION_PAGE_LIMIT = (CLASSIFICATION_MAX_REGION_TILES + PAGE_SIZE - 1) // PAGE_SIZE
 CLASSIFICATION_TOTAL_RESPONSE_BYTES_LIMIT = CLASSIFICATION_PAGE_LIMIT * MAX_RESPONSE_BYTES
 

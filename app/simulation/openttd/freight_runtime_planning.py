@@ -299,7 +299,12 @@ async def capture_planning_facts(
     from app.demo_random import relationship_region
 
     tile_limit = capture_budget.capture_tile_limit if capture_budget is not None else 256
-    region = relationship_region(world, (src, dst, cargo), tile_limit)
+    region = relationship_region(
+        world,
+        (src, dst, cargo),
+        tile_limit,
+        edge_pad=capture_budget.capture_edge_pad if capture_budget is not None else 0,
+    )
     x, y, width, height = (region[k] for k in ("x", "y", "width", "height"))
     map_width = world.context.world.map_width
     map_height = world.context.world.map_height
