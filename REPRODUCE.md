@@ -1277,3 +1277,54 @@ uvx ty check app/planning/phase_c_feasibility.py tests/test_phase_c_feasibility.
 # → ruff/format/compile/diff-check clean; ty 1 diagnostic (deliberate
 #   runtime-validated refusal in the test file; counted, never repaired).
 ```
+
+## 2026-11-07 addendum #2 — ticket-05 loop engine + M2 capture pacing (checked)
+
+Offline only: no OpenTTD launch, no AdminPort connection, no candidate work,
+no `artifacts/` mutation. Records: ticket build section
+`.scratch/ramrom-product/issues/05-build-loop-product.md`, decision doc
+[docs/random-world-capture-pacing-decision-2026-11-07.md](docs/random-world-capture-pacing-decision-2026-11-07.md).
+
+```bash
+# New loop-engine suite (exclude/zero-service typing, budget scaling, bounds,
+# pause pair contracts, prepared gates, CLI gating)
+.venv/bin/pytest tests/test_freight_loops.py
+# → 14 passed
+
+# Touched suites of record (all green together)
+.venv/bin/pytest tests/test_freight_loops.py tests/test_native_freight_network.py \
+  tests/test_freight_network.py tests/test_network_world_preparation.py \
+  tests/test_freight_continuous.py tests/test_openttd_demo.py \
+  tests/test_freight_delivery.py
+# → 151 passed (test_openttd_demo's prepare-kwargs expectation now includes loop_cycles=1)
+
+# Touch-path hygiene
+.venv/bin/ruff check app/openttd_demo.py \
+  app/simulation/openttd/freight_delivery.py \
+  app/simulation/openttd/freight_native_network.py \
+  tests/test_freight_loops.py tests/test_openttd_demo.py
+.venv/bin/ruff format --check app/openttd_demo.py \
+  app/simulation/openttd/freight_delivery.py \
+  app/simulation/openttd/freight_native_network.py \
+  tests/test_freight_loops.py tests/test_openttd_demo.py
+.venv/bin/python -m py_compile app/openttd_demo.py \
+  app/simulation/openttd/freight_delivery.py \
+  app/simulation/openttd/freight_native_network.py tests/test_freight_loops.py
+git diff --check
+uvx ty check app/openttd_demo.py app/simulation/openttd/freight_delivery.py \
+  app/simulation/openttd/freight_native_network.py \
+  tests/test_freight_loops.py tests/test_openttd_demo.py
+# → ruff/format/compile/diff-check clean; ty 1 diagnostic (pre-existing
+#   viewer.log.closed in test_openttd_demo; counted, never repaired).
+```
+
+Native loop-proof command of record (operator-granted, one launch, requires
+OPENTTD_BINARY and OPENTTD_OPENGFX_ARCHIVE before Python starts):
+
+```bash
+.venv/bin/python -m app.openttd_demo run --headless --random-world \
+  --seed 2026 --towns 3 --industries 3 --stop-on-delivery --cycles 2
+# per-cycle retained replay afterwards:
+.venv/bin/python -m app.simulation.openttd.proof.freight_delivery verify <run-dir>
+# → truthfully prints verified_loop_cycles for every loop-cycle directory
+```

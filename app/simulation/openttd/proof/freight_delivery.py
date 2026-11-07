@@ -13,6 +13,7 @@ import zlib
 from dataclasses import asdict
 from decimal import Decimal
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
 from app.simulation.openttd.admin_crypto import AuthorizedKey
@@ -121,6 +122,31 @@ NETWORK_BUDGETS = PLANNER_BUDGETS | dict(
     selected_services=2,
 )
 
+# Loop products repeat cycles inside one attempt; volume budgets scale linearly
+# with the sealed cycle count, while one-shot costs never repeat per cycle.
+_LOOP_CYCLED_BUDGET_KEYS = (
+    "requests",
+    "mutations",
+    "supplemental_requests",
+    "total_seconds",
+    "construction_commands",
+)
+
+
+def loop_scaled_budgets(budgets, loop_cycles):
+    if loop_cycles == 1:
+        return budgets
+    return budgets | {
+        key: budgets[key] * loop_cycles
+        for key in _LOOP_CYCLED_BUDGET_KEYS
+        if key in budgets
+    }
+
+
+def validate_loop_cycles(loop_cycles):
+    if type(loop_cycles) is not int or not 1 <= loop_cycles <= 8:
+        raise ValueError("loop cycles must be an integer between 1 and 8")
+
 
 def network_budgets(
     service_limit=2,
@@ -129,14 +155,18 @@ def network_budgets(
     capacity_telemetry=None,
     capacity_intervention=None,
     random_budget=None,
+    loop_cycles=1,
 ):
     """Keep the consumed two-service seals valid; larger capacity is explicit."""
+    validate_loop_cycles(loop_cycles)
     if random_budget is not None:
         from app.demo_random_native import random_budgets
 
         if continuous_years is not None or capacity_telemetry or capacity_intervention:
             raise ValueError("random demo excludes continuous/capacity experiments")
-        return random_budgets(random_budget, service_limit, NETWORK_BUDGETS)
+        return loop_scaled_budgets(
+            random_budgets(random_budget, service_limit, NETWORK_BUDGETS), loop_cycles
+        )
     if type(service_limit) is not int or service_limit not in (2, 3):
         raise ValueError("network service limit must be 2 or 3")
     if continuous_years is not None:
@@ -166,14 +196,18 @@ def network_budgets(
     if capacity_telemetry is not None or capacity_intervention is not None:
         raise ValueError("capacity experiments require continuous three-service monitoring")
     if service_limit == 2:
-        return NETWORK_BUDGETS
-    return NETWORK_BUDGETS | dict(
-        requests=87,
-        mutations=33,
-        total_seconds=1200,
-        world_preparation_mutations=162,
-        construction_commands=192,
-        selected_services=3,
+        return loop_scaled_budgets(NETWORK_BUDGETS, loop_cycles)
+    return loop_scaled_budgets(
+        NETWORK_BUDGETS
+        | dict(
+            requests=87,
+            mutations=33,
+            total_seconds=1200,
+            world_preparation_mutations=162,
+            construction_commands=192,
+            selected_services=3,
+        ),
+        loop_cycles,
     )
 
 
@@ -264,7 +298,9 @@ def staged_package(
     *,
     canonical=False,
     random_budget=None,
+    loop_cycles=1,
 ):
+    validate_loop_cycles(loop_cycles)
     requested_limit = network_service_limit
     if random_budget is not None:
         network_service_limit = 3
@@ -331,7 +367,10 @@ def staged_package(
         )
         out["delivery.nut"] = out["delivery.nut"].replace(
             b"drequests>=26",
-            f"drequests>={network_budgets(network_service_limit)['requests']}".encode(),
+            (
+                "drequests>=%d"
+                % network_budgets(network_service_limit, loop_cycles=loop_cycles)["requests"]
+            ).encode(),
         )
         out["delivery.nut"] = out["delivery.nut"].replace(
             b"GSVehicleList().Count()!=1", b"GSVehicleList().Count()!=ExpectedVehicleCount()"
@@ -430,7 +469,7 @@ def staged_package(
     if random_budget is not None:
         from app.demo_random_native import stage_random
 
-        network_budgets(requested_limit, random_budget=random_budget)
+        network_budgets(requested_limit, random_budget=random_budget, loop_cycles=loop_cycles)
         out = stage_random(out, random_budget)
     return out
 
@@ -647,7 +686,13 @@ def prepare(
     continuous_years=None,
     random_world=None,
     random_budget=None,
+    loop_cycles=1,
 ):
+    validate_loop_cycles(loop_cycles)
+    if loop_cycles > 1 and (not network or not planner or not demo):
+        raise ValueError("loop cycles require bounded demo planner network")
+    if loop_cycles > 1 and (random_world is None or continuous_years is not None):
+        raise ValueError("loop cycles require the random ramrom world and exclude continuous")
     if random_world is not None:
         from app.demo_random import DemoBudgets, RandomWorldSettings
 
@@ -662,7 +707,9 @@ def prepare(
         network_service_limit = min(random_budget["max_services"], random_budget["max_vehicles"])
     elif random_budget is not None:
         raise ValueError("random budgets require random world")
-    network_budgets(network_service_limit, continuous_years, random_budget=random_budget)
+    network_budgets(
+        network_service_limit, continuous_years, random_budget=random_budget, loop_cycles=loop_cycles
+    )
     if continuous_years is not None and (not network or finance_only):
         raise ValueError("continuous years requires three-service network operation")
     if network_service_limit != 2 and not network:
@@ -787,6 +834,7 @@ def prepare(
                     network_service_limit,
                     continuous_years,
                     random_budget=random_budget,
+                    loop_cycles=loop_cycles,
                 ).items():
                     (target / name).write_bytes(data)
             else:
@@ -883,6 +931,7 @@ def prepare(
                     network_service_limit,
                     continuous_years,
                     random_budget=random_budget,
+                    loop_cycles=loop_cycles,
                 ).items():
                     z.writestr("staged/" + name, data)
                 z.writestr("staged/openttd.cfg", workspace.config.read_bytes())
@@ -910,6 +959,7 @@ def prepare(
             network=network,
             network_service_limit=network_service_limit,
             **({"continuous_years": continuous_years} if continuous_years is not None else {}),
+            **({"loop_cycles": loop_cycles} if loop_cycles > 1 else {}),
             construction_readback_version=1 if planner else None,
             game_time_metrics_version=1 if network else None,
             delivery_batch_limit=batch_limit if planner else None,
@@ -978,7 +1028,10 @@ def prepare(
                 "--authorize-one-launch",
             ],
             budgets=network_budgets(
-                network_service_limit, continuous_years, random_budget=random_budget
+                network_service_limit,
+                continuous_years,
+                random_budget=random_budget,
+                loop_cycles=loop_cycles,
             )
             if network
             else PLANNER_BUDGETS
@@ -1130,6 +1183,10 @@ def preflight(p):
 
     validate_game_time_version(m)
     validate_financial_reconciliation_version(m)
+    if m.get("loop_cycles", 1) > 1 and not (
+        m.get("network") and m.get("planner") and m.get("demo") and m.get("random_world")
+    ):
+        raise ValueError("loop cycles require the sealed bounded random planner network")
     if (
         sha256(p.directory / "PRELAUNCH.json")
         != (p.directory / "PRELAUNCH.sha256").read_text().strip()
@@ -1143,6 +1200,7 @@ def preflight(p):
                 capacity_telemetry=m.get("capacity_telemetry"),
                 capacity_intervention=m.get("capacity_intervention"),
                 random_budget=m.get("random_budget"),
+                loop_cycles=m.get("loop_cycles", 1),
             )
             if m.get("network", False)
             else PLANNER_BUDGETS
@@ -1628,6 +1686,98 @@ async def run(p, *, on_ready=None, on_delivered=None, on_closing=None):
             if m.get("network", False):
                 from app.simulation.openttd.freight_native_network import execute_network
 
+                if m.get("loop_cycles", 1) > 1:
+                    excluded: set[tuple[int, int, int]] = set()
+                    loops: list[dict[str, Any]] = []
+                    streak = 0
+                    for cycle in range(1, m["loop_cycles"] + 1):
+                        summary: dict[str, Any] = dict(cycle=cycle)
+                        if cycle > 1:
+                            # Spec §3.2 of record: reconnect per cycle under the
+                            # one-connect-per-cycle discipline; the world stays alive.
+                            await session.close()
+                            session = await session_class.connect_secure(
+                                "127.0.0.1",
+                                p.endpoints[1],
+                                5,
+                                key=AuthorizedKey.from_bytes(p.key_path.read_bytes()),
+                                frame_observer=accounting.observe
+                                if accounting is not None
+                                else backend.planning_frame_observer,
+                            )
+                            backend.session = session
+                            await session.authenticate("Freight-delivery", "1", timeout=10)
+                            w = session.welcome
+                            if (
+                                w is None
+                                or (w.revision, w.seed, w.width, w.height) != expected_world(m)
+                            ):
+                                raise ValueError("native runtime mismatch")
+                            if session.protocol is None:
+                                raise ValueError("negotiated native Admin protocol required")
+                            await GameScriptTransport(session, session.protocol).subscribe()
+                        cycle_dir = p.directory / f"loop-cycle-{cycle}"
+                        cycle_dir.mkdir(exist_ok=False)
+                        for name in (
+                            "PRELAUNCH.json",
+                            "PRELAUNCH.sha256",
+                            "CLAIM.json",
+                            "frozen-source.zip",
+                        ):
+                            shutil.copyfile(p.directory / name, cycle_dir / name)
+                        write_json(
+                            cycle_dir / "runtime-identity.json",
+                            dict(encrypted=session.state is AuthState.ACTIVE, welcome=asdict(w)),
+                        )
+                        cycle_prepared = SimpleNamespace(
+                            directory=cycle_dir, spec=p.spec, endpoints=p.endpoints
+                        )
+                        before = await save(backend, cycle_prepared, "before")
+                        try:
+                            services = await execute_network(
+                                backend,
+                                cycle_prepared,
+                                session,
+                                accounting,
+                                before,
+                                seal,
+                                m,
+                                result,
+                                exclude=tuple(sorted(excluded)),
+                            )
+                        except ValueError as e:
+                            if not str(e).startswith("NO_FEASIBLE_SERVICES"):
+                                raise
+                            summary["status"] = "ZERO_SERVICE"
+                            summary["error"] = str(e)
+                            loops.append(summary)
+                            streak += 1
+                            (cycle_dir / "artifact-manifest.sha256").write_text(manifest(cycle_dir))
+                            if streak >= 2:
+                                # Spec §3.5: two consecutive zero-service cycles
+                                # abandon this world; a fresh ramrom seed is a
+                                # separate, newly granted attempt.
+                                summary["abandoned_world"] = True
+                                break
+                            continue
+                        streak = 0
+                        excluded |= {(s.source, s.destination, s.cargo) for _, s in services}
+                        summary["status"] = "DELIVERY_VERIFIED"
+                        summary["selected"] = [route_id for route_id, _ in services]
+                        loops.append(summary)
+                        (cycle_dir / "artifact-manifest.sha256").write_text(manifest(cycle_dir))
+                        if on_delivered is not None:
+                            await on_delivered(backend, p)
+                    delivered = [entry for entry in loops if entry["status"] == "DELIVERY_VERIFIED"]
+                    result["loops"] = loops
+                    result["loop_cycles_planned"] = m["loop_cycles"]
+                    result["loop_cycles_delivered"] = len(delivered)
+                    result["status"] = (
+                        "NATIVE_LOOP_DELIVERED_VERIFIED"
+                        if delivered
+                        else "NATIVE_LOOP_ZERO_SERVICES"
+                    )
+                    return result
                 await execute_network(backend, p, session, accounting, before, seal, m, result)
                 if m.get("company_policy"):
                     write_json(
@@ -1754,6 +1904,30 @@ async def run(p, *, on_ready=None, on_delivered=None, on_closing=None):
         write_json(p.directory / "result.json", result)
         (p.directory / "artifact-manifest.sha256").write_text(manifest(p.directory))
     return result
+
+
+def loop_gate(metadata):
+    """Typed guard of record for the loop engine: only a sealed bounded random
+    planner-network attempt with two or more cycles may run loops."""
+    if metadata.get("loop_cycles", 1) < 2:
+        raise ValueError("loop engine requires a sealed loop_cycles of at least 2")
+    if not (
+        metadata.get("network")
+        and metadata.get("planner")
+        and metadata.get("demo")
+        and metadata.get("random_world")
+    ):
+        raise ValueError("loop engine requires the bounded random-world planner network profile")
+    return metadata["loop_cycles"]
+
+
+async def run_loops(p, *, on_ready=None, on_delivered=None, on_closing=None):
+    """Ticket-05 loop engine of record: run the sealed analyze→plan→play cycles
+    on one live ramrom world (one launch, one fresh connection per cycle,
+    per-cycle recording, soft ends). Single-use claim semantics are unchanged."""
+    m = json.loads((p.directory / "PRELAUNCH.json").read_text())
+    loop_gate(m)
+    return await run(p, on_ready=on_ready, on_delivered=on_delivered, on_closing=on_closing)
 
 
 def verify_finance_receipt(directory):
@@ -2146,6 +2320,15 @@ def main():
         metadata = json.loads((directory / "PRELAUNCH.json").read_text())
         if metadata.get("finance_only"):
             print(json.dumps(verify_finance_receipt(directory), sort_keys=True))
+        elif metadata.get("network", False) and metadata.get("loop_cycles", 1) > 1:
+            from app.simulation.openttd.freight_native_network import verify_network_receipt
+
+            verified = {}
+            for cycle in range(1, metadata["loop_cycles"] + 1):
+                verified[f"cycle-{cycle}"] = verify_network_receipt(
+                    directory / f"loop-cycle-{cycle}"
+                )
+            print(json.dumps(dict(verified_loop_cycles=verified), sort_keys=True))
         elif metadata.get("network", False):
             from app.simulation.openttd.freight_native_network import verify_network_receipt
 
@@ -2164,6 +2347,7 @@ def main():
                 "NATIVE_DELIVERY_VERIFIED",
                 "NATIVE_MULTI_SERVICE_DELIVERY_VERIFIED",
                 "NATIVE_SCENARIO_FINANCE_VERIFIED",
+                "NATIVE_LOOP_DELIVERED_VERIFIED",
             )
             else 1
         )

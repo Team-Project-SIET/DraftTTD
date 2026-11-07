@@ -262,6 +262,7 @@ def test_public_run_uses_fresh_identity_existing_executor_and_p07(tmp_path, monk
             network=True,
             scenario="high-budget-500k",
             network_service_limit=3,
+            loop_cycles=1,
         )
         root.mkdir()
         return SimpleNamespace(directory=root)

@@ -264,7 +264,9 @@ def report(directory, output):
     return result
 
 
-def run_demo(*, headless=False, view_seconds=120, random_world=None, random_budget=None):
+def run_demo(
+    *, headless=False, view_seconds=120, random_world=None, random_budget=None, loop_cycles=1
+):
     check(graphical=not headless)
     root = RUNS / ("playable-demo-" + uuid.uuid4().hex)
     if random_world is not None:
@@ -282,6 +284,7 @@ def run_demo(*, headless=False, view_seconds=120, random_world=None, random_budg
             network=True,
             scenario="high-budget-500k",
             network_service_limit=3,
+            loop_cycles=loop_cycles,
             **(
                 dict(random_world=random_world, random_budget=random_budget)
                 if random_world is not None
@@ -305,17 +308,36 @@ def run_demo(*, headless=False, view_seconds=120, random_world=None, random_budg
         if not (root / "CLAIM.json").exists():
             for workspace in (root / "isolated").glob("openttd-15.3-*"):
                 RuntimeWorkspace.reopen(workspace).close()
-    if result["status"] != "NATIVE_MULTI_SERVICE_DELIVERY_VERIFIED":
-        print(
-            f"Demo failed: {result.get('error', result['status'])}. Logs: {root}", file=sys.stderr
-        )
-        return 1
-    output = RUNS / (root.name + "-report")
-    if report(root, output):
-        print(f"P07 report verification failed: {output}", file=sys.stderr)
-        return 1
-    print(f"P07 results: {output / 'results.md'}\nGame save: {root / 'after.sav'}", flush=True)
-    return 0
+    if result["status"] == "NATIVE_MULTI_SERVICE_DELIVERY_VERIFIED":
+        output = RUNS / (root.name + "-report")
+        if report(root, output):
+            print(f"P07 report verification failed: {output}", file=sys.stderr)
+            return 1
+        print(f"P07 results: {output / 'results.md'}\nGame save: {root / 'after.sav'}", flush=True)
+        return 0
+    if result["status"] in ("NATIVE_LOOP_DELIVERED_VERIFIED", "NATIVE_LOOP_ZERO_SERVICES"):
+        # Spec §3.6: every cycle keeps its own receipt set and report; the run
+        # summary at the root indexes the cycles.
+        output = RUNS / (root.name + "-loop-report")
+        output.mkdir()
+        lines = ["# Loop run cycles", "", "| Cycle | Status | Selected |", "|---|---|---|"]
+        for entry in result.get("loops", []):
+            cycle_dir = root / f"loop-cycle-{entry['cycle']}"
+            if (cycle_dir / "receipt.json").is_file():
+                if report(cycle_dir, output / f"cycle-{entry['cycle']}"):
+                    print(
+                        f"P07 report verification failed: {output / f'cycle-{entry["cycle"]}'}",
+                        file=sys.stderr,
+                    )
+                    return 1
+            selected = ", ".join(entry.get("selected", [])) if "selected" in entry else "—"
+            abandoned = " (abandoned world)" if entry.get("abandoned_world") else ""
+            lines.append(f"| {entry['cycle']} | {entry['status']}{abandoned} | {selected} |")
+        (output / "loops.md").write_text("\n".join(lines) + "\n")
+        print(f"Loop results: {output / 'loops.md'}", flush=True)
+        return 0 if result["status"] == "NATIVE_LOOP_DELIVERED_VERIFIED" else 1
+    print(f"Demo failed: {result.get('error', result['status'])}. Logs: {root}", file=sys.stderr)
+    return 1
 
 
 def main(argv=None):
@@ -370,6 +392,12 @@ def main(argv=None):
         help="Extra growth per side on the shorter capture axis, 2048 profile (0..32)",
     )
     parser.add_argument(
+        "--cycles",
+        type=int,
+        default=1,
+        help="Sealed loop cycles for the ramrom loop product (1..8; requires --random-world)",
+    )
+    parser.add_argument(
         "--source", type=Path, help="Existing demo evidence directory, for offline report only"
     )
     parser.add_argument(
@@ -399,6 +427,10 @@ def main(argv=None):
         parser.error("--capture-seconds must be between 1 and 180")
     if not 0 <= args.capture_pad <= 32:
         parser.error("--capture-pad must be between 0 and 32")
+    if not 1 <= args.cycles <= 8:
+        parser.error("--cycles must be between 1 and 8")
+    if args.cycles > 1 and not args.random_world:
+        parser.error("--cycles greater than 1 requires --random-world")
     if args.source is not None and args.command not in ("report", "compare"):
         parser.error("--source is only valid with report/compare")
     if args.command == "report" and (args.source is None or args.random_world):
@@ -456,6 +488,7 @@ def main(argv=None):
                     view_seconds=0 if args.stop_on_delivery else args.view_seconds,
                     random_world=settings.model_dump(),
                     random_budget=budgets.model_dump(),
+                    loop_cycles=args.cycles,
                 )
             if args.command == "check":
                 check(graphical=not args.headless)

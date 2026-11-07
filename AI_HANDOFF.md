@@ -399,3 +399,26 @@ fresh gated native capture round — per-attempt fences in
 [the roadmap](docs/roadmap-and-scope-2026-11-05.md) still govern every
 launch. Full offline regression (53 sealed legacy reds) remains the
 wayfinder EXIT gate, not this round's subject.
+
+## 2026-11-07 Phase C continuation addendum (offline; no runtime authority consumed or granted)
+
+Ticket 05's loop engine is built and offline-verified this round, recorded at
+`.scratch/ramrom-product/issues/05-build-loop-product.md` (build record +
+native proof requirements), `.scratch/ramrom-product/map.md`, ledger row
+`2026-11-07` in TASKS.md, E143 in EVIDENCE_INDEX.md and the checked commands
+in REPRODUCE.md. The engine `run_loops`/`loop_gate` runs sealed `--cycles`
+on one launch with one connect per cycle, per-cycle `loop-cycle-{k}`
+recording, and typed `ZERO_SERVICE`/`abandoned_world` soft ends;
+`exclude=()` threading makes every cycle plan only new services
+(`SERVICE_ALREADY_BUILT` rejections; an all-excluded attempt is a typed
+zero-service outcome, never infeasibility). The M2 capture-pacing question is
+a decision of record: `docs/random-world-capture-pacing-decision-2026-11-07.md`
+— pause the world clock around each random-world supplemental capture
+(`paused_world_clock`), bounded settings and per-attempt fences included.
+Touched suites total 151 passed; the 53-legacy-red FULL regression remains
+the map EXIT gate. The remaining Phase C remainder is native-gated: ONE
+operator grant for the loop command of record in the ticket file (first
+cycle delivering ≥1 verified service, per-cycle replay
+`verified_loop_cycles`, pacing fences observed), after which FD-C-2's
+`INCOMPLETE_EVIDENCE` decision gains its first new native evidence under the
+new pacing.

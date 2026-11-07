@@ -107,3 +107,54 @@ operator.
   clean on touched paths; `git diff --check` clean; `ty` reports 1
   diagnostic on the touched files (deliberate runtime-validated refusal,
   counted, never repaired).
+
+## Status log (2026-11-07, Phase C continuation — ticket-05 loop engine built offline + M2 pacing decided)
+
+- Offline only: no OpenTTD launch, no AdminPort connection, no candidate
+  staging or signing, no claim consumption, no native receipt, no
+  `artifacts/` byte modified; one commit, no push. Recorded at
+  `.scratch/ramrom-product/issues/05-build-loop-product.md` (build record
+  section), `.scratch/ramrom-product/map.md` and
+  [docs/random-world-capture-pacing-decision-2026-11-07.md](random-world-capture-pacing-decision-2026-11-07.md).
+- **Ticket-05 loop engine built offline.** `run_loops`/`loop_gate`
+  (working-tree sha256 prefix `7c3e3155…`): sealed `loop_cycles` cycles run
+  on ONE launch with one fresh connect per cycle (spec §3.2), per-cycle
+  `loop-cycle-{k}` directories carrying byte-equal identity copies
+  (PRELAUNCH.json/sha256, CLAIM.json, frozen-source.zip), their own
+  runtime-identity, own before/qualified/after saves and their own
+  artifact-manifest; runs report `NATIVE_LOOP_DELIVERED_VERIFIED` or
+  `NATIVE_LOOP_ZERO_SERVICES`, with two consecutive zero-service cycles
+  typing `abandoned_world` (§3.5 K=2) — never a relabeled defect.
+- **`exclude=()` threading** (`freight_native_network.py`, `707d3446…`):
+  loop cycles pass already-built `(source, destination, cargo)` identities
+  into `network_from_facts`, which skips them before P08/P05 with
+  `SERVICE_ALREADY_BUILT` rejections; an all-excluded set raises the typed
+  `NO_FEASIBLE_SERVICES: all N captured relationships are excluded
+  already-built services`. `execute_network` returns its selected services
+  so exclusions derive in-process.
+- **CLI `--cycles`** (`app/openttd_demo.py`, `394db0f4…`): sealed at prepare
+  (recorded in PRELAUNCH.json only when > 1), 1..8 validated, requires
+  `--random-world`; volume budgets (`requests`, `mutations`,
+  `supplemental_requests`, `total_seconds`, `construction_commands`) scale
+  linearly via `network_budgets(..., loop_cycles=k)` and every recompute
+  site (preflight, verify_finance_receipt, verify_receipt,
+  verify_network_receipt) passes the sealed count; legacy single-cycle
+  metadata bytes unchanged (byte-parity asserted by the untouched suites).
+- **M2 capture pacing decided** (`019c605e…`): pause the world clock around
+  every random-world supplemental capture (`paused_world_clock`, one
+  pause/resume pair per relationship, `pause_pairs`/
+  `pause_resume_error` in the planning diagnostic); rejects page-critical
+  reordering and any widening of the M2 gate; per-attempt fences and the
+  first-run pause-stall risk (`PAUSED_CAPTURE_UNRESPONSIVE`) in the decision
+  doc.
+- **Tests of record:** new `tests/test_freight_loops.py` (14: exclude
+  selects only new services, typed all-excluded raise, budget scaling,
+  bounds, pause pair/failed-resume, loop_gate, prepare gates, CLI errors)
+  plus touched suites; total 151 passed. ruff/format/`py_compile` clean,
+  `git diff --check` clean, `ty` 1 pre-existing count diagnostic
+  (`viewer.log.closed`), never repaired.
+- **Still owed by the ticket:** the operator-granted native loop proof —
+  one launch, `--cycles 2`, first cycle delivering ≥1 verified service,
+  per-cycle replay via `verify` printing `verified_loop_cycles`, pacing
+  fences observed. Command of record in the ticket file. The 53-legacy-red
+  FULL regression remains the wayfinder EXIT gate, not run this round.
