@@ -3420,3 +3420,31 @@ code changed this round).
   requires a fresh explicit operator grant.
 
 Evidence index E147.
+
+### 2026-11-08 — E148 execution-mode decision: GUI vs `--headless` for the qualification attempt of record
+
+Docs-only decision round (offline; no launch, no AdminPort, no staging, no
+`artifacts/` mutation, no grant consumed; one commit, no push). Decision of
+record `docs/gui-headless-execution-mode-decision-2026-11-08.md`, E148 in
+`EVIDENCE_INDEX.md`, `REPRODUCE.md` addendum #6, ticket-05 appended section,
+map decision line, backlog status-log entry.
+
+- **Decision:** the next native qualification attempt keeps `--headless`
+  (`--stop-on-delivery`, `--cycles 2`, seed 2026, towns 3, industries 3).
+  Every acceptance bar of record is receipt-based and names no GUI (spec
+  §2 lines 78–84; ticket-05 lines 196–207), and the loop line's native
+  history is headless (E139/E141/E145). The §1 spectator GUI and the §3.3
+  window-close soft end stay product-definition scope for their own later,
+  separately granted GUI-bearing probe — owed, never silently dropped or
+  satisfied; headless soft end is Ctrl+C only, and E140's window close was
+  historically typed FAILED.
+- **No code change; no criterion, command or budget changed; digests of
+  record unchanged** (`258ba9dbe19c7284`, `2cce3070c125bd41`,
+  `f6a432e2b771231b`).
+- **Offline checks:** staging suite 13 passed (`tests/
+  test_random_capture_budgets.py`); `git diff --check` clean; ruff/py_compile
+  not applicable (docs only).
+- **Status:** decision recorded; the qualification attempt remains gated on
+  a fresh explicit operator grant (E145 grant consumed, not reusable).
+
+Evidence index E148.

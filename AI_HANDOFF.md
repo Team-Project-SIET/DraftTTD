@@ -562,3 +562,32 @@ staging path provably cannot ship drifted seam bytes offline; the world,
 capture pacing, reconnect and loop recordings remain unproven natively.
 The E145 grant is consumed; the next attempt of record needs a fresh
 explicit operator grant (command of record unchanged).
+
+## 2026-11-08 E148 addendum — GUI vs `--headless` execution mode decided (offline decision round)
+
+The GUI-vs-headless discrepancy is resolved of record on 2026-11-08 (docs
+only; no launch, no AdminPort, no staging, no `artifacts/` mutation, no grant
+consumed; one commit, no push). Decision doc:
+`docs/gui-headless-execution-mode-decision-2026-11-08.md`; record: E148 in
+`EVIDENCE_INDEX.md`, TASKS ledger row, `REPRODUCE.md` addendum #6, ticket-05
+appended section, map decision line, backlog status-log entry.
+
+**Decision:** the qualification attempt of record stays `--headless` exactly
+as commanded (`--headless --stop-on-delivery --cycles 2`, seed 2026, towns 3,
+industries 3). Every acceptance bar of record is receipt-based (spec §2
+lines 78–84; ticket-05 acceptance list lines 196–207) and names no GUI; the
+random-world line's entire native history is headless (E139/E141/E145);
+headless never starts a graphical client and returns immediately at delivery
+(`app/openttd_demo.py:96–98`, `:188`, `:348`), and `--stop-on-delivery`
+disables the viewing hold with or without a window (`:356–360`). The §1
+spectator GUI and the §3.3 window-close soft end remain **product-definition
+scope owed by their own later, separately granted GUI-bearing probe**
+(without `--stop-on-delivery`, ended-by-operator never typed as a system
+failure — E140's historical window close typed FAILED); until then they are
+owed, never silently satisfied, and the only operator soft end headless is
+Ctrl+C. No code change; no criterion, command or budget changed; source
+digests of record unchanged (`258ba9dbe19c7284`, `2cce3070c125bd41`,
+`f6a432e2b771231b`); staging suite 13 passed; `git diff --check` clean.
+
+**Status: decision recorded. The attempt remains gated on a fresh explicit
+operator grant (E145 grant consumed, not reusable).**

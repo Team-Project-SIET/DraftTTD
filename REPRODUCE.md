@@ -1483,3 +1483,25 @@ The documented 53-legacy-red FULL regression stays the wayfinder EXIT gate
 (not this round's gate). The native command of record and per-cycle verify
 command remain unchanged from addenda #2/#3; the next attempt requires a
 fresh explicit operator grant.
+
+## 2026-11-08 addendum #6 — E148: GUI vs `--headless` execution-mode decision of record (checked)
+
+Docs-only decision round: no launch, no AdminPort, no staging, no `artifacts/`
+mutation, no grant consumed; one commit, no push. Decision of record:
+`docs/gui-headless-execution-mode-decision-2026-11-08.md` (spec §1/§3.3
+spectator clauses are product-definition scope for their own later
+GUI-bearing probe; the qualification attempt of record keeps `--headless`
+because every acceptance bar is receipt-based and the loop line's native
+history is headless). No code change; source digests of record unchanged.
+
+```bash
+# Decision round checks (docs-only; the staging suite re-proves the
+# untouched staging path at the unchanged digests)
+.venv/bin/pytest tests/test_random_capture_budgets.py
+# → 13 passed
+git diff --check
+# → clean (ruff/py_compile not applicable: no code touched)
+```
+
+The native command of record is unchanged (addenda #2–#5, ticket-05 lines
+194–208); the next attempt still requires a fresh explicit operator grant.

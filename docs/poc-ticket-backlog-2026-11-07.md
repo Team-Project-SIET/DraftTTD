@@ -158,3 +158,34 @@ operator.
   per-cycle replay via `verify` printing `verified_loop_cycles`, pacing
   fences observed. Command of record in the ticket file. The 53-legacy-red
   FULL regression remains the wayfinder EXIT gate, not run this round.
+
+## Status log (2026-11-08, Phase C continuation — execution-mode decision: spectator GUI stays product scope, attempt of record stays `--headless`)
+
+- Docs-only decision round: no launch, no AdminPort connection, no staging,
+  no `artifacts/` byte modified, no operator grant consumed; one commit, no
+  push. Decision of record
+  [docs/gui-headless-execution-mode-decision-2026-11-08.md](gui-headless-execution-mode-decision-2026-11-08.md);
+  recorded at E148 (`EVIDENCE_INDEX.md`), the TASKS ledger,
+  `AI_HANDOFF.md`, `REPRODUCE.md` addendum #6, ticket-05 (appended
+  section) and `.scratch/ramrom-product/map.md`.
+- **The GUI-vs-headless discrepancy is resolved without changing anything of
+  the record.** Spec §1 (lines 17–21) and §3 item 3 (lines 104–108) give the
+  finished product a spectator window whose close ends a phase softly; the
+  qualification command of record runs `--headless --stop-on-delivery`
+  (ticket-05 lines 194–208; `REPRODUCE.md` addenda #2–#5), launches no
+  graphical client, and can never exercise that window close. Decided: the
+  attempt of record keeps `--headless` — every acceptance bar is
+  receipt-based (spec §2 lines 78–84; ticket-05 lines 196–207) and names no
+  GUI, and the loop line's native history is headless (E139/E141/E145).
+- **The spectator GUI and its window-close soft end stay owed as
+  product-definition scope** for their own later, separately granted
+  GUI-bearing probe (without `--stop-on-delivery`, with the viewing hold,
+  ended-by-operator never typed as a system failure — E140's historical
+  window close typed FAILED `RuntimeError: Graphical client exited (0)`).
+  Until that probe runs, the window-close soft end is natively
+  unexercised; a headless attempt's only operator soft end is Ctrl+C.
+- **Offline checks:** staging suite `tests/test_random_capture_budgets.py`
+  13 passed; `git diff --check` clean; source digests of record unchanged
+  (`258ba9dbe19c7284`, `2cce3070c125bd41`, `f6a432e2b771231b`). No code
+  change; the native command of record is unchanged and remains gated on a
+  fresh explicit operator grant.

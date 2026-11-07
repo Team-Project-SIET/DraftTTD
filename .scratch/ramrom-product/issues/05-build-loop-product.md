@@ -206,3 +206,21 @@ widened-seal attempt):
 .venv/bin/python -m app.openttd_demo run --headless --random-world \
   --seed 2026 --towns 3 --industries 3 --stop-on-delivery --cycles 2
 ```
+
+## Execution-mode decision (2026-11-08, E148: GUI vs `--headless`)
+
+Spec §1/§3.3 make the spectator window and its window-close soft end part of
+the finished product, while the qualification command of record above runs
+`--headless`. Decided of record
+([docs/gui-headless-execution-mode-decision-2026-11-08.md](../../../docs/gui-headless-execution-mode-decision-2026-11-08.md)):
+the qualification attempt of record keeps `--headless` exactly as commanded,
+because every acceptance bar of this ticket is receipt-based (≥1 verified
+service, `verified_loop_cycles` replay, pacing fences, honestly typed
+terminals) and names no GUI, and the whole native history of the loop line
+(E139/E141/E145) is headless. The §1 spectator GUI and the §3.3
+window-close soft end stay product-definition scope that their own later,
+separately granted GUI-bearing element must exercise natively (without
+`--stop-on-delivery`, with the viewing hold, ended-by-operator never typed
+as a system failure); until then they are owed, not satisfied: a headless
+run's only operator soft end is Ctrl+C. No command, criterion or budget of
+the record changed.
