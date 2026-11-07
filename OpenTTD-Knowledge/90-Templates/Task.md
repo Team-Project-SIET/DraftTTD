@@ -1,4 +1,5 @@
 ---
+
 title: "<Task title>"
 type: task
 status: <open|in-progress|blocked|done>
@@ -6,8 +7,9 @@ updated: <YYYY-MM-DD>
 priority: <P1|P2|P3 — set only when a source document justifies one>
 depends: [[]]
 tags:
-  - openttd
-  - task
+- openttd
+- task
+
 ---
 
 # <Task title>

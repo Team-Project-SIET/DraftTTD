@@ -14,7 +14,7 @@ agent does not execute it.
    enters this repository, this agent's context, chat logs, screenshots or
    the candidate directory.
 2. The runner never signs, never approves execution, and never bypasses the
-   gate. Approval artifacts are: (a) a *reviewed code change* pinning the
+   gate. Approval artifacts are: (a) a _reviewed code change_ pinning the
    public key hex, (b) a candidate-bound signed AUTHORIZATION.json, and
    (c) an explicit operator statement authorizing the exact launch scope.
 3. Nothing here provisions any key automatically; each action below is an

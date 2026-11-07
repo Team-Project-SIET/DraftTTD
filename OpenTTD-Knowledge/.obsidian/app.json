@@ -1,8 +1,8 @@
 {
-  "alwaysUpdateLinks": true,
-  "newLinkFormat": "shortest",
-  "attachmentFolderPath": "90-Templates/attachments",
-  "showFrontmatter": true,
-  "readableLineLength": true,
-  "defaultViewMode": "preview"
+	"alwaysUpdateLinks": true,
+	"newLinkFormat": "shortest",
+	"attachmentFolderPath": "90-Templates/attachments",
+	"showFrontmatter": true,
+	"readableLineLength": true,
+	"defaultViewMode": "preview"
 }

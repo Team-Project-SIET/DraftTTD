@@ -48,7 +48,7 @@ health-vocabulary could not separate:
 `[18]` (`script_object.cpp` `GetRootCompany` of `ScriptController`'s
 `SetCompany` = `OWNER_DEITY`, `company_type.h`, value `0x12` = 18; AI instances
 log at `[0]`). The consumed log shows `[18] [W] Loading failed: … no
-`Load()` function` (a *warning* — `ScriptInstance::CallLoad` pops the stored
+`Load()` function` (a _warning_ — `ScriptInstance::CallLoad` pops the stored
 data and continues; missing `Load()` is not fatal), then
 `[18] [I] BRIDGE_STARTED protocol=1 api=15` (the staged composed main started),
 then the AI's `[0] [E]` dummy sequence and the `[script:0]` death line, then —
@@ -71,8 +71,8 @@ died-line inside the readiness window (~0.38 s) and raised
 `Native script/asset error` → `RUNTIMEERROR` → 0 connections / 0 pages → the
 fail-closed cleanup chain reported `FAILED_CLEANUP` because its final log
 health step still returns the fatal finding. The runner did what it was
-written to do: it failed closed on a fatal *shape* it recognized. The defect
-was *misattribution*: a benign, engine-designed dummy-AI death was treated as
+written to do: it failed closed on a fatal _shape_ it recognized. The defect
+was _misattribution_: a benign, engine-designed dummy-AI death was treated as
 a GameScript failure, so a repairable staging gap was diagnosed as an
 unrecoverable native script error.
 
@@ -102,7 +102,7 @@ Cross-checks against the working retained runs: the freight demo
 `playable-demo-25d891bc9f34…/stderr.log` shows the same healthy shape — the
 GameScript at `[18] [I]`, the freight AI at `[0] [W] Save function is not
 implemented` — i.e. the log-severity/company-attribute vocabulary used here is
-the engine's own, and a *live* root-company-18 script with warnings is exactly
+the engine's own, and a _live_ root-company-18 script with warnings is exactly
 what a working capture leaves behind. The consumed run's `[18]` lines match
 that healthy shape; only the AI side (no staged AI) deviated.
 
@@ -201,12 +201,12 @@ Staged offline (no authorization consumed, no claim, no launch):
   AI file, staging failure when the retained AI sources are missing, and
   identity-tamper refusal before any runtime is built.
 - Broader controlled suites re-run green: `tests/test_gamescript_transport_classification.py`
-  + `tests/test_tile_classification.py` + `tests/test_tile_classification_receipt.py`
-  (39 PASS); the REPRODUCE.md controlled regression set
-  (`tests/test_demo_random.py` … `tests/test_openttd_demo.py`, 90 PASS);
-  `tests/test_p08_classification_workflow.py` +
-  `tests/test_p08_controlled_road.py` + `tests/test_freight_canonical_dispatch.py`
-  (84 PASS).
+  - `tests/test_tile_classification.py` + `tests/test_tile_classification_receipt.py`
+    (39 PASS); the REPRODUCE.md controlled regression set
+    (`tests/test_demo_random.py` … `tests/test_openttd_demo.py`, 90 PASS);
+    `tests/test_p08_classification_workflow.py` +
+    `tests/test_p08_controlled_road.py` + `tests/test_freight_canonical_dispatch.py`
+    (84 PASS).
 - Gates: `ruff check` clean, `ruff format --check` clean,
   `compileall` clean, `git diff --check` clean. Typecheck: `ty` is configured
   (`tool.ty.environment`) but still not installed in this venv — unavailable,

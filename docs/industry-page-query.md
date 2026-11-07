@@ -16,19 +16,39 @@ fields (booleans are not integers), and compact sorted-key JSON on Python output
 First page:
 
 ```json
-{"after_id":null,"limit":5,"protocol":1,"request_id":"industries-0","type":"industry_page"}
+{
+	"after_id": null,
+	"limit": 5,
+	"protocol": 1,
+	"request_id": "industries-0",
+	"type": "industry_page"
+}
 ```
 
 Continuation:
 
 ```json
-{"after_id":7,"limit":5,"protocol":1,"request_id":"industries-1","type":"industry_page"}
+{
+	"after_id": 7,
+	"limit": 5,
+	"protocol": 1,
+	"request_id": "industries-1",
+	"type": "industry_page"
+}
 ```
 
 Response (one-record intermediate page requested with limit 1):
 
 ```json
-{"has_more":true,"industries":[{"id":7,"tile":71,"type":12,"x":7,"y":1}],"next_after_id":7,"protocol":1,"request_id":"industries-0","status":"ok","type":"industry_page_result"}
+{
+	"has_more": true,
+	"industries": [{ "id": 7, "tile": 71, "type": 12, "x": 7, "y": 1 }],
+	"next_after_id": 7,
+	"protocol": 1,
+	"request_id": "industries-0",
+	"status": "ok",
+	"type": "industry_page_result"
+}
 ```
 
 `after_id` is null for the first page or an industry ID in 0..63999. Return only IDs

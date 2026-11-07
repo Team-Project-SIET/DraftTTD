@@ -1,11 +1,13 @@
 ---
+
 title: "Home"
 type: hub
 status: current
 updated: 2026-10-26
 tags:
-  - openttd
-  - hub
+- openttd
+- hub
+
 ---
 
 # OpenTTD Integration — Knowledge Vault
@@ -36,7 +38,7 @@ receipts.
   certified; manifest 90/90; read-only replay `RECEIPT_VERIFIED`. Exactly the
   reviewed v3 scope — no vehicle/delivery/OPEX/ROI claim; the claim is
   consumed, so the next native step (D5 vehicle work) needs a fresh candidate
-  + fresh authorization → [[05-Planning/Next Actions]].
+  - fresh authorization → [[05-Planning/Next Actions]].
 - Stable fixed demo **VERIFIED** (E1) — 3 services, 60 coal, £1,022 revenue.
 - Milestone D3 native terraforming **PROVEN** (E19); **the three earlier D4
   attempts are immutable history** (E21, E28, E32). `D4-CORRIDOR-4` was signed under the
@@ -86,17 +88,17 @@ receipts.
 
 ## Navigate
 
-| Area | Notes |
-|---|---|
-| **Project** | [[00-Project/Project Overview]] · [[00-Project/Current Status]] · [[00-Project/Roadmap]] · [[00-Project/Scope and Non-Goals]] |
-| **Architecture** | [[01-Architecture/System Architecture]] · [[01-Architecture/Component Map]] · [[01-Architecture/Data Flow]] · [[01-Architecture/OpenTTD Integration]] · [[01-Architecture/AdminPort Protocol]] · [[01-Architecture/Planning and Execution Boundary]] |
-| **Milestones** | [[02-Milestones/Milestone Index]] · [[02-Milestones/Completed Milestones]] · [[02-Milestones/Pending Milestones]] |
-| **Engineering** | [[03-Engineering/Source Code Map]] · [[03-Engineering/Testing Strategy]] · [[03-Engineering/Reproduction Guide]] · [[03-Engineering/Runtime and Environment]] · [[03-Engineering/Troubleshooting]] |
-| **Evidence** | [[04-Evidence/Evidence Index]] · [[04-Evidence/Native Verification]] · [[04-Evidence/Controlled Tests]] · [[04-Evidence/Failed Attempts]] · [[04-Evidence/Evidence Preservation]] |
-| **Planning** | [[05-Planning/Task Board]] · [[05-Planning/Next Actions]] · [[05-Planning/Blockers]] · [[05-Planning/Technical Debt]] |
-| **Decisions** | [[06-Decisions/Architecture Decision Records]] · [[06-Decisions/Decision Log]] |
-| **Reference** | [[07-Reference/Glossary]] · [[07-Reference/Status Definitions]] · [[07-Reference/Important Paths]] · [[07-Reference/External References]] |
-| **Source documents** | [[99-Source-Documents/CONTEXT]] · [[99-Source-Documents/AI_HANDOFF]] · [[99-Source-Documents/TASKS]] · [[99-Source-Documents/EVIDENCE_INDEX]] · [[99-Source-Documents/REPRODUCE]] · [[99-Source-Documents/README]] |
+| Area                 | Notes                                                                                                                                                                                                                                                |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Project**          | [[00-Project/Project Overview]] · [[00-Project/Current Status]] · [[00-Project/Roadmap]] · [[00-Project/Scope and Non-Goals]]                                                                                                                        |
+| **Architecture**     | [[01-Architecture/System Architecture]] · [[01-Architecture/Component Map]] · [[01-Architecture/Data Flow]] · [[01-Architecture/OpenTTD Integration]] · [[01-Architecture/AdminPort Protocol]] · [[01-Architecture/Planning and Execution Boundary]] |
+| **Milestones**       | [[02-Milestones/Milestone Index]] · [[02-Milestones/Completed Milestones]] · [[02-Milestones/Pending Milestones]]                                                                                                                                    |
+| **Engineering**      | [[03-Engineering/Source Code Map]] · [[03-Engineering/Testing Strategy]] · [[03-Engineering/Reproduction Guide]] · [[03-Engineering/Runtime and Environment]] · [[03-Engineering/Troubleshooting]]                                                   |
+| **Evidence**         | [[04-Evidence/Evidence Index]] · [[04-Evidence/Native Verification]] · [[04-Evidence/Controlled Tests]] · [[04-Evidence/Failed Attempts]] · [[04-Evidence/Evidence Preservation]]                                                                    |
+| **Planning**         | [[05-Planning/Task Board]] · [[05-Planning/Next Actions]] · [[05-Planning/Blockers]] · [[05-Planning/Technical Debt]]                                                                                                                                |
+| **Decisions**        | [[06-Decisions/Architecture Decision Records]] · [[06-Decisions/Decision Log]]                                                                                                                                                                       |
+| **Reference**        | [[07-Reference/Glossary]] · [[07-Reference/Status Definitions]] · [[07-Reference/Important Paths]] · [[07-Reference/External References]]                                                                                                            |
+| **Source documents** | [[99-Source-Documents/CONTEXT]] · [[99-Source-Documents/AI_HANDOFF]] · [[99-Source-Documents/TASKS]] · [[99-Source-Documents/EVIDENCE_INDEX]] · [[99-Source-Documents/REPRODUCE]] · [[99-Source-Documents/README]]                                   |
 
 ## Maintenance
 

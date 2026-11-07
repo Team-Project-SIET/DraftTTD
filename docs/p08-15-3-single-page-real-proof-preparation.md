@@ -74,7 +74,13 @@ not an allocated native attempt). All actual terrain values remain unknown.
 Exact compact request is 111 bytes:
 
 ```json
-{"cursor":0,"protocol":1,"region":[1,1,5,1],"request_id":"terrain-single-page-review","type":"tile_facts_page"}
+{
+	"cursor": 0,
+	"protocol": 1,
+	"region": [1, 1, 5, 1],
+	"request_id": "terrain-single-page-review",
+	"type": "tile_facts_page"
+}
 ```
 
 The existing wire schemas and scalar domains are unchanged. For this shorter ID,
@@ -87,18 +93,18 @@ ceiling 512 and native Send ceiling 1450. This proof enforces its stricter 420-b
 response budget and canonical serializer equality. No truncation is admitted.
 Exactly five records, no pagination/continuation request.
 
-| Resource | Single-page bound and derivation |
-| --- | --- |
-| Application requests | 1 |
-| Request bytes | 111 |
-| Response bytes | 1×420=420 |
-| Native getter calls | 5×44+6=226 upper bound, not measured CPU work |
-| Query operations | 1×8=8 ceiling; nominal application/response/PING/PONG=4 |
-| Lifecycle frames | PROTOCOL+WELCOME 2; subscription/PING/PONG 3; QUIT 1: 6 |
-| Post-auth frames | 2+3+8+1=14 ceiling, nominal 10 |
-| Application plaintext frames | request 111+NUL+3=115; response 420+NUL+3=424 |
-| Application encrypted frames | 115+16=131; 424+16=440 |
-| Retained output | stdout ≤262144; stderr ≤262144 bytes |
+| Resource                     | Single-page bound and derivation                        |
+| ---------------------------- | ------------------------------------------------------- |
+| Application requests         | 1                                                       |
+| Request bytes                | 111                                                     |
+| Response bytes               | 1×420=420                                               |
+| Native getter calls          | 5×44+6=226 upper bound, not measured CPU work           |
+| Query operations             | 1×8=8 ceiling; nominal application/response/PING/PONG=4 |
+| Lifecycle frames             | PROTOCOL+WELCOME 2; subscription/PING/PONG 3; QUIT 1: 6 |
+| Post-auth frames             | 2+3+8+1=14 ceiling, nominal 10                          |
+| Application plaintext frames | request 111+NUL+3=115; response 420+NUL+3=424           |
+| Application encrypted frames | 115+16=131; 424+16=440                                  |
+| Retained output              | stdout ≤262144; stderr ≤262144 bytes                    |
 
 SinglePageFrames configures the existing observer, enforces independent phases,
 counts every decrypted/encrypted-boundary packet once and rejects undeclared

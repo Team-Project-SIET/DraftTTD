@@ -37,12 +37,12 @@ supporting expectation only. Valid empty worlds yield complete empty enrichment.
 
 ## Finite budgets and one connection
 
-| Bound | Inventory phase | Capability phase | Combined ceiling |
-| --- | ---: | ---: | ---: |
-| Application requests | 32 pages | 32 industries/requests | 64 |
-| Industry records | 32 | Exactly source inventory count | 32 |
-| Response bytes | 16,384 | 16,384 | 32,768 |
-| Admin query frames | 256 | 256 | 512 |
+| Bound                | Inventory phase |               Capability phase | Combined ceiling |
+| -------------------- | --------------: | -----------------------------: | ---------------: |
+| Application requests |        32 pages |         32 industries/requests |               64 |
+| Industry records     |              32 | Exactly source inventory count |               32 |
+| Response bytes       |          16,384 |                         16,384 |           32,768 |
+| Admin query frames   |             256 |                            256 |              512 |
 
 The combined ceiling sums the existing phase ceilings rather than weakening them.
 With full two-record pages, 32 stable industries normally require 16 inventory

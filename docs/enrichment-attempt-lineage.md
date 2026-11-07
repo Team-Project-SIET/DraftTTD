@@ -11,7 +11,7 @@ sibling `<preparation>-gate-failure/` directory existed. The enrichment runner
 independently rejected the same directory or an existing runtime attempt directory.
 Neither read the failure's state, activity counts, manifest, freeze revision, or
 authorization identity. An empty directory had the same blocking effect as a
-recorded runtime failure. The condition distinguished preparation *paths*, but not
+recorded runtime failure. The condition distinguished preparation _paths_, but not
 semantic freeze revisions or authorization attempts. It did not establish 0/0/0.
 
 The public V3 preflight reproduced the error before process creation. A controlled
@@ -41,7 +41,7 @@ process-creation evidence is RUNTIME regardless of directory name. An absent
 actual process PID is not evidence sufficient to undo a runtime claim.
 
 Prelaunch failure invalidates its authorization and remains immutable. Continuation
-requires a *newer* freeze, frozen predecessor lineage, exact evidence validation,
+requires a _newer_ freeze, frozen predecessor lineage, exact evidence validation,
 and fresh external authorization. The same freeze cannot acknowledge itself.
 Runtime failure cannot use the prelaunch exception: there is no retry, resume,
 reconnect, renaming, or conversion under the previous authorization. Any separately

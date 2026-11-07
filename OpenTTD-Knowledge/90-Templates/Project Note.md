@@ -1,11 +1,13 @@
 ---
+
 title: "<Note title>"
 type: <project|architecture|engineering|reference>
 status: current
 updated: <YYYY-MM-DD>
 tags:
-  - openttd
-  - <area>
+- openttd
+- <area>
+
 ---
 
 # <Note title>
@@ -21,8 +23,8 @@ tags:
 <!-- Sections as appropriate: context, facts with dates, use tables for structures. -->
 
 | Fact | Value | Source/Limit |
-|---|---|---|
-|  |  |  |
+| ---- | ----- | ------------ |
+|      |       |              |
 
 ## Boundaries / non-claims
 

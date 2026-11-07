@@ -20,16 +20,16 @@ Predecessor records:
 
 ## 1. Verified values
 
-| Fact | Value |
-| --- | --- |
-| Prelaunch seal (sha-256 of `PRELAUNCH.json`) | **`de0e16f73d71efbad636271217a4981b4e6350412184bdbdfa17533e3d304f00`** (bytes end `…04f00`) |
-| Canonical authorization payload (sha-256) | **`e85ea64ba8ec15c383e913a72df7d1e4bd13569496a83d297bf7ee2c1952ff17`** |
-| Canonical payload size | **2,393 bytes** |
-| Plan digest (signed inside the payload) | **`2a30e95048e89ffa1420e0ae392b79f4d051f447d7a15a3edb896b4bbdcabb3a`** (`2a30e950…cabb3a`, v2, eight ops) |
-| Source world (signed inside the payload) | `fbebef54dd466e0bea23cc30e11e94ebaf2a3ca07e2e9b7aadd6a6645c37d59e` (`fbebef54…d59e`, the D3-TERRAFORMING-1 after.sav; diagnostic save never a substitute) |
-| Frozen closure | **3,447 entries — 3,447 verified, 0 missing, 0 mismatches** |
-| Authorization state after this session | unsigned; `AUTHORIZATION.json` / `CLAIM.json` do not exist for candidate-2 |
-| Company / max_cost / stale rule / launch count | company 0; `max_cost` £2,000 per op; the staged stale-refusal rule; 1 launch, 0 retries (all bound in the payload and unchanged from E24) |
+| Fact                                           | Value                                                                                                                                                     |
+| ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Prelaunch seal (sha-256 of `PRELAUNCH.json`)   | **`de0e16f73d71efbad636271217a4981b4e6350412184bdbdfa17533e3d304f00`** (bytes end `…04f00`)                                                               |
+| Canonical authorization payload (sha-256)      | **`e85ea64ba8ec15c383e913a72df7d1e4bd13569496a83d297bf7ee2c1952ff17`**                                                                                    |
+| Canonical payload size                         | **2,393 bytes**                                                                                                                                           |
+| Plan digest (signed inside the payload)        | **`2a30e95048e89ffa1420e0ae392b79f4d051f447d7a15a3edb896b4bbdcabb3a`** (`2a30e950…cabb3a`, v2, eight ops)                                                 |
+| Source world (signed inside the payload)       | `fbebef54dd466e0bea23cc30e11e94ebaf2a3ca07e2e9b7aadd6a6645c37d59e` (`fbebef54…d59e`, the D3-TERRAFORMING-1 after.sav; diagnostic save never a substitute) |
+| Frozen closure                                 | **3,447 entries — 3,447 verified, 0 missing, 0 mismatches**                                                                                               |
+| Authorization state after this session         | unsigned; `AUTHORIZATION.json` / `CLAIM.json` do not exist for candidate-2                                                                                |
+| Company / max_cost / stale rule / launch count | company 0; `max_cost` £2,000 per op; the staged stale-refusal rule; 1 launch, 0 retries (all bound in the payload and unchanged from E24)                 |
 
 ## 2. Verification method (all read-only, offline)
 
@@ -99,7 +99,7 @@ No key access or signing; no `AUTHORIZATION.json`, `CLAIM.json` or
 connection, no native execution; no modification/regeneration of the frozen
 candidate, its manifest, its closure or any retained evidence; no Git
 staging/commit/push/reset/clean/stash (`git add` was not used at all). The
-results below and in the corrected notes are *verification*, never
+results below and in the corrected notes are _verification_, never
 authorization: **any execution still requires exactly ONE fresh explicit
 operator authorization**, the one-shot run under the existing rules.
 
@@ -131,15 +131,15 @@ substitute for the two findings that matter, and the corrected conclusions:
 Documentation-only edits made after §5, themselves kept on record here,
 explicitly identified as corrections rather than quiet rewrites:
 
-| Site | Correction |
-| --- | --- |
-| Abbreviated seal tail `de0e16f7…2bf00` in active references (root + vault-copy `EVIDENCE_INDEX.md` E24 row, `04-Evidence/Evidence Index.md` E24 row, `AI_START_HERE.md` §3/§4, `00-Project/Current Status.md`, `00-Project/Roadmap.md`, `02-Milestones/Pending Milestones.md`, `05-Planning/Blockers.md` §§1+8, `05-Planning/Task Board.md`, `05-Planning/Next Actions.md`, this record's predecessor §7.1) | corrected to `de0e16f7…04f00` per the verified bytes above (full `…3d304f00`) |
-| `d4-corridor-native-candidate-2-preparation.md` §7.1 | the same shorthand tail corrected (its §1 always carried the correct full seal) |
-| `d4-corridor-native-candidate-2-preparation.md` §8 | the dangling phrase "the evidence-index update below" (no such section exists) replaced by the actual evidence: the E24 evidence-index rows written immediately after that record (root + byte-verified vault copy) |
-| `d4-corridor-native-candidate-2-preparation.md` §7.2 | a duplicated clause ("the `schedule_version` number itself is not a signed key;" twice) removed |
-| `OpenTTD-Knowledge/05-Planning/Next Actions.md` | the overbroad preservation statement corrected to the §5 findings (self-written note, prior bytes unknown) and this record linked as the durable verification record |
-| Root `TASKS.md` item 8 | a dated update records the E24 staging, this verification and the corrections (previously ended at the E23 review) |
-| New E24 narrative entry in `EVIDENCE_INDEX.md` | the table row existed without its addendum narrative; the sixth entry records staging plus this verification (no new E-ID assigned) |
+| Site                                                                                                                                                                                                                                                                                                                                                                                                        | Correction                                                                                                                                                                                                          |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Abbreviated seal tail `de0e16f7…2bf00` in active references (root + vault-copy `EVIDENCE_INDEX.md` E24 row, `04-Evidence/Evidence Index.md` E24 row, `AI_START_HERE.md` §3/§4, `00-Project/Current Status.md`, `00-Project/Roadmap.md`, `02-Milestones/Pending Milestones.md`, `05-Planning/Blockers.md` §§1+8, `05-Planning/Task Board.md`, `05-Planning/Next Actions.md`, this record's predecessor §7.1) | corrected to `de0e16f7…04f00` per the verified bytes above (full `…3d304f00`)                                                                                                                                       |
+| `d4-corridor-native-candidate-2-preparation.md` §7.1                                                                                                                                                                                                                                                                                                                                                        | the same shorthand tail corrected (its §1 always carried the correct full seal)                                                                                                                                     |
+| `d4-corridor-native-candidate-2-preparation.md` §8                                                                                                                                                                                                                                                                                                                                                          | the dangling phrase "the evidence-index update below" (no such section exists) replaced by the actual evidence: the E24 evidence-index rows written immediately after that record (root + byte-verified vault copy) |
+| `d4-corridor-native-candidate-2-preparation.md` §7.2                                                                                                                                                                                                                                                                                                                                                        | a duplicated clause ("the `schedule_version` number itself is not a signed key;" twice) removed                                                                                                                     |
+| `OpenTTD-Knowledge/05-Planning/Next Actions.md`                                                                                                                                                                                                                                                                                                                                                             | the overbroad preservation statement corrected to the §5 findings (self-written note, prior bytes unknown) and this record linked as the durable verification record                                                |
+| Root `TASKS.md` item 8                                                                                                                                                                                                                                                                                                                                                                                      | a dated update records the E24 staging, this verification and the corrections (previously ended at the E23 review)                                                                                                  |
+| New E24 narrative entry in `EVIDENCE_INDEX.md`                                                                                                                                                                                                                                                                                                                                                              | the table row existed without its addendum narrative; the sixth entry records staging plus this verification (no new E-ID assigned)                                                                                 |
 
 ## 7. Honest limits
 

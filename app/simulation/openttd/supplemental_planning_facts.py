@@ -15,8 +15,10 @@ MAX_TILES = 256
 MAX_ENGINES = 32
 # 256-tile profile ceiling (2 x MAX_TILES); the 512-tile profile pages scope facts
 # itself, capping at 2 x MAX_RANDOM_TILES in the record contract below.
+# 2048 is the ramrom production decision (docs/specs/ramrom-product.md §2):
+# the 512 identity stays retired-safe because 512-v1 records still validate.
 MAX_COVERAGE = 512
-MAX_RANDOM_TILES = 512
+MAX_RANDOM_TILES = 2048
 UInt = Annotated[int, Field(ge=0, le=2**32 - 2)]
 CargoID = Annotated[int, Field(ge=0, le=63)]
 IndustryID = Annotated[int, Field(ge=0, le=63999)]
@@ -86,12 +88,26 @@ class Region(Contract):
 
 
 class RandomCaptureRegion(Region):
-    """Explicit opt-in to a larger, still completely observed rectangle."""
+    """Explicit opt-in to a larger, still completely observed rectangle.
+
+    ``profile`` names the cap the record was captured under: legacy
+    ``random-rectangle-512-v1`` records keep their sealed semantics, and
+    widened captures carry ``random-rectangle-2048-v1`` as a fresh identity
+    (no 512-v1 byte is ever reinterpreted).
+    """
 
     tile_limit: ClassVar[int] = MAX_RANDOM_TILES
-    profile: Literal["random-rectangle-512-v1"]
+    profile: Literal["random-rectangle-512-v1", "random-rectangle-2048-v1"]
     width: Annotated[int, Field(ge=1, le=MAX_RANDOM_TILES)]
     height: Annotated[int, Field(ge=1, le=MAX_RANDOM_TILES)]
+
+    @model_validator(mode="after")
+    def sealed_profile_area(self) -> RandomCaptureRegion:
+        """The profile name pins its own tile budget; no name is reinterpreted."""
+        cap = 512 if self.profile == "random-rectangle-512-v1" else MAX_RANDOM_TILES
+        if self.width * self.height > cap:
+            raise PlanningFactError(f"region exceeds {cap} tiles")
+        return self
 
 
 class TileFact(Contract):

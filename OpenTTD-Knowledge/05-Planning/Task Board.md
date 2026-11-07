@@ -1,12 +1,14 @@
 ---
+
 title: "Task Board"
 type: planning
 status: current
 updated: 2026-10-26
 tags:
-  - openttd
-  - planning
-  - tasks
+- openttd
+- planning
+- tasks
+
 ---
 
 # Task Board
@@ -29,7 +31,7 @@ deadlines.
 
 ## Consumed authorization (closed with immutable outcome)
 
-- [x] 3. Separate authorization: one new Seed 17 native smoke — **authorization consumed 2026-10-17** under its reviewed frozen identity; outcome `NO_BOUNDED_CORRIDOR` → `NO_FEASIBLE_SERVICES`; P05 NOT_RUN; diagnostics retained (E8). Task is closed; the *failed outcome* is retained, not "undone". Also completed offline follow-ups: readiness record (E8-linked), bounded routing record (E9), terrain-modification record (E10), classification record (E11), and preparation records (E12, E13).
+- [x] 3. Separate authorization: one new Seed 17 native smoke — **authorization consumed 2026-10-17** under its reviewed frozen identity; outcome `NO_BOUNDED_CORRIDOR` → `NO_FEASIBLE_SERVICES`; P05 NOT_RUN; diagnostics retained (E8). Task is closed; the _failed outcome_ is retained, not "undone". Also completed offline follow-ups: readiness record (E8-linked), bounded routing record (E9), terrain-modification record (E10), classification record (E11), and preparation records (E12, E13).
 - [x] **D4 native execution — one shot on candidate `D4-CORRIDOR-1`** — authorization
   consumed 2026-10-22; the ceremony halted `PHASE_HALTED_PREFIX_PRESERVED` at `op-01`:
   `op-00` verified (£785; funds £496,543 → £495,758), `op-01` refused at admission
@@ -179,8 +181,8 @@ deadlines.
 - [ ] **Third-party/application backlog (separately scoped, later)** — obstructed terrain,
   long corridors, >32 industries, larger maps; fourth-vehicle matched A/B native work;
   continuous dispatch; five-year experiment expansion. All gated behind reviewed contracts
-  + authorizations; fourth-vehicle native readiness currently BLOCKED (no canonical
-  pre-intervention save).
+  - authorizations; fourth-vehicle native readiness currently BLOCKED (no canonical
+    pre-intervention save).
 
 ## Board hygiene rules
 

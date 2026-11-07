@@ -52,12 +52,12 @@ It cannot bind the A1 after-save as-is, by design:
 - Preflight (725–744) and replay (1187–1215) additionally demand
   `save_sha256 == PINNED_PREREQUISITE_AFTER_SAVE = a81ac836…ef261`.
 
-The A1 candidate satisfies every *generic* binding requirement —
+The A1 candidate satisfies every _generic_ binding requirement —
 consumed `CLAIM.json` (`prelaunch_digest == seal`), retained
 `after.sav`, receipt `after_save_sha256 == 3748e00c…5420bd`, replay
 verdict `EXTENSION_COMPLETION_VERIFIED`, welcome-identity fact carried
 in its retained `runtime-identity.json` — and fails only the four
-*D4-pinned* identity gates. Therefore the design is a **versioned
+_D4-pinned_ identity gates. Therefore the design is a **versioned
 retarget of the same pipeline**, following the established
 `EXTENSION_SCHEDULE_VERSION = 2` precedent
 (`corridor_extension_native.py` §14, E41):
@@ -70,13 +70,13 @@ retarget of the same pipeline**, following the established
   staged bytes, matching E42's identity rule).
 - Prerequisite of record (v2): the consumed A1 attempt —
 
-  | field | value |
-  | --- | --- |
-  | directory | `artifacts/experiments/d5-corridor-extension-native-candidate-3/` |
-  | attempt | `D5-CORRIDOR-EXTENSION-3` |
-  | milestone / seal | `D5-CORRIDOR-EXTENSION` / `404d42d9…6acd8` |
-  | after_save_sha256 | `3748e00c…5420bd` |
-  | replay requirement | `verify_extension_attempt` → `EXTENSION_COMPLETION_VERIFIED` |
+  | field              | value                                                             |
+  | ------------------ | ----------------------------------------------------------------- |
+  | directory          | `artifacts/experiments/d5-corridor-extension-native-candidate-3/` |
+  | attempt            | `D5-CORRIDOR-EXTENSION-3`                                         |
+  | milestone / seal   | `D5-CORRIDOR-EXTENSION` / `404d42d9…6acd8`                        |
+  | after_save_sha256  | `3748e00c…5420bd`                                                 |
+  | replay requirement | `verify_extension_attempt` → `EXTENSION_COMPLETION_VERIFIED`      |
 
   The binding function gains a v2 branch: a generic consumed-prerequisite
   check (same tuple discipline as `terrain_terraform_native.py::prerequisite_source_binding`,
@@ -93,12 +93,12 @@ retarget of the same pipeline**, following the established
 Eight→four exchange schedule (minimal census; within the historical
 32-request budget but planned smaller on purpose):
 
-| id | op | tile | expected | role |
-| --- | --- | --- | --- | --- |
-| `radius-00` | `radius` | none (tile `null` on the wire; the op reads the global `GSStation.GetCoverageRadius(STATION_TRUCK_STOP)`) | coverage radius natively measured (record `radius: 3`) | radius first, hard-ordered before any acceptance |
-| `accept-00` | `accept` | 50351 | cargo-1 acceptance **0** | **negative control of record** (A0 §13.3: 0/8 pre-construction; consumed `D5-FREIGHT-1` freight candidate-1 `site-00`: accept 0 post-refusal, E36) |
-| `accept-01` | `accept` | 50862 | cargo-1 acceptance **8/8** under measured radius 3 | the A1 feasibility fact: strong acceptance persists at the live bay-stop tile (A1 station sid 2, `DISTINCT_NEW_STATION`) |
-| `prod-00` | `prod` | pickup industry | cargo 1 production 104 (production readback of record) | production continuity across the A1 world |
+| id          | op       | tile                                                                                                      | expected                                               | role                                                                                                                                               |
+| ----------- | -------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `radius-00` | `radius` | none (tile `null` on the wire; the op reads the global `GSStation.GetCoverageRadius(STATION_TRUCK_STOP)`) | coverage radius natively measured (record `radius: 3`) | radius first, hard-ordered before any acceptance                                                                                                   |
+| `accept-00` | `accept` | 50351                                                                                                     | cargo-1 acceptance **0**                               | **negative control of record** (A0 §13.3: 0/8 pre-construction; consumed `D5-FREIGHT-1` freight candidate-1 `site-00`: accept 0 post-refusal, E36) |
+| `accept-01` | `accept` | 50862                                                                                                     | cargo-1 acceptance **8/8** under measured radius 3     | the A1 feasibility fact: strong acceptance persists at the live bay-stop tile (A1 station sid 2, `DISTINCT_NEW_STATION`)                           |
+| `prod-00`   | `prod`   | pickup industry                                                                                           | cargo 1 production 104 (production readback of record) | production continuity across the A1 world                                                                                                          |
 
 Controls and halt rules (carried from the
 `D5-ACCEPT-SURVEY-1` preparation doc §4):
@@ -137,7 +137,7 @@ Expected evidence (per the remediated lifecycle, all force-carrying):
   re-verified untouched by a fresh listing.
 - Acceptance criterion (pass): control 0, stop 8, radius 3, prod 104,
   zero mutation, cleanup certified, replay verified. The census alone
-  unlocks the *next gate* (freight staging design review); it does not
+  unlocks the _next gate_ (freight staging design review); it does not
   itself order or purchase anything.
 
 ## 4. Remaining uncertainties this census does not close (fact-of-record)
@@ -178,9 +178,9 @@ independent-review corrections (§7) folded in:
   the §3 table, v2 constants (`SURVEY_ATTEMPT = "D5-ACCEPT-SURVEY-2"`,
   prelaunch schema `d5-accept-survey-prelaunch-v2`), v2
   `survey_prerequisite_binding()` (generic consumed-prerequisite check
-  + A1 identity equality, replacing the v1 `attempt ==
+  - A1 identity equality, replacing the v1 `attempt ==
   "D4-CORRIDOR-5"` branch under the version selector — the v1 path
-  stays byte-for-byte for consumed-candidate-1 replay).
+    stays byte-for-byte for consumed-candidate-1 replay).
 - **The plan contract itself must be versioned** (review M3):
   `AcceptSurveyPlan` hard-binds the v1 world
   (`corridor_accept_survey.py:174–213` — `schema_version: Literal[1]`,
@@ -223,6 +223,7 @@ independent-review corrections (§7) folded in:
   tests/test_corridor_terrain_survey_native.py -q -p no:cacheprovider -rs`.
 
 ## 6. Fresh candidate staging checklist (§14.6-style; each item its own record)
+
 1. Implement §5 offline; suites green; consumed precedent candidates
    (accept-survey-1, A1 candidate-3) byte-verified untouched by
    listing/digest after the edit session ends.
@@ -565,3 +566,85 @@ other candidate:
   a separate explicit operator launch approval for the census lifecycle,
   per the phase-a precedent (§16 then §17 as two distinct approvals).
   This record reached that gate and stopped.
+
+## 11. Census native completion record (appended 2026-11-01, operator-approved launch)
+
+Following one explicit operator launch approval covering only this
+census lifecycle for `d5-accept-survey-native-candidate-2/` (one
+`CLAIM.json`, one consumption, one OpenTTD 15.3 launch, one census
+execution, and the documented read-only verification and cleanup —
+nothing else), the lifecycle was executed exactly once:
+`corridor_accept_survey_native run` → **exit 0,
+`NATIVE_SURVEY_COMPLETE`, `verified: true`**, followed by the
+documented read-only replay `corridor_accept_survey_native verify` →
+`SURVEY_COMPLETION_VERIFIED` (exit 0).
+
+Pre-launch revalidation matched every expected identity cryptographically
+before anything was consumed: seal `237a4f84…37daa4` (file == recomputed),
+authorization payload digest `b1f3e209…00bd` recomputed over the
+canonical bytes, `AUTHORIZATION.json` record sha
+`d87c2c45…4ae3` verifying under the production anchor as
+`VerifiedAuthorization` with operator identity
+`sha256-ed25519-public-key:cbb63ff5…c614`, plan model digest
+`67fce856…80be2`, schedule digest `1222db02…389d`, schema
+`d5-accept-survey-prelaunch-v2` schedule version 2, A1 after-save
+binding `3748e00c…5420bd` (re-verified on the A1 record and on the
+staged workspace save), and A1 prerequisite seal
+`404d42d9…6acd8` with its claim consumed. The final `preflight`
+returned `PREFLIGHT PASS` immediately before consumption. The signed
+payload's own `execution_command` is exactly the documented run CLI,
+so nothing outside the authorized command was executed.
+
+Consumption and connection of record: `CLAIM.json` minted and consumed
+once, `consumed: true`, `launches_allowed: 1`, `retries: 0`, binding
+authorization sha `d87c2c45…4ae3` / operator identity
+`sha256-ed25519-public-key:cbb63ff5…c614` / seal `237a4f84…37daa4`;
+`LAUNCH-CONSUMED.json` written with schema `d5-native-launch-consumed`
+carrying the identical three bindings. One OpenTTD 15.3 launch (pid
+71098), one encrypted connection (`X25519_AuthorizedKey`), 4 of the
+32-request budget used, 0 retries, 0 reconnects, `halt: null`. The
+native welcome matched the signed `expected_welcome` exactly (seed 17,
+OpenTTD 15.3, 256×256, landscape 0, start day 712223).
+
+The four census exchanges were each stamped `command_accepted: true`
+and `status: READY`, with the request id correlated in both directions
+and every receipt independently sealed and plan-bound:
+`radius-00` observed radius **3**; `accept-00` observed control tile
+50351 cargo-1 acceptance **0**; `accept-01` observed the A1 delivery
+station tile 50862 cargo-1 acceptance **8** (8/8); `prod-00` observed
+pickup production **104**. Every observation arrived bound to plan
+digest `67fce856…80be2` and seal `237a4f84…37daa4`, with native funds
+read as £490,257 (the A1 close-out value) in every receipt. Every wire
+response carried `cost: 0` and the phase recorded
+`state_changed: false` — the census constructed, purchased, ordered,
+loaded and paid nothing.
+
+World and cleanup of record. The staged
+`isolated/…/source.sav` (sha `3748e00c…5420bd`) was consumed by
+design as the session input; the session then owns its own
+`session-before.sav` native re-save (sha
+`1966b5c7e9e2c0d606f034536d04be5f99e3e30a8720506fd1ff2bf65f6d40b7`,
+recorded in `session-before-identity.json` and bound into
+`receipt.json` `before_save_sha256` — an OpenTTD re-serialization
+after GameScript subscribe, distinct bytes over the identical pinned
+world state, exactly like the A1 precedent's owned session saves).
+The production verifier re-derives and accepts this binding
+(`SURVEY_COMPLETION_VERIFIED`), so the unpinned-byte digest difference
+is the documented owned-save behavior, not drift. The source of record
+remains byte-intact: the A1 record's `after.sav` re-hashed exactly
+`3748e00c…5420bd` after the run. Certified cleanup: `reaped: true`
+(pid 71098, `returncode: 0`), `credential_removed: true`,
+`sockets_closed: true`, endpoint verification recorded (AdminPort
+53023 / game port 40535, `connection_closed: true`,
+`connection_probe: false`, `immediate_rebindability_required: false`),
+`workspace_disposed: true`, `cleanup_error: []`. The evidence manifest
+covers 24 entries; all 24 recomputed matches, zero mismatches. Raw
+evidence retained in the candidate directory: `result.json` (sha
+`23da6aa3…d06c9`), `receipt.json` (sha `7577eca7…27c00`),
+`frames.json`, the four request/response pairs (`radius-00`,
+`accept-00`, `accept-01`, `prod-00`), `runtime-identity.json`,
+`session-before-identity.json`, `stdout.log`/`stderr.log`, and
+`cleanup.json`. This census proves native cargo-1 acceptance and
+production observation only; it claims no freight delivery, no vehicle
+reachability, no road-bit traversal, no YAPF pathfinding and no M8
+route optimization. The authorized lifecycle is complete.

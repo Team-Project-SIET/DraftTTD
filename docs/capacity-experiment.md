@@ -16,10 +16,10 @@ that fleet size causes the bottleneck. S2 is the first test candidate because
 it has the larger sampled monthly queue; revenue by service remains UNKNOWN.
 
 | Arm | S1 vehicles | S2 vehicles | S3 vehicles | P05 CAPEX estimate |
-|---|---:|---:|---:|---:|
-| A | 1 | 1 | 1 | £25,607 |
-| B | 1 | 2 | 1 | £30,036 |
-| C | 1 | 1 | 2 | £30,036 |
+| --- | ----------: | ----------: | ----------: | -----------------: |
+| A   |           1 |           1 |           1 |            £25,607 |
+| B   |           1 |           2 |           1 |            £30,036 |
+| C   |           1 |           1 |           2 |            £30,036 |
 
 These controlled plans validate against retained P08 resource, supply and budget
 inputs. Original cargo demand stays at 20 per service. Opt-in P05
@@ -302,13 +302,13 @@ bounded to 1,450 bytes by `decode_telemetry`; `SampleWindow` caps each stream at
 20,000 samples and suppresses transition inference across its configured tick gap.
 These bounds are controlled-tested, not qualified native collection.
 
-| Metric | Measurement boundary |
-|---|---|
-| Tick, economy date, tile, state, speed, load, capacity, source queue | Direct point samples |
-| Stopped in depot, at station | Direct sampled predicates; neither establishes servicing or idle duration |
-| Departure, arrival, loading, unloading | Possible transitions bracketed between samples |
-| Cargo carried and frequency | Last source load, observed net unload delta and censored candidate-cycle rate |
-| Exact event times, completed cycles, avoidable idle, servicing duration | UNKNOWN |
+| Metric                                                                  | Measurement boundary                                                          |
+| ----------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Tick, economy date, tile, state, speed, load, capacity, source queue    | Direct point samples                                                          |
+| Stopped in depot, at station                                            | Direct sampled predicates; neither establishes servicing or idle duration     |
+| Departure, arrival, loading, unloading                                  | Possible transitions bracketed between samples                                |
+| Cargo carried and frequency                                             | Last source load, observed net unload delta and censored candidate-cycle rate |
+| Exact event times, completed cycles, avoidable idle, servicing duration | UNKNOWN                                                                       |
 
 Do not sum repeated service queue or industry-delivery counters across vehicles.
 The industry monitor remains service-level; it cannot attribute delivery to the

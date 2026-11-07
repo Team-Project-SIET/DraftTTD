@@ -322,7 +322,9 @@ def test_classification_plan_shapes_and_budgets(census):
     assert plan[45].region.width * plan[45].region.height == 225
     # A census shape whose bounded plan would need more than
     # CLASSIFICATION_PAGE_LIMIT requests is refused instead of over-paging.
-    wide = RandomCaptureRegion(x=0, y=0, profile="random-rectangle-512-v1", width=64, height=8)
+    # The widened ramrom 2048 profile re-derives the refusal at the new
+    # ceiling: 8 bands of 256 tiles need 8*52 = 416 > 410 pages.
+    wide = RandomCaptureRegion(x=0, y=0, profile="random-rectangle-2048-v1", width=256, height=8)
     with pytest.raises(TileQueryError) as budget:
         classification_plan(wide, CENSUS_REQUEST_ID)
     assert budget.value.code is TileFailure.ACCOUNTING_LIMIT_EXCEEDED

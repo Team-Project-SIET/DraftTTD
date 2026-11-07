@@ -3,17 +3,17 @@
 **Date:** 2026-10-18 (offline diagnosis only; no launch, no AdminPort, no policy/implementation changes).
 **Scope:** root-cause provenance of the 83 `PROJECTED_FLAGS_DIFFER` disagreements recorded by
 `artifacts/demos/classification-exec-seed17-3a8f9e46/` (verdict `SOURCE_SAVE_FUSION REJECTED`).
-The captured rejection itself is unchanged and remains valid as-recorded; this analysis explains *why*
+The captured rejection itself is unchanged and remains valid as-recorded; this analysis explains _why_
 the two records differ and classifies every tile evidence-exactly.
 
 ## Evidence identity
 
-| Record | Instant | Identity |
-| --- | --- | --- |
-| Retained V1 facts | economy dates **712285–712291** | `artifacts/demos/playable-demo-698799a2dfb146948fd2983ff2032253/network-facts-0.json`, sha256 `9e4c5c4225b697312230deae40989de643bcdd79db1063cf6eda9fa365d8bb6e` |
-| Fresh V2 census | economy date **712224** (save instant) | `artifacts/demos/classification-exec-seed17-3a8f9e46/`, composition `3a8f9e46…`, 90 pages / 450 tiles |
+| Record            | Instant                                | Identity                                                                                                                                                         |
+| ----------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Retained V1 facts | economy dates **712285–712291**        | `artifacts/demos/playable-demo-698799a2dfb146948fd2983ff2032253/network-facts-0.json`, sha256 `9e4c5c4225b697312230deae40989de643bcdd79db1063cf6eda9fa365d8bb6e` |
+| Fresh V2 census   | economy date **712224** (save instant) | `artifacts/demos/classification-exec-seed17-3a8f9e46/`, composition `3a8f9e46…`, 90 pages / 450 tiles                                                            |
 
-**Direction matters:** the fresh census (replay of the source save) is observed at the *earlier*
+**Direction matters:** the fresh census (replay of the source save) is observed at the _earlier_
 instant (712224); the retained TileFacts were captured later in the demo session (712285–712291,
 i.e. 61–67 in-game days afterwards, spread over the capture window). The two records are not
 simultaneous snapshots of the same corpus.
@@ -48,7 +48,7 @@ Both records are native reads of the same OpenTTD 15.3 binary (same GS API, same
   ```
 
 So the retained `TileFact.buildable` is the **planner's "directly placeable right now" predicate**
-(flat + unowned + bare ground), *not* the raw native `IsBuildable`. Every other V1 field shares its
+(flat + unowned + bare ground), _not_ the raw native `IsBuildable`. Every other V1 field shares its
 V2 counterpart's exact call (`road` retains `IsRoadTile` semantics; `air_transport` used
 `HasTransportType(TRANSPORT_AIR)` and equaled the V2 airport bit on all 450 tiles in this corpus).
 
@@ -81,7 +81,7 @@ empirically by the six transitions below):
   grass and rough are CAN-plant; fields/rocks are not).
 - In the `Dead` stage, a single-tree tile converts back to `MP_CLEAR` per its stored tree ground:
   `TREE_GROUND_GRASS → MakeClear(CLEAR_GRASS,…)` and, notably, **`TREE_GROUND_ROUGH →
-  MakeClear(CLEAR_ROUGH, 3)`** — a dying tree-on-rough-ground leaves *bare rough ground*.
+  MakeClear(CLEAR_ROUGH, 3)`** — a dying tree-on-rough-ground leaves _bare rough ground_.
 - `OnTick_Trees` periodically `PlantRandomTree()`s on plantable clear tiles.
 
 ## Replay result (offline, read-only)
@@ -90,14 +90,14 @@ Applying the exact V1 producer formulas to the fresh V2 bits (+ slope + owner �
 reproduces the retained V1 boolean tuples **exactly on 444/450 tiles**. Per-field residuals remain
 only on **6 tiles**, all temporal:
 
-| Tile | x, y | Retained (later instant) | Fresh census (save instant) | Verified mechanism (`tree_cmd.cpp`) |
-| --- | --- | --- | --- | --- |
-| 43951 | 175,171 | tree | buildable (bare clear) | tree spread/planted onto bare grass between the instants |
-| 47286 | 182,184 | tree | buildable | same |
-| 47288 | 184,184 | rough (no tree) | buildable+tree | tree-on-rough-ground died → `MakeClear(CLEAR_ROUGH, 3)` |
-| 48042 | 170,187 | rough (no tree) | buildable+tree | same |
-| 48309 | 181,188 | rough (no tree) | buildable+tree | same |
-| 51378 | 178,200 | buildable (vacant grass) | buildable+tree | single grass-tree died → vacant clear |
+| Tile  | x, y    | Retained (later instant) | Fresh census (save instant) | Verified mechanism (`tree_cmd.cpp`)                      |
+| ----- | ------- | ------------------------ | --------------------------- | -------------------------------------------------------- |
+| 43951 | 175,171 | tree                     | buildable (bare clear)      | tree spread/planted onto bare grass between the instants |
+| 47286 | 182,184 | tree                     | buildable                   | same                                                     |
+| 47288 | 184,184 | rough (no tree)          | buildable+tree              | tree-on-rough-ground died → `MakeClear(CLEAR_ROUGH, 3)`  |
+| 48042 | 170,187 | rough (no tree)          | buildable+tree              | same                                                     |
+| 48309 | 181,188 | rough (no tree)          | buildable+tree              | same                                                     |
+| 51378 | 178,200 | buildable (vacant grass) | buildable+tree              | single grass-tree died → vacant clear                    |
 
 Slope, min-height, industry id, and owner agree on all 450 tiles; no other bit differs anywhere.
 
@@ -107,7 +107,7 @@ Raw gate comparison (what `projection_disagrees()` compares: V2 bit 0 suppressed
 vs `fact.buildable`; road OR-of-3 vs `fact.road`; direct bits): **83 tiles** — buildable 82, tree 6,
 rough 3, all other fields 0 — exactly the sealed verdict list.
 
-- **77 tiles — proven semantic difference, zero contradiction.** They differ *only* in
+- **77 tiles — proven semantic difference, zero contradiction.** They differ _only_ in
   `buildable`: retained says `Vacant= false` (tree/rough/water-side/owned-x exclusion) while the
   fresh key says `IsBuildable=true`. All ten non-buildable fields agree bit-for-bit, and the exact
   `Vacant` reproduction (item above) proves the retained `buildable` was produced by the same-world
@@ -153,7 +153,7 @@ Additions cross-checking the same corpus:
    reproducible (444/450 exact V1-tuple reconstruction).
 2. **Temporal (6 tiles):** world evolution between the two capture instants (tree spread and tree
    death, including tree-on-rough → bare rough ground), verified against OpenTTD 15.3
-   `tree_cmd.cpp`. The fresh census instant is 61–67 in-game days *earlier* than the retained facts.
+   `tree_cmd.cpp`. The fresh census instant is 61–67 in-game days _earlier_ than the retained facts.
 3. The original `SOURCE_SAVE_FUSION REJECTED` verdict, the retained `INCOMPLETE_TILE_CLASSIFICATION`
    result, and the historical 339/63/19/29 segmentation remain valid and unchanged: the gate's raw
    strictness is correct behavior for an unfused-schema comparison, and no contradictory

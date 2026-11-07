@@ -37,16 +37,16 @@ The combined backend specializes the established StructuralFrameBudget and uses
 its encrypted/decrypted frame observer throughout all phases. Receipt accounting
 validates that same counter; it does not add frames to a second counter.
 
-| Category | Conservative post-auth frames |
-| --- | ---: |
-| Encrypted PROTOCOL and WELCOME | 2 |
-| One UPDATE_FREQUENCY, setup PING and PONG | 3 |
-| Inventory | 256 |
-| Capability | 256 |
-| Catalog | 512 |
-| Production | 4096 |
-| Graceful QUIT | 1 |
-| Total | 5126 |
+| Category                                  | Conservative post-auth frames |
+| ----------------------------------------- | ----------------------------: |
+| Encrypted PROTOCOL and WELCOME            |                             2 |
+| One UPDATE_FREQUENCY, setup PING and PONG |                             3 |
+| Inventory                                 |                           256 |
+| Capability                                |                           256 |
+| Catalog                                   |                           512 |
+| Production                                |                          4096 |
+| Graceful QUIT                             |                             1 |
+| Total                                     |                          5126 |
 
 Query operations include outbound request/control frames and decoded inbound
 frames admitted during each query. Query completion PING/PONG are already part

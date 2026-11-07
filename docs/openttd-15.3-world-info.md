@@ -19,13 +19,20 @@ Pinned copies, URLs and SHA-256 identities are in tests/reference/world_info_15_
 Request, exactly three fields:
 
 ```json
-{"protocol":1,"request_id":"world-001","type":"world_info"}
+{ "protocol": 1, "request_id": "world-001", "type": "world_info" }
 ```
 
 Canonical response, exactly six fields:
 
 ```json
-{"map_height":128,"map_width":64,"protocol":1,"request_id":"world-001","status":"ok","type":"world_info_result"}
+{
+	"map_height": 128,
+	"map_width": 64,
+	"protocol": 1,
+	"request_id": "world-001",
+	"status": "ok",
+	"type": "world_info_result"
+}
 ```
 
 Request IDs remain 1–64 safe ASCII characters. Protocol must be integer1; dimensions must be integers, not booleans/floats. Unknown fields/types, duplicate JSON keys, malformed JSON, wrong IDs and non-ok statuses fail closed. Existing application limit512 bytes remains below GSAdmin.Send's verified1450-byte ceiling. Maximum canonical response is172 bytes with64-character ID and five-digit dimensions. Native Send receives a fixed six-field table of bounded values; Send failure emits no response-sent/liveness marker.

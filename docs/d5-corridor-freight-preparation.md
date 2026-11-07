@@ -72,10 +72,10 @@ geometric authority for the D5 world.
 The protocol defines thirteen distinct ops, but the schedule has fifteen
 exchange ids because two ops legitimately run twice:
 
-| Repeat | Exchanges | Why |
-|---|---|---|
+| Repeat  | Exchanges              | Why                                                                                                                                                            |
+| ------- | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `vread` | `vread-00`, `vread-01` | `vread-00` independently re-observes the just-purchased vehicle; `vread-01` independently re-observes the running vehicle after `start-00` and before loading. |
-| `order` | `order-00`, `order-01` | One append per stop: pickup `OF_FULL_LOAD`, then delivery `OF_NO_LOAD`. |
+| `order` | `order-00`, `order-01` | One append per stop: pickup `OF_FULL_LOAD`, then delivery `OF_NO_LOAD`.                                                                                        |
 
 So `13 ops + 1 extra vread + 1 extra order = 15 exchanges`. The former baked
 `planned` table in `main.nut` held only fourteen rows and omitted `finish-00`,
@@ -193,7 +193,7 @@ The tests use sealed census buildable tiles
 selection `(43947, 44203, 44204, 44205, 43949)` flipping to
 `(43947, 43948, 44204, 44205, 43949)` when tile `44203` costs GBP 1000.
 That proves selection among source-backed alternatives, not that a second
-*executable* road route exists.
+_executable_ road route exists.
 
 ### 2.10 Single built route blocks an executable competing-route claim
 
@@ -221,20 +221,20 @@ plus the unchanged generic 512-byte default.
 
 ## 3. Offline verification performed
 
-| Check | Result |
-|---|---|
-| `tests/test_corridor_freight.py` | **32 passed** (controlled VM only) |
-| `tests/test_corridor_freight_native.py` | **29 passed** (temporary staging only; includes the protocol-5 live/replay request-transport regressions) |
-| Protocol-5 live/replay request transport | **PASS**: production 526-byte `site-00` accepted through outbound validation, live exchange and replay parsing; exact 640 accepted, 641 refused; generic 512 default retained |
-| `tests/test_corridor_route_optimizer.py` | **13 passed** (sealed census tiles, no native run) |
-| D5/corridor family (`test_corridor_*.py`) | **136 passed** |
-| Planning family (`test_planning*.py`, `test_plan_*.py`, freight/supplemental/world observation) | **405 passed, 4 skipped** |
-| D4 regressions (`test_corridor_construction*.py`) | included in the 136 above; retained evidence untouched |
-| D5 staging/preflight rehearsal | **PASS** in a temporary directory; seal unchanged, no `CLAIM.json` |
-| Prerequisite binding | **PASS**: D4-CORRIDOR-5 replay-verified; candidate-5 bytes unchanged before/after |
-| Tamper refusals | **PASS**: config, source save, frozen source, removed closure entry, drifted schedule, drifted seal, existing claim, drifted world/optimizer/plan pins |
-| Unconsumed candidate | **PASS (fail-closed)**: `AUTHORIZATION_UNVERIFIED` / `CLAIM_ABSENT` |
-| Ruff / `compileall` / `git diff --check` | **PASS** (exit 0) |
+| Check                                                                                           | Result                                                                                                                                                                        |
+| ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tests/test_corridor_freight.py`                                                                | **32 passed** (controlled VM only)                                                                                                                                            |
+| `tests/test_corridor_freight_native.py`                                                         | **29 passed** (temporary staging only; includes the protocol-5 live/replay request-transport regressions)                                                                     |
+| Protocol-5 live/replay request transport                                                        | **PASS**: production 526-byte `site-00` accepted through outbound validation, live exchange and replay parsing; exact 640 accepted, 641 refused; generic 512 default retained |
+| `tests/test_corridor_route_optimizer.py`                                                        | **13 passed** (sealed census tiles, no native run)                                                                                                                            |
+| D5/corridor family (`test_corridor_*.py`)                                                       | **136 passed**                                                                                                                                                                |
+| Planning family (`test_planning*.py`, `test_plan_*.py`, freight/supplemental/world observation) | **405 passed, 4 skipped**                                                                                                                                                     |
+| D4 regressions (`test_corridor_construction*.py`)                                               | included in the 136 above; retained evidence untouched                                                                                                                        |
+| D5 staging/preflight rehearsal                                                                  | **PASS** in a temporary directory; seal unchanged, no `CLAIM.json`                                                                                                            |
+| Prerequisite binding                                                                            | **PASS**: D4-CORRIDOR-5 replay-verified; candidate-5 bytes unchanged before/after                                                                                             |
+| Tamper refusals                                                                                 | **PASS**: config, source save, frozen source, removed closure entry, drifted schedule, drifted seal, existing claim, drifted world/optimizer/plan pins                        |
+| Unconsumed candidate                                                                            | **PASS (fail-closed)**: `AUTHORIZATION_UNVERIFIED` / `CLAIM_ABSENT`                                                                                                           |
+| Ruff / `compileall` / `git diff --check`                                                        | **PASS** (exit 0)                                                                                                                                                             |
 
 The native test fixture stages a candidate only under pytest's temporary
 directory, with the pinned prerequisite and pinned binary, and closes the
@@ -260,8 +260,8 @@ preflight (world/fronts/plan-model/optimizer/scenario/execution pins),
 freeze/claim/seal gates, the request mapping, the fail-closed unconsumed
 verdict and the exit-status contract.
 
-**PARTIAL/UNKNOWN (optimizer-to-execution):** competing *feasible* routes
-are proven; competing *executable* routes are not, because the retained
+**PARTIAL/UNKNOWN (optimizer-to-execution):** competing _feasible_ routes
+are proven; competing _executable_ routes are not, because the retained
 candidate-5 world has only one built road route. No second built route or
 authoritative post-D4 built-road connectivity map exists in the repository.
 

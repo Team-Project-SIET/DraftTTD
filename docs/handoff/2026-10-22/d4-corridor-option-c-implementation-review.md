@@ -27,11 +27,11 @@ Reviewed artifact: the uncommitted E22 work —
   the E22 documentation (root + vault) are modified; `docs/handoff/2026-10-22/`
   `d4-corridor-option-c-implementation.md` is untracked (the reviewed record).
 - Pre-existing unrelated change preserved untouched: `mise.toml` (+1 line,
-  `bun = "latest"`) — outside this review's scope and never edited. *(End-of-review
+  `bun = "latest"`) — outside this review's scope and never edited. _(End-of-review
   observation: at final verification the working tree showed `mise.toml` clean vs
   HEAD — the `bun = "latest"` line is no longer present in the checkout; HEAD itself
   is unchanged and its `mise.toml` history goes back to `8d2fc9e`. This review edited,
-  removed and restored nothing in that file.)*
+  removed and restored nothing in that file.)_
 - Untracked files left untouched by this review: `--version` (accidental redirect of
   an `ls --version` command: coreutils license text), `OpenTTD-Knowledge.zip`,
   `opencode-debug.log`, `docs/handoff/local-artifacts-before.json`,
@@ -52,16 +52,16 @@ Reviewed artifact: the uncommitted E22 work —
 
 ## 2. Independent verification performed (actual commands and results)
 
-| Check | Command | Result |
-| --- | --- | --- |
-| Focused offline suites | `.venv/bin/python -m pytest tests/test_corridor_construction.py tests/test_corridor_construction_native.py -q` | exit 0; **55 progress markers, all passed dots, 0 failed, 0 skipped** (the in-process Squirrel extension suppresses pytest's terminal summary; the counts were cross-checked with `--collect-only`: wire 23 + native 32); both consumed-artifact replay tests ran (not skipped — the retained evidence is present) |
-| Lint | `.venv/bin/python -m ruff check` on the changed module + both test files | exit 0, "All checks passed!" |
-| Byte-compile | `.venv/bin/python -m compileall` on the two modules + both test files | exit 0, clean |
-| Whitespace hygiene | `git diff --check` | exit 0, clean |
-| Production read-only replay of the consumed candidate | `.venv/bin/python -m app.simulation.openttd.proof.corridor_construction_native verify artifacts/experiments/d4-corridor-native-candidate-1` | exit 0; verdict **byte-identical to the E21 close-out**: `PHASE_HALTED_EVIDENCE_PRESERVED`, `completed ["full"]`, `failed op-01` (native admission refusal), `pending op-02…op-05` |
-| Evidence manifests, before and after | `sha256sum -c artifact-manifest.sha256` inside the consumed D4 candidate and the D2/D3 candidates | consumed D4 28/28 OK (before) and 28/28 OK (after); D2 clearing candidate-3 26/26; D3 clearing-1 26/26, clearing-2 26/26, terraforming-1 385/385 — zero mismatches in every run |
-| Pinned D3 after-save | `sha256sum artifacts/experiments/d3-terraform-native-candidate-1/after.sav` | unchanged `fbebef54dd466e0bea23cc30e11e94ebaf2a3ca07e2e9b7aadd6a6645c37d59e`; diagnostic save remains distinct (`2942b778…25b07`) |
-| Independent derivation probe | in-process read of the module's own derivations | exact results in §3 |
+| Check                                                 | Command                                                                                                                                     | Result                                                                                                                                                                                                                                                                                                             |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Focused offline suites                                | `.venv/bin/python -m pytest tests/test_corridor_construction.py tests/test_corridor_construction_native.py -q`                              | exit 0; **55 progress markers, all passed dots, 0 failed, 0 skipped** (the in-process Squirrel extension suppresses pytest's terminal summary; the counts were cross-checked with `--collect-only`: wire 23 + native 32); both consumed-artifact replay tests ran (not skipped — the retained evidence is present) |
+| Lint                                                  | `.venv/bin/python -m ruff check` on the changed module + both test files                                                                    | exit 0, "All checks passed!"                                                                                                                                                                                                                                                                                       |
+| Byte-compile                                          | `.venv/bin/python -m compileall` on the two modules + both test files                                                                       | exit 0, clean                                                                                                                                                                                                                                                                                                      |
+| Whitespace hygiene                                    | `git diff --check`                                                                                                                          | exit 0, clean                                                                                                                                                                                                                                                                                                      |
+| Production read-only replay of the consumed candidate | `.venv/bin/python -m app.simulation.openttd.proof.corridor_construction_native verify artifacts/experiments/d4-corridor-native-candidate-1` | exit 0; verdict **byte-identical to the E21 close-out**: `PHASE_HALTED_EVIDENCE_PRESERVED`, `completed ["full"]`, `failed op-01` (native admission refusal), `pending op-02…op-05`                                                                                                                                 |
+| Evidence manifests, before and after                  | `sha256sum -c artifact-manifest.sha256` inside the consumed D4 candidate and the D2/D3 candidates                                           | consumed D4 28/28 OK (before) and 28/28 OK (after); D2 clearing candidate-3 26/26; D3 clearing-1 26/26, clearing-2 26/26, terraforming-1 385/385 — zero mismatches in every run                                                                                                                                    |
+| Pinned D3 after-save                                  | `sha256sum artifacts/experiments/d3-terraform-native-candidate-1/after.sav`                                                                 | unchanged `fbebef54dd466e0bea23cc30e11e94ebaf2a3ca07e2e9b7aadd6a6645c37d59e`; diagnostic save remains distinct (`2942b778…25b07`)                                                                                                                                                                                  |
+| Independent derivation probe                          | in-process read of the module's own derivations                                                                                             | exact results in §3                                                                                                                                                                                                                                                                                                |
 
 Not run: typecheck (`mypy`/`ty`/`pyright` absent from the venv — environment gap,
 honest, unchanged); neighboring suites (p08 road/terrain, D3 native staging suite) —
@@ -72,16 +72,16 @@ justified below; no native/OpenTTD execution of any kind.
 The module's `corridor_schedule()` derivation (re-executed offline in this review,
 not copied from any record) produces **exactly the eight operations proposed**:
 
-| Index | Operation | Pins (derived + asserted) | Native preconditions |
-| --- | --- | --- | --- |
-| 0 | `full` run A | `45747 → 45743`, run_len 5, tiles = witness[1..5] | endpoints unowned, roadless |
-| 1 | `full` run-B segment 1 | `45999 → 48047`, run_len 9 | endpoints unowned, roadless |
-| 2 | `full` run-B segment 2 | `48303 → 50095`, run_len 8 | endpoints unowned, roadless |
-| 3 | `road` interior join | `48047 ↔ 48303` | both endpoints company road (after ops 1–2) |
-| 4 | `road` corner join | `45743 ↔ 45999` | both endpoints company road (after ops 0–1) |
-| 5 | `station` pickup | tile `45748`, front `45747` | unplanned footprint, company-road front |
-| 6 | `station` delivery | tile `50351`, front `50095` | unplanned footprint, company-road front |
-| 7 | `depot` | tile `45487`, front `45743`, orientation `south` | unplanned ground, company-road front |
+| Index | Operation              | Pins (derived + asserted)                         | Native preconditions                        |
+| ----- | ---------------------- | ------------------------------------------------- | ------------------------------------------- |
+| 0     | `full` run A           | `45747 → 45743`, run_len 5, tiles = witness[1..5] | endpoints unowned, roadless                 |
+| 1     | `full` run-B segment 1 | `45999 → 48047`, run_len 9                        | endpoints unowned, roadless                 |
+| 2     | `full` run-B segment 2 | `48303 → 50095`, run_len 8                        | endpoints unowned, roadless                 |
+| 3     | `road` interior join   | `48047 ↔ 48303`                                   | both endpoints company road (after ops 1–2) |
+| 4     | `road` corner join     | `45743 ↔ 45999`                                   | both endpoints company road (after ops 0–1) |
+| 5     | `station` pickup       | tile `45748`, front `45747`                       | unplanned footprint, company-road front     |
+| 6     | `station` delivery     | tile `50351`, front `50095`                       | unplanned footprint, company-road front     |
+| 7     | `depot`                | tile `45487`, front `45743`, orientation `south`  | unplanned ground, company-road front        |
 
 Independently verified in this review:
 
@@ -149,7 +149,7 @@ Independently verified in this review:
   `max_requests = 31`; request #32 is dropped by the dispatcher without any reply,
   and the runner's `exchange()` treats a late reply as a timeout — nothing past the
   cap can ever be silently counted as successful work (the VM test drives 25 planned
-  + 6 slack reads to exactly 31 and proves request 32 disappears without a reply).
+  - 6 slack reads to exactly 31 and proves request 32 disappears without a reply).
 - Duplicate/unknown request ids, invalid company/location rows and malformed
   frames fail closed through the request-id accounting and the contract validators
   (`READY` never accompanies a zero-cost quote — a native refusal at admission is
@@ -203,7 +203,7 @@ unchanged source — `app.planning.p08_road.find_depot`, the unchanged wire cont
 of length), and the D2/D3 machinery (`terrain_clearing`, `terrain_terraform_native`,
 `operator_authorization`). None of those files changed in this diff, so the p08
 road/terrain and D3 staging suites are outside the affected boundary **as to code
-they own** — but the one shared *runtime* boundary the D4 code calls into
+they own** — but the one shared _runtime_ boundary the D4 code calls into
 (replay-verifying the retained D3 attempt in `prerequisite_binding`) was actually
 executed read-only twice in this review-session's runs (staging fixture + the
 prerequisite-binding tests in the native suite), and it passed with the retained
@@ -222,7 +222,7 @@ D3 bytes.
    (staging module, `NATIVE_CORRIDOR_VERIFIED` branch, final request-inventory
    check) compares `len(outbound_requests) != PLANNED_CORRIDOR_REQUESTS`, where the
    module constant is the **v2-schedule planned count (25)**, not the selected
-   schedule's planned count. A hypothetical *completed* v1 receipt (19 planned)
+   schedule's planned count. A hypothetical _completed_ v1 receipt (19 planned)
    would be **falsely refused** there — never falsely accepted, so the fail-closed
    direction is safe, and nothing can reach this branch today: the only consumed
    candidate halted at `op-01`, fresh staging always pins v2, and no v1 completion

@@ -28,25 +28,25 @@ is partial coverage of a 64×64 map.
 
 Proposed implementation: `app/simulation/openttd/terrain_sweeps.py`.
 
-* Immutable `TerrainSweepContext`: acquisition ID, declared world fingerprint
+- Immutable `TerrainSweepContext`: acquisition ID, declared world fingerprint
   (existing `Digest` shape), map width/height and `Region`. Geometry must pass the
   existing tile-protocol map validation. The world fingerprint identifies a declared
   source context, not the changing terrain rows; do not hash terrain to manufacture
   a stable world identity. CONTROLLED callers supply synthetic source context,
   explicitly labeled as such. Native authentication of this context is deferred.
-* `TerrainTwoSweep(context, *, per_sweep_budget, combined_budget)` owns its two
+- `TerrainTwoSweep(context, *, per_sweep_budget, combined_budget)` owns its two
   pagination instances privately. Snapshot and validate constructor inputs; do not
   expose mutable paginator configuration. Sweep identities are `(acquisition_id,1)`
   and `(acquisition_id,2)`. Request prefixes are distinct `id-s1` and `id-s2`, with
   existing `-pNNN` suffixes. Validate the longest resulting request ID at construction.
-* `requests` exposes an immutable tuple for the current sweep. `accept(sweep,
+- `requests` exposes an immutable tuple for the current sweep. `accept(sweep,
   observed_context, exchange)` checks the exact sweep identity and context, then
   delegates page admission. The supplied context is an attestation from the future
   adapter; the response itself only corroborates geometry, not a world fingerprint.
-* `complete_sweep()` calls pagination `finish()`; it never accepts a caller-created
+- `complete_sweep()` calls pagination `finish()`; it never accepts a caller-created
   `TerrainDataset`. After sweep one it exposes sweep two; after sweep two it performs
   equality and freezes the result. `finish()` returns the accepted result only.
-* `abort(reason)` terminally rejects interruption. Read-only progress/diagnostics
+- `abort(reason)` terminally rejects interruption. Read-only progress/diagnostics
   disclose received/missing page identities and failure reason, never partial success.
 
 `VerifiedTerrainPair` is a frozen result containing context, two immutable datasets,
@@ -57,14 +57,14 @@ The next slice has no persistent evidence schema or REAL_PASS output.
 
 ## State and failure contract
 
-| State | Allowed transition |
-| --- | --- |
-| FIRST_COLLECTING | Admit the next page; `complete_sweep` requires exact complete coverage |
-| FIRST_COMPLETE | Internal transition to SECOND_COLLECTING; no caller-admitted page in between |
-| SECOND_COLLECTING | Admit the next second-sweep page; complete only with exact coverage |
-| VALIDATING_EQUALITY | Internal comparison, then ACCEPTED or REJECTED |
-| ACCEPTED | Read immutable result; repeated `finish` is read-only; further admission is an error |
-| REJECTED | Read diagnostics; no further admission, completion, retry or reset |
+| State               | Allowed transition                                                                   |
+| ------------------- | ------------------------------------------------------------------------------------ |
+| FIRST_COLLECTING    | Admit the next page; `complete_sweep` requires exact complete coverage               |
+| FIRST_COMPLETE      | Internal transition to SECOND_COLLECTING; no caller-admitted page in between         |
+| SECOND_COLLECTING   | Admit the next second-sweep page; complete only with exact coverage                  |
+| VALIDATING_EQUALITY | Internal comparison, then ACCEPTED or REJECTED                                       |
+| ACCEPTED            | Read immutable result; repeated `finish` is read-only; further admission is an error |
+| REJECTED            | Read diagnostics; no further admission, completion, retry or reset                   |
 
 Any admission/context/accounting/coverage/equality error before acceptance becomes
 terminal REJECTED and raises `ValueError` with a specific reason and preserved cause
@@ -107,13 +107,13 @@ changes. It must never be described as atomic-world consistency.
 ## Budget scopes
 
 | Measured application quantity | Each sweep ceiling | Combined ceiling |
-| --- | ---: | ---: |
-| Pages | 52 | 104 |
-| Request bytes/page | 159 | 159 (unchanged) |
-| Response bytes/page | 508 | 508 (unchanged) |
-| Request bytes | 8,268 | 16,536 |
-| Response bytes | 26,416 | 52,832 |
-| Query operations | 416 | 832 |
+| ----------------------------- | -----------------: | ---------------: |
+| Pages                         |                 52 |              104 |
+| Request bytes/page            |                159 |  159 (unchanged) |
+| Response bytes/page           |                508 |  508 (unchanged) |
+| Request bytes                 |              8,268 |           16,536 |
+| Response bytes                |             26,416 |           52,832 |
+| Query operations              |                416 |              832 |
 
 Retain independent per-sweep `PaginationBudget`; add only a frozen aggregate
 budget with exact positive integers bounded by the combined ceilings above.
@@ -162,25 +162,25 @@ optimization. Neither integration is implemented here.
 
 All tests exercise the proposed public interface and real pagination/protocol code.
 
-| Challenge | Required outcome |
-| --- | --- |
-| Equal regions of 1, 5, 6, 255, 256 tiles | Complete pair; exact rows and independent coverage |
-| Partial final page, including 256th tile | Correct terminal cursor and row count in both sweeps |
-| Empty region | Constructor rejects under existing Region contract |
-| Change each of ten row fields independently, with otherwise valid rows | Reject drift; schema-invalid variants reject at protocol admission |
-| Different valid dates/receipt IDs/bytes with equal rows | Accept; preserve distinct metadata |
-| Date bracket inversion/regression | Reject temporal evidence inconsistency |
-| Changed context fingerprint/geometry; wrong sweep identity | Reject context/sweep mismatch |
-| Changed page ID/order/cursor, missing page in either sweep | Reject; no assembled pair |
-| Duplicate/conflicting/overlapping/out-of-region tile | Reject through real page coverage validation |
-| Abort or incomplete second sweep | Terminal rejection; diagnostics preserved |
-| Sweep-local cap, aggregate cap, invalid budget type | Reject exact offending scope; no counter reset bypass |
-| Accounting tampered in replay/result metadata | Derive actual totals; inconsistent claimed totals reject in replay comparison |
-| Immutable rows/exchanges/context/result | Mutation impossible; metadata copies cannot alter authority |
-| Request/response byte mutation or incorrect receipt digest | Replay rejects independently |
-| Recomputed receipt around changed second-sweep terrain | Equality rejects |
-| Attempts to admit forged completed datasets or resume rejected state | No admission path; no success |
-| Existing pagination and WPO collector regressions | Unchanged behavior and semantics |
+| Challenge                                                              | Required outcome                                                              |
+| ---------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Equal regions of 1, 5, 6, 255, 256 tiles                               | Complete pair; exact rows and independent coverage                            |
+| Partial final page, including 256th tile                               | Correct terminal cursor and row count in both sweeps                          |
+| Empty region                                                           | Constructor rejects under existing Region contract                            |
+| Change each of ten row fields independently, with otherwise valid rows | Reject drift; schema-invalid variants reject at protocol admission            |
+| Different valid dates/receipt IDs/bytes with equal rows                | Accept; preserve distinct metadata                                            |
+| Date bracket inversion/regression                                      | Reject temporal evidence inconsistency                                        |
+| Changed context fingerprint/geometry; wrong sweep identity             | Reject context/sweep mismatch                                                 |
+| Changed page ID/order/cursor, missing page in either sweep             | Reject; no assembled pair                                                     |
+| Duplicate/conflicting/overlapping/out-of-region tile                   | Reject through real page coverage validation                                  |
+| Abort or incomplete second sweep                                       | Terminal rejection; diagnostics preserved                                     |
+| Sweep-local cap, aggregate cap, invalid budget type                    | Reject exact offending scope; no counter reset bypass                         |
+| Accounting tampered in replay/result metadata                          | Derive actual totals; inconsistent claimed totals reject in replay comparison |
+| Immutable rows/exchanges/context/result                                | Mutation impossible; metadata copies cannot alter authority                   |
+| Request/response byte mutation or incorrect receipt digest             | Replay rejects independently                                                  |
+| Recomputed receipt around changed second-sweep terrain                 | Equality rejects                                                              |
+| Attempts to admit forged completed datasets or resume rejected state   | No admission path; no success                                                 |
+| Existing pagination and WPO collector regressions                      | Unchanged behavior and semantics                                              |
 
 ## Implementation sequence and gates
 

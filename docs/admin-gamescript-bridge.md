@@ -13,13 +13,13 @@ is controlled-only and has not had a real world-state proof.
 Canonical UTF-8 JSON request:
 
 ```json
-{"protocol":1,"request_id":"ack-000001","type":"ping"}
+{ "protocol": 1, "request_id": "ack-000001", "type": "ping" }
 ```
 
 ACK:
 
 ```json
-{"protocol":1,"request_id":"ack-000001","status":"ok","type":"ack"}
+{ "protocol": 1, "request_id": "ack-000001", "status": "ok", "type": "ack" }
 ```
 
 The root must be an object with exactly the documented fields. Protocol must be
@@ -61,13 +61,13 @@ ID correlation. It does not certify a world-state change.
 
 Verified OpenTTD 15.3 wire constants:
 
-| Purpose | ID / value |
-| --- | --- |
-| `ADMIN_PACKET_ADMIN_GAMESCRIPT` | 6 |
-| `ADMIN_PACKET_SERVER_GAMESCRIPT` | 124 |
-| `ADMIN_UPDATE_GAMESCRIPT` | 9 |
-| `AUTOMATIC` frequency mask | 64 |
-| Admin protocol version | 3 |
+| Purpose                          | ID / value |
+| -------------------------------- | ---------- |
+| `ADMIN_PACKET_ADMIN_GAMESCRIPT`  | 6          |
+| `ADMIN_PACKET_SERVER_GAMESCRIPT` | 124        |
+| `ADMIN_UPDATE_GAMESCRIPT`        | 9          |
+| `AUTOMATIC` frequency mask       | 64         |
+| Admin protocol version           | 3          |
 
 A plaintext/decrypted Admin frame uses a little-endian uint16 total length,
 one-byte packet ID, and body. GameScript body is one UTF-8 JSON string terminated

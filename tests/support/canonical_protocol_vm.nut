@@ -109,7 +109,12 @@ return ::testing||!::partial_command;
 ::GSOrder <- class {
  static OF_FULL_LOAD=64;static OF_NO_LOAD=128;
  static function GetOrderCount(v){return ::vehicles[v].orders.len();}
- static function GetOrderDestination(v,n){return ::vehicles[v].orders[n].tile;}
+ /* 15.3 (E92, script_order.cpp:241-284): the readback resolves the stored
+  * station and returns its canonical stop tile — never an echo of the
+  * appended argument and never a StationID. Single-stop stub stations,
+  * so the canonical tile of the resolved station is its stop tile; the
+  * membership test is the fidelity point. */
+ static function GetOrderDestination(v,n){local t=::vehicles[v].orders[n].tile;return t in ::stations?t:false;}
  static function GetOrderFlags(v,n){return ::vehicles[v].orders[n].flags;}
  static function IsGotoStationOrder(v,n){return true;}
  static function AppendOrder(v,t,f){if(!Complete())return false;if(!::testing)::vehicles[v].orders.append({tile=t,flags=f});return true;}

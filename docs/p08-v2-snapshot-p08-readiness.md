@@ -40,7 +40,7 @@ separately-authorized route for full V1/V2 correspondence fusion only.
    `industry_covered` capture exactly (40+40) — independent confirmation
    of site stability.
 6. Ownership: all census tiles owner `-1` (unowned).
-7. Route-planning fields: all present; production quantities are *not*
+7. Route-planning fields: all present; production quantities are _not_
    re-observed (recorded as zero, declared not-consumed; delivery
    capability is an industry-specification constant).
 8. Temporal consistency: the multi-day window is NOT claimed

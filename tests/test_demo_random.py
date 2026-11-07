@@ -119,3 +119,72 @@ def test_random_cli_prepares_without_native_and_forwards_explicit_run(
         demo.main(["plan", "--seed", "12"])
     with pytest.raises(SystemExit):
         demo.main(["plan", "--random-world", "--map-size", "512"])
+
+
+def test_widened_region_grows_the_shorter_axis_within_budget():
+    # Anchor rect x 98..108 (w 11), y 98..102 (h 5): height is the shorter
+    # axis and the request consumes the default 6-side pad each way.
+    world = observed_world(2)
+    a, b = world.structural.inventory.observation.records
+    a.x, a.y, b.x, b.y = 100, 100, 106, 100
+    region = relationship_region(world, (a.id, b.id, 7), 2048, edge_pad=6)
+    assert region == dict(x=98, y=92, width=10, height=16, profile="random-rectangle-2048-v1")
+
+
+def test_widened_region_budget_caps_perpendicular_growth():
+    # Width 234 dominates: the perpendicular room is the budget-fit 1 side.
+    world = observed_world(2)
+    a, b = world.structural.inventory.observation.records
+    a.x, a.y, b.x, b.y = 10, 10, 240, 11
+    region = relationship_region(world, (a.id, b.id, 7), 2048, edge_pad=6)
+    assert region["width"] == 234 and region["height"] == 7
+    assert region["width"] * region["height"] <= 2048
+
+
+def test_widened_region_clips_growth_at_the_map_edge():
+    world = observed_world(2)
+    a, b = world.structural.inventory.observation.records
+    a.x, a.y, b.x, b.y = 1, 100, 106, 100
+    region = relationship_region(world, (a.id, b.id, 7), 2048, edge_pad=6)
+    assert region["x"] >= 1 and region["x"] + region["width"] <= 255
+    assert region["width"] * region["height"] <= 2048
+    assert region["profile"] == "random-rectangle-2048-v1"
+
+
+def test_spread_pair_still_refused_with_typed_capture_budget():
+    world = observed_world(2)
+    a, b = world.structural.inventory.observation.records
+    a.x, a.y, b.x, b.y = 2, 2, 250, 130
+    with pytest.raises(ValueError, match="CAPTURE_TILE_BUDGET"):
+        relationship_region(world, (a.id, b.id, 7), 2048, edge_pad=6)
+
+
+def test_legacy_budgets_keep_their_sealed_shapes():
+    # 512/256 keep byte-compatible shapes; no perpendicular growth, no 2048
+    # profile, and a widened budget never reinterprets a sealed record.
+    world = observed_world(2)
+    a, b = world.structural.inventory.observation.records
+    a.x, a.y, b.x, b.y = 10, 10, 20, 12
+    assert relationship_region(world, (a.id, b.id, 7), 512) == dict(
+        x=8, y=8, width=14, height=6, profile="random-rectangle-512-v1"
+    )
+    assert relationship_region(world, (a.id, b.id, 7), 256) == dict(x=8, y=8, width=14, height=6)
+
+
+def test_product_default_run_uses_the_widened_seal():
+    forwarded = []
+
+    def fake_run(**kwargs):
+        forwarded.append(kwargs)
+        return 0
+
+    demo.run_demo, original = fake_run, demo.run_demo
+    try:
+        assert demo.main(["run", "--random-world", "--headless", "--seed", "7"]) == 0
+    finally:
+        demo.run_demo = original
+    budgets = forwarded[0]["random_budget"]
+    assert budgets["capture_tile_limit"] == 2048
+    assert budgets["capture_seconds"] == 120
+    assert budgets["capture_edge_pad"] == 6
+    assert budgets["capture_seconds"] != 45

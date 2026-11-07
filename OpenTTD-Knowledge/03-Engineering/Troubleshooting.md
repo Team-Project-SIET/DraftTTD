@@ -1,12 +1,14 @@
 ---
+
 title: "Troubleshooting"
 type: engineering
 status: current
 updated: 2026-10-22
 tags:
-  - openttd
-  - engineering
-  - troubleshooting
+- openttd
+- engineering
+- troubleshooting
+
 ---
 
 # Troubleshooting

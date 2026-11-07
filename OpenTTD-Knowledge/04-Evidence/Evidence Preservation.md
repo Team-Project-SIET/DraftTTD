@@ -1,12 +1,14 @@
 ---
+
 title: "Evidence Preservation"
 type: evidence
 status: current
 updated: 2026-10-26
 tags:
-  - openttd
-  - evidence
-  - preservation
+- openttd
+- evidence
+- preservation
+
 ---
 
 # Evidence Preservation

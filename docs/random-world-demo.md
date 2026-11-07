@@ -5,8 +5,11 @@ bounded to 256×256, and uses OpenTTD 15.3's native TerraGenesis generator. No
 heightmap is loaded and no replacement industries or roads are prepared for it.
 Native Seed 17 generation, discovery and spectator navigation are verified in
 retained evidence, but the smoke terminal remains FAILED: P05 did not run and no
-service was constructed or delivered. The new 512-tile capture correction is
-controlled/offline only; native service feasibility awaits a fresh authorized run.
+service was constructed or delivered. The capture seal is widened for the ramrom
+product (2048 tiles, profile `random-rectangle-2048-v1`; spec of record
+`docs/specs/ramrom-product.md` §2). The 256- and 512-tile profiles stay
+byte-compatible with every retained identity, and native service feasibility
+under the widened seal awaits a fresh authorized run.
 
 ## Commands
 
@@ -24,6 +27,11 @@ controlled/offline only; native service feasibility awaits a fresh authorized ru
 .venv/bin/python -m app.openttd_demo run --random-world --seed 17 \
   --terrain 0 --max-services 4 --max-vehicles 4 --stop-on-delivery
 
+# Production command of record (flags shown are the defaults of the widened
+# 2048-tile capture seal, per docs/specs/ramrom-product.md §2)
+.venv/bin/python -m app.openttd_demo run --random-world --seed 2026 \
+  --capture-tiles 2048 --capture-seconds 120 --capture-pad 6
+
 # Offline P07 replay/report; source must be an existing completed native demo
 .venv/bin/python -m app.openttd_demo report --source /absolute/path/to/demo-run
 
@@ -37,17 +45,19 @@ options require `--random-world`. Random `check` validates configuration and
 prerequisites without generation. Random `plan` writes a reproducible recipe,
 not a synthetic world or a claim of feasible services.
 
-| Setting | Supported range |
-|---|---|
-| Seed | 0..4294967294 (the all-ones random-seed sentinel is excluded) |
-| Map size | 256×256 only |
-| Climate | temperate, arctic, tropic, toyland |
-| Terrain type | native difficulty values 0..5 |
-| Town density | native values 0..3; custom town counts excluded |
-| Industry density | native values 0..4; zero may yield no freight services |
-| Candidate relationships | 1..16; at most 8192 source/cargo/destination checks |
-| Services / vehicles | independently 1..8; one vehicle per selected service |
-| P05 solve time | 1..60 wall-clock seconds, default 30; killed/reaped on timeout |
+| Setting                 | Supported range                                                |
+| ----------------------- | -------------------------------------------------------------- |
+| Seed                    | 0..4294967294 (the all-ones random-seed sentinel is excluded)  |
+| Map size                | 256×256 only                                                   |
+| Climate                 | temperate, arctic, tropic, toyland                             |
+| Terrain type            | native difficulty values 0..5                                  |
+| Town density            | native values 0..3; custom town counts excluded                |
+| Industry density        | native values 0..4; zero may yield no freight services         |
+| Candidate relationships | 1..16; at most 8192 source/cargo/destination checks            |
+| Services / vehicles     | independently 1..8; one vehicle per selected service           |
+| P05 solve time          | 1..60 wall-clock seconds, default 30; killed/reaped on timeout |
+| Capture seal            | 256, 512 or 2048 tiles per relationship (`--capture-tiles`); 2048 is the production default |
+| Capture budget          | 1..180 wall-clock seconds per capture (default 120) and `--capture-pad` 0..32 extra tiles per side on the shorter axis of the 2048 profile |
 
 The existing finite GBP 500,000 scenario funds random runs. P05 spending is capped
 at that budget; each native service still has the executor's GBP 100,000 admission
@@ -64,18 +74,25 @@ inventories fail the existing explicit collection budget. Production is a
 qualified last-month supply benchmark, not a forecast of demand.
 
 Discovery retains compatible positive freight supply with an accepting industry
-before capture admission. New random preparations seal a 512-tile **rectangular
-area** limit per relationship (`random-rectangle-512-v1`); the fixed profile and
-legacy sealed random budgets retain 256 tiles. This is not a Manhattan-distance
-limit. Random captures clip padding to the map interior, then require every tile
+before capture admission. Random preparations seal a **rectangular area** limit
+per relationship. The production default is the widened 2048-tile profile
+`random-rectangle-2048-v1`: after the anchor bounding rectangle (+2 tiles per
+side) is clipped to the map interior, its spare budget deterministically grows
+the shorter capture axis by up to `--capture-pad` tiles per side (default 6) so
+corridor search gains detour room inside an exactly observed rectangle. The
+legacy `random-rectangle-512-v1` (512 tiles) and the fixed profile (256 tiles)
+keep their sealed byte shapes; `--capture-tiles 512` pins the legacy demo shape.
+This is not a Manhattan-distance limit. Captures then require every tile
 and both declared cargo-coverage scopes; missing observations fail explicitly.
 Search/candidate truncation is retained as `CANDIDATE_SEARCH_LIMIT`. Capture
 rejections report `CAPTURE_TILE_BUDGET` or `CAPTURE_MAP_BOUND`. No admitted
 relationship is `NO_SUPPORTED_RELATIONSHIP`; an exhausted search with none found
-is `SEARCH_LIMIT`. Each capture has a sealed 45-second deadline and at most
-`capture_tile_limit + 34` reads (tiles, settings, engine list and at most 32 engines).
-The staged global guard is `(capture_tile_limit + 36) × max_relationships + 1`;
-at defaults it permits 8769 reads. Each response remains at most 512 bytes and a tile
+is `SEARCH_LIMIT`. Each capture has a sealed deadline (`--capture-seconds`,
+1..180, default 120) and at most `capture_tile_limit + 34` reads (tiles,
+settings, engine list and at most 32 engines). The staged global guard is
+`(capture_tile_limit + 36) × max_relationships + 1`; at the production defaults
+it permits 33,345 reads and at `--capture-tiles 512` it matches the historical
+8769. Each response remains at most 512 bytes and a tile
 response contains exactly 19 integers. The total native runtime deadline remains
 unchanged. Complete observations must still fit the qualified economy month.
 P08 still requires flat, vacant, unobstructed road sites and a bounded corridor.
@@ -177,6 +194,9 @@ navigation, then stopped before construction because all six compatible pairs
 exceeded the old 256-tile capture area. New 512-tile admission permits the 450-tile
 coal pair; the other five still exceed the bound. Its native terrain, catchment and
 engine reads were never collected, so actual P08/P05 feasibility remains unknown.
+Retained evidence is immutable: the seed-17 smoke stays FAILED at its own
+identity, and widened-seal feasibility is proven on fresh authorized runs
+(seed 2026 of record, `docs/specs/ramrom-product.md` §2).
 See [distance support and Seed 17 evidence](random-world-distance-support.md).
 
 Native settings were checked against the locally installed 15.3 API reference and

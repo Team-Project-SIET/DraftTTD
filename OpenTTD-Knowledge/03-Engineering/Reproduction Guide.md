@@ -1,13 +1,15 @@
 ---
+
 title: "Reproduction Guide"
 type: engineering
 status: current
 updated: 2026-10-24
 tags:
-  - openttd
-  - engineering
-  - reproduce
-  - safety
+- openttd
+- engineering
+- reproduce
+- safety
+
 ---
 
 # Reproduction Guide
@@ -85,7 +87,7 @@ package does not satisfy the checksum gate. Install guide + hashes:
 .venv/bin/python -m app.openttd_demo --view-seconds 300
 ```
 
-Future random smoke command *shape* (only after fresh preparation, independent preflight
+Future random smoke command _shape_ (only after fresh preparation, independent preflight
 and explicit one-shot authority — this text is not authority):
 
 ```bash

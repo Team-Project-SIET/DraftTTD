@@ -48,9 +48,9 @@ The runner's read-only `preflight` was re-run immediately before execution:
    info and tolérates the stored Save-data without a `Load()` hook was
    documented as an engine-native fact decidable only at launch (fail-closed).
 6. **Schema-2 transport compatibility** — `GameScriptTransport.tile_classification_page`
-   + `_read_query` union with the `(request_id, region, cursor)` uniqueness key
-   implemented; controlled 90-page walk with `[7]+[4]*89` operation accounting
-   passes offline.
+   - `_read_query` union with the `(request_id, region, cursor)` uniqueness key
+     implemented; controlled 90-page walk with `[7]+[4]*89` operation accounting
+     passes offline.
 7. **Receipt/correspondence contracts** — `TileClassificationReceipt.correlate`
    / `TileClassificationExchange` / `TileClassificationSweep.record` +
    `evaluate_correspondence` (SOURCE_SAVE_FUSION) implemented and pinned suites
@@ -186,16 +186,16 @@ credential, no open sockets, no resident process.
 
 ## Evidence inventory (all inside `artifacts/demos/classification-exec-seed17-e71c95a3/`)
 
-| File | SHA-256 | Meaning |
-|---|---|---|
-| `result.json` | `7db905692bfbac4fe1e9802963cae6ec5155f1e66463036453aa7634de8a0f56` | Terminal capture result (FAILED_CLEANUP) |
-| `capture-failure.json` | `753bd1d959984b4c5c72f3d3b498e78d602bea97efda469619c57d7f29a3e733` | Bounded failure record (RUNTIMEERROR, 0 pages) |
-| `stderr.log` | `57a11449cb413b530ac1c20a8b29ac66f9c9791da1f261028396fc0b868b2dd3` | Native script-death evidence (verbatim above) |
-| `stdout.log` | `239836d45516d94ded30a5dbcf255e00524a51f450183a7e3de28c2ed2df8e09` | Quit-time failure save acknowledgement |
-| `failure.sav` | `ee21468cdc2e4ddabfc85a6f592763313baea843a49f10ea9cf29cc04cb99932` | Native world snapshot at terminal (61,616 B) |
-| `CLAIM.json` | `693caed5dbd68f7c5e24e63e3c16dc9f07c113a1e8c8c57638523b81c57b7364` | Consumed one-shot claim (prelaunch digest `6acbd4970e4b38869fefadcef4005a1e919f969b2b208a8a84a39c4f0f332d34` = the sealed `PRELAUNCH.sha256`) |
-| `cleanup.json` | `b3130c069bbc6c4a9eb348c5258d6a75438569466fc5b784120d362f32982f6b` | Cleanup honesty record (FAILED_CLEANUP cause chain) |
-| `artifact-manifest.sha256` | (refreshed by the runner) | Post-terminal file enumeration |
+| File                       | SHA-256                                                            | Meaning                                                                                                                                       |
+| -------------------------- | ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `result.json`              | `7db905692bfbac4fe1e9802963cae6ec5155f1e66463036453aa7634de8a0f56` | Terminal capture result (FAILED_CLEANUP)                                                                                                      |
+| `capture-failure.json`     | `753bd1d959984b4c5c72f3d3b498e78d602bea97efda469619c57d7f29a3e733` | Bounded failure record (RUNTIMEERROR, 0 pages)                                                                                                |
+| `stderr.log`               | `57a11449cb413b530ac1c20a8b29ac66f9c9791da1f261028396fc0b868b2dd3` | Native script-death evidence (verbatim above)                                                                                                 |
+| `stdout.log`               | `239836d45516d94ded30a5dbcf255e00524a51f450183a7e3de28c2ed2df8e09` | Quit-time failure save acknowledgement                                                                                                        |
+| `failure.sav`              | `ee21468cdc2e4ddabfc85a6f592763313baea843a49f10ea9cf29cc04cb99932` | Native world snapshot at terminal (61,616 B)                                                                                                  |
+| `CLAIM.json`               | `693caed5dbd68f7c5e24e63e3c16dc9f07c113a1e8c8c57638523b81c57b7364` | Consumed one-shot claim (prelaunch digest `6acbd4970e4b38869fefadcef4005a1e919f969b2b208a8a84a39c4f0f332d34` = the sealed `PRELAUNCH.sha256`) |
+| `cleanup.json`             | `b3130c069bbc6c4a9eb348c5258d6a75438569466fc5b784120d362f32982f6b` | Cleanup honesty record (FAILED_CLEANUP cause chain)                                                                                           |
+| `artifact-manifest.sha256` | (refreshed by the runner)                                          | Post-terminal file enumeration                                                                                                                |
 
 Sealed preparation inputs (mtime 2026-10-18 11:20, before the 11:32 run)
 `CANDIDATE.json`, `PRELAUNCH.json`, `PRELAUNCH.sha256`,

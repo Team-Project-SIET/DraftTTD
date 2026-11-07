@@ -11,14 +11,14 @@ Its independent qualified-world replay confirms ten industries and eleven cargo
 types. Discovery examined 60 source/cargo/destination combinations without search
 truncation and found these compatible positive-supply relationships:
 
-| Source→destination | Cargo | Origin | Destination | Manhattan distance | Padded rectangle area | New 512-tile capture |
-|---|---|---|---|---:|---:|---|
-| 0→1 | COAL | (183,173) | (172,199) |37|450|Admitted for observation |
-| 3→2 | WOOD | (219,23) | (221,206) |185|1122|CAPTURE_TILE_BUDGET |
-| 7→5 | LVST | (166,21) | (33,148) |260|17947|CAPTURE_TILE_BUDGET |
-| 7→5 | GRAI | (166,21) | (33,148) |260|17947|CAPTURE_TILE_BUDGET |
-| 8→4 | OIL_ | (182,97) | (75,25) |179|8436|CAPTURE_TILE_BUDGET |
-| 9→6 | IORE | (133,33) | (168,92) |94|2457|CAPTURE_TILE_BUDGET |
+| Source→destination | Cargo | Origin    | Destination | Manhattan distance | Padded rectangle area | New 512-tile capture     |
+| ------------------ | ----- | --------- | ----------- | -----------------: | --------------------: | ------------------------ |
+| 0→1                | COAL  | (183,173) | (172,199)   |                 37 |                   450 | Admitted for observation |
+| 3→2                | WOOD  | (219,23)  | (221,206)   |                185 |                  1122 | CAPTURE_TILE_BUDGET      |
+| 7→5                | LVST  | (166,21)  | (33,148)    |                260 |                 17947 | CAPTURE_TILE_BUDGET      |
+| 7→5                | GRAI  | (166,21)  | (33,148)    |                260 |                 17947 | CAPTURE_TILE_BUDGET      |
+| 8→4                | OIL_  | (182,97)  | (75,25)     |                179 |                  8436 | CAPTURE_TILE_BUDGET      |
+| 9→6                | IORE  | (133,33)  | (168,92)    |                 94 |                  2457 | CAPTURE_TILE_BUDGET      |
 
 Every relationship originally failed `CAPTURE_REGION_BOUND`. The old check was
 `(abs(origin.x-destination.x)+4) * (abs(origin.y-destination.y)+4) <= 256`, plus

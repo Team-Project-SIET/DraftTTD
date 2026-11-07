@@ -1,11 +1,13 @@
 ---
+
 title: "System Architecture"
 type: architecture
 status: current
 updated: 2026-10-22
 tags:
-  - openttd
-  - architecture
+- openttd
+- architecture
+
 ---
 
 # System Architecture
@@ -100,17 +102,17 @@ The project intentionally evaluates a different integration boundary for 15.3
 
 ## Component stations
 
-| Station | What it does | Details |
-|---|---|---|
-| World qualification | Same-run structural + production observation contracts, coherent economy-month window, stability checks | [[04-Evidence/Evidence Index]] (E-context), CONTEXT §20 |
-| Observation / supplemental facts | Typed observation models assembled in Python; GameScript remains thin | [[01-Architecture/Data Flow]] |
-| P08 | Bounded road candidates (flat-land routing, 2..47 road tiles), terrain-aware reachability, terrain-modification planning | [[01-Architecture/Component Map]] |
-| P05 | CP-SAT selection of supplied candidates → `ExecutionPlan` | [[01-Architecture/Planning and Execution Boundary]] |
-| Freight compiler | Compiles selected single-vehicle service into checked intents; identity retention | [[01-Architecture/Data Flow]] |
-| AdminPort client | Encrypted X25519 session; correlated ACK; bounded budgets | [[01-Architecture/AdminPort Protocol]] |
-| GameScript bridge | Thin executor; `GSAdmin.Send`; `GSEventAdminPort` intake | [[01-Architecture/OpenTTD Integration]] |
-| Verifier | Offline receipt replay; prepared-source correspondence | [[04-Evidence/Evidence Preservation]] |
-| D-chain ceremonies | One-shot operator-authorized native mutations (clearing/terraform/roads) | [[02-Milestones/Completed Milestones]] |
+| Station                          | What it does                                                                                                             | Details                                                 |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------- |
+| World qualification              | Same-run structural + production observation contracts, coherent economy-month window, stability checks                  | [[04-Evidence/Evidence Index]] (E-context), CONTEXT §20 |
+| Observation / supplemental facts | Typed observation models assembled in Python; GameScript remains thin                                                    | [[01-Architecture/Data Flow]]                           |
+| P08                              | Bounded road candidates (flat-land routing, 2..47 road tiles), terrain-aware reachability, terrain-modification planning | [[01-Architecture/Component Map]]                       |
+| P05                              | CP-SAT selection of supplied candidates → `ExecutionPlan`                                                                | [[01-Architecture/Planning and Execution Boundary]]     |
+| Freight compiler                 | Compiles selected single-vehicle service into checked intents; identity retention                                        | [[01-Architecture/Data Flow]]                           |
+| AdminPort client                 | Encrypted X25519 session; correlated ACK; bounded budgets                                                                | [[01-Architecture/AdminPort Protocol]]                  |
+| GameScript bridge                | Thin executor; `GSAdmin.Send`; `GSEventAdminPort` intake                                                                 | [[01-Architecture/OpenTTD Integration]]                 |
+| Verifier                         | Offline receipt replay; prepared-source correspondence                                                                   | [[04-Evidence/Evidence Preservation]]                   |
+| D-chain ceremonies               | One-shot operator-authorized native mutations (clearing/terraform/roads)                                                 | [[02-Milestones/Completed Milestones]]                  |
 
 ## What is implemented vs proposed vs unverified
 

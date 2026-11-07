@@ -16,12 +16,12 @@ It does not need another general collector or a replacement planning model.
 
 ## Evidence levels
 
-| Level | Established scope |
-| --- | --- |
-| Actual OpenTTD 15.3 | One native process/session/request produced five terrain/road records for tiles 65–69 in region [1,1,5,1]; Python validated the page. Historical native REAL_PASS remains supported within local attestation. |
-| CONTROLLED only | Repaired offline contract, 188 canonical identities, exact inventory and lineage, cleanup, endpoints and result consistency; two-sweep collector, drift/coverage/accounting failure tests and supplied-stream transport tests. |
-| Planned, not established by current proof package | Multi-page attempt writer/verifier integration, immutable aggregate budgets, page-index retention, whole-attempt gates and aggregate offline replay. |
-| Separate approved native proof required | Bounded region/two-sweep behavior, measured cumulative runtime accounting, real session lifetime, then any full-map or production-world claim. |
+| Level                                             | Established scope                                                                                                                                                                                                              |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Actual OpenTTD 15.3                               | One native process/session/request produced five terrain/road records for tiles 65–69 in region [1,1,5,1]; Python validated the page. Historical native REAL_PASS remains supported within local attestation.                  |
+| CONTROLLED only                                   | Repaired offline contract, 188 canonical identities, exact inventory and lineage, cleanup, endpoints and result consistency; two-sweep collector, drift/coverage/accounting failure tests and supplied-stream transport tests. |
+| Planned, not established by current proof package | Multi-page attempt writer/verifier integration, immutable aggregate budgets, page-index retention, whole-attempt gates and aggregate offline replay.                                                                           |
+| Separate approved native proof required           | Bounded region/two-sweep behavior, measured cumulative runtime accounting, real session lifetime, then any full-map or production-world claim.                                                                                 |
 
 A 256-tile region is at most 1/16 of a 64x64 map. It is not full-map acquisition.
 The current tile protocol restricts a region to at most 256 tiles. Full-map coverage
@@ -50,17 +50,17 @@ observation. A consistent duplicate is still a protocol violation, not a retry.
 These are existing controlled ceilings or proposed proof requirements, not approved
 runtime budgets. Future authorization must bind the actual selected scope and totals.
 
-| Quantity | Existing controlled regional ceiling |
-| --- | --- |
-| Tiles | N <=256 per region |
-| Pages | `P=ceil(N/5)` <=52 per sweep |
-| Sweeps/requests | 2 sweeps; <=104 page requests |
-| Request JSON | <=159 bytes/page; <=16,536 aggregate application bytes at 104 requests |
-| Response JSON | <=508 bytes/page; <=26,416/sweep; <=52,832 total |
-| Query operations | <=8/page; <=416/sweep; <=832 total |
-| Post-auth frames | 2 establishment + 3 setup + <=832 query + 1 cleanup = <=838 |
-| Native getters | Static bound `44*N+6*P` per sweep; <=23,152 across two sweeps |
-| Capture | Existing 262,144 bytes per stream; overflow fails, not silent evidence truncation |
+| Quantity         | Existing controlled regional ceiling                                              |
+| ---------------- | --------------------------------------------------------------------------------- |
+| Tiles            | N <=256 per region                                                                |
+| Pages            | `P=ceil(N/5)` <=52 per sweep                                                      |
+| Sweeps/requests  | 2 sweeps; <=104 page requests                                                     |
+| Request JSON     | <=159 bytes/page; <=16,536 aggregate application bytes at 104 requests            |
+| Response JSON    | <=508 bytes/page; <=26,416/sweep; <=52,832 total                                  |
+| Query operations | <=8/page; <=416/sweep; <=832 total                                                |
+| Post-auth frames | 2 establishment + 3 setup + <=832 query + 1 cleanup = <=838                       |
+| Native getters   | Static bound `44*N+6*P` per sweep; <=23,152 across two sweeps                     |
+| Capture          | Existing 262,144 bytes per stream; overflow fails, not silent evidence truncation |
 
 Request/response byte totals cover application JSON, not framing/encryption or disk
 metadata. Accounting must retain actual byte lengths and every admitted frame;
@@ -176,17 +176,17 @@ nor execution authorization. No acquisition PASS grants P05 construction or P07 
 
 ## Implementation sequence and verification gates
 
-| Step | Proposed work | Gate before advancing |
-| --- | --- | --- |
-| 1 | Select standalone region versus qualified same-run scope; freeze page plan and derive cumulative budgets | Reviewed scope, time/storage/frame/getter bounds; no native authorization |
-| 2 | Reuse controlled collector; adapt production attempt writer, exact inventory and offline aggregate verifier | Full-path controlled tests for 1/5/6/255/256 tiles, coverage and drift, all cross-contract mutations |
-| 3 | Establish multi-request marker/log ranges and whole-attempt gates | Append-only logging accepted; committed-byte mutations, duplicate markers, contradictory result/cleanup reject |
-| 4 | Complete controlled lifecycle and independent acceptance | Candidate/runtime cleanup, fresh interpreter, no secret retention; focused/ordinary/lint/type/import/history checks |
-| 5 | Independent bounded adversarial review | Every mandatory challenge conclusive; no mutable-manifest acceptance bypass |
-| 6 | Separately prepare a future immutable proof package | Reviewed current source inventory, exact artifact contract, endpoint/credential identity, operation and budgets; unauthorized seal only if separately requested |
-| 7 | Separately authorize one small multi-page native proof | Exact digest, attempt, destination, Model A attended allowance; no retry/reconnect/resume |
-| 8 | Separately review regional two-sweep native proof | Native observations, accounting, equality and offline acceptance; no full-map or production-world claim |
-| 9 | Later qualified/P08 integration | Complete independent supplemental facts and source correspondence, separate approved proof |
+| Step | Proposed work                                                                                               | Gate before advancing                                                                                                                                           |
+| ---- | ----------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | Select standalone region versus qualified same-run scope; freeze page plan and derive cumulative budgets    | Reviewed scope, time/storage/frame/getter bounds; no native authorization                                                                                       |
+| 2    | Reuse controlled collector; adapt production attempt writer, exact inventory and offline aggregate verifier | Full-path controlled tests for 1/5/6/255/256 tiles, coverage and drift, all cross-contract mutations                                                            |
+| 3    | Establish multi-request marker/log ranges and whole-attempt gates                                           | Append-only logging accepted; committed-byte mutations, duplicate markers, contradictory result/cleanup reject                                                  |
+| 4    | Complete controlled lifecycle and independent acceptance                                                    | Candidate/runtime cleanup, fresh interpreter, no secret retention; focused/ordinary/lint/type/import/history checks                                             |
+| 5    | Independent bounded adversarial review                                                                      | Every mandatory challenge conclusive; no mutable-manifest acceptance bypass                                                                                     |
+| 6    | Separately prepare a future immutable proof package                                                         | Reviewed current source inventory, exact artifact contract, endpoint/credential identity, operation and budgets; unauthorized seal only if separately requested |
+| 7    | Separately authorize one small multi-page native proof                                                      | Exact digest, attempt, destination, Model A attended allowance; no retry/reconnect/resume                                                                       |
+| 8    | Separately review regional two-sweep native proof                                                           | Native observations, accounting, equality and offline acceptance; no full-map or production-world claim                                                         |
+| 9    | Later qualified/P08 integration                                                                             | Complete independent supplemental facts and source correspondence, separate approved proof                                                                      |
 
 No implementation, sealing or execution step is performed by this plan. Required
 approvals remain scope/budget review, any future contract representation change,

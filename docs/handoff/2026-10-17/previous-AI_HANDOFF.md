@@ -26,13 +26,13 @@ historical, superseded by this dated handoff.
 
 ## Status vocabulary
 
-| Label | Meaning |
-|---|---|
+| Label    | Meaning                                                                                                               |
+| -------- | --------------------------------------------------------------------------------------------------------------------- |
 | VERIFIED | A stated proposition supported by identified inspected evidence; scope and whether freshly executed must be explicit. |
-| PARTIAL | Some relevant evidence exists, but at least one required gate is missing. |
-| PREPARED | Source/package/contracts exist; native execution acceptance is not established. |
-| FAILED | A consumed attempt or check failed; later repair never rewrites its outcome. |
-| UNKNOWN | Evidence is missing, unavailable, or not inspected sufficiently. |
+| PARTIAL  | Some relevant evidence exists, but at least one required gate is missing.                                             |
+| PREPARED | Source/package/contracts exist; native execution acceptance is not established.                                       |
+| FAILED   | A consumed attempt or check failed; later repair never rewrites its outcome.                                          |
+| UNKNOWN  | Evidence is missing, unavailable, or not inspected sufficiently.                                                      |
 
 A test passing with controlled peers verifies that test's behavior, not native
 compatibility. A retained report verifies that the report records an outcome;
@@ -66,18 +66,18 @@ boundaries, not a claim of line-by-line review of every file.
 
 ## Current implementation and evidence limits
 
-| Area | Status at handoff and supporting evidence |
-|---|---|
-| Save path and canonical orchestration guards | VERIFIED controlled: 47 tests freshly passed, E4. |
-| Q1 canonical creation | FAILED: retained result records 1 launch, 0 connections, 0 mutations, native script/asset error; no canonical save. E5. |
-| Q2 repair | PREPARED for native qualification. Direct instance-slot delegates replace command-bearing closure `.call` boundaries; absolute save helper and controlled tests exist. E4/E6/E7. No native Q2 result or claim was present at inventory time. |
-| Exact 15.3 VM suspension | Retained seven-case report records expected positive and negative behavior, E6. Fresh rerun is separately recorded in E8; it uses controlled API peers and is not native construction. |
-| Single/multiple service native freight | PARTIAL overall product scope. README and retained Attempts 4/9/12/17 record delivery milestones; no full historical replay was run for this handoff. E9. Arbitrary maps, rail and autonomous closed-loop optimization remain unproven. |
-| Five-year Attempt 19 | FAILED historical native terminal. PARTIAL acceptance: separate derived offline recovery records five years; original evidence remains immutable. E10. Never relabel native terminal as success. |
-| Capacity fourth vehicle / telemetry / matched A-B | PREPARED, controlled implementation only. Native readiness blocked on canonical save, fresh-process reload, paused correspondence and intervention. E7. |
-| Terrain single-page native vs offline acceptance | PARTIAL: documentation supports historical native REAL_PASS; full historical offline acceptance AUDIT_BLOCKED by 13 missing canonical inputs. E11. No recovery or waiver is implied. |
-| Multi-page terrain / two-sweep acquisition | PREPARED/local controlled work; native completeness and end-to-end acceptance UNKNOWN here. Read dedicated contracts before reuse. E12. |
-| Full suite, PostgreSQL suite, broad lint/typecheck on this exact tree | UNKNOWN for this handoff; prior counts in docs are historical reports, not reruns. |
+| Area                                                                  | Status at handoff and supporting evidence                                                                                                                                                                                                    |
+| --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Save path and canonical orchestration guards                          | VERIFIED controlled: 47 tests freshly passed, E4.                                                                                                                                                                                            |
+| Q1 canonical creation                                                 | FAILED: retained result records 1 launch, 0 connections, 0 mutations, native script/asset error; no canonical save. E5.                                                                                                                      |
+| Q2 repair                                                             | PREPARED for native qualification. Direct instance-slot delegates replace command-bearing closure `.call` boundaries; absolute save helper and controlled tests exist. E4/E6/E7. No native Q2 result or claim was present at inventory time. |
+| Exact 15.3 VM suspension                                              | Retained seven-case report records expected positive and negative behavior, E6. Fresh rerun is separately recorded in E8; it uses controlled API peers and is not native construction.                                                       |
+| Single/multiple service native freight                                | PARTIAL overall product scope. README and retained Attempts 4/9/12/17 record delivery milestones; no full historical replay was run for this handoff. E9. Arbitrary maps, rail and autonomous closed-loop optimization remain unproven.      |
+| Five-year Attempt 19                                                  | FAILED historical native terminal. PARTIAL acceptance: separate derived offline recovery records five years; original evidence remains immutable. E10. Never relabel native terminal as success.                                             |
+| Capacity fourth vehicle / telemetry / matched A-B                     | PREPARED, controlled implementation only. Native readiness blocked on canonical save, fresh-process reload, paused correspondence and intervention. E7.                                                                                      |
+| Terrain single-page native vs offline acceptance                      | PARTIAL: documentation supports historical native REAL_PASS; full historical offline acceptance AUDIT_BLOCKED by 13 missing canonical inputs. E11. No recovery or waiver is implied.                                                         |
+| Multi-page terrain / two-sweep acquisition                            | PREPARED/local controlled work; native completeness and end-to-end acceptance UNKNOWN here. Read dedicated contracts before reuse. E12.                                                                                                      |
+| Full suite, PostgreSQL suite, broad lint/typecheck on this exact tree | UNKNOWN for this handoff; prior counts in docs are historical reports, not reruns.                                                                                                                                                           |
 
 ## Q1/Q2 and safety rules
 

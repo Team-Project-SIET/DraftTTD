@@ -91,12 +91,12 @@ cargo-class mask remains part of the catalog schema and digest unchanged.
 
 ## Finite bounds and accounting
 
-| Phase | Requests/pages | Records | Response bytes | Query Admin operations |
-|---|---:|---:|---:|---:|
-| Inventory | 32 | 32 industries | 32 × 512 = 16384 | 32 × 8 = 256 |
-| Capability | 32 | 32 industries | 32 × 512 = 16384 | 32 × 8 = 256 |
-| Catalog | 32 | 64 cargoes | 32 × 512 = 16384 | 32 × 16 = 512 |
-| Combined | **96** | Separate phase bounds | **49152** | **1024** |
+| Phase      | Requests/pages |               Records |   Response bytes | Query Admin operations |
+| ---------- | -------------: | --------------------: | ---------------: | ---------------------: |
+| Inventory  |             32 |         32 industries | 32 × 512 = 16384 |           32 × 8 = 256 |
+| Capability |             32 |         32 industries | 32 × 512 = 16384 |           32 × 8 = 256 |
+| Catalog    |             32 |            64 cargoes | 32 × 512 = 16384 |          32 × 16 = 512 |
+| Combined   |         **96** | Separate phase bounds |        **49152** |               **1024** |
 
 These are ceilings, not targets. The inventory retains its proven 32-page ceiling;
 minimum page occupancy is not assumed to tighten it. Catalog page size 2 spans at most

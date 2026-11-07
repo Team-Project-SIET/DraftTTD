@@ -33,23 +33,93 @@ See the [demo guide](examples/openttd-demo/README.md) for installation, spectato
 controls, results, troubleshooting, and limits. Full OPEX and ROI remain UNKNOWN.
 Arbitrary-world planning and larger networks are not verified MVP capabilities.
 
+## How to run the program
+
+There are two ways to run this program, and everything below runs offline
+except an explicitly authorized native launch.
+
+### Offline pipeline (no OpenTTD needed)
+
+The D5 corridor deliverable pipeline (Cargoflow-2) lives in
+`app/simulation/openttd/proof/corridor_cargoflow2_native.py`. It stages a
+candidate, validates it, and later replays the retained evidence — all
+without launching the game:
+
+```bash
+# 1. Stage a fresh delivered-arm candidate offline into a NEW directory:
+.venv/bin/python -m app.simulation.openttd.proof.corridor_cargoflow2_native \
+  prepare artifacts/experiments/d5-corridor-cargoflow2-native-<new-name> \
+  --route-version 2 --schedule-version 2
+# -> PRELAUNCH PASS
+
+# 2. Re-validate the staged candidate (still offline):
+.venv/bin/python -m app.simulation.openttd.proof.corridor_cargoflow2_native \
+  preflight artifacts/experiments/d5-corridor-cargoflow2-native-<new-name>
+# -> PREFLIGHT PASS
+
+# 3. Replay the retained one-launch evidence (offline, read-only):
+.venv/bin/python -m app.simulation.openttd.proof.corridor_cargoflow2_native \
+  verify artifacts/experiments/d5-corridor-cargoflow2-native-candidate-11
+# -> exit 0, CARGOFLOW2_COMPLETION_VERIFIED, with the phase verdict
+#    CARGOFLOW2_LOADED_NEVER_DELIVERED — the verbatim delivered-miss record
+#    of the latest retained run; the same command shape replays the earlier
+#    retained candidate-9 bytes identically, and open item E36 stays open
+#    by its own rule
+```
+
+Omit `--route-version 2 --schedule-version 2` to stage the historical v1 arm
+instead: its 25-row ladder stays byte-equal to the recorded candidates 6 and
+7. Staging depends on the retained prerequisite lineage under `artifacts/`,
+which Git ignores — on a fresh clone the lineage evidence is missing and the
+checks report that, rather than the code being broken. The exact commands of
+record live in [REPRODUCE.md](REPRODUCE.md).
+
+### Native demo and native launches (operator-gated)
+
+The playable graphical demo (`python -m app.openttd_demo`, Quick start above)
+needs `OPENTTD_BINARY` (the pinned OpenTTD 15.3 binary, sha256
+`276d5b69…904c`) and `OPENTTD_OPENGFX_ARCHIVE` (OpenGFX 8.0, sha256
+`43a0c1da…03be`) exported before Python starts.
+
+A native launch of a staged corridor candidate runs **at most once per
+candidate** and is never authorized by preparation or preflight: the operator
+signs the candidate at Gate C (one `AUTHORIZATION.json` write from the
+operator-held key, which is not stored in this repository), the launch claim
+mints and is consumed at the launch boundary, and the outcome is terminal
+either way — no retry, no reconnect, no relabel. Candidate-9's claim is
+consumed: its delivered-arm ladder completed with
+`CARGOFLOW2_LOADED_NEVER_DELIVERED` (loads latched and carried to the bay,
+zero unloadings, zero bay acceptance), and that record is retained, not
+rerunnable. Candidate-11's claim is consumed the same way (the 2026-11-06
+corridor production round): the same delivered-arm ladder ran once more
+end-to-end with the same verdict — four loads latched, the 20-ton truck
+departed and arrived at the bay, zero unloadings and zero bay acceptance —
+so the delivered-miss is twice-reproduced on retained evidence, and open
+item E36 stays open by its own rule. Any further native attempt needs its
+own fresh candidate, independent review, signature and explicit operator
+authorization.
+
 ## Random World & Scalable Logistics
 
-An opt-in bounded 256×256 native random generator and dynamic P08/P05 planning,
-terminal monitoring and P07 charts/history/comparisons are implemented locally.
-Seed 17 verified native generation, discovery and spectator inspection, but its
-smoke remains FAILED: no services constructed/delivered and P05 did not run.
-The new 512-tile rectangular capture correction is controlled/offline only;
-actual Seed 17 route feasibility awaits fresh native facts and authorization.
-Its Tile Classification V2 census completed natively on 2026-10-18 (90/90
-pages, 450/450 tiles, schema-2 AdminPort, staged AI + GameScript startup,
-cleanup PASS), but the SOURCE_SAVE_FUSION correspondence verdict is REJECTED:
-83 projected-flag disagreements, nothing fused, the 19 historically UNKNOWN
-tiles stay UNKNOWN and the P08 diagnosis stays `INCOMPLETE_TILE_CLASSIFICATION`.
+The random-world line is the product (`docs/specs/ramrom-product.md`): a
+recorded ramrom seed generates one 256×256 temperate flat 1950-01-01 world
+(towns 3, industries 3), the planner analyzes its assets (industries,
+materials, yields), P05/CP-SAT selects services, and the game plays live in
+the spectator GUI. The 2026-11-07 diagnosis (E139) proved the historical
+`NO_FEASIBLE_SERVICES` funnel was capture-seal geometry, not the planner: the
+widened capture seal of record (2048-tile perpendicular-grown rectangles,
+`--capture-tiles 2048 --capture-seconds 120 --capture-pad 6`, the new
+`run --random-world` defaults) replaces the 512-tile distance gate while
+keeping every typed rejection honest.
+Native proof runs (seed 2026 re-certification and the seed 7/8/9 battery)
+require separate per-attempt authorization; seed 17's historical smoke stays
+FAILED and is never relabeled.
 Fixed Scenario remains the stable default. See [random-world documentation](docs/random-world-demo.md),
 [distance support](docs/random-world-distance-support.md),
-[the V2 completion record](docs/p08-classification-v2-native-capture-completion.md) and the
-[vendor-neutral AI handoff](AI_HANDOFF.md) for current dirty-worktree scope.
+[the V2 completion record](docs/p08-classification-v2-native-capture-completion.md),
+[the product spec](docs/specs/ramrom-product.md),
+[the feasibility diagnosis](.scratch/ramrom-product/research/01-feasibility-diagnosis.md)
+and the [vendor-neutral AI handoff](AI_HANDOFF.md) for current dirty-worktree scope.
 
 ## Research reference and historical milestones
 
@@ -87,19 +157,21 @@ Historical runtime evidence is optional for a **new `--demo` run**.
 
 ## What works, and what remains incomplete
 
-| Capability | Current evidence |
-| --- | --- |
-| Secure AdminPort, industry/cargo observation and native qualification | Native milestones; qualification Attempt 2's overall post-run acceptance remains FAILED |
-| Road, stops, depot, purchase, orders and movement | Native readbacks |
-| Freight loading, final industry delivery and payment | Attempt 4, 20 units, verified receipt and cleanup |
-| WorldPlanningObservation → P08 → P05 → ExecutionPlan | Controlled verification and native Attempt 9 |
-| P05 output → checked single-vehicle freight intent | Controlled compiler and native Attempt 9 |
-| Qualified observation → P08 → native delivery | Attempt 9, 20 coal units, attributed payment, plan-bound offline replay and cleanup |
-| P07 post-play evaluation, run history and charts | Offline replay of Attempts 4 and 9; native plan comparison for Attempt 9; failed Attempt 8 excluded from delivery averages |
-| Multiple candidate services, shared-constrained P05 selection and network P07 estimates | Attempt 12: two native P05-selected services delivered in one world; paid shared-asset reuse remains unproven |
-| Evidence-aware P07 performance analytics (bottlenecks, advisories, comparisons) | Offline implementation verified 2026-10-18 on retained Attempt 19/fixed-demo evidence; see [the analytics record](docs/p07-performance-analytics-extension.md); no native relabeling of FAILED terminals |
-| Tile classification census capture (schema-2 AdminPort) | Native 2026-10-18: 90/90 pages, 450/450 tiles with AI/GameScript startup and cleanup PASS; correspondence verdict REJECTED (83 disagreements), nothing fused — see [the completion record](docs/p08-classification-v2-native-capture-completion.md) |
-| Arbitrary maps, rail delivery, concurrent native vehicles, closed-loop optimization | Outside the demonstrated native MVP |
+| Capability                                                                              | Current evidence                                                                                                                                                                                                                                                 |
+| --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Secure AdminPort, industry/cargo observation and native qualification                   | Native milestones; qualification Attempt 2's overall post-run acceptance remains FAILED                                                                                                                                                                          |
+| Road, stops, depot, purchase, orders and movement                                       | Native readbacks                                                                                                                                                                                                                                                 |
+| Freight loading, final industry delivery and payment                                    | Attempt 4, 20 units, verified receipt and cleanup                                                                                                                                                                                                                |
+| WorldPlanningObservation → P08 → P05 → ExecutionPlan                                    | Controlled verification and native Attempt 9                                                                                                                                                                                                                     |
+| P05 output → checked single-vehicle freight intent                                      | Controlled compiler and native Attempt 9                                                                                                                                                                                                                         |
+| Qualified observation → P08 → native delivery                                           | Attempt 9, 20 coal units, attributed payment, plan-bound offline replay and cleanup                                                                                                                                                                              |
+| P07 post-play evaluation, run history and charts                                        | Offline replay of Attempts 4 and 9; native plan comparison for Attempt 9; failed Attempt 8 excluded from delivery averages                                                                                                                                       |
+| Multiple candidate services, shared-constrained P05 selection and network P07 estimates | Attempt 12: two native P05-selected services delivered in one world; paid shared-asset reuse remains unproven                                                                                                                                                    |
+| Evidence-aware P07 performance analytics (bottlenecks, advisories, comparisons)         | Offline implementation verified 2026-10-18 on retained Attempt 19/fixed-demo evidence; see [the analytics record](docs/p07-performance-analytics-extension.md); no native relabeling of FAILED terminals                                                         |
+| Tile classification census capture (schema-2 AdminPort)                                 | Native 2026-10-18: 90/90 pages, 450/450 tiles with AI/GameScript startup and cleanup PASS; correspondence verdict REJECTED (83 disagreements), nothing fused — see [the completion record](docs/p08-classification-v2-native-capture-completion.md)              |
+| Seed-17 D-chain corridor, construction + extension + acceptance census                  | Native: corridor/stops/depot PROVEN (E35), A1 extension VERIFIED (E44, after-save `3748e00c…5420bd`, funds £490,257), census `SURVEY_COMPLETION_VERIFIED` (E49: control 50351 = 0/8, bay 50862 = 8/8, prod 104); freight delivery not yet proven on the corridor |
+| D5 Freight Delivery v2 design review (offline, 2026-11-01)                              | Three fresh-context read-only reviewers + cross-review; verdict `DESIGN READY WITH CONDITIONS` — engine-ID provenance and funds-taxonomy decisions gate implementation; see [the review record](docs/d5-freight-delivery-v2-design-review-2026-11-01.md)         |
+| Arbitrary maps, rail delivery, concurrent native vehicles, closed-loop optimization     | Outside the demonstrated native MVP                                                                                                                                                                                                                              |
 
 The standalone `--demo` result uses native OD selection. `--demo --planner` instead
 qualifies that generated world, captures the missing planning facts, runs P08/P05,
@@ -186,12 +258,12 @@ also validates the graphics descriptor and native GRF checksums.
 
 ## Configuration
 
-| Variable | Use |
-| --- | --- |
-| `OPENTTD_BINARY` | Freight demo executable path; bytes must match the pinned 15.3 binary |
-| `OPENTTD_OPENGFX_ARCHIVE` | OpenGFX 8.0 ZIP path; defaults to `artifacts/runtime/verified-assets/opengfx-8.0-all.zip` |
-| `UV_CACHE_DIR`, `UV_TOOL_DIR` | Optional writable uv cache/tool directories |
-| `DATABASE_URL`, `APP_ENV`, `SQL_ECHO` | Optional database-backed experiment configuration; not needed by the freight demo |
+| Variable                              | Use                                                                                       |
+| ------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `OPENTTD_BINARY`                      | Freight demo executable path; bytes must match the pinned 15.3 binary                     |
+| `OPENTTD_OPENGFX_ARCHIVE`             | OpenGFX 8.0 ZIP path; defaults to `artifacts/runtime/verified-assets/opengfx-8.0-all.zip` |
+| `UV_CACHE_DIR`, `UV_TOOL_DIR`         | Optional writable uv cache/tool directories                                               |
+| `DATABASE_URL`, `APP_ENV`, `SQL_ECHO` | Optional database-backed experiment configuration; not needed by the freight demo         |
 
 Without `OPENTTD_BINARY`, the historical local default is
 `/home/fed/Downloads/openttd-15.3-linux-generic-amd64/openttd`; set the variable on
@@ -242,7 +314,14 @@ truck and receives source full-load and destination no-load orders.
 A successful run prints:
 
 ```json
-{"connections":1,"launches":1,"mutations":10,"preflight":"PASS","requests":26,"status":"NATIVE_DELIVERY_VERIFIED"}
+{
+	"connections": 1,
+	"launches": 1,
+	"mutations": 10,
+	"preflight": "PASS",
+	"requests": 26,
+	"status": "NATIVE_DELIVERY_VERIFIED"
+}
 ```
 
 `verify` returns the replayed receipt as JSON and exits zero only when frame
@@ -267,17 +346,17 @@ uv run --no-sync python -m app.simulation.openttd.proof.freight_delivery \
 
 For a new run, inspect these files under `$FREIGHT_ATTEMPT`:
 
-| File | Meaning |
-| --- | --- |
-| `PRELAUNCH.json`, `PRELAUNCH.sha256`, `frozen-source.zip` | Immutable runtime/input/policy/source provenance |
-| `CLAIM.json` | One-launch attempt consumed before starting |
-| `inspect-1-response.json`, `plan.json` | Native admission and plan identity |
-| `build-*-response.json`, `read-*-response.json` | Command results and independent state reads |
-| `observe-*-response.json`, `finish-1-response.json` | Physical cargo and native monitor/payment evidence |
-| `receipt.json` | Verified delivery, attribution, costs and digests; success only |
-| `result.json`, `cleanup.json` | Overall result and process/socket/credential/workspace cleanup |
-| `before.sav`, `after.sav`, `failure.sav` | Native saves, according to outcome |
-| `frames.json`, `stdout.log`, `stderr.log`, `artifact-manifest.sha256` | Retained exchanges, logs and file integrity |
+| File                                                                  | Meaning                                                         |
+| --------------------------------------------------------------------- | --------------------------------------------------------------- |
+| `PRELAUNCH.json`, `PRELAUNCH.sha256`, `frozen-source.zip`             | Immutable runtime/input/policy/source provenance                |
+| `CLAIM.json`                                                          | One-launch attempt consumed before starting                     |
+| `inspect-1-response.json`, `plan.json`                                | Native admission and plan identity                              |
+| `build-*-response.json`, `read-*-response.json`                       | Command results and independent state reads                     |
+| `observe-*-response.json`, `finish-1-response.json`                   | Physical cargo and native monitor/payment evidence              |
+| `receipt.json`                                                        | Verified delivery, attribution, costs and digests; success only |
+| `result.json`, `cleanup.json`                                         | Overall result and process/socket/credential/workspace cleanup  |
+| `before.sav`, `after.sav`, `failure.sav`                              | Native saves, according to outcome                              |
+| `frames.json`, `stdout.log`, `stderr.log`, `artifact-manifest.sha256` | Retained exchanges, logs and file integrity                     |
 
 The disposable runtime is removed after cleanup; the evidence stays. These artifacts
 are ignored by Git. Back them up before removing an attempt directory.
@@ -468,11 +547,11 @@ delivered cargo, measured load fill, and descriptive history within comparable c
 statistics. `metrics.csv` has one row per metric; empty numeric fields mean unknown.
 Example output reports `successful_deliveries: 2`, `failed_attempts: 1`, `cohorts: 2`.
 
-| Attempt | Service mode | Delivered | Revenue | Infrastructure CAPEX | Purchase | Vehicle profit delta |
-| --- | --- | --- | --- | --- | --- | --- |
-| 4 | Standalone | 20 coal units | £341 | £4,929 | £4,429 | £304 |
-| 8 | Planner-driven, failed | Unknown | Unknown | Unknown | Unknown | Unknown |
-| 9 | Planner-driven | 20 coal units | £325 | £5,157 | £4,429 | £289 |
+| Attempt | Service mode           | Delivered     | Revenue | Infrastructure CAPEX | Purchase | Vehicle profit delta |
+| ------- | ---------------------- | ------------- | ------- | -------------------- | -------- | -------------------- |
+| 4       | Standalone             | 20 coal units | £341    | £4,929               | £4,429   | £304                 |
+| 8       | Planner-driven, failed | Unknown       | Unknown | Unknown              | Unknown  | Unknown              |
+| 9       | Planner-driven         | 20 coal units | £325    | £5,157               | £4,429   | £289                 |
 
 Attempt 9 planned and delivered the same 20-unit batch, two stations, one depot,
 one vehicle and a connected 24-tile corridor. Planned total CAPEX was £8,583;
@@ -628,10 +707,10 @@ services; native selection bindings, vehicles, orders, loading, final delivery a
 payment were replayed from retained evidence.
 
 | Service (native industry IDs) | Delivered coal | Actual revenue (GBP) | Construction and vehicle CAPEX (GBP) |
-| --- | ---: | ---: | ---: |
-| 2 → 3 | 20 | 356 | 9,515 |
-| 0 → 1 | 20 | 326 | 9,586 |
-| Aggregate | 40 | 682 | 19,101 |
+| ----------------------------- | -------------: | -------------------: | -----------------------------------: |
+| 2 → 3                         |             20 |                  356 |                                9,515 |
+| 0 → 1                         |             20 |                  326 |                                9,586 |
+| Aggregate                     |             40 |                  682 |                               19,101 |
 
 The unique infrastructure ledger totals £10,243; vehicle purchases total £8,858.
 P05 selected no shared construction actions, so shared CAPEX is £0. This attempt
@@ -747,11 +826,11 @@ and charts without these three baseline files; use a fresh output directory.
 
 Verified example with the checked-in scenario and retained Attempt 12 feedback:
 
-| Cost assumption | Selected services | Expected CAPEX (GBP) | Fleet capacity | Planned batch | Controlled feasible |
-| --- | --- | ---: | ---: | ---: | --- |
-| Baseline | `benchmark-2-1-17`, `benchmark-2-1-30` | 2,580.00 | 120 | 80 | Yes |
-| Observed error | Same two services | 2,715.14 | 120 | 80 | Yes |
-| Double error | Same two services | 2,850.24 | 120 | 80 | Yes |
+| Cost assumption | Selected services                      | Expected CAPEX (GBP) | Fleet capacity | Planned batch | Controlled feasible |
+| --------------- | -------------------------------------- | -------------------: | -------------: | ------------: | ------------------- |
+| Baseline        | `benchmark-2-1-17`, `benchmark-2-1-30` |             2,580.00 |            120 |            80 | Yes                 |
+| Observed error  | Same two services                      |             2,715.14 |            120 |            80 | Yes                 |
+| Double error    | Same two services                      |             2,850.24 |            120 |            80 | Yes                 |
 
 All three remain within the identical £4,000 budget. JSON also reports whether
 the baseline selection remains within budget under each alternative assumption.
@@ -979,10 +1058,10 @@ the two £9,702 construction/purchase quotes totaled £19,404. Independent comma
 route and delivery readbacks established:
 
 | Native service | Delivered coal | Freight revenue | Actual CAPEX |
-| --- | ---: | ---: | ---: |
-| Industry 2 → 3 | 20 units | £356 | £9,515 |
-| Industry 0 → 1 | 20 units | £326 | £9,586 |
-| Total | 40 units | £682 | £19,101 |
+| -------------- | -------------: | --------------: | -----------: |
+| Industry 2 → 3 |       20 units |            £356 |       £9,515 |
+| Industry 0 → 1 |       20 units |            £326 |       £9,586 |
+| Total          |       40 units |            £682 |      £19,101 |
 
 Actual CAPEX comprises **£10,243 infrastructure** and **£8,858 vehicle purchases**.
 Final retained cash readback was **£480,748**. Cash movement also includes the
@@ -1070,14 +1149,14 @@ remains UNKNOWN without an event timestamp. Historical receipts remain unchanged
 Calendar days, script ticks and wall-clock seconds are separate nullable metrics;
 no conversion from ticks or wall time supplies missing economy dates.
 
-| Attempt 14 network milestone | Retained economy-date evidence |
-| --- | --- |
-| Simulation start | UNKNOWN |
-| Planning completion | UNKNOWN |
-| Construction completion | UNKNOWN; all construction observed complete by 712319 |
-| First cargo pickup | UNKNOWN; first loaded observation by 712299 |
-| Final cargo delivery | 712349, native industry last-accepted date |
-| Total elapsed economy days | UNKNOWN; simulation start was not timestamped |
+| Attempt 14 network milestone | Retained economy-date evidence                        |
+| ---------------------------- | ----------------------------------------------------- |
+| Simulation start             | UNKNOWN                                               |
+| Planning completion          | UNKNOWN                                               |
+| Construction completion      | UNKNOWN; all construction observed complete by 712319 |
+| First cargo pickup           | UNKNOWN; first loaded observation by 712299           |
+| Final cargo delivery         | 712349, native industry last-accepted date            |
+| Total elapsed economy days   | UNKNOWN; simulation start was not timestamped         |
 
 Construction and pickup observation dates are bounds, not event timestamps.
 The serial services delivered on economy dates **712319** and **712349**;
@@ -1156,11 +1235,11 @@ Independent offline replay verifies loading, delivery, payment, command costs,
 owned infrastructure, separate vehicles, receipts, and the complete network ledger.
 
 | Service | Coal delivered | Revenue | Command CAPEX | Construction economy date | Delivery economy date | Days from construction to delivery | Days from bridge start to delivery |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| 4 → 5 | 20 | £340 | £9,358 | 712298 | 712328 | 30 | 105 |
-| 2 → 3 | 20 | £352 | £9,515 | 712329 | 712360 | 31 | 137 |
-| 0 → 1 | 20 | £326 | £9,586 | 712360 | 712393 | 33 | 170 |
-| Network | 60 | £1,018 | £28,459 | 712360 | 712393 | — | 170 |
+| ------- | -------------: | ------: | ------------: | ------------------------: | --------------------: | ---------------------------------: | ---------------------------------: |
+| 4 → 5   |             20 |    £340 |        £9,358 |                    712298 |                712328 |                                 30 |                                105 |
+| 2 → 3   |             20 |    £352 |        £9,515 |                    712329 |                712360 |                                 31 |                                137 |
+| 0 → 1   |             20 |    £326 |        £9,586 |                    712360 |                712393 |                                 33 |                                170 |
+| Network |             60 |  £1,018 |       £28,459 |                    712360 |                712393 |                                  — |                                170 |
 
 The bridge start date is 712223, before world preparation. Exact pickup dates,
 calendar duration, script-tick duration, and wall-clock duration remain UNKNOWN.
@@ -1245,12 +1324,12 @@ compares the services and separates observed constraints from hypotheses.
 Service labels follow the existing P07 chart legend, with vehicles 4, 5, and 6.
 
 | Economy year | Service 1 cargo | Service 2 cargo | Service 3 cargo | Network cargo | Network revenue |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| 1 | 200 | 200 | 180 | 580 | £9,920 |
-| 2 | 200 | 200 | 200 | 600 | £10,259 |
-| 3 | 200 | 200 | 200 | 600 | £10,258 |
-| 4 | 220 | 180 | 200 | 600 | £10,241 |
-| 5 | 200 | 200 | 200 | 600 | £10,257 |
+| ------------ | --------------: | --------------: | --------------: | ------------: | --------------: |
+| 1            |             200 |             200 |             180 |           580 |          £9,920 |
+| 2            |             200 |             200 |             200 |           600 |         £10,259 |
+| 3            |             200 |             200 |             200 |           600 |         £10,258 |
+| 4            |             220 |             180 |             200 |           600 |         £10,241 |
+| 5            |             200 |             200 |             200 |           600 |         £10,257 |
 
 Revenue per service remains UNKNOWN in every year. The 60 sampled monthly
 intervals cover 2,940 cargo and £50,267; the final 17-day tail adds 40 cargo
@@ -1482,5 +1561,10 @@ The fixed playable demo remains the default. Explicit `--random-world` adds nati
 256×256 generation settings and bounded observed-world P08/P05 planning. Terminal
 status and P07 reports include operational history, expense/UNKNOWN labels and
 revenue/throughput charts. Offline `report` and `compare` commands reuse retained
-evidence. See [random mode, interfaces and limitations](docs/random-world-demo.md).
-Native random-world validation requires separate authorization.
+evidence. See [random mode, interfaces and limitations](docs/random-world-demo.md),
+[distance support](docs/random-world-distance-support.md) and
+[the V2 completion record](docs/p08-classification-v2-native-capture-completion.md).
+Native random-world validation requires separate per-attempt authorization; the
+production command of record is `python -m app.openttd_demo run --random-world
+--seed N` (widened 2048-tile capture seal by default; see
+[the product spec](docs/specs/ramrom-product.md)).

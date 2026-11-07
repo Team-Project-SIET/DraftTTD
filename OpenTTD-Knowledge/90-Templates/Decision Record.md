@@ -1,4 +1,5 @@
 ---
+
 id: ADR-<NNN>
 title: "<Decision title>"
 type: decision
@@ -8,7 +9,8 @@ updated: <YYYY-MM-DD>
 source: ""   <!-- repo path of the authoritative record -->
 tags:
   - openttd
-  - decisions
+- decisions
+
 ---
 
 # ADR-<NNN> — <Decision title>

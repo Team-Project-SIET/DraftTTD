@@ -107,18 +107,18 @@ The first supported station pair with a depot is selected. Exhaustion describes
 this bounded policy, not global world infeasibility: a different path or placements
 outside the nearest-four slice might work.
 
-| Work | Explicit bound |
-|---|---|
-| Region tiles / coverage scopes / coverage records | 256 / 2 / 512, unchanged |
-| Imported artifact | 256 KiB, unchanged importer |
-| OD combinations | At most one pickup/delivery relationship |
-| Station ranking | Two scans of at most 256 tiles, four results per role |
-| Station pairs | At most 16 |
-| Path work | <=256 expansions per pair; <=4096 total |
-| Depot checks | <=256 footprints ×4 neighbors per pair; <=16384 total |
-| Engine records examined | <=32, unchanged |
-| Successful output | Two stops, one depot, one corridor, one fleet option |
-| Required fleet | <=64 vehicles; larger demand is not truncated |
+| Work                                              | Explicit bound                                        |
+| ------------------------------------------------- | ----------------------------------------------------- |
+| Region tiles / coverage scopes / coverage records | 256 / 2 / 512, unchanged                              |
+| Imported artifact                                 | 256 KiB, unchanged importer                           |
+| OD combinations                                   | At most one pickup/delivery relationship              |
+| Station ranking                                   | Two scans of at most 256 tiles, four results per role |
+| Station pairs                                     | At most 16                                            |
+| Path work                                         | <=256 expansions per pair; <=4096 total               |
+| Depot checks                                      | <=256 footprints ×4 neighbors per pair; <=16384 total |
+| Engine records examined                           | <=32, unchanged                                       |
+| Successful output                                 | Two stops, one depot, one corridor, one fleet option  |
+| Required fleet                                    | <=64 vehicles; larger demand is not truncated         |
 
 No full-map extraction or search occurs. Terrain legality is a controlled predicate,
 not an exact native command-test result. This construction geometry is not YAPF;

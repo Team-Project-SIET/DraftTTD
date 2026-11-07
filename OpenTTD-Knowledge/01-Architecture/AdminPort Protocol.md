@@ -1,12 +1,14 @@
 ---
+
 title: "AdminPort Protocol"
 type: architecture
 status: current
 updated: 2026-10-22
 tags:
-  - openttd
-  - architecture
-  - adminport
+- openttd
+- architecture
+- adminport
+
 ---
 
 # AdminPort Protocol
@@ -63,10 +65,10 @@ that proof. This round trip is proven; the planner/executor acceptance gates are
 
 ```json
 {
-  "type": "command_result",
-  "request_id": "p08-000123",
-  "status": "ok",
-  "object_id": 42
+	"type": "command_result",
+	"request_id": "p08-000123",
+	"status": "ok",
+	"object_id": 42
 }
 ```
 

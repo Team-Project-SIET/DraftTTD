@@ -19,11 +19,11 @@ From `result.json` (`phase.completed`, schema `company-corridor-receipt-v1`,
 each `verification: NATIVE_STATE_CHANGED`, plan digest
 `6d912a3dc95a78bf82914000478b7df67b7e57852c94978926167cb32c52c15d`):
 
-| op | request | native command | built | pins | quote/cost |
-|----|---------|----------------|-------|------|------------|
-| ROAD_FULL | `full-00` | `CMD_BUILD_ROAD` (`is_ai` long-road, full) | BUILT | start 50096 → end 50864, 4 tiles | £1,144 |
-| ROAD_CONNECT | `road-01` | `CMD_BUILD_ROAD` | BUILT | start 50095 → end 50096, 2 tiles | £142 |
-| ROAD_STATION | `station-02` | `CMD_BUILD_ROAD_STATION` | BUILT | tile 50863, front 50864 | £307 |
+| op           | request      | native command                             | built | pins                             | quote/cost |
+| ------------ | ------------ | ------------------------------------------ | ----- | -------------------------------- | ---------- |
+| ROAD_FULL    | `full-00`    | `CMD_BUILD_ROAD` (`is_ai` long-road, full) | BUILT | start 50096 → end 50864, 4 tiles | £1,144     |
+| ROAD_CONNECT | `road-01`    | `CMD_BUILD_ROAD`                           | BUILT | start 50095 → end 50096, 2 tiles | £142       |
+| ROAD_STATION | `station-02` | `CMD_BUILD_ROAD_STATION`                   | BUILT | tile 50863, front 50864          | £307       |
 
 `result.json` records 10 requests, 1 native launch, `state_changed: true`,
 `preflight: PASS`, `dispatch_state: CONFIRMED`, `last_status: BUILT`.
@@ -116,7 +116,7 @@ proved `stop_owner: 0` and `front_owner: 0`), so the failure component is
   `CheckFlatLandRoadStop` (`src/station_cmd.cpp`) is a pure validate/price
   routine and never adds a road bit to the front tile, and a bay stop only
   preserves the underlying road bits when it is a drive-through (an
-  over-road bay build prices a landscape-clear, so a stop never *adds* a
+  over-road bay build prices a landscape-clear, so a stop never _adds_ a
   road bit to the front tile) — so the lateral stop build could never have
   created the missing bit.
 
@@ -126,7 +126,7 @@ Map width is 256 tiles (witness steps of 256 are y-advances):
 
 - The ROAD_FULL corridor 50096 → 50864 runs along the **y axis** at x = 176:
   tiles (176,195) 50096, (176,196) 50352, (176,197) 50608, (176,198) 50864.
-- The stop sits at **(175,198)** — one tile *west* of the road end, lateral to
+- The stop sits at **(175,198)** — one tile _west_ of the road end, lateral to
   the road axis.
 - Tile 50864, as the end tile of a y-axis `is_ai` full road build, stores road
   bits in the **y** directions only (toward 50608, and the far half toward
@@ -150,7 +150,7 @@ verifier applies an "ordinary road-only" predicate to station tiles.
 The route verifier's `Linked` predicate is the correct,
 source-supported OpenTTD adjacency test; it never wrongly required an
 ordinary-road shape of the station tile (Explanation B is refuted by the
-semantics in 2.2 and by the passing pair 0). The construction *plan* modeled
+semantics in 2.2 and by the passing pair 0). The construction _plan_ modeled
 the geometry wrongly: it placed the truck stop lateral to a y-axis dead road
 end, at a tile the front road tile never received a road bit toward. The
 engine accepted `CMD_BUILD_ROAD_STOP` with that entrance direction (valid
@@ -174,7 +174,7 @@ native freight/delivery attempt over the corrected corridor.
 
 ## 3. Corrected terminal construction design
 
-Constraint honored: bay stop on an ordinary road tile can only *persist* alongside an existing road as a
+Constraint honored: bay stop on an ordinary road tile can only _persist_ alongside an existing road as a
 drive-through stop, and the pinned design is a bay truck stop
 (`drive_through` is force-refused by the production gate). So the stop must
 occupy fresh ground adjacent to a front road tile that stores a road bit
@@ -199,7 +199,7 @@ stop tiles regardless.)
    exactly one bit (toward 50864) and none toward 50862, relocating the
    consumed attempt's failure to the new pair 50863 → 50862. Under full
    build (`is_ai`, both halves unmasked) 50863 receives full `ROAD_X` —
-   bits toward 50864 *and* toward 50862 — and 50864 gains the x-direction
+   bits toward 50864 _and_ toward 50862 — and 50864 gains the x-direction
    bit toward 50863 alongside its y bits. Both pairs 50864 ↔ 50863 and
    50863 ↔ 50862 then pass `Linked`.
 4. `ROAD_STATION` tile **50862**, front **50863**, bay truck stop,
@@ -227,7 +227,7 @@ Witness path grows to 31 tiles (`… 50095, 50096, 50352, 50608, 50864, 50863,
   50862-facing bit of 50863 has **no read-only GameScript probe** (no road
   bits getter exists in the 15.x `GSRoad` static list;
   `AreRoadTilesConnected(50863, 50862)` cannot test it while 50862 is
-  roadless) — so it is *not* pinned as a spur-receipt clause. It is proven
+  roadless) — so it is _not_ pinned as a spur-receipt clause. It is proven
   systemically, fail-closed, by the terminal route witness pair 29
   (50863 → 50862): `verify_corridor_route` refuses the whole attempt on
   that pair's absence, and the route gate is asserted against a forged

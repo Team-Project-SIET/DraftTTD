@@ -18,13 +18,13 @@ RconEnd **125 ×1**, ServerShutdown **106 ×1**. All 134 parsed typed observatio
 were recorded while the Lab subprocess was still running. Protocol version 2
 advertised the required polling/subscription frequencies.
 
-| Game date | Company | Money | Loan | Admin yearly net income | Vehicles | Station facilities |
-|---|---:|---:|---:|---:|---:|---:|
-| 1950-01-01 | 0 | 100000 | 100000 | 0 | 0 | 0 |
-| 1950-02-01 | 0 | 17390 | 50000 | -32610 | 5 | 2 |
-| 1950-03-01 | 0 | 17533 | 50000 | -32467 | 5 | 2 |
-| 1950-04-01 | 0 | 95908 | 130000 | -34092 | 5 | 4 |
-| 1950-05-01 | 0 | 96732 | 130000 | -33268 | 5 | 4 |
+| Game date  | Company |  Money |   Loan | Admin yearly net income | Vehicles | Station facilities |
+| ---------- | ------: | -----: | -----: | ----------------------: | -------: | -----------------: |
+| 1950-01-01 |       0 | 100000 | 100000 |                       0 |        0 |                  0 |
+| 1950-02-01 |       0 |  17390 |  50000 |                  -32610 |        5 |                  2 |
+| 1950-03-01 |       0 |  17533 |  50000 |                  -32467 |        5 |                  2 |
+| 1950-04-01 |       0 |  95908 | 130000 |                  -34092 |        5 |                  4 |
+| 1950-05-01 |       0 |  96732 | 130000 |                  -33268 |        5 |                  4 |
 
 All five vehicles were lorries; all four final facilities were lorry stations.
 April's completed-quarter record reported company value **8463**, performance
@@ -104,21 +104,21 @@ remain unmodified; the real integration test is skipped unless explicitly enable
 
 ## Scope, limitations and next phase
 
-* The application and database schema are unchanged. This proof calls the existing
+- The application and database schema are unchanged. This proof calls the existing
   simulation adapter directly and does not insert a PostgreSQL experiment row.
-* Private Lab launch interception is a fragile 0.0.75-specific seam. It changes
+- Private Lab launch interception is a fragile 0.0.75-specific seam. It changes
   driver and stopping semantics, so this does **not** establish bit-for-bit or
   tick-for-tick equivalence with stock accelerated batch runs.
-* Final result is the latest monthly save that Lab normally processes, not a new
+- Final result is the latest monthly save that Lab normally processes, not a new
   custom telemetry-derived result. Live updates and saves are separate snapshots.
-* `income` is year-to-date net expense-category total, including capital costs.
+- `income` is year-to-date net expense-category total, including capital costs.
   No separate expense/gross-revenue field exists in these Admin packets.
-* CompanyStats counts primary vehicles and station facilities. It cannot describe
+- CompanyStats counts primary vehicles and station facilities. It cannot describe
   train wagon counts, consist capacity, routes, or cargo-by-route throughput.
-* Only localhost, one company, one version and one simulation were proven. No
+- Only localhost, one company, one version and one simulation were proven. No
   reconnect/backpressure/load testing, remote security solution, or long-run
   reliability claim. The free-port selection has a short bind race.
-* Samples join the most recently received date, economy and stats for this one
+- Samples join the most recently received date, economy and stats for this one
   company; the protocol does not provide an atomic multi-packet snapshot.
 
 **Throw away:** the private-function/module monkeypatch, hardcoded scenario and
@@ -148,13 +148,13 @@ state for them. No such architecture or optimization/control system was built he
 The original prototype task created these files. T18 retained the documents
 and proof while removing the obsolete executable files:
 
-* `protocol.py`: minimum typed packet/framing subset (removed in T18).
-* `lab_seam.py`: isolated dedicated-mode Lab launch wrapper (removed in T18).
-* `run.py`: one-run supervisor and live listener (removed in T18).
-* `test_protocol.py`: focused synthetic checks (removed in T18; adapted production tests remain).
-* `README.md`: reproduction/config/protocol research and primary sources.
-* `REPORT.md`: verdict, findings and next-phase recommendation.
-* `proof.json`: compact credential-free evidence copied from the real run.
+- `protocol.py`: minimum typed packet/framing subset (removed in T18).
+- `lab_seam.py`: isolated dedicated-mode Lab launch wrapper (removed in T18).
+- `run.py`: one-run supervisor and live listener (removed in T18).
+- `test_protocol.py`: focused synthetic checks (removed in T18; adapted production tests remain).
+- `README.md`: reproduction/config/protocol research and primary sources.
+- `REPORT.md`: verdict, findings and next-phase recommendation.
+- `proof.json`: compact credential-free evidence copied from the real run.
 
 Runtime artifacts live in ignored `artifacts/live-admin-proof/`: typed
 `telemetry.jsonl`, `evidence.json`, `launch.json`, `final-result.json`, Lab console

@@ -1,4 +1,5 @@
 ---
+
 id: ADR-012
 title: "Six temporal tiles: the save-instant census is authoritative for tree-lifecycle deltas (planning evidence only)"
 type: decision
@@ -7,8 +8,9 @@ date: 2026-10-24
 updated: 2026-10-25
 source: "docs/random-world-six-tile-policy-decision.md"
 tags:
-  - openttd
-  - decisions
+- openttd
+- decisions
+
 ---
 
 # ADR-012 — Six temporal tiles: the save-instant census is authoritative for tree-lifecycle deltas (planning evidence only)
@@ -26,7 +28,7 @@ the written record and implemented code below and for nothing else.
 
 What it establishes, precisely:
 
-- The disagreement *between the fresh census values and the retained V1 values*
+- The disagreement _between the fresh census values and the retained V1 values_
   on those six tiles is attributed to elapsed world time (tree growth/death
   between the census instants 712224–712226 and the retained window
   712285–712291), mechanism-verified against OpenTTD 15.3 `tree_cmd.cpp`
@@ -75,24 +77,24 @@ What it does **not** establish:
 - **Option A — fresh same-instant native re-observation** of the six tiles
   under a fresh one-shot authorization: **rejected as the resolution path, on
   code-level feasibility, not on cost.** The same-state criterion is
-  `SameStateProvenance.within_window(census_date)` over the *sealed, immutable*
+  `SameStateProvenance.within_window(census_date)` over the _sealed, immutable_
   census instants vs the retained window (`v2_semantic_reconciliation.py`);
   both records' instants can never change, so no future observation can make
   the census and retained states same-instant. A fresh capture would at best
-  *confirm* the already mechanically-explained deltas — it could not resolve
+  _confirm_ the already mechanically-explained deltas — it could not resolve
   which instant's state governs P08 planning, which is the actual open
   question. It is **retained as an optional, conditional future
   delta-confirmation run** (its own staged candidate + fresh authorization) if
   the operator later wants replay determinism against the retained timeline
   proven natively. No work may assume its outcome.
 - **Adopting both simultaneously**: rejected because a policy that stands only
-  *pending an unperformed experiment* would create contradictory assumptions
+  _pending an unperformed experiment_ would create contradictory assumptions
   (authority-by-default vs authority-pending-evidence).
 
 ## Consequences
 
 - The reconciliation workflow gains an explicit, fail-closed, scope-contained
-  application layer (`apply_census_authority`) that emits a *derived* policy
+  application layer (`apply_census_authority`) that emits a _derived_ policy
   verdict; the sealed inputs, sealed verdicts, base ledger and historical bytes
   are untouched, and the derived evidence is separately labeled (`PREPARED`
   analysis, no native proof).
@@ -130,7 +132,7 @@ the `--policy-report` CLI flag in `app/planning/p08_v2_snapshot.py`).
   out-of-scope tiles/fields, missing/malformed/stale/tampered evidence, and
   fail-closed refusal for contradictory or established bases.
 
-The rebinding resolves *which evidence the remaining blocker is not about*;
+The rebinding resolves _which evidence the remaining blocker is not about_;
 it does not resolve the 19 UNKNOWN tiles and does not create native proof.
 A 2026-10-25 diagnosis (`diagnose_unknown_occupancy`) shows those 19 are one
 definitional group — census `CLEAR`, unowned, non-flat, already

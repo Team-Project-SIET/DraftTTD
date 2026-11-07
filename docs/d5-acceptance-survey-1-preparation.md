@@ -31,15 +31,15 @@ facts, read-only, before any placement design exists.
 
 ## 2. Survey identity, runtime and pins
 
-| Item | Binding |
-|---|---|
-| Survey identifier | `D5-ACCEPT-SURVEY-1` (one-shot, read-only, no mutation op exists) |
-| Binary | OpenTTD 15.3, pinned sha-256 `276d5b698a6b706154f3af588f6f885b3aebe518f4ecc8f869abf71383b1904c` (REPRODUCE.md), OpenGFX 8.0 `43a0c1da…03be` |
-| Source world | authoritative D4 candidate-5 after-save `a81ac836…ef261` (the world `D5-FREIGHT-1` ran on; unchanged by that attempt: zero-cost halt) |
-| World identity at connect | `revision 15.3`, `seed 17`, `landscape 0`, `256×256`, `start_day 712223` (the E36 welcome identity) |
-| Company / cargo | company 0, cargo 1 (coal), funds expected `£492,149` exactly |
-| Corridor pins | pickup `45748`/front `45747`, delivery `50351`/front `50095`, depot `45487`/front `45743` |
-| Protocol | protocol 6 (`app/simulation/openttd/corridor_accept_survey.py`), additive over protocol 5, sharing only the 32-unique-request budget cap |
+| Item                      | Binding                                                                                                                                     |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Survey identifier         | `D5-ACCEPT-SURVEY-1` (one-shot, read-only, no mutation op exists)                                                                           |
+| Binary                    | OpenTTD 15.3, pinned sha-256 `276d5b698a6b706154f3af588f6f885b3aebe518f4ecc8f869abf71383b1904c` (REPRODUCE.md), OpenGFX 8.0 `43a0c1da…03be` |
+| Source world              | authoritative D4 candidate-5 after-save `a81ac836…ef261` (the world `D5-FREIGHT-1` ran on; unchanged by that attempt: zero-cost halt)       |
+| World identity at connect | `revision 15.3`, `seed 17`, `landscape 0`, `256×256`, `start_day 712223` (the E36 welcome identity)                                         |
+| Company / cargo           | company 0, cargo 1 (coal), funds expected `£492,149` exactly                                                                                |
+| Corridor pins             | pickup `45748`/front `45747`, delivery `50351`/front `50095`, depot `45487`/front `45743`                                                   |
+| Protocol                  | protocol 6 (`app/simulation/openttd/corridor_accept_survey.py`), additive over protocol 5, sharing only the 32-unique-request budget cap    |
 
 ## 3. The pinned exchange sequence (8 read-only exchanges)
 
@@ -49,16 +49,16 @@ Every request echoes the corridor identity pins and a uniform seal digest;
 `max_cost` is 0 on every exchange (the survey has no cost-bearing operation
 and its Squirrel handler contains no GS accounting usage at all).
 
-| # | exchange | op | send | returns |
-|---|---|---|---|---|
-| 1 | `radius-00` | `radius` | — | native truck-stop coverage `radius` (0..255) |
-| 2 | `accept-00` | `accept` | tile `50351` (control) | `accept` (0..8) + `radius` echo |
-| 3 | `accept-01` | `accept` | tile `50607` | `accept` + `radius` echo |
-| 4 | `accept-02` | `accept` | tile `50863` | `accept` + `radius` echo |
-| 5 | `accept-03` | `accept` | tile `51119` | `accept` + `radius` echo |
-| 6 | `accept-04` | `accept` | tile `51375` | `accept` + `radius` echo |
-| 7 | `accept-05` | `accept` | tile `50605` | `accept` + `radius` echo |
-| 8 | `prod-00` | `prod` | — | pickup industry 0 last-month production of cargo 1 |
+| #   | exchange    | op       | send                   | returns                                            |
+| --- | ----------- | -------- | ---------------------- | -------------------------------------------------- |
+| 1   | `radius-00` | `radius` | —                      | native truck-stop coverage `radius` (0..255)       |
+| 2   | `accept-00` | `accept` | tile `50351` (control) | `accept` (0..8) + `radius` echo                    |
+| 3   | `accept-01` | `accept` | tile `50607`           | `accept` + `radius` echo                           |
+| 4   | `accept-02` | `accept` | tile `50863`           | `accept` + `radius` echo                           |
+| 5   | `accept-03` | `accept` | tile `51119`           | `accept` + `radius` echo                           |
+| 6   | `accept-04` | `accept` | tile `51375`           | `accept` + `radius` echo                           |
+| 7   | `accept-05` | `accept` | tile `50605`           | `accept` + `radius` echo                           |
+| 8   | `prod-00`   | `prod`   | —                      | pickup industry 0 last-month production of cargo 1 |
 
 Acceptance is always queried as `GSTile.GetCargoAcceptance(tile, 1, 1, 1,
 radius)` with the radius measured natively in the same world (the `radius-00`
@@ -71,14 +71,14 @@ The candidate tiles come from the retained pre-construction census
 (`coverage` entries, role `delivery`, cargo 1), re-parsed offline and guarded
 by `test_pinned_hypotheses_match_the_retained_preconstruction_census`:
 
-| Tile | Census hypothesis (pre-construction, offline) | Native expectation for the survey | Meaning if different |
-|---|---|---|---|
-| `50351` (control) | acceptance 0 | **0** (the finding of record re-measured) | a positive control value would falsify the E36 finding of record and must halt for review, never be relabeled |
-| `50607` (175,197) | 8 | ≥ 1/8 | catchment depends on the native radius; a 0 is a real finding |
-| `50863` (175,198) | 8 | ≥ 1/8 | as above |
-| `51119` (175,199) | 8 | ≥ 1/8 | as above |
-| `51375` (175,200) | 8 | ≥ 1/8 | as above |
-| `50605` (173,197) | 8 | ≥ 1/8 | as above |
+| Tile              | Census hypothesis (pre-construction, offline) | Native expectation for the survey         | Meaning if different                                                                                          |
+| ----------------- | --------------------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `50351` (control) | acceptance 0                                  | **0** (the finding of record re-measured) | a positive control value would falsify the E36 finding of record and must halt for review, never be relabeled |
+| `50607` (175,197) | 8                                             | ≥ 1/8                                     | catchment depends on the native radius; a 0 is a real finding                                                 |
+| `50863` (175,198) | 8                                             | ≥ 1/8                                     | as above                                                                                                      |
+| `51119` (175,199) | 8                                             | ≥ 1/8                                     | as above                                                                                                      |
+| `51375` (175,200) | 8                                             | ≥ 1/8                                     | as above                                                                                                      |
+| `50605` (173,197) | 8                                             | ≥ 1/8                                     | as above                                                                                                      |
 
 Stated plainly: **these are hypotheses, not valid stops.** No candidate tile
 is claimed buildable, no stop exists at any candidate tile, no station is

@@ -1,16 +1,18 @@
 ---
+
 title: "Architecture Decision Records"
 type: decision
 status: current
 updated: 2026-10-25
 tags:
-  - openttd
-  - decisions
+- openttd
+- decisions
+
 ---
 
 # Architecture Decision Records (ADR)
 
-Lightweight ADR practice for this project. A decision is *recorded* only when the source
+Lightweight ADR practice for this project. A decision is _recorded_ only when the source
 documents state it. When a future decision is made, add an entry to [[06-Decisions/Decision Log]]
 using the template below (or promote a dated statement from a new source document).
 
@@ -34,9 +36,9 @@ id: ADR-000
 title: "…"
 type: decision
 status: accepted
-date: 1970-01-01   # decision date recorded by the source
+date: 1970-01-01 # decision date recorded by the source
 updated: 2026-10-22
-source: ""        # repo path of the authoritative record
+source: "" # repo path of the authoritative record
 tags: [openttd, decisions]
 ---
 ```

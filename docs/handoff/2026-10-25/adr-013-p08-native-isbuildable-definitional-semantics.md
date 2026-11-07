@@ -1,4 +1,5 @@
 ---
+
 id: ADR-013
 title: "P08 native IsBuildable semantics for the 19 definitional tiles"
 type: decision
@@ -8,9 +9,10 @@ updated: 2026-10-25
 relates: ADR-012
 source: "docs/p08-native-tile-classification.md"
 tags:
-  - openttd
-  - decisions
-  - p08
+- openttd
+- decisions
+- p08
+
 ---
 
 # ADR-013 — P08 native `IsBuildable` semantics for the 19 definitional tiles
@@ -40,10 +42,10 @@ tile, segment class or count is covered.
 
 The mapping is deliberately narrow:
 
-| Observed sealed evidence | Adopted P08 class |
-| --- | --- |
-| retained `buildable=False`, census `CLEAR`, owner `-1`, slope `!= 0` | `TERRAIN_MODIFICATION` |
-| any other retained/census shape | refuse the whole application |
+| Observed sealed evidence                                             | Adopted P08 class            |
+| -------------------------------------------------------------------- | ---------------------------- |
+| retained `buildable=False`, census `CLEAR`, owner `-1`, slope `!= 0` | `TERRAIN_MODIFICATION`       |
+| any other retained/census shape                                      | refuse the whole application |
 
 All 19 census observations are on the single-instant page
 `date_before == date_after == 712225`.

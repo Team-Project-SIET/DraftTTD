@@ -11,12 +11,12 @@ was made for this work.
 `OPERATOR_PUBLIC_KEY_HEX` in `app/simulation/openttd/proof/operator_authorization.py`
 was seeded on 2026-10-21 with the operator-supplied Ed25519 public key.
 
-| Item | Value |
-| --- | --- |
-| Public key hex | `5063982bd28d48573705f334ed4f396618c4930ce21083789dfbbf13a564880f` |
-| Fingerprint (`operator_key_identity`) | `sha256-ed25519-public-key:cbb63ff58f17f13df3e1be0735fad18497e3a0c6ad6b5dd55491d708ae40c614` |
-| Setup class | **LOCAL DEVELOPMENT PROOF** — the key pair was generated **on the runner host**, not off-runner |
-| Private key location | Operator-held material **outside the Git repository** at `~/.local/share/openttd-operator/operator-private.pem` |
+| Item                                  | Value                                                                                                           |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Public key hex                        | `5063982bd28d48573705f334ed4f396618c4930ce21083789dfbbf13a564880f`                                              |
+| Fingerprint (`operator_key_identity`) | `sha256-ed25519-public-key:cbb63ff58f17f13df3e1be0735fad18497e3a0c6ad6b5dd55491d708ae40c614`                    |
+| Setup class                           | **LOCAL DEVELOPMENT PROOF** — the key pair was generated **on the runner host**, not off-runner                 |
+| Private key location                  | Operator-held material **outside the Git repository** at `~/.local/share/openttd-operator/operator-private.pem` |
 
 The runner never opened, read, copied, printed or signed with the private
 key; the runner never generated a replacement key. Only the 32-byte public
@@ -59,12 +59,12 @@ Validation performed with the existing production rules only:
 
 Focused regression suites (offline, controlled peers only):
 
-| Suite | Result |
-| --- | --- |
+| Suite                                                                   | Result    |
+| ----------------------------------------------------------------------- | --------- |
 | `tests/test_ed25519_cryptography.py` + `tests/test_terrain_clearing.py` | 43 passed |
-| `tests/test_terrain_clearing_native_prep.py` | 53 passed |
-| `tests/test_terrain_clearing_adversarial.py` | 74 passed |
-| `tests/test_native_clearing_repair.py` | 27 passed |
+| `tests/test_terrain_clearing_native_prep.py`                            | 53 passed |
+| `tests/test_terrain_clearing_adversarial.py`                            | 74 passed |
+| `tests/test_native_clearing_repair.py`                                  | 27 passed |
 
 Dependency integrity: `uv lock --check` resolves cleanly against
 `pyproject.toml`/`uv.lock`; `cryptography==50.0.2` (the maintained
@@ -87,17 +87,17 @@ remain untouched as historical evidence, as does all other historical
 artifacts — the retained census manifest, source save and qualified save
 re-verified by seal each time):
 
-| Fact | Requirement | Staged value | Verified against source evidence |
-| --- | --- | --- | --- |
-| OpenTTD version | 15.3 | `15.3` (`RuntimeIdentity("15.3")`), binary `276d5b698a6b706154f3af588f6f885b3aebe518f4ecc8f869abf71383b1904c` at `/home/fed/Downloads/openttd-15.3-linux-generic-amd64/openttd` | byte-verified against the pinned identity |
-| Seed | 17 | `seed: 17` in `expected_welcome` | sealed census `CANDIDATE.json` `retained_welcome` (sha `a3559852d523f46486488ac6a2d0f0ba3c29c4ca37f2145f7e15a6fb286a5765`) |
-| Target tile | 46769 | `target_tile: 46769` | sealed census page `classification-p034-response.json` row `[46769, 2, 0, 9, None, -1]`, page sha `7ab777648aed5450287f964ac7e334a9c1881dbe5bdf502cc8ea22b5d3c9e5af` |
-| Expected classification | TREE | pinned `classification: TREES`, tile-type flags `9`, geometry (2, 0), unowned (`owner: -1`), no industry | census taxonomy value for the tree tile group |
-| Max real clearing operations | 1 | `budgets.real_clears: 1` | staged record + admission contract |
-| Max launches | 1 | `budgets.launches: 1` | staged record + one-shot launch gate |
-| Max AdminPort connections | 1 | `budgets.connection_attempts: 1` (plus `reconnects: 0`, `retries: 0`) | staged record + ceremony |
-| Retries | 0 | `budgets.retries: 0` | staged record + one-shot claim schema |
-| Max clearing cost | £10,000 | `max_cost: 10000` (`MAX_CLEARING_COST`), `company: 0`, command `GSTile.DemolishTile(tile)` | staged plan policy + quote/stop rules |
+| Fact                         | Requirement | Staged value                                                                                                                                                                    | Verified against source evidence                                                                                                                                     |
+| ---------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| OpenTTD version              | 15.3        | `15.3` (`RuntimeIdentity("15.3")`), binary `276d5b698a6b706154f3af588f6f885b3aebe518f4ecc8f869abf71383b1904c` at `/home/fed/Downloads/openttd-15.3-linux-generic-amd64/openttd` | byte-verified against the pinned identity                                                                                                                            |
+| Seed                         | 17          | `seed: 17` in `expected_welcome`                                                                                                                                                | sealed census `CANDIDATE.json` `retained_welcome` (sha `a3559852d523f46486488ac6a2d0f0ba3c29c4ca37f2145f7e15a6fb286a5765`)                                           |
+| Target tile                  | 46769       | `target_tile: 46769`                                                                                                                                                            | sealed census page `classification-p034-response.json` row `[46769, 2, 0, 9, None, -1]`, page sha `7ab777648aed5450287f964ac7e334a9c1881dbe5bdf502cc8ea22b5d3c9e5af` |
+| Expected classification      | TREE        | pinned `classification: TREES`, tile-type flags `9`, geometry (2, 0), unowned (`owner: -1`), no industry                                                                        | census taxonomy value for the tree tile group                                                                                                                        |
+| Max real clearing operations | 1           | `budgets.real_clears: 1`                                                                                                                                                        | staged record + admission contract                                                                                                                                   |
+| Max launches                 | 1           | `budgets.launches: 1`                                                                                                                                                           | staged record + one-shot launch gate                                                                                                                                 |
+| Max AdminPort connections    | 1           | `budgets.connection_attempts: 1` (plus `reconnects: 0`, `retries: 0`)                                                                                                           | staged record + ceremony                                                                                                                                             |
+| Retries                      | 0           | `budgets.retries: 0`                                                                                                                                                            | staged record + one-shot claim schema                                                                                                                                |
+| Max clearing cost            | £10,000     | `max_cost: 10000` (`MAX_CLEARING_COST`), `company: 0`, command `GSTile.DemolishTile(tile)`                                                                                      | staged plan policy + quote/stop rules                                                                                                                                |
 
 Retained world identity (save-load composition; no reseed — the staged
 config has no `[game_creation]` block):
@@ -148,6 +148,7 @@ and no authorization file exists`.
    `sha256-ed25519-public-key:cbb63ff58f17f13df3e1be0735fad18497e3a0c6ad6b5dd55491d708ae40c614`
 4. **Exact proposed native execution command** (from the staged
    `execution_command`; one process, one owned secure session, budgets above)
+
    ```
    /home/fed/codes/softdev2/.venv/bin/python -m app.simulation.openttd.proof.terrain_clearing run /home/fed/codes/softdev2/artifacts/experiments/d2-clearing-native-candidate-3
    ```

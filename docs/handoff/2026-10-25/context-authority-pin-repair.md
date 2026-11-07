@@ -44,14 +44,14 @@ repair does not weaken historical protection.
 
 ## 3. Files changed
 
-| Path | Change |
-| --- | --- |
-| `docs/authority/context-authority-supersession.json` | new authority record (ADR-014) |
-| `app/simulation/openttd/proof/authority_supersession.py` | new fail-closed validator |
-| `tests/test_authority_supersession.py` | new focused tests (8) |
-| `tests/test_proof_endpoints.py` | protected check uses the wrapper |
-| `tests/test_qualification_dispatch_repair.py` | CONTEXT row resolved through the record |
-| `tests/test_industry_production_proof.py` | architecture check resolves the historical pin |
+| Path                                                     | Change                                         |
+| -------------------------------------------------------- | ---------------------------------------------- |
+| `docs/authority/context-authority-supersession.json`     | new authority record (ADR-014)                 |
+| `app/simulation/openttd/proof/authority_supersession.py` | new fail-closed validator                      |
+| `tests/test_authority_supersession.py`                   | new focused tests (8)                          |
+| `tests/test_proof_endpoints.py`                          | protected check uses the wrapper               |
+| `tests/test_qualification_dispatch_repair.py`            | CONTEXT row resolved through the record        |
+| `tests/test_industry_production_proof.py`                | architecture check resolves the historical pin |
 
 ## 4. Validation
 

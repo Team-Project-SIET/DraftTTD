@@ -9,7 +9,7 @@ AdminPort, mutates evidence, commits or pushes.
 ## Why this extension exists
 
 The prior milestone ([bounded terrain-aware routing](p08-bounded-terrain-aware-routing.md))
-proved the retained Seed 17 coal pair disconnected in the *supported* corridor
+proved the retained Seed 17 coal pair disconnected in the _supported_ corridor
 graph and explicitly left levelling out of scope. This milestone implements the
 smallest safe planning/validation extension for that gap: bounded levelling
 proposals across limited height differences, as **diagnostics attached to
@@ -52,8 +52,8 @@ Checked against `src/script/api/script_tile.hpp`, `script_tile.cpp` and
   24 permutations by brute-force consistency against the retained Seed 17
   capture: zero shared-corner contradictions across all captured tiles.
 - All four corner heights are therefore derivable from retained
-  `(min_height, slope)`; no new native capture is needed to *plan* (only to
-  *execute and verify*).
+  `(min_height, slope)`; no new native capture is needed to _plan_ (only to
+  _execute and verify_).
 
 ## Implemented contracts
 
@@ -102,7 +102,7 @@ Checked against `src/script/api/script_tile.hpp`, `script_tile.cpp` and
   interior tiles.
 - Unclassifiable obstructions: a retained tile that is neither buildable nor
   classified clearable is rejected, not guessed. This is load-bearing: the
-  wire's 13th/12th flag bits (house/station) are deliberately *not* projected
+  wire's 13th/12th flag bits (house/station) are deliberately _not_ projected
   into `TileFact` (see `app/simulation/openttd/tile_facts.py`); they only force
   `buildable=False`. 15.3 `IsBuildable` is true for `MP_CLEAR`/`MP_TREES`
   regardless of slope, so such tiles cannot be MP_CLEAR ground — but the
@@ -204,7 +204,7 @@ the review):
 ## Honest accounting
 
 - OPEX, profit and ROI for any Seed 17 service remain UNKNOWN; terrain
-  modification CAPEX is *categorized* (`CAPEX_CATEGORY_TERRAIN`) but unpriced
+  modification CAPEX is _categorized_ (`CAPEX_CATEGORY_TERRAIN`) but unpriced
   until runtime cost observation.
 - Controlled fixtures prove planning/validation behavior only; they do not
   prove native terraforming success.

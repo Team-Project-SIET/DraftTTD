@@ -24,23 +24,23 @@ evidence directories are untouched (their `after.sav` digest re-checked below,
 
 ## 1. The staged candidate at a glance
 
-| Fact | Value |
-| --- | --- |
-| Candidate directory | `artifacts/experiments/d4-corridor-native-candidate-1/` |
-| Attempt | `D4-CORRIDOR-1` (one attempt, milestone `D4-CONSTRUCTION`, kind `corridor`) |
-| Prelaunch schema | `d4-corridor-native-prelaunch-v1` |
-| Prelaunch seal (PRELAUNCH.json sha-256) | `0b000d68852aac75504a0c16fb65807051d6f52dfccb6ea99de29a230781a18f` |
-| Source world mode | `PREREQUISITE_ATTEMPT_SOURCE_SAVE_LOAD` |
-| Source save | `after.sav` from the consumed D3-TERRAFORMING-1 attempt, sha-256 **`fbebef54dd466e0bea23cc30e11e94ebaf2a3ca07e2e9b7aadd6a6645c37d59e`** |
-| Prerequisite record | `d4-native-prerequisite-attempt-v1`: attempt `D3-TERRAFORMING-1`, prelaunch sha `edb6b34c6597d146be766ca42728da816d27eaaf40dcb51eb779dd13e30cff9e`, consumed claim, replay-verified receipt, chain `… → D3-CLEARING-2 → D3-CLEARING-1` (cleared chain tiles `[45999, 49326]` = the compiled clears) |
-| Welcome (must match at execution) | revision `15.3`, seed `17`, landscape `0`, 256×256, `start_day 712223`, dedicated |
-| GameScript identity | save's retained identity `RoadFreightProof` v1 announced by the staged `info.nut`; the corridor handler runs as bridge class `NetworkFreightProof extends D4CorridorProof` (no retained identity byte modified) |
-| Company | 0 (authorized company for every op) |
-| Plan digest | `3bf3eddffa807cca2bde279425332d5079a025dec3b1dabe7114164822d8a912` |
-| Budgets | 1 launch, 1 connection, **25 requests**, 6 road ops, 0 retries/reconnects, readiness 45 s, request 10 s, total 900 s, responses ≤ **640 B** |
-| Authorization | `PENDING — requires ONE fresh operator authorization after all preflight gates; offline staging consumed no claim and no authorization file exists` |
-| Execution command (after authorization) | `.venv/bin/python -m app.simulation.openttd.proof.corridor_construction_native run artifacts/experiments/d4-corridor-native-candidate-1` |
-| Exit semantics | 0 only for the verified native receipt; every failed/halted/pre-verified state exits 1 |
+| Fact                                    | Value                                                                                                                                                                                                                                                                                               |
+| --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Candidate directory                     | `artifacts/experiments/d4-corridor-native-candidate-1/`                                                                                                                                                                                                                                             |
+| Attempt                                 | `D4-CORRIDOR-1` (one attempt, milestone `D4-CONSTRUCTION`, kind `corridor`)                                                                                                                                                                                                                         |
+| Prelaunch schema                        | `d4-corridor-native-prelaunch-v1`                                                                                                                                                                                                                                                                   |
+| Prelaunch seal (PRELAUNCH.json sha-256) | `0b000d68852aac75504a0c16fb65807051d6f52dfccb6ea99de29a230781a18f`                                                                                                                                                                                                                                  |
+| Source world mode                       | `PREREQUISITE_ATTEMPT_SOURCE_SAVE_LOAD`                                                                                                                                                                                                                                                             |
+| Source save                             | `after.sav` from the consumed D3-TERRAFORMING-1 attempt, sha-256 **`fbebef54dd466e0bea23cc30e11e94ebaf2a3ca07e2e9b7aadd6a6645c37d59e`**                                                                                                                                                             |
+| Prerequisite record                     | `d4-native-prerequisite-attempt-v1`: attempt `D3-TERRAFORMING-1`, prelaunch sha `edb6b34c6597d146be766ca42728da816d27eaaf40dcb51eb779dd13e30cff9e`, consumed claim, replay-verified receipt, chain `… → D3-CLEARING-2 → D3-CLEARING-1` (cleared chain tiles `[45999, 49326]` = the compiled clears) |
+| Welcome (must match at execution)       | revision `15.3`, seed `17`, landscape `0`, 256×256, `start_day 712223`, dedicated                                                                                                                                                                                                                   |
+| GameScript identity                     | save's retained identity `RoadFreightProof` v1 announced by the staged `info.nut`; the corridor handler runs as bridge class `NetworkFreightProof extends D4CorridorProof` (no retained identity byte modified)                                                                                     |
+| Company                                 | 0 (authorized company for every op)                                                                                                                                                                                                                                                                 |
+| Plan digest                             | `3bf3eddffa807cca2bde279425332d5079a025dec3b1dabe7114164822d8a912`                                                                                                                                                                                                                                  |
+| Budgets                                 | 1 launch, 1 connection, **25 requests**, 6 road ops, 0 retries/reconnects, readiness 45 s, request 10 s, total 900 s, responses ≤ **640 B**                                                                                                                                                         |
+| Authorization                           | `PENDING — requires ONE fresh operator authorization after all preflight gates; offline staging consumed no claim and no authorization file exists`                                                                                                                                                 |
+| Execution command (after authorization) | `.venv/bin/python -m app.simulation.openttd.proof.corridor_construction_native run artifacts/experiments/d4-corridor-native-candidate-1`                                                                                                                                                            |
+| Exit semantics                          | 0 only for the verified native receipt; every failed/halted/pre-verified state exits 1                                                                                                                                                                                                              |
 
 ## 2. The staged corridor schedule (compiled, deterministic)
 
@@ -51,14 +51,14 @@ payload carries the schedule + plan digest as additive keys of the shared
 scalar builder. Road pieces built by separate commands do not auto-merge: the
 corner between the two runs is its own scheduled op, never a free by-product.
 
-| Op | Kind | Command | Pins (tile → (x,y)) | Run length |
-| --- | --- | --- | --- | --- |
-| 0 | `full` | `GSRoad.BuildRoadFull` | start 45747 (179,178) → end 45743 (175,178) | 5 |
-| 1 | `full` | `GSRoad.BuildRoadFull` | start 45999 (175,179) → end 50095 (175,195) | 17 |
-| 2 | `road` | `GSRoad.BuildRoad` | 45743 (175,178) ↔ 45999 (175,179) | 2 |
-| 3 | `station` | `GSRoad.BuildRoadStation` | tile 45748 (180,178), front 45747 (179,178), pickup | 1×1 |
-| 4 | `station` | `GSRoad.BuildRoadStation` | tile 50351 (175,196), front 50095 (175,195), delivery | 1×1 |
-| 5 | `depot` | `GSRoad.BuildRoadDepot` | tile 45487 (175,177), front 45743 (175,178), orientation `south` | 1×1 |
+| Op  | Kind      | Command                   | Pins (tile → (x,y))                                              | Run length |
+| --- | --------- | ------------------------- | ---------------------------------------------------------------- | ---------- |
+| 0   | `full`    | `GSRoad.BuildRoadFull`    | start 45747 (179,178) → end 45743 (175,178)                      | 5          |
+| 1   | `full`    | `GSRoad.BuildRoadFull`    | start 45999 (175,179) → end 50095 (175,195)                      | 17         |
+| 2   | `road`    | `GSRoad.BuildRoad`        | 45743 (175,178) ↔ 45999 (175,179)                                | 2          |
+| 3   | `station` | `GSRoad.BuildRoadStation` | tile 45748 (180,178), front 45747 (179,178), pickup              | 1×1        |
+| 4   | `station` | `GSRoad.BuildRoadStation` | tile 50351 (175,196), front 50095 (175,195), delivery            | 1×1        |
+| 5   | `depot`   | `GSRoad.BuildRoadDepot`   | tile 45487 (175,177), front 45743 (175,178), orientation `south` | 1×1        |
 
 Both straight spans are inside the wire contract's `MAX_FULL_SPAN` bound (36
 delta steps; actual spans 4 and 16). The route read is **not** an op.

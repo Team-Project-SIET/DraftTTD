@@ -29,18 +29,18 @@ verification library; this task does not implement a signing protocol.
 `proof/terrain_authorization.py` defines immutable `OneLaunchAuthorization`.
 Exact fields, with unknown fields rejected:
 
-| Field | Meaning |
-| --- | --- |
-| schema | `openttd-terrain-one-launch` |
-| version | integer 1 |
-| authorization_id | issuer-correlated approval identity |
-| seal_sha256 | exact immutable PRELAUNCH bytes, lowercase SHA256 |
-| attempt_identity | exactly the identity reserved in that seal |
-| attempt_directory | exactly the canonical absolute proof destination |
-| authorized_launch_count | integer 1; booleans rejected |
-| proof_operation | `openttd-15.3.tile_facts_page.single_page` |
-| issuer_id | independently authenticated issuer identity |
-| approval_evidence | bounded opaque authenticated approval evidence |
+| Field                   | Meaning                                           |
+| ----------------------- | ------------------------------------------------- |
+| schema                  | `openttd-terrain-one-launch`                      |
+| version                 | integer 1                                         |
+| authorization_id        | issuer-correlated approval identity               |
+| seal_sha256             | exact immutable PRELAUNCH bytes, lowercase SHA256 |
+| attempt_identity        | exactly the identity reserved in that seal        |
+| attempt_directory       | exactly the canonical absolute proof destination  |
+| authorized_launch_count | integer 1; booleans rejected                      |
+| proof_operation         | `openttd-15.3.tile_facts_page.single_page`        |
+| issuer_id               | independently authenticated issuer identity       |
+| approval_evidence       | bounded opaque authenticated approval evidence    |
 
 Identity strings are ASCII tokens of at most 128 characters, destination at most
 1024 characters, and approval evidence at most 4096 UTF-8 bytes. The approval

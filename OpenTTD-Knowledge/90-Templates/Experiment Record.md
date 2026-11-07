@@ -1,4 +1,5 @@
 ---
+
 title: "<Experiment/attempt title>"
 type: experiment
 status: <prepared|consumed|failed|verified>
@@ -9,20 +10,21 @@ milestone: ""
 launch_authorization: <none-issued|pending|consumed>
 tags:
   - openttd
-  - experiment
+- experiment
+
 ---
 
 # <Experiment/attempt title>
 
 ## Identity
 
-| Fact | Value |
-|---|---|
-| Attempt / candidate |  |
-| Attempt date |  |
-| Welcome identity | revision / seed / landscape / map size / start_day |
-| Source world |  |
-| Plan digest |  |
+| Fact                | Value                                              |
+| ------------------- | -------------------------------------------------- |
+| Attempt / candidate |                                                    |
+| Attempt date        |                                                    |
+| Welcome identity    | revision / seed / landscape / map size / start_day |
+| Source world        |                                                    |
+| Plan digest         |                                                    |
 
 ## Budgets
 

@@ -20,16 +20,16 @@ CAPEX; they are not monthly or annual predictions or incremental upgrade quotes.
 The baseline £25,607 estimate differs from observed £28,459 command-local CAPEX
 by £2,852. This is retrospective cost error, not an investment return or forecast.
 
-| Controlled input | Served planning units | Vehicles | Estimated CAPEX |
-|---|---:|---:|---:|
-| Retained baseline | 60 | 3 | £25,607 |
-| Six-vehicle limit, same demand | 60 | 3 | £25,607 |
-| Hypothetical 10-unit capacity, six-vehicle limit | 60 | 6 | £38,894 |
-| Hypothetical 40-unit capacity | 60 | 3 | £25,607 |
-| 40-unit demand per service, three-vehicle limit | 40 | 2 | £12,870 |
-| 40-unit demand per service, six-vehicle limit | 120 | 6 | £38,894 |
-| Double infrastructure cost, same candidates | 60 | 3 | £37,927 |
-| 40-unit demand on one service, 20 on others, four vehicles | 80 | 4 | £30,036 |
+| Controlled input                                           | Served planning units | Vehicles | Estimated CAPEX |
+| ---------------------------------------------------------- | --------------------: | -------: | --------------: |
+| Retained baseline                                          |                    60 |        3 |         £25,607 |
+| Six-vehicle limit, same demand                             |                    60 |        3 |         £25,607 |
+| Hypothetical 10-unit capacity, six-vehicle limit           |                    60 |        6 |         £38,894 |
+| Hypothetical 40-unit capacity                              |                    60 |        3 |         £25,607 |
+| 40-unit demand per service, three-vehicle limit            |                    40 |        2 |         £12,870 |
+| 40-unit demand per service, six-vehicle limit              |                   120 |        6 |         £38,894 |
+| Double infrastructure cost, same candidates                |                    60 |        3 |         £37,927 |
+| 40-unit demand on one service, 20 on others, four vehicles |                    80 |        4 |         £30,036 |
 
 The final row was solved separately for each service; all three allocations
 are feasible under the supplied constraints. With 40-unit demands and only

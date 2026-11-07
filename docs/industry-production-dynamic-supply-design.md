@@ -39,19 +39,19 @@ Classification: A = suitable input to an explicit supply estimator; B = useful o
 after qualified warm-up; C = evaluation input rather than supply; D = descriptive
 analytics; E = unreliable as direct quantitative supply. None guarantees future output.
 
-| Concept / metric | Classification | Planning interpretation |
-| --- | --- | --- |
-| Instance produces/accepts membership | A for eligibility, E for quantity | Structural capability identifies possible relationships, not units available. |
-| GetLastMonthProduction | B, then A for an explicit estimator | Historical cargo units for a closed economy-month, after provenance qualifies that window. Preserve raw value; projection into a horizon requires a separate policy. |
-| Initial map-generated last-month value | E as historical supply | Seeded estimate; may be retained as initialization evidence but never silently relabelled measured history. |
-| GetLastMonthTransported | C | Station allocation/service evidence; not unused capacity, future demand, pickup or final delivery. |
-| GetLastMonthTransportedPercentage | C / D | Quantized/clamped service indicator; not a transport mode or marginal supply estimate. |
-| GetProductionLevel | D; E as direct supply | Dimensionless current control level, not units/day. Engine rates and callbacks determine output. |
-| Internal produced.rate | E / unavailable via industry Script getter | Core implementation state is not a legal new wire API; no invented GSIndustry.GetProductionRate. |
-| GetStockpiledCargo | D; E as standalone output supply | Current accepted/input cargo waiting for processing, not output inventory or a guaranteed conversion yield. |
-| IsCargoAccepted | D / separate operational eligibility | Instantaneous accepted/refused state; structural accepts membership alone is not current acceptance. |
-| IndustryType raw/processing/increase flags | D / qualified structural eligibility | NewGRF authors control interpretation; no numeric capacity or conversion recipe. |
-| GSTile.GetCargoProduction | A for catchment presence only | Counts nearby producing sources, including native industry cargo membership; not industry monthly volume. |
+| Concept / metric                           | Classification                             | Planning interpretation                                                                                                                                              |
+| ------------------------------------------ | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Instance produces/accepts membership       | A for eligibility, E for quantity          | Structural capability identifies possible relationships, not units available.                                                                                        |
+| GetLastMonthProduction                     | B, then A for an explicit estimator        | Historical cargo units for a closed economy-month, after provenance qualifies that window. Preserve raw value; projection into a horizon requires a separate policy. |
+| Initial map-generated last-month value     | E as historical supply                     | Seeded estimate; may be retained as initialization evidence but never silently relabelled measured history.                                                          |
+| GetLastMonthTransported                    | C                                          | Station allocation/service evidence; not unused capacity, future demand, pickup or final delivery.                                                                   |
+| GetLastMonthTransportedPercentage          | C / D                                      | Quantized/clamped service indicator; not a transport mode or marginal supply estimate.                                                                               |
+| GetProductionLevel                         | D; E as direct supply                      | Dimensionless current control level, not units/day. Engine rates and callbacks determine output.                                                                     |
+| Internal produced.rate                     | E / unavailable via industry Script getter | Core implementation state is not a legal new wire API; no invented GSIndustry.GetProductionRate.                                                                     |
+| GetStockpiledCargo                         | D; E as standalone output supply           | Current accepted/input cargo waiting for processing, not output inventory or a guaranteed conversion yield.                                                          |
+| IsCargoAccepted                            | D / separate operational eligibility       | Instantaneous accepted/refused state; structural accepts membership alone is not current acceptance.                                                                 |
+| IndustryType raw/processing/increase flags | D / qualified structural eligibility       | NewGRF authors control interpretation; no numeric capacity or conversion recipe.                                                                                     |
+| GSTile.GetCargoProduction                  | A for catchment presence only              | Counts nearby producing sources, including native industry cargo membership; not industry monthly volume.                                                            |
 
 Sources: [ScriptIndustry contracts](https://github.com/OpenTTD/OpenTTD/blob/15.3/src/script/api/script_industry.hpp),
 [IndustryType contracts](https://github.com/OpenTTD/OpenTTD/blob/15.3/src/script/api/script_industrytype.hpp),
@@ -70,14 +70,14 @@ malformed merely because it violates that assumed inequality.
 
 ## Fresh-world and time semantics
 
-| Time | What can be concluded |
-| --- | --- |
-| Immediately after map generation | Last-month production can already be nonzero due to seeded estimates; transported starts zero absent other saved/runtime activity. Not measured previous-month supply. |
-| Some ticks/days, before first economy rollover | Current-month internal counters change; last-month APIs still expose the prior/seeded bucket. No current-month total or output-waiting industry getter is exposed by this API. |
-| First rollover | Internal history rotates; the previous month becomes LAST_MONTH. It may cover only a partial month if generation/construction began mid-month. |
-| Second rollover | For an industry present throughout the intervening month, LAST_MONTH can cover a fully elapsed economy-month. Earlier output changes and input availability still matter. |
-| Multiple rollovers | APIs expose the latest last-month slot, not arbitrary historical periods. Core retains more history but ScriptIndustry does not export an indexed history getter. |
-| Industry created later or loaded save with unknown provenance | Warm-up eligibility must be established again; the two numeric endpoints alone do not prove the object existed throughout the window. |
+| Time                                                          | What can be concluded                                                                                                                                                          |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Immediately after map generation                              | Last-month production can already be nonzero due to seeded estimates; transported starts zero absent other saved/runtime activity. Not measured previous-month supply.         |
+| Some ticks/days, before first economy rollover                | Current-month internal counters change; last-month APIs still expose the prior/seeded bucket. No current-month total or output-waiting industry getter is exposed by this API. |
+| First rollover                                                | Internal history rotates; the previous month becomes LAST_MONTH. It may cover only a partial month if generation/construction began mid-month.                                 |
+| Second rollover                                               | For an industry present throughout the intervening month, LAST_MONTH can cover a fully elapsed economy-month. Earlier output changes and input availability still matter.      |
+| Multiple rollovers                                            | APIs expose the latest last-month slot, not arbitrary historical periods. Core retains more history but ScriptIndustry does not export an indexed history getter.              |
+| Industry created later or loaded save with unknown provenance | Warm-up eligibility must be established again; the two numeric endpoints alone do not prove the object existed throughout the window.                                          |
 
 GSDate.GetCurrentDate/GetYear/GetMonth/GetDayOfMonth/GetDate are economy-time
 queries in 15.3; do not infer Gregorian month length from Python datetime when
@@ -98,13 +98,13 @@ universal diagnosis from zero output.
 
 ## Warm-up strategy comparison and recommendation
 
-| Strategy | Correctness / usefulness | Determinism, cost and proof complexity |
-| --- | --- | --- |
-| Query immediately | Good API-binding proof; bad evidence of elapsed historical supply | Cheap/repeatable under fixed pins, but seeded values are ambiguous. |
-| First economy rollover | Removes generation seed, but may expose a partial initial month | Moderate cost; insufficient generically unless exact month-start initialization and industry existence are proven. |
-| Fixed game days | Can accidentally straddle incomplete months | Simple wait, wrong across timekeeping modes/month lengths; avoid. |
-| Wait for a native history-valid flag | No such exposed industry Script API | Cannot implement honestly; positivity is not validity. |
-| Structural/default output estimate | Relationship membership is reliable; amount is not | Cheap but unsuitable for quantitative planning without explicit model assumptions. NewGRFs defeat universal default rates. |
+| Strategy                                     | Correctness / usefulness                                                                           | Determinism, cost and proof complexity                                                                                           |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Query immediately                            | Good API-binding proof; bad evidence of elapsed historical supply                                  | Cheap/repeatable under fixed pins, but seeded values are ambiguous.                                                              |
+| First economy rollover                       | Removes generation seed, but may expose a partial initial month                                    | Moderate cost; insufficient generically unless exact month-start initialization and industry existence are proven.               |
+| Fixed game days                              | Can accidentally straddle incomplete months                                                        | Simple wait, wrong across timekeeping modes/month lengths; avoid.                                                                |
+| Wait for a native history-valid flag         | No such exposed industry Script API                                                                | Cannot implement honestly; positivity is not validity.                                                                           |
+| Structural/default output estimate           | Relationship membership is reliable; amount is not                                                 | Cheap but unsuitable for quantitative planning without explicit model assumptions. NewGRFs defeat universal default rates.       |
 | Hybrid structure + qualified elapsed history | Best project fit; eligibility remains structural and historical quantities are separately labelled | Bounded, explicit economy-window warm-up costs at most the initial remainder plus one full month; freeze settings and endpoints. |
 
 Recommend the hybrid. For a newly generated proof world, observe **two economy-month
@@ -183,13 +183,31 @@ the structural digest must not change merely because another month elapsed.
 Prefer **one industry + one produced cargo per request** for V1:
 
 ```json
-{"protocol":1,"type":"industry_production","request_id":"...","industry_id":123,"cargo_id":1}
+{
+	"protocol": 1,
+	"type": "industry_production",
+	"request_id": "...",
+	"industry_id": 123,
+	"cargo_id": 1
+}
 ```
 
 Candidate response fields:
 
 ```json
-{"protocol":1,"type":"industry_production_result","request_id":"...","status":"ok","industry_id":123,"cargo_id":1,"economy_date_before":730485,"economy_date_after":730485,"last_month_produced":100,"last_month_transported":0,"last_month_transported_pct":0}
+{
+	"protocol": 1,
+	"type": "industry_production_result",
+	"request_id": "...",
+	"status": "ok",
+	"industry_id": 123,
+	"cargo_id": 1,
+	"economy_date_before": 730485,
+	"economy_date_after": 730485,
+	"last_month_produced": 100,
+	"last_month_transported": 0,
+	"last_month_transported_pct": 0
+}
 ```
 
 Each field has API authority: validity and produced membership checked against live

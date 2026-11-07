@@ -3,6 +3,7 @@
 import asyncio
 import json
 import re
+from contextlib import asynccontextmanager
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
@@ -45,7 +46,12 @@ def bounded_relationships(world, metadata=None):
         admitted = []
         for relationship in discovered.relationships:
             try:
-                relationship_region(world, relationship, budgets.capture_tile_limit)
+                relationship_region(
+                    world,
+                    relationship,
+                    budgets.capture_tile_limit,
+                    edge_pad=budgets.capture_edge_pad,
+                )
             except ValueError as error:
                 src, dst, cargo = relationship
                 reason = (
@@ -93,7 +99,15 @@ def bounded_relationships(world, metadata=None):
 
 
 def network_from_facts(
-    world, facts, source, policy, *, max_vehicles=2, service_batches=False, planning_rejections=None
+    world,
+    facts,
+    source,
+    policy,
+    *,
+    max_vehicles=2,
+    service_batches=False,
+    planning_rejections=None,
+    exclude=(),
 ):
     # Each raw package is retained separately. The combined bracket encompasses
     # every read, without inventing simultaneous capture or upgrading its trust.
@@ -102,8 +116,32 @@ def network_from_facts(
     month = world.production.qualification.current_month
     if not month.start_date <= before <= after < month.end_date:
         raise ValueError("network facts crossed the qualified economy month")
+    # Loop-cycle planning of record: identities already built on the live world
+    # are excluded before P08/P05 so each cycle only forms new services.
+    excluded = 0
     packages = []
     for f in facts:
+        if exclude:
+            scopes = {c.role: c for c in f.coverage_scopes}
+            pickup_scope = scopes.get("pickup")
+            delivery_scope = scopes.get("delivery")
+            if (
+                pickup_scope is not None
+                and delivery_scope is not None
+                and (pickup_scope.industry_id, delivery_scope.industry_id, pickup_scope.cargo_id)
+                in exclude
+            ):
+                excluded += 1
+                if planning_rejections is not None:
+                    planning_rejections.append(
+                        dict(
+                            source=pickup_scope.industry_id,
+                            destination=delivery_scope.industry_id,
+                            cargo=pickup_scope.cargo_id,
+                            reason="SERVICE_ALREADY_BUILT",
+                        )
+                    )
+                continue
         service_policy = policy
         if service_batches:
             pickup = next(c for c in f.coverage_scopes if c.role == "pickup")
@@ -170,18 +208,64 @@ def network_from_facts(
                 continue
         packages.append(package)
     if not packages:
+        if excluded:
+            raise ValueError(
+                f"NO_FEASIBLE_SERVICES: all {excluded} captured relationships are "
+                "excluded already-built services"
+            )
         raise ValueError("NO_FEASIBLE_SERVICES: no supported full-load road engine and supply")
     return generate_freight_network(
         tuple(packages), max_vehicles=max_vehicles, allow_service_batches=service_batches
     )
 
 
-async def plan_network_world(backend, prepared, session, accounting, before, batch_limit):
+@asynccontextmanager
+async def paused_world_clock(backend, *, diagnostic=None):
+    """M2 capture pacing of record (ticket 03 family): pause the world clock for
+    the duration of one bounded supplemental capture, resume after.
+
+    The qualified-month gate dates every read at its actual capture instant; a
+    paused clock therefore freezes before/after inside the month and the E141
+    wall-clock race (a 2048-tile capture running past `month.end_date`) cannot
+    happen. The wall-clock capture budget stays unchanged, so the pause never
+    unbounds an attempt; each pair is logged via the owned console and counted
+    in the planning diagnostic for per-attempt evidence."""
+    from .proof.road_mutation import console
+
+    console(backend, "pause")
+    try:
+        yield
+    finally:
+        try:
+            console(backend, "unpause")
+        except Exception as error:
+            if diagnostic is not None:
+                diagnostic["pause_resume_error"] = str(error)
+        else:
+            if diagnostic is not None:
+                diagnostic["pause_pairs"] = diagnostic.get("pause_pairs", 0) + 1
+
+
+@asynccontextmanager
+async def _live_clock():
+    yield
+
+
+async def plan_network_world(
+    backend, prepared, session, accounting, before, batch_limit, exclude=()
+):
     metadata = json.loads((prepared.directory / "PRELAUNCH.json").read_bytes())
     diagnostic = {} if metadata.get("random_world") else None
     try:
         return await _plan_network_world(
-            backend, prepared, session, accounting, before, batch_limit, diagnostic=diagnostic
+            backend,
+            prepared,
+            session,
+            accounting,
+            before,
+            batch_limit,
+            diagnostic=diagnostic,
+            exclude=exclude,
         )
     except Exception as error:
         if diagnostic is not None:
@@ -217,7 +301,7 @@ async def plan_network_world(backend, prepared, session, accounting, before, bat
 
 
 async def _plan_network_world(
-    backend, prepared, session, accounting, before, batch_limit, *, diagnostic=None
+    backend, prepared, session, accounting, before, batch_limit, *, diagnostic=None, exclude=()
 ):
     from app.simulation.openttd.proof.road_mutation import save
 
@@ -271,16 +355,22 @@ async def _plan_network_world(
         raise ValueError(reason + ": no compatible freight OD within capture budgets")
     facts, count = [], 1 if metadata.get("random_world") else 0
     for n, relationship in enumerate(relationships):
+        paused = (
+            paused_world_clock(backend, diagnostic=diagnostic)
+            if metadata.get("random_world")
+            else _live_clock()
+        )
         try:
-            value = await capture_planning_facts(
-                backend,
-                prepared,
-                world,
-                relationship=relationship,
-                prefix=f"n{n}-",
-                retain=False,
-                capture_budget=capture_budget,
-            )
+            async with paused:
+                value = await capture_planning_facts(
+                    backend,
+                    prepared,
+                    world,
+                    relationship=relationship,
+                    prefix=f"n{n}-",
+                    retain=False,
+                    capture_budget=capture_budget,
+                )
         finally:
             if diagnostic is not None:
                 diagnostic["capture_requests_attempted"] += backend.planning_read_attempts
@@ -327,6 +417,7 @@ async def _plan_network_world(
         max_vehicles=metadata.get("network_service_limit", 2),
         service_batches=bool(metadata.get("random_world")),
         planning_rejections=diagnostic["candidate_rejections"] if diagnostic is not None else None,
+        exclude=exclude,
     )
     if diagnostic is not None:
         diagnostic["candidate_count"] = len(network.services)
@@ -887,13 +978,15 @@ async def execute_capacity_intervention(prepared, session, plans, receipts, meta
     ]
 
 
-async def execute_network(backend, prepared, session, accounting, before, seal, metadata, result):
+async def execute_network(
+    backend, prepared, session, accounting, before, seal, metadata, result, exclude=()
+):
     validate_game_time_version(metadata)
     from app.simulation.openttd.proof.freight_delivery import exchange
     from app.simulation.openttd.proof.road_mutation import save
 
     network, execution, services, source_save = await plan_network_world(
-        backend, prepared, session, accounting, before, metadata["delivery_batch_limit"]
+        backend, prepared, session, accounting, before, metadata["delivery_batch_limit"], exclude
     )
     result["supplemental_requests"] = backend.planning_read_count
     result["selected_services"] = [i for i, _ in services]
@@ -1046,6 +1139,7 @@ async def execute_network(backend, prepared, session, accounting, before, seal, 
         financial_reconciliation(prepared.directory, finance_records, aggregate),
     )
     write_json(prepared.directory / "receipt.json", aggregate)
+    return services
 
 
 def replay_network_capture(directory, world, metadata):

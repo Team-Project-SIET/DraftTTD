@@ -1,12 +1,14 @@
 ---
+
 title: "Data Flow"
 type: architecture
 status: current
 updated: 2026-10-22
 tags:
-  - openttd
-  - architecture
-  - dataflow
+- openttd
+- architecture
+- dataflow
+
 ---
 
 # Data Flow
@@ -59,13 +61,13 @@ finished an operation — explicit protocol acknowledgements only (CONTEXT §11,
 
 ## Message-size / budget flow (recorded, per layer)
 
-| Boundary | Recorded bound | Source |
-|---|---|---|
-| `GSAdmin.Send(table)` → AdminPort | JSON ≤ **1450 B** | CONTEXT §10 |
-| Tile replies (random capture) | ≤ 512 B, exactly 19 integers/tile | E4/E5, [[99-Source-Documents/AI_HANDOFF]] |
-| Classification V2 pages | ≤ 508 B/page; census ≤ 52,324 B total; 90 pages | E12/E13/E16 |
-| D4 corridor wire | requests ≤ 512 B (worst planned 304 B); responses ≤ 640 B (contract-only delta) | E20 |
-| Global random capture request guard | `(capture_tile_limit+36)×max_relationships+1` = 8769 @ 16 | E5 |
+| Boundary                            | Recorded bound                                                                  | Source                                    |
+| ----------------------------------- | ------------------------------------------------------------------------------- | ----------------------------------------- |
+| `GSAdmin.Send(table)` → AdminPort   | JSON ≤ **1450 B**                                                               | CONTEXT §10                               |
+| Tile replies (random capture)       | ≤ 512 B, exactly 19 integers/tile                                               | E4/E5, [[99-Source-Documents/AI_HANDOFF]] |
+| Classification V2 pages             | ≤ 508 B/page; census ≤ 52,324 B total; 90 pages                                 | E12/E13/E16                               |
+| D4 corridor wire                    | requests ≤ 512 B (worst planned 304 B); responses ≤ 640 B (contract-only delta) | E20                                       |
+| Global random capture request guard | `(capture_tile_limit+36)×max_relationships+1` = 8769 @ 16                       | E5                                        |
 
 Large snapshots are chunked/paginated — never one big packet
 ([[01-Architecture/AdminPort Protocol]]).
@@ -92,7 +94,7 @@ neither a command ACK nor an empty vehicle alone establishes freight delivery
    ≤ 546 reads per relationship).
 3. Qualified observation + supplemental facts → bounded P08 (flat-land candidates,
    2..47 road tiles, terrain-aware reachability) → P05 (1–60 s bound).
-4. *CONTROLLED:* the 512-tile correction and the synthetic flat fixture's 31-road-tile
+4. _CONTROLLED:_ the 512-tile correction and the synthetic flat fixture's 31-road-tile
    route and £1,830 estimate — not Seed 17 native results ([[05-Planning/Blockers]]).
 
 ## Save/load and idempotency flow

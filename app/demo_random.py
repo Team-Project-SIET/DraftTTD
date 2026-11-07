@@ -46,8 +46,9 @@ class DemoBudgets(Contract):
     max_relationships: StrictInt = Field(default=16, ge=1, le=16)
     max_pair_checks: StrictInt = Field(default=8192, ge=1, le=8192)
     planning_seconds: StrictInt = Field(default=30, ge=1, le=60)
-    capture_tile_limit: Literal[256, 512] = 512
-    capture_seconds: StrictInt = Field(default=45, ge=1, le=60)
+    capture_tile_limit: Literal[256, 512, 2048] = 512
+    capture_edge_pad: StrictInt = Field(default=0, ge=0, le=32)
+    capture_seconds: StrictInt = Field(default=45, ge=1, le=180)
 
     @classmethod
     def from_sealed(cls, value: dict) -> DemoBudgets:
@@ -132,9 +133,17 @@ def discover_relationships(
     return RelationshipDiscovery(tuple(selected), tuple(rejected), False, checks)
 
 
-def relationship_region(world: WorldPlanningObservation, relationship: tuple, tile_limit=256):
-    """Complete padded rectangle; clipped interior padding only for the opt-in profile."""
-    if tile_limit not in (256, 512):
+def relationship_region(
+    world: WorldPlanningObservation, relationship: tuple, tile_limit=256, *, edge_pad=0
+):
+    """Complete padded rectangle; the 2048 profile grows the shorter axis.
+
+    The 256 and 512 budgets keep their sealed byte shape for retained
+    identities: ``edge_pad`` is consumed only by the 2048 production
+    profile, growing perpendicular to the catchment so corridor search
+    gains detour room inside the still completely observed rectangle.
+    """
+    if tile_limit not in (256, 512, 2048):
         raise ValueError("CAPTURE_PROFILE_UNSUPPORTED")
     records = {r.id: r for r in world.structural.inventory.observation.records}
     a, b = records[relationship[0]], records[relationship[1]]
@@ -146,18 +155,50 @@ def relationship_region(world: WorldPlanningObservation, relationship: tuple, ti
     if tile_limit == 512:
         x, y = max(1, x), max(1, y)
         right, bottom = min(map_width - 1, right), min(map_height - 1, bottom)
-    elif x < 1 or y < 1 or right >= map_width - 1 or bottom >= map_height - 1:
-        raise ValueError("CAPTURE_MAP_BOUND: padded region outside supported interior")
+    elif tile_limit == 2048:
+        # Deterministic perpendicular growth: spend the spare budget on the
+        # shorter axis (both sides equally), clipped by the map interior.
+        x, y = max(1, x), max(1, y)
+        right, bottom = min(map_width - 1, right), min(map_height - 1, bottom)
+        base_width, base_height = right - x, bottom - y
+        if base_width < base_height:
+            side = max(
+                0,
+                min(
+                    edge_pad,
+                    (tile_limit // base_height - base_width) // 2,
+                    x - 1,
+                    map_width - 1 - right,
+                ),
+            )
+            x, right = x - side, right + side
+        else:
+            side = max(
+                0,
+                min(
+                    edge_pad,
+                    (tile_limit // base_width - base_height) // 2,
+                    y - 1,
+                    map_height - 1 - bottom,
+                ),
+            )
+            y, bottom = y - side, bottom + side
+    else:
+        if x < 1 or y < 1 or right >= map_width - 1 or bottom >= map_height - 1:
+            raise ValueError("CAPTURE_MAP_BOUND: padded region outside supported interior")
     width, height = right - x, bottom - y
     if width * height > tile_limit:
         raise ValueError(f"CAPTURE_TILE_BUDGET: {width * height} tiles exceeds {tile_limit}")
     return dict(x=x, y=y, width=width, height=height) | (
-        {"profile": "random-rectangle-512-v1"} if tile_limit == 512 else {}
+        {"profile": "random-rectangle-2048-v1"}
+        if tile_limit == 2048
+        else {"profile": "random-rectangle-512-v1"} if tile_limit == 512 else {}
     )
 
 
 def planning_diagnostic(world: WorldPlanningObservation, metadata: dict) -> dict:
-    discovery = discover_relationships(world, DemoBudgets.from_sealed(metadata["random_budget"]))
+    budgets = DemoBudgets.from_sealed(metadata["random_budget"])
+    discovery = discover_relationships(world, budgets)
     records = {r.id: r for r in world.structural.inventory.observation.records}
     pairs = []
     for src, dst, cargo in discovery.relationships:
@@ -195,9 +236,12 @@ def planning_diagnostic(world: WorldPlanningObservation, metadata: dict) -> dict
         candidate_count=None,
         selected_service_count=None,
         status="DISCOVERED",
-        budgets=DemoBudgets.from_sealed(metadata["random_budget"]).model_dump(),
+        budgets=budgets.model_dump(),
         limitations=[
-            "complete rectangular capture only; at most 512 tiles per relationship",
+            (
+                "complete rectangular capture only; "
+                f"at most {budgets.capture_tile_limit} tiles per relationship"
+            ),
             "flat vacant land only; no clearing, slopes, bridges or tunnels",
             "native executor requires 2..47 road tiles and independent admission",
             "missing terrain, catchment or engine facts cannot establish feasibility",

@@ -1,11 +1,13 @@
 ---
+
 title: "Decision Log"
 type: decision
 status: current
 updated: 2026-10-22
 tags:
-  - openttd
-  - decisions
+- openttd
+- decisions
+
 ---
 
 # Decision Log
@@ -96,7 +98,7 @@ keep their original dates. Full indexing practice: [[06-Decisions/Architecture D
   the matching packages (`RoadProofCompany`), seal digests in PRELAUNCH records, and treat
   `which is no longer available` fallback as fatal; the dummy-AI death is exempt exactly
   once under a strict three-line condition.
-- **Consequences:** repairs addressed the *health check + staging*, not the historical
+- **Consequences:** repairs addressed the _health check + staging_, not the historical
   evidence; cost of a wrong staging decision is a consumed authorization (E14).
 
 ## ADR-010 — Reconciliation must not relabel sealed verdicts

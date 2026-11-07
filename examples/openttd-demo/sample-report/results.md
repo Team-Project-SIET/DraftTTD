@@ -2,17 +2,17 @@
 
 P07 verified native delivery batches.
 
-| Metric | Actual | Unit |
-|---|---:|---|
-| delivered_cargo | 60 | cargo_units |
-| vehicles | 3 | vehicles |
-| infrastructure_capex | 15172 | GBP |
-| vehicle_purchase | 13287 | GBP |
-| total_capex | 28459 | GBP |
-| delivery_revenue | 1018 | GBP |
-| vehicle_profit | 909 | GBP |
-| operating_costs | UNKNOWN | GBP |
-| net_return | UNKNOWN | GBP |
+| Metric               |  Actual | Unit        |
+| -------------------- | ------: | ----------- |
+| delivered_cargo      |      60 | cargo_units |
+| vehicles             |       3 | vehicles    |
+| infrastructure_capex |   15172 | GBP         |
+| vehicle_purchase     |   13287 | GBP         |
+| total_capex          |   28459 | GBP         |
+| delivery_revenue     |    1018 | GBP         |
+| vehicle_profit       |     909 | GBP         |
+| operating_costs      | UNKNOWN | GBP         |
+| net_return           | UNKNOWN | GBP         |
 
 Services:
 

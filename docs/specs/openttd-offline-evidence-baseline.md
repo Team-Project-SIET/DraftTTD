@@ -24,20 +24,20 @@ Earlier repair results in those documents remain historical stage-specific repor
 
 ## Existing identifiers
 
-| Component | Existing identifier and source |
-| --- | --- |
-| Controlled collector semantic record | `terrain-two-sweep-v1`, `TerrainObservation` semantic digest record |
-| Tile wire protocol | `protocol=1`, `tile_facts_page` / `tile_facts_page_result`, `tile_facts.py` |
-| Canonical retention | `terrain-durable-canonical-v1`, `terrain_retention.POLICY` |
-| Log scope | `terrain-execution-log-v1`, `terrain_logs.POLICY` |
-| Path ownership | `resolved-path-ownership-v1`, runtime `OwnershipGraph.public()` |
-| Materialization ledger | `frozen-content-disposable-path-v1`, `ownership.freeze_materializations()` |
-| Historical inventory | `historical-exact-paths-v1`, `historical_protection.POLICY` |
-| Endpoint closure | `linux-kernel-endpoint-closure-v1`, `endpoints.POLICY` |
-| Independent authorization DTO | `openttd-terrain-one-launch`, version 1, `OneLaunchAuthorization` |
-| Model A local policy | `OPERATOR_ATTENDED_LOCAL_PROOF`; REAL trust `LOCAL_OPERATOR_ATTESTED`, CONTROLLED trust `CONTROLLED_OPERATOR_ATTESTED` |
-| Proof operation | `openttd-15.3.tile_facts_page.single_page` |
-| PRELAUNCH subject | `mode=terrain-single-page`, `state=SEALED_UNAUTHORIZED`; no separate top-level numeric schema version |
+| Component                            | Existing identifier and source                                                                                         |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| Controlled collector semantic record | `terrain-two-sweep-v1`, `TerrainObservation` semantic digest record                                                    |
+| Tile wire protocol                   | `protocol=1`, `tile_facts_page` / `tile_facts_page_result`, `tile_facts.py`                                            |
+| Canonical retention                  | `terrain-durable-canonical-v1`, `terrain_retention.POLICY`                                                             |
+| Log scope                            | `terrain-execution-log-v1`, `terrain_logs.POLICY`                                                                      |
+| Path ownership                       | `resolved-path-ownership-v1`, runtime `OwnershipGraph.public()`                                                        |
+| Materialization ledger               | `frozen-content-disposable-path-v1`, `ownership.freeze_materializations()`                                             |
+| Historical inventory                 | `historical-exact-paths-v1`, `historical_protection.POLICY`                                                            |
+| Endpoint closure                     | `linux-kernel-endpoint-closure-v1`, `endpoints.POLICY`                                                                 |
+| Independent authorization DTO        | `openttd-terrain-one-launch`, version 1, `OneLaunchAuthorization`                                                      |
+| Model A local policy                 | `OPERATOR_ATTENDED_LOCAL_PROOF`; REAL trust `LOCAL_OPERATOR_ATTESTED`, CONTROLLED trust `CONTROLLED_OPERATOR_ATTESTED` |
+| Proof operation                      | `openttd-15.3.tile_facts_page.single_page`                                                                             |
+| PRELAUNCH subject                    | `mode=terrain-single-page`, `state=SEALED_UNAUTHORIZED`; no separate top-level numeric schema version                  |
 
 The independent authorization DTO does not establish an installed signing issuer.
 Model A remains a separate local operator-attested policy. No new identifier or
@@ -111,16 +111,16 @@ contract requiring unauthorized metadata to reach the resolver first.
 
 ## Mandatory result gates
 
-| Gate | Independent verification and required result |
-| --- | --- |
-| `schema_valid` | Parsed canonical response/receipt; boolean true from `verify_page()` |
-| `coverage_valid` | Tiles 65–69 in order, region [1,1,5,1], cursor 0, terminal page; boolean true |
-| `native_read_evidence` | Response-correlated native marker facts; boolean true |
-| `post_yield_liveness` | Complete expected marker sequence; boolean true |
-| `response_sha256` | Exact response bytes/receipt; identical verified digest string |
-| `evidence_sha256` | Explicit validated snapshot byte range; identical verified digest string |
-| `post_run_integrity` | Source/ownership/history verification and disposal attestation; boolean true |
-| `cleanup` | Established cleanup, endpoints and disposal checks already passed; boolean true |
+| Gate                   | Independent verification and required result                                    |
+| ---------------------- | ------------------------------------------------------------------------------- |
+| `schema_valid`         | Parsed canonical response/receipt; boolean true from `verify_page()`            |
+| `coverage_valid`       | Tiles 65–69 in order, region [1,1,5,1], cursor 0, terminal page; boolean true   |
+| `native_read_evidence` | Response-correlated native marker facts; boolean true                           |
+| `post_yield_liveness`  | Complete expected marker sequence; boolean true                                 |
+| `response_sha256`      | Exact response bytes/receipt; identical verified digest string                  |
+| `evidence_sha256`      | Explicit validated snapshot byte range; identical verified digest string        |
+| `post_run_integrity`   | Source/ownership/history verification and disposal attestation; boolean true    |
+| `cleanup`              | Established cleanup, endpoints and disposal checks already passed; boolean true |
 
 Type and value must agree for the six `verify_page()` outputs. Mandatory cleanup
 and post-run gates require actual boolean true. Readiness lists and diagnostic fields
@@ -132,27 +132,27 @@ attempt can be legitimate failure evidence but cannot return successful acceptan
 Paths below are relative to `app/simulation/openttd/proof/` unless qualified.
 Tests are in `tests/`; these names identify executable regressions, not new runs.
 
-| Mandatory invariant | Evidence/authority | Verification function | Regression reference |
-| --- | --- | --- | --- |
-| Exact successful artifact set/types | Production writer contract, mode | `terrain_attempt.verify_attempt_inventory`, `verify_retained_attempt` | `test_terrain_offline_retention.py::test_exact_attempt_inventory`, `test_valid_optional_stdout_inventory` |
-| Canonical content and exact coverage | PRELAUNCH index digest, source freeze, retained objects | `terrain_retention.verify_inputs` | `test_durable_input_damage_rejects`, `test_full_production_inventory_package` |
-| Reviewed origin, exact bridge identity, no aliases | Candidate and source commitments | `retain_inputs`, `verify_inputs` | `test_exact_external_source_policy`, `test_wrong_original_source_provenance_rejects` |
-| No secret retention; runtime disposal mandatory | Reviewed public configs, workspace/key paths | retention content checks, `verify_retained_attempt`, `ownership.dispose_and_verify` | `test_secret_configuration_never_copied`, `test_private_key_not_retained_and_cleanup_mandatory` |
-| Ownership semantics and seal binding | PRELAUNCH ownership digest, graph/materializations | `verify_retained_ownership`, `OwnershipGraph.validate` | `test_ownership_semantic_challenges`, `test_ownership_substitution_defect_regression` |
-| Materialization derivation and retained origins | Ledger plus immutable candidate commitments | `verify_inputs`, `ownership.validate_ownership` | `test_full_production_inventory_package`, `test_ownership_semantic_challenges` |
-| Historical root and unchanged captured history | PRELAUNCH base/inventory digest | `explicit_protection_base`, `validate_protection`, `verify_inputs` | `test_mutable_manifests_cannot_replace_historical_base`; `test_terrain_historical_root.py` |
-| One-shot authorization, claim and invocation | Seal/attempt/destination, consumed digest, owner/trust | `verify_execution_lineage`, final prelaunch and claim routines | `test_controlled_lineage_defect_regression`; `test_terrain_model_a.py` |
-| CONTROLLED cannot authorize native execution | Explicit controlled grant, mode marker | lineage and native grant checks | `test_controlled_grant_cannot_authorize_native_process`, `test_synthetic_real_contract_rejects` |
-| REAL authenticated encrypted session | Authentication/public-key identity, sealed public config | `verify_retained_authentication` | `test_production_verifier_checks_authentication` |
-| Request/response/schema/exact coverage | Frozen request, response, receipt, marker facts | `verify_page`, `TileFactsExchange.validate` | `test_tile_facts_protocol.py`, `test_terrain_single_page_preparation.py` |
-| Snapshot and final log distinct exact scopes | `execution-log.json`, retained stderr | `terrain_logs.verify_log_record` | `test_log_scope_rejects_tampering`, `test_appended_log_production_verifier` |
-| Lifecycle frames and query counts | Accounting categories, receipt | `verify_retained_attempt` | `test_terrain_model_a.py`; `test_terrain_query.py::test_accounting_observer_mismatch_rejects_receipt` |
-| Raw/normalized cleanup consistency | Same observation phase, process/endpoints | `verify_cleanup_records` | `test_cleanup_consistency_full_verifier`, `test_real_shaped_cleanup_requires_observed_process_exit` |
-| Final endpoint identity and socket semantics | Sealed ports, final kernel rows and closure summary | `endpoints.verify_retained_endpoints` | `test_endpoint_observation_full_verifier`, `test_coordinated_cleanup_cannot_override_endpoint_observation` |
-| Successful result agrees with evidence | Result gates plus independently verified outcomes | `verify_retained_attempt` | `test_result_gate_consistency_full_verifier` |
-| Permitted original cleanup excludes persistent inputs | Ownership, protected/source/asset/retained identities | production retention plus fixture deletion guard | `test_all_permitted_temporary_originals_can_disappear`, `test_fixture_deletion_rejects_persistent_and_aliased_paths` |
-| Independent acceptance after permitted cleanup | Entire retained package and declared authorities | `verify_retained_attempt` in fresh interpreter | `test_offline_after_candidate_and_runtime_cleanup`, `test_full_production_inventory_package` |
-| Historical legacy limits remain explicit | Original retained evidence and missing sources | `inspect_legacy_attempt` | `test_historical_pass_remains_blocked_and_byte_identical` |
+| Mandatory invariant                                   | Evidence/authority                                       | Verification function                                                               | Regression reference                                                                                                 |
+| ----------------------------------------------------- | -------------------------------------------------------- | ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Exact successful artifact set/types                   | Production writer contract, mode                         | `terrain_attempt.verify_attempt_inventory`, `verify_retained_attempt`               | `test_terrain_offline_retention.py::test_exact_attempt_inventory`, `test_valid_optional_stdout_inventory`            |
+| Canonical content and exact coverage                  | PRELAUNCH index digest, source freeze, retained objects  | `terrain_retention.verify_inputs`                                                   | `test_durable_input_damage_rejects`, `test_full_production_inventory_package`                                        |
+| Reviewed origin, exact bridge identity, no aliases    | Candidate and source commitments                         | `retain_inputs`, `verify_inputs`                                                    | `test_exact_external_source_policy`, `test_wrong_original_source_provenance_rejects`                                 |
+| No secret retention; runtime disposal mandatory       | Reviewed public configs, workspace/key paths             | retention content checks, `verify_retained_attempt`, `ownership.dispose_and_verify` | `test_secret_configuration_never_copied`, `test_private_key_not_retained_and_cleanup_mandatory`                      |
+| Ownership semantics and seal binding                  | PRELAUNCH ownership digest, graph/materializations       | `verify_retained_ownership`, `OwnershipGraph.validate`                              | `test_ownership_semantic_challenges`, `test_ownership_substitution_defect_regression`                                |
+| Materialization derivation and retained origins       | Ledger plus immutable candidate commitments              | `verify_inputs`, `ownership.validate_ownership`                                     | `test_full_production_inventory_package`, `test_ownership_semantic_challenges`                                       |
+| Historical root and unchanged captured history        | PRELAUNCH base/inventory digest                          | `explicit_protection_base`, `validate_protection`, `verify_inputs`                  | `test_mutable_manifests_cannot_replace_historical_base`; `test_terrain_historical_root.py`                           |
+| One-shot authorization, claim and invocation          | Seal/attempt/destination, consumed digest, owner/trust   | `verify_execution_lineage`, final prelaunch and claim routines                      | `test_controlled_lineage_defect_regression`; `test_terrain_model_a.py`                                               |
+| CONTROLLED cannot authorize native execution          | Explicit controlled grant, mode marker                   | lineage and native grant checks                                                     | `test_controlled_grant_cannot_authorize_native_process`, `test_synthetic_real_contract_rejects`                      |
+| REAL authenticated encrypted session                  | Authentication/public-key identity, sealed public config | `verify_retained_authentication`                                                    | `test_production_verifier_checks_authentication`                                                                     |
+| Request/response/schema/exact coverage                | Frozen request, response, receipt, marker facts          | `verify_page`, `TileFactsExchange.validate`                                         | `test_tile_facts_protocol.py`, `test_terrain_single_page_preparation.py`                                             |
+| Snapshot and final log distinct exact scopes          | `execution-log.json`, retained stderr                    | `terrain_logs.verify_log_record`                                                    | `test_log_scope_rejects_tampering`, `test_appended_log_production_verifier`                                          |
+| Lifecycle frames and query counts                     | Accounting categories, receipt                           | `verify_retained_attempt`                                                           | `test_terrain_model_a.py`; `test_terrain_query.py::test_accounting_observer_mismatch_rejects_receipt`                |
+| Raw/normalized cleanup consistency                    | Same observation phase, process/endpoints                | `verify_cleanup_records`                                                            | `test_cleanup_consistency_full_verifier`, `test_real_shaped_cleanup_requires_observed_process_exit`                  |
+| Final endpoint identity and socket semantics          | Sealed ports, final kernel rows and closure summary      | `endpoints.verify_retained_endpoints`                                               | `test_endpoint_observation_full_verifier`, `test_coordinated_cleanup_cannot_override_endpoint_observation`           |
+| Successful result agrees with evidence                | Result gates plus independently verified outcomes        | `verify_retained_attempt`                                                           | `test_result_gate_consistency_full_verifier`                                                                         |
+| Permitted original cleanup excludes persistent inputs | Ownership, protected/source/asset/retained identities    | production retention plus fixture deletion guard                                    | `test_all_permitted_temporary_originals_can_disappear`, `test_fixture_deletion_rejects_persistent_and_aliased_paths` |
+| Independent acceptance after permitted cleanup        | Entire retained package and declared authorities         | `verify_retained_attempt` in fresh interpreter                                      | `test_offline_after_candidate_and_runtime_cleanup`, `test_full_production_inventory_package`                         |
+| Historical legacy limits remain explicit              | Original retained evidence and missing sources           | `inspect_legacy_attempt`                                                            | `test_historical_pass_remains_blocked_and_byte_identical`                                                            |
 
 ## Independent audit summary and archival limitation
 
@@ -160,10 +160,10 @@ The completed audit verdict is 24 PASS, 0 DEFECT, 0 INCONCLUSIVE, 0 NOT_TESTED.
 In the final adjudication, 23 PASS cases were carried forward. The remaining root
 case became PASS through two independent propositions:
 
-| Proposition | Newly executed evidence | Boundary and result |
-| --- | --- | --- |
-| Unauthorized root substitution | Two full-verifier calls, mutable manifests recomputed, immutable authority unchanged | `verify_inputs`: immutable historical digest rejection twice |
-| Authorized root path/integrity guarantees | 13 isolated production-function checks | Valid base, cwd independence and bytes accepted; relative/wrong/missing/traversal/symlink/ambiguous identities and changed/missing history rejected |
+| Proposition                               | Newly executed evidence                                                              | Boundary and result                                                                                                                                 |
+| ----------------------------------------- | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Unauthorized root substitution            | Two full-verifier calls, mutable manifests recomputed, immutable authority unchanged | `verify_inputs`: immutable historical digest rejection twice                                                                                        |
+| Authorized root path/integrity guarantees | 13 isolated production-function checks                                               | Valid base, cwd independence and bytes accepted; relative/wrong/missing/traversal/symlink/ambiguous identities and changed/missing history rejected |
 
 A fresh production CONTROLLED package had 188 canonical identities and accepted
 before cleanup, after cleanup and in a fresh interpreter. The final quality gates

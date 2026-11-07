@@ -76,11 +76,11 @@ observation. The coordinator always executes canonical request order.
 
 ## Bounds and continuous accounting
 
-| Bound | Structural | Production | Combined |
-| --- | ---: | ---: | ---: |
-| Application requests | 96 | 512 | 608 |
-| Response bytes | 49152 | 171520 | 220672 |
-| Abstract query operations | 1024 | 4096 | 5120 |
+| Bound                     | Structural | Production | Combined |
+| ------------------------- | ---------: | ---------: | -------: |
+| Application requests      |         96 |        512 |      608 |
+| Response bytes            |      49152 |     171520 |   220672 |
+| Abstract query operations |       1024 |       4096 |     5120 |
 
 Production has at most 32 industries × 16 native output slots = 512 pairs.
 512 × 335 = 171520 response bytes. Combined bounds are 96 + 512 = 608 and

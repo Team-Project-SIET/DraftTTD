@@ -31,17 +31,17 @@ from retained evidence; code does not hardcode them.
 
 ## Verified limits vs current code
 
-| Limit | Where enforced |
-|---|---|
-| Random capture 512 completely observed tiles/profile `random-rectangle-512-v1` | `MAX_RANDOM_TILES=512` (`supplemental_planning_facts.py`); `RandomCaptureRegion` (≤512, exact-tile completeness validator); `DemoBudgets.capture_tile_limit: Literal[256,512]` (`demo_random.py`) |
-| Fixed-demo capture 256 tiles; legacy identity preserved | `Region.tile_limit=MAX_TILES=256`; `DemoBudgets.from_sealed` re-pins 256 for old packets; fixed staging bytes unchanged |
-| ≤546 reads/relationship (512 tiles + settings + engines list + ≤32 engine details), 45 s deadline | `capture_planning_facts` request budget `tile_limit+34` and `asyncio.timeout_at` deadline (`freight_runtime_planning.py`); `capture_seconds=45` |
-| Global staged read guard 8769 = `(512+36)×16+1` | `DemoBudgets.supplemental_request_limit`; staged bridge `planner_requests>=…` seam (`demo_random_native.stage_random`) |
-| Replies ≤512 bytes; 19 ints per tile reply | `PlanningReadback.parse_for` (512-byte + exact data shape; tile=19); GameScript `planner.nut` tile branch |
-| Native corridor 2..47 road tiles, excluded before P05 | `freight_planning.ServicePath` (2..47), `network_from_facts` `NATIVE_CORRIDOR_BOUND`, bridge `PLANNER_TOPOLOGY_REJECTED (tiles.len()>47)` |
-| ≤8 services/vehicles, ≤16 candidate relationships | `DemoBudgets` bounds; `MAX_SERVICE_PACKAGES=16` (`p08_network.py`); `compile_freight_network` 1..8 routes |
-| Industry observation ceiling 32 | `MAX_INDUSTRY_RECORDS=32` (`industry_inventory.py`); structural phase ceilings (`structural_world.py`) |
-| One full-capacity vehicle per service | `compile_freight_network` rejects `group.count != 1` / capacity mismatch (`freight_planning.py`) |
+| Limit                                                                                             | Where enforced                                                                                                                                                                                    |
+| ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Random capture 512 completely observed tiles/profile `random-rectangle-512-v1`                    | `MAX_RANDOM_TILES=512` (`supplemental_planning_facts.py`); `RandomCaptureRegion` (≤512, exact-tile completeness validator); `DemoBudgets.capture_tile_limit: Literal[256,512]` (`demo_random.py`) |
+| Fixed-demo capture 256 tiles; legacy identity preserved                                           | `Region.tile_limit=MAX_TILES=256`; `DemoBudgets.from_sealed` re-pins 256 for old packets; fixed staging bytes unchanged                                                                           |
+| ≤546 reads/relationship (512 tiles + settings + engines list + ≤32 engine details), 45 s deadline | `capture_planning_facts` request budget `tile_limit+34` and `asyncio.timeout_at` deadline (`freight_runtime_planning.py`); `capture_seconds=45`                                                   |
+| Global staged read guard 8769 = `(512+36)×16+1`                                                   | `DemoBudgets.supplemental_request_limit`; staged bridge `planner_requests>=…` seam (`demo_random_native.stage_random`)                                                                            |
+| Replies ≤512 bytes; 19 ints per tile reply                                                        | `PlanningReadback.parse_for` (512-byte + exact data shape; tile=19); GameScript `planner.nut` tile branch                                                                                         |
+| Native corridor 2..47 road tiles, excluded before P05                                             | `freight_planning.ServicePath` (2..47), `network_from_facts` `NATIVE_CORRIDOR_BOUND`, bridge `PLANNER_TOPOLOGY_REJECTED (tiles.len()>47)`                                                         |
+| ≤8 services/vehicles, ≤16 candidate relationships                                                 | `DemoBudgets` bounds; `MAX_SERVICE_PACKAGES=16` (`p08_network.py`); `compile_freight_network` 1..8 routes                                                                                         |
+| Industry observation ceiling 32                                                                   | `MAX_INDUSTRY_RECORDS=32` (`industry_inventory.py`); structural phase ceilings (`structural_world.py`)                                                                                            |
+| One full-capacity vehicle per service                                                             | `compile_freight_network` rejects `group.count != 1` / capacity mismatch (`freight_planning.py`)                                                                                                  |
 
 ## Pipeline stages and ownership
 

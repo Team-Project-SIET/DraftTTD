@@ -19,11 +19,11 @@ historical version-one 512-byte response bound (`corridor_construction.py`,
 
 During `op-06` the retained depot response had a 517-byte Admin frame:
 
-| Layer | Bytes |
-|---|---:|
-| Admin frame (2-byte length + 1-byte packet ID + body) | 517 |
-| Body (513-byte UTF-8 JSON + terminating NUL) | 514 |
-| Application JSON payload | 513 |
+| Layer                                                 | Bytes |
+| ----------------------------------------------------- | ----: |
+| Admin frame (2-byte length + 1-byte packet ID + body) |   517 |
+| Body (513-byte UTF-8 JSON + terminating NUL)          |   514 |
+| Application JSON payload                              |   513 |
 
 The payload is valid under the protocol-4 contract but exceeded the decoder's
 hard-coded 512-byte check, so `decode_gamescript` raised
@@ -62,14 +62,14 @@ fail closed.
 
 ## Changed files
 
-| File | Change |
-|---|---|
-| `app/simulation/openttd/gamescript_transport.py` | Opt-in validated `max_payload_bytes` for encode/decode; default 512 preserved; absolute frame-body ceiling 32763 |
-| `app/simulation/openttd/corridor_construction.py` | Shared protocol-4 request/response constants; `parse_for()` and `to_bytes()` use them |
-| `app/simulation/openttd/proof/corridor_construction_native.py` | Corridor live exchange and retained-frame replay decode responses under the 640-byte protocol-4 bound |
-| `tests/test_gamescript_transport.py` | Default-limit preservation, 513/640/641 boundaries, multibyte UTF-8 byte counting, invalid bounds, malformed bodies, 32767-byte frame boundary |
-| `tests/test_corridor_construction.py` | Retained candidate-4 depot frame regression, inclusive 640 / one-over 641, malformed/truncated/duplicate/invalid-UTF-8 responses |
-| `tests/test_corridor_construction_native.py` | Retained candidate-4 replay now decodes the 513-byte depot reply and stops at the next honest missing-evidence refusal |
+| File                                                           | Change                                                                                                                                         |
+| -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `app/simulation/openttd/gamescript_transport.py`               | Opt-in validated `max_payload_bytes` for encode/decode; default 512 preserved; absolute frame-body ceiling 32763                               |
+| `app/simulation/openttd/corridor_construction.py`              | Shared protocol-4 request/response constants; `parse_for()` and `to_bytes()` use them                                                          |
+| `app/simulation/openttd/proof/corridor_construction_native.py` | Corridor live exchange and retained-frame replay decode responses under the 640-byte protocol-4 bound                                          |
+| `tests/test_gamescript_transport.py`                           | Default-limit preservation, 513/640/641 boundaries, multibyte UTF-8 byte counting, invalid bounds, malformed bodies, 32767-byte frame boundary |
+| `tests/test_corridor_construction.py`                          | Retained candidate-4 depot frame regression, inclusive 640 / one-over 641, malformed/truncated/duplicate/invalid-UTF-8 responses               |
+| `tests/test_corridor_construction_native.py`                   | Retained candidate-4 replay now decodes the 513-byte depot reply and stops at the next honest missing-evidence refusal                         |
 
 ## Validation (actually run)
 

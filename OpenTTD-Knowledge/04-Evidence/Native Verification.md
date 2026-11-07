@@ -1,12 +1,14 @@
 ---
+
 title: "Native Verification"
 type: evidence
 status: current
 updated: 2026-10-26
 tags:
-  - openttd
-  - evidence
-  - native
+- openttd
+- evidence
+- native
+
 ---
 
 # Native Verification
@@ -26,17 +28,17 @@ What "VERIFIED"/"PROVEN" means and exactly which native behaviors are covered.
 
 ## Natively verified behaviors (in exact scope)
 
-| # | Behavior | Where proven | Scope boundary |
-|---|---|---|---|
-| N1 | Full freight MVP loop: encrypt AdminPort, preamble, construct depot+roads+stops, purchase trucks, orders, loading, delivery, payment, per-service income readback | E1 (fixed demo, checkpoint `a348016`); E-attempt lineage 4/9/12/17 | One company; serial batches; one vehicle/service; bounded worlds; no direct player control; revenue≠profit; OPEX/ROI UNKNOWN |
-| N2 | AdminPort round trip: request → `GSEventAdminPort` → `GSAdmin.Send` ACK correlated by `request_id` | CONTEXT §22 initial transport proof | No game-world mutation in that proof |
-| N3 | Canonical constructed fleet save + fresh-process reload correspondence | E2 (Q3 create + reload) | Reload-only; no purchase/dispatch/unpause |
-| N4 | Single-tile tree clearing (`GSTile.DemolishTile`, £15 cost accounting) | E17 (D2, tile 46769) | Exactly one tile in retained Seed 17 world |
-| N5 | Bounded levelling: 2 clears + 16 compiled S-corner raises with per-op readbacks | E19 (D3) | Pre-defined corridor tiles only; £496,543 reconciliation |
-| N6 | Encrypted schema-2 paginated tile-classification census (450 tiles/90 pages) | E14(failed→E15 repaired)/E16 (completed) | Capture only; SOURCE_SAVE_FUSION REJECTED; no fused world model |
-| N7 | Random world native generation, discovery, spectator navigation, GUI inspection | E4, E8 (Seed 17) | No service construction/delivery; P05 NOT_RUN in smoke; funding mutation separate |
-| N8 | Same-run qualification + production observation (two-rollover) | CONTEXT §20 Attempt 2 native phase | Overall attempt FAILED (post-run verification failed) — do not cite as passed qualification |
-| N9 | Corridor construction on the pre-defined post-D3 site: two road runs (5 + 9 + 8 tiles), perpendicular corner join, two truck stops, depot — every op with positive tested quote equal to native cost and its own independent readback, route observation of the 23-pair witness | E35 (D4, candidate-5) | Exactly the reviewed v3 schedule over the receipt-verified post-D3 Seed 17 world; stops/depot built, no vehicle, order or delivery claim; OPEX/ROI UNKNOWN |
+| #   | Behavior                                                                                                                                                                                                                                                                        | Where proven                                                       | Scope boundary                                                                                                                                             |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| N1  | Full freight MVP loop: encrypt AdminPort, preamble, construct depot+roads+stops, purchase trucks, orders, loading, delivery, payment, per-service income readback                                                                                                               | E1 (fixed demo, checkpoint `a348016`); E-attempt lineage 4/9/12/17 | One company; serial batches; one vehicle/service; bounded worlds; no direct player control; revenue≠profit; OPEX/ROI UNKNOWN                               |
+| N2  | AdminPort round trip: request → `GSEventAdminPort` → `GSAdmin.Send` ACK correlated by `request_id`                                                                                                                                                                              | CONTEXT §22 initial transport proof                                | No game-world mutation in that proof                                                                                                                       |
+| N3  | Canonical constructed fleet save + fresh-process reload correspondence                                                                                                                                                                                                          | E2 (Q3 create + reload)                                            | Reload-only; no purchase/dispatch/unpause                                                                                                                  |
+| N4  | Single-tile tree clearing (`GSTile.DemolishTile`, £15 cost accounting)                                                                                                                                                                                                          | E17 (D2, tile 46769)                                               | Exactly one tile in retained Seed 17 world                                                                                                                 |
+| N5  | Bounded levelling: 2 clears + 16 compiled S-corner raises with per-op readbacks                                                                                                                                                                                                 | E19 (D3)                                                           | Pre-defined corridor tiles only; £496,543 reconciliation                                                                                                   |
+| N6  | Encrypted schema-2 paginated tile-classification census (450 tiles/90 pages)                                                                                                                                                                                                    | E14(failed→E15 repaired)/E16 (completed)                           | Capture only; SOURCE_SAVE_FUSION REJECTED; no fused world model                                                                                            |
+| N7  | Random world native generation, discovery, spectator navigation, GUI inspection                                                                                                                                                                                                 | E4, E8 (Seed 17)                                                   | No service construction/delivery; P05 NOT_RUN in smoke; funding mutation separate                                                                          |
+| N8  | Same-run qualification + production observation (two-rollover)                                                                                                                                                                                                                  | CONTEXT §20 Attempt 2 native phase                                 | Overall attempt FAILED (post-run verification failed) — do not cite as passed qualification                                                                |
+| N9  | Corridor construction on the pre-defined post-D3 site: two road runs (5 + 9 + 8 tiles), perpendicular corner join, two truck stops, depot — every op with positive tested quote equal to native cost and its own independent readback, route observation of the 23-pair witness | E35 (D4, candidate-5)                                              | Exactly the reviewed v3 schedule over the receipt-verified post-D3 Seed 17 world; stops/depot built, no vehicle, order or delivery claim; OPEX/ROI UNKNOWN |
 
 ## What native verification requires (the D-ceremony chain)
 

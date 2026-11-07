@@ -27,17 +27,17 @@ completion doc preflight; the launch argv equals the sealed records:
 
 ## Execution (all numbers read from the retained artifacts)
 
-| Item | Result |
-|---|---|
-| Launches / connections | 1 / 1, encrypted X25519 admin (`result.json.auth.state=ACTIVE`), pid 118415 |
-| Welcome identity | revision `15.3`, seed `17`, 256×256, landscape 0, dedicated (`runtime-identity.json`) — `world_identity_mismatch: false` |
-| Census | 90/90 pages requested and exchanged, 2 bands (`[170,171,15,17]` + `[170,188,15,13]` over the 15×30 = 450-tile region), schema 2, protocol version 3 |
-| Coverage | 450/450 tiles classified; fresh classes CLEAR 359, TREES 52, WATER 17, INDUSTRY 12, ROUGH 10; `unknown_tiles: []` in the fresh census |
-| Bytes | 33,613 total response bytes = the sum over the 90 retained envelopes; max page 381 B ≤ 508; max request 142 B ≤ 159; total ≤ 52,324 budget |
-| GameScript/AI startup | `[18] BRIDGE_STARTED protocol=1 api=15`; staged AI package `RoadProofCompany` started (`[0] [I] ROAD_PROOF_COMPANY_READY`); **zero** `The script died` lines and **zero** `[E]` lines for this run (contrast [E14]) |
-| Mutations | 0 |
-| Cleanup | completed: `quit_requested`, reaped returncode 0, sockets closed, listener closed, credential removed, reservation released, workspace disposed (`cleanup.json`) — cleaning PASSED this time |
-| Script liveness | `BRIDGE_REQUEST_RECEIVED`/`TILE_CLASSIFICATION_READ`/`BRIDGE_RESPONSE_SENT`/`BRIDGE_POST_RESPONSE_ALIVE` cycles through page 89 (`has_more: false`); `(request_id="seed17-tile-classification-v2", region, cursor)` keying exercised for all 90 pages |
+| Item                   | Result                                                                                                                                                                                                                                                |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Launches / connections | 1 / 1, encrypted X25519 admin (`result.json.auth.state=ACTIVE`), pid 118415                                                                                                                                                                           |
+| Welcome identity       | revision `15.3`, seed `17`, 256×256, landscape 0, dedicated (`runtime-identity.json`) — `world_identity_mismatch: false`                                                                                                                              |
+| Census                 | 90/90 pages requested and exchanged, 2 bands (`[170,171,15,17]` + `[170,188,15,13]` over the 15×30 = 450-tile region), schema 2, protocol version 3                                                                                                   |
+| Coverage               | 450/450 tiles classified; fresh classes CLEAR 359, TREES 52, WATER 17, INDUSTRY 12, ROUGH 10; `unknown_tiles: []` in the fresh census                                                                                                                 |
+| Bytes                  | 33,613 total response bytes = the sum over the 90 retained envelopes; max page 381 B ≤ 508; max request 142 B ≤ 159; total ≤ 52,324 budget                                                                                                            |
+| GameScript/AI startup  | `[18] BRIDGE_STARTED protocol=1 api=15`; staged AI package `RoadProofCompany` started (`[0] [I] ROAD_PROOF_COMPANY_READY`); **zero** `The script died` lines and **zero** `[E]` lines for this run (contrast [E14])                                   |
+| Mutations              | 0                                                                                                                                                                                                                                                     |
+| Cleanup                | completed: `quit_requested`, reaped returncode 0, sockets closed, listener closed, credential removed, reservation released, workspace disposed (`cleanup.json`) — cleaning PASSED this time                                                          |
+| Script liveness        | `BRIDGE_REQUEST_RECEIVED`/`TILE_CLASSIFICATION_READ`/`BRIDGE_RESPONSE_SENT`/`BRIDGE_POST_RESPONSE_ALIVE` cycles through page 89 (`has_more: false`); `(request_id="seed17-tile-classification-v2", region, cursor)` keying exercised for all 90 pages |
 
 ## Correspondence verdict (the decisive outcome)
 
@@ -112,18 +112,18 @@ launch) reproduced the run on 2026-10-18:
 
 ## Evidence inventory (all inside `artifacts/demos/classification-exec-seed17-3a8f9e46/`)
 
-| File | Meaning |
-|---|---|
-| `result.json` | Terminal capture result (`TILE_CLASSIFICATION_V2_CAPTURED_INCOHERENT`, verdict REJECTED, 83 disagreements) |
-| `correspondence-verdict.json` | Read-only duplicate of the verdict inside `result.json` |
-| `classification-completeness.json` | Machine-readable census summary (90 pages/450 tiles/83 coherence failures/retained-facts digest) |
-| `classification-receipts.json` + `classification-p000..p089-request/-response.json` | Per-page correlation receipts and exact request/response bytes |
-| `artifact-manifest.sha256` | SHA-256 manifest over all 200 candidate files |
-| `CLAIM.json` | Consumed claim (1 launch, 0 retries) |
-| `PRELAUNCH.json` + `PRELAUNCH.sha256`, `CANDIDATE.json`, `AUTHORIZATION_REQUIRED.json`, `save-correspondence.json`, `runtime-identity.json`, `graphics-identity.json`, `same-session-accounting.json` | Sealed pre-launch identity chain of the repaired candidate |
-| `stdout.log`, `stderr.log` | Native logs (Startup AI/GameScript markers; final admin disconnect + graceful shutdown) |
-| `cleanup.json` | Completed cleanup verification (contrast [E14]) |
-| `isolated/` | Workspace disposal remnants of the owned isolated runtime |
+| File                                                                                                                                                                                                  | Meaning                                                                                                    |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `result.json`                                                                                                                                                                                         | Terminal capture result (`TILE_CLASSIFICATION_V2_CAPTURED_INCOHERENT`, verdict REJECTED, 83 disagreements) |
+| `correspondence-verdict.json`                                                                                                                                                                         | Read-only duplicate of the verdict inside `result.json`                                                    |
+| `classification-completeness.json`                                                                                                                                                                    | Machine-readable census summary (90 pages/450 tiles/83 coherence failures/retained-facts digest)           |
+| `classification-receipts.json` + `classification-p000..p089-request/-response.json`                                                                                                                   | Per-page correlation receipts and exact request/response bytes                                             |
+| `artifact-manifest.sha256`                                                                                                                                                                            | SHA-256 manifest over all 200 candidate files                                                              |
+| `CLAIM.json`                                                                                                                                                                                          | Consumed claim (1 launch, 0 retries)                                                                       |
+| `PRELAUNCH.json` + `PRELAUNCH.sha256`, `CANDIDATE.json`, `AUTHORIZATION_REQUIRED.json`, `save-correspondence.json`, `runtime-identity.json`, `graphics-identity.json`, `same-session-accounting.json` | Sealed pre-launch identity chain of the repaired candidate                                                 |
+| `stdout.log`, `stderr.log`                                                                                                                                                                            | Native logs (Startup AI/GameScript markers; final admin disconnect + graceful shutdown)                    |
+| `cleanup.json`                                                                                                                                                                                        | Completed cleanup verification (contrast [E14])                                                            |
+| `isolated/`                                                                                                                                                                                           | Workspace disposal remnants of the owned isolated runtime                                                  |
 
 Consumed attempt evidence is retained in place; no historical or frozen records
 were modified by this capture or by this documentation.
