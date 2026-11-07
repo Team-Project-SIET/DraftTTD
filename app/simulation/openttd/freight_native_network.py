@@ -500,14 +500,22 @@ def network_route_readback(log_path, native, service):
     )
 
 
-def service_construction(plan, records, reused_stages=(), *, log_path=None, network_plans=()):
+def service_construction(
+    plan, records, reused_stages=(), *, log_path=None, network_plans=(), foreign_plans=()
+):
     from app.simulation.openttd.proof.freight_delivery import (
         command_readback_evidence,
         construction_evidence,
     )
 
     commands = (
-        command_readback_evidence(log_path, plan, records, network_plans=network_plans)
+        command_readback_evidence(
+            log_path,
+            plan,
+            records,
+            network_plans=network_plans,
+            foreign_plans=foreign_plans,
+        )
         if log_path is not None
         else {}
     )
@@ -979,7 +987,16 @@ async def execute_capacity_intervention(prepared, session, plans, receipts, meta
 
 
 async def execute_network(
-    backend, prepared, session, accounting, before, seal, metadata, result, exclude=()
+    backend,
+    prepared,
+    session,
+    accounting,
+    before,
+    seal,
+    metadata,
+    result,
+    exclude=(),
+    foreign_plans=(),
 ):
     validate_game_time_version(metadata)
     from app.simulation.openttd.proof.freight_delivery import exchange
@@ -988,10 +1005,14 @@ async def execute_network(
     network, execution, services, source_save = await plan_network_world(
         backend, prepared, session, accounting, before, metadata["delivery_batch_limit"], exclude
     )
-    result["supplemental_requests"] = backend.planning_read_count
+    # Loop products re-collect per cycle; accumulate so the sealed volume budget
+    # is one total for the attempt (single-cycle runs keep the legacy values).
+    result["supplemental_requests"] = (
+        result.get("supplemental_requests", 0) + backend.planning_read_count
+    )
     result["selected_services"] = [i for i, _ in services]
     require_selected_service_count(metadata, services)
-    result["qualification_requests"] = sum(
+    result["qualification_requests"] = result.get("qualification_requests", 0) + sum(
         v[0] for _, v in services[0][1].road.input.admitted.world.qualification.evidence.phase_usage
     )
     admissions, plans, bindings = [], [], []
@@ -1055,6 +1076,7 @@ async def execute_network(
                     reused_stages=shared_stages(execution, services, n),
                     log_path=prepared.spec.workspace.logs / "stderr.log",
                     network_plans=tuple(p.digest for p in plans),
+                    foreign_plans=tuple(foreign_plans),
                 )
             )
             receipt.update(
@@ -1080,6 +1102,7 @@ async def execute_network(
                 reused_stages=shared_stages(execution, services, n),
                 log_path=prepared.spec.workspace.logs / "stderr.log",
                 network_plans=tuple(p.digest for p in plans),
+                foreign_plans=tuple(foreign_plans),
             )
         )
         receipt.update(
@@ -1184,33 +1207,22 @@ def replay_network_capture(directory, world, metadata):
     return facts
 
 
-def verify_network_receipt(
-    directory: Path,
-    *,
-    return_network=False,
-    allow_continuous_partial=False,
-    recovery_directory=None,
-):
-    """Independent retained readback replay; never creates a process or connection."""
+def _replay_network_world(directory, *, recovery=None):
+    """Shared retained-readback prologue of every network verify path.
+
+    Replays the qualified world, bounded captures and planned decision of a
+    retained directory; never creates a process or connection. Raises the same
+    typed errors as the pre-split verify flow."""
     from app.simulation.openttd.freight_planning_replay import replay_qualified_world
     from app.simulation.openttd.freight_runtime_planning import _ISSUER, NativeSaveCorrespondence
     from app.simulation.openttd.prepared_source_correspondence import (
         ControlledSourceLinks,
         PreparedSourceCorrespondence,
     )
-    from app.simulation.openttd.proof.endpoints import verify_retained_endpoints
-    from app.simulation.openttd.proof.freight_delivery import (
-        network_budgets,
-    )
+    from app.simulation.openttd.proof.freight_delivery import network_budgets
 
-    directory = directory.resolve()
     if manifest(directory) != (directory / "artifact-manifest.sha256").read_text():
         raise ValueError("network artifact manifest mismatch")
-    recovery = None
-    if recovery_directory is not None:
-        from app.simulation.openttd.freight_continuous import verify_recovery_metadata
-
-        recovery = verify_recovery_metadata(directory, recovery_directory)
     metadata = json.loads((directory / "PRELAUNCH.json").read_bytes())
     validate_game_time_version(metadata)
     validate_financial_reconciliation_version(metadata)
@@ -1224,6 +1236,7 @@ def verify_network_receipt(
             capacity_telemetry=metadata.get("capacity_telemetry"),
             capacity_intervention=metadata.get("capacity_intervention"),
             random_budget=metadata.get("random_budget"),
+            loop_cycles=metadata.get("loop_cycles", 1),
         )
         or seal != (directory / "PRELAUNCH.sha256").read_text().strip()
     ):
@@ -1319,6 +1332,28 @@ def verify_network_receipt(
         "delivery_batch_limit"
     ] or policy.budget_gbp != Decimal(metadata.get("planning_budget_gbp", "100000")):
         raise ValueError("network batch differs from prelaunch")
+    return metadata, seal, world, facts, links, cleanup, source, policy
+
+
+def verify_network_receipt(
+    directory: Path,
+    *,
+    return_network=False,
+    allow_continuous_partial=False,
+    recovery_directory=None,
+    exclude=(),
+    foreign_plans=(),
+):
+    """Independent retained readback replay; never creates a process or connection."""
+    directory = directory.resolve()
+    recovery = None
+    if recovery_directory is not None:
+        from app.simulation.openttd.freight_continuous import verify_recovery_metadata
+
+        recovery = verify_recovery_metadata(directory, recovery_directory)
+    metadata, seal, world, facts, links, cleanup, source, policy = _replay_network_world(
+        directory, recovery=recovery
+    )
     network = network_from_facts(
         world,
         facts,
@@ -1326,6 +1361,7 @@ def verify_network_receipt(
         policy,
         max_vehicles=metadata.get("network_service_limit", 2),
         service_batches=bool(metadata.get("random_world")),
+        exclude=exclude,
     )
     plan = ExecutionPlan.model_validate_json((directory / "execution-plan.json").read_bytes())
     scenario = PlanningScenario.model_validate_json(
@@ -1413,6 +1449,7 @@ def verify_network_receipt(
                 reused_stages=shared_stages(plan, services, n),
                 log_path=directory / "stderr.log",
                 network_plans=all_plans,
+                foreign_plans=tuple(foreign_plans),
             )
         )
         receipt.update(network_route_readback(directory / "stderr.log", native, service))
@@ -1455,11 +1492,15 @@ def verify_network_receipt(
     ):
         verify_financial_reconciliation(directory, records, aggregate)
     result = json.loads((directory / "result.json").read_bytes())
-    if metadata.get("scenario") and (
-        result.get("funding_requests"),
-        result.get("funding_mutations"),
-    ) != (2, 1):
-        raise ValueError("network funding accounting mismatch")
+    # Attempt-level funding is recorded once, on the connection that actually
+    # funded (loop cycle 1 or the single network connection); its request and
+    # response files only exist in that directory.
+    if metadata.get("scenario") and (directory / "capital-read-response.json").exists():
+        if (
+            result.get("funding_requests"),
+            result.get("funding_mutations"),
+        ) != (2, 1):
+            raise ValueError("network funding accounting mismatch")
     if (
         (
             result["launches"],
@@ -1478,6 +1519,8 @@ def verify_network_receipt(
         raise ValueError("network execution or cleanup incomplete")
     if result.get("supplemental_requests", 0) > metadata["budgets"]["supplemental_requests"]:
         raise ValueError("network supplemental request budget exceeded")
+    from app.simulation.openttd.proof.endpoints import verify_retained_endpoints
+
     verify_retained_endpoints(
         cleanup["endpoint_verification"],
         metadata | {"endpoints": [metadata["game_port"], metadata["admin_port"]]},
@@ -1487,6 +1530,52 @@ def verify_network_receipt(
         if logs.count("Map successfully saved to '" + str(directory / (name + ".sav"))) != 1:
             raise ValueError("network unique native save completion missing")
     return (aggregate, network) if return_network else aggregate
+
+
+def verify_loop_zero_service_cycle(directory, *, expected_error, exclude=()):
+    """Independent replay of a loop cycle that recorded zero services.
+
+    Replays the same qualified world, captures and planning decision; the typed
+    zero-service failure must reproduce exactly. Selected services instead of
+    the recorded failure, or any other typed error, refuses the cycle."""
+    directory = directory.resolve()
+    metadata, _, world, facts, links, cleanup, source, policy = _replay_network_world(directory)
+    try:
+        network_from_facts(
+            world,
+            facts,
+            source,
+            policy,
+            max_vehicles=metadata.get("network_service_limit", 2),
+            service_batches=bool(metadata.get("random_world")),
+            exclude=exclude,
+        )
+    except ValueError as error:
+        if str(error) != expected_error:
+            raise ValueError(
+                "loop zero-service typed error does not replay: expected "
+                + repr(expected_error)
+                + ", got "
+                + repr(str(error))
+            ) from error
+    else:
+        raise ValueError("loop zero-service cycle replays feasible services instead")
+    diagnostic = json.loads((directory / "planning-diagnostic.json").read_bytes())
+    if (
+        diagnostic.get("status") != "FAILED"
+        or diagnostic.get("error") != "ValueError: " + expected_error
+        or diagnostic.get("captured_relationships") != len(facts)
+    ):
+        raise ValueError("loop zero-service planning diagnostic mismatch")
+    if (
+        not cleanup.get("reaped")
+        or not cleanup.get("workspace_disposed")
+        or not cleanup.get("credential_removed")
+        or cleanup.get("cleanup_error")
+        or cleanup.get("verification_error")
+    ):
+        raise ValueError("loop zero-service cycle cleanup incomplete")
+    return dict(status="ZERO_SERVICE_REPLAYED", error=expected_error, captured=len(facts))
 
 
 def verified_exchanges(directory, *, allow_continuous_partial=False):

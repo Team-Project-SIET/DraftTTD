@@ -137,9 +137,7 @@ def loop_scaled_budgets(budgets, loop_cycles):
     if loop_cycles == 1:
         return budgets
     return budgets | {
-        key: budgets[key] * loop_cycles
-        for key in _LOOP_CYCLED_BUDGET_KEYS
-        if key in budgets
+        key: budgets[key] * loop_cycles for key in _LOOP_CYCLED_BUDGET_KEYS if key in budgets
     }
 
 
@@ -368,8 +366,9 @@ def staged_package(
         out["delivery.nut"] = out["delivery.nut"].replace(
             b"drequests>=26",
             (
-                "drequests>=%d"
-                % network_budgets(network_service_limit, loop_cycles=loop_cycles)["requests"]
+                "drequests>={}".format(
+                    network_budgets(network_service_limit, loop_cycles=loop_cycles)["requests"]
+                )
             ).encode(),
         )
         out["delivery.nut"] = out["delivery.nut"].replace(
@@ -708,7 +707,10 @@ def prepare(
     elif random_budget is not None:
         raise ValueError("random budgets require random world")
     network_budgets(
-        network_service_limit, continuous_years, random_budget=random_budget, loop_cycles=loop_cycles
+        network_service_limit,
+        continuous_years,
+        random_budget=random_budget,
+        loop_cycles=loop_cycles,
     )
     if continuous_years is not None and (not network or finance_only):
         raise ValueError("continuous years requires three-service network operation")
@@ -1382,8 +1384,13 @@ def construction_evidence(
     return evidence
 
 
-def command_readback_evidence(log_path, plan, records, *, network_plans=()):
-    """Replay bounded native command outcomes; failures remain failures."""
+def command_readback_evidence(log_path, plan, records, *, network_plans=(), foreign_plans=()):
+    """Replay bounded native command outcomes; failures remain failures.
+
+    ``network_plans`` are the other plans of the same session whose construction
+    blocks share the stream; ``foreign_plans`` are prior loop cycles' plan
+    digests, recorded on the same one server log, whose lines must be skipped
+    without ever being attributed to this plan."""
     stages = []
     commands = []
     for line in log_path.read_text().splitlines():
@@ -1393,7 +1400,7 @@ def command_readback_evidence(log_path, plan, records, *, network_plans=()):
         data = dict(item.split("=", 1) for item in match[2].split())
         digest = data.pop("plan")
         if digest != plan.digest:
-            if digest in network_plans:
+            if digest in network_plans or digest in foreign_plans:
                 continue
             raise ValueError("construction command provenance mismatch")
         kind = match[1]
@@ -1574,9 +1581,13 @@ async def run(p, *, on_ready=None, on_delivered=None, on_closing=None):
         accounting = ScenarioPlanningAccounting(frames)
     backend.planning_frame_observer = lambda d, f: frames.append((d, f.hex()))
     backend.planning_frames = frames
+    # Root-relative index where the frame slice of the current loop connection
+    # starts; one connection funds at cycle 1, later cycles start at reconnect.
+    backend.planning_frames_start = 0
     result: dict[str, Any] = dict(
         preflight="PASS", launches=0, connections=0, requests=0, mutations=0, status="FAILED"
     )
+    cycle_records: list[Path] = []
     try:
         async with asyncio.timeout(m["budgets"]["total_seconds"]):
             await backend.launch(p)
@@ -1687,37 +1698,50 @@ async def run(p, *, on_ready=None, on_delivered=None, on_closing=None):
                 from app.simulation.openttd.freight_native_network import execute_network
 
                 if m.get("loop_cycles", 1) > 1:
+                    # Spec §3 ticket-05: sealed analyze→plan→play cycles on one
+                    # live world. One launch, one fresh connection per cycle,
+                    # per-cycle recording (§3.5), soft ends. Two consecutive
+                    # zero-service cycles abandon the world (§3.5).
                     excluded: set[tuple[int, int, int]] = set()
                     loops: list[dict[str, Any]] = []
                     streak = 0
+                    prior_plans: list[str] = []
                     for cycle in range(1, m["loop_cycles"] + 1):
                         summary: dict[str, Any] = dict(cycle=cycle)
                         if cycle > 1:
                             # Spec §3.2 of record: reconnect per cycle under the
-                            # one-connect-per-cycle discipline; the world stays alive.
+                            # one-connect-per-cycle discipline; the world stays
+                            # alive and the frame machine of record starts fresh
+                            # per single connection.
                             await session.close()
+                            accounting = ScenarioPlanningAccounting(frames)
+                            backend.planning_frames_start = len(frames)
                             session = await session_class.connect_secure(
                                 "127.0.0.1",
                                 p.endpoints[1],
                                 5,
                                 key=AuthorizedKey.from_bytes(p.key_path.read_bytes()),
-                                frame_observer=accounting.observe
-                                if accounting is not None
-                                else backend.planning_frame_observer,
+                                frame_observer=accounting.observe,
                             )
                             backend.session = session
+                            result["connections"] += 1
                             await session.authenticate("Freight-delivery", "1", timeout=10)
                             w = session.welcome
-                            if (
-                                w is None
-                                or (w.revision, w.seed, w.width, w.height) != expected_world(m)
-                            ):
+                            if w is None or (
+                                w.revision,
+                                w.seed,
+                                w.width,
+                                w.height,
+                            ) != expected_world(m):
                                 raise ValueError("native runtime mismatch")
                             if session.protocol is None:
                                 raise ValueError("negotiated native Admin protocol required")
+                            accounting.enter("setup")
                             await GameScriptTransport(session, session.protocol).subscribe()
+                        frames_start = backend.planning_frames_start
                         cycle_dir = p.directory / f"loop-cycle-{cycle}"
                         cycle_dir.mkdir(exist_ok=False)
+                        cycle_records.append(cycle_dir)
                         for name in (
                             "PRELAUNCH.json",
                             "PRELAUNCH.sha256",
@@ -1726,6 +1750,16 @@ async def run(p, *, on_ready=None, on_delivered=None, on_closing=None):
                         ):
                             shutil.copyfile(p.directory / name, cycle_dir / name)
                         write_json(
+                            cycle_dir / "loop-cycle.json",
+                            dict(
+                                schema="ramrom-loop-cycle-v1",
+                                cycle=cycle,
+                                loop_cycles=m["loop_cycles"],
+                                funding_frames=4 if cycle == 1 else 0,
+                                frames_start=frames_start,
+                            ),
+                        )
+                        write_json(
                             cycle_dir / "runtime-identity.json",
                             dict(encrypted=session.state is AuthState.ACTIVE, welcome=asdict(w)),
                         )
@@ -1733,6 +1767,24 @@ async def run(p, *, on_ready=None, on_delivered=None, on_closing=None):
                             directory=cycle_dir, spec=p.spec, endpoints=p.endpoints
                         )
                         before = await save(backend, cycle_prepared, "before")
+                        if cycle == 1 and m.get("scenario"):
+                            # Funding of record happened once on this connection;
+                            # its retained files belong to the first cycle.
+                            for name in (
+                                "capital-initialize-request.json",
+                                "capital-initialize-response.json",
+                                "capital-read-request.json",
+                                "capital-read-response.json",
+                                "scenario-capital.json",
+                            ):
+                                shutil.copyfile(p.directory / name, cycle_dir / name)
+                        scope = dict(
+                            requests=result["requests"],
+                            mutations=result["mutations"],
+                            supplemental_requests=result.get("supplemental_requests", 0),
+                            qualification_requests=result.get("qualification_requests", 0),
+                            selected_services=result.get("selected_services", []),
+                        )
                         try:
                             services = await execute_network(
                                 backend,
@@ -1744,6 +1796,7 @@ async def run(p, *, on_ready=None, on_delivered=None, on_closing=None):
                                 m,
                                 result,
                                 exclude=tuple(sorted(excluded)),
+                                foreign_plans=tuple(prior_plans),
                             )
                         except ValueError as e:
                             if not str(e).startswith("NO_FEASIBLE_SERVICES"):
@@ -1752,7 +1805,20 @@ async def run(p, *, on_ready=None, on_delivered=None, on_closing=None):
                             summary["error"] = str(e)
                             loops.append(summary)
                             streak += 1
-                            (cycle_dir / "artifact-manifest.sha256").write_text(manifest(cycle_dir))
+                            # §3.5 recording discipline: the zero cycle replays
+                            # independently (typed error and diagnostic).
+                            write_json(
+                                cycle_dir / "cycle-result.json",
+                                dict(
+                                    launches=1,
+                                    connections=1,
+                                    requests=result["requests"] - scope["requests"],
+                                    mutations=result["mutations"] - scope["mutations"],
+                                    status="NATIVE_LOOP_ZERO_SERVICES",
+                                    planning_error=type(e).__name__ + ": " + str(e),
+                                ),
+                            )
+                            write_json(cycle_dir / "frames.json", frames[frames_start:])
                             if streak >= 2:
                                 # Spec §3.5: two consecutive zero-service cycles
                                 # abandon this world; a fresh ramrom seed is a
@@ -1762,12 +1828,40 @@ async def run(p, *, on_ready=None, on_delivered=None, on_closing=None):
                             continue
                         streak = 0
                         excluded |= {(s.source, s.destination, s.cargo) for _, s in services}
+                        prior_plans.extend(
+                            DeliveryPlan.model_validate_json(
+                                (cycle_dir / f"native-plan-{n}.json").read_bytes()
+                            ).digest
+                            for n in range(len(services))
+                        )
                         summary["status"] = "DELIVERY_VERIFIED"
                         summary["selected"] = [route_id for route_id, _ in services]
                         loops.append(summary)
-                        (cycle_dir / "artifact-manifest.sha256").write_text(manifest(cycle_dir))
+                        write_json(
+                            cycle_dir / "loop-excluded-sources.json",
+                            [[s.source, s.destination, s.cargo] for _, s in services],
+                        )
+                        # §3.5 recording discipline: every cycle keeps scoped
+                        # counters pinned to its own connection for replay.
+                        cycle_result: dict[str, Any] = dict(
+                            launches=1,
+                            connections=1,
+                            requests=result["requests"] - scope["requests"],
+                            mutations=result["mutations"] - scope["mutations"],
+                            supplemental_requests=result.get("supplemental_requests", 0)
+                            - scope["supplemental_requests"],
+                            qualification_requests=result.get("qualification_requests", 0)
+                            - scope["qualification_requests"],
+                            selected_services=result.get("selected_services", []),
+                            status="NATIVE_MULTI_SERVICE_DELIVERY_VERIFIED",
+                        )
+                        if cycle == 1 and m.get("scenario"):
+                            cycle_result["funding_requests"] = result.get("funding_requests")
+                            cycle_result["funding_mutations"] = result.get("funding_mutations")
+                        write_json(cycle_dir / "result.json", cycle_result)
+                        write_json(cycle_dir / "frames.json", frames[frames_start:])
                         if on_delivered is not None:
-                            await on_delivered(backend, p)
+                            await on_delivered(backend, cycle_prepared)
                     delivered = [entry for entry in loops if entry["status"] == "DELIVERY_VERIFIED"]
                     result["loops"] = loops
                     result["loop_cycles_planned"] = m["loop_cycles"]
@@ -1901,6 +1995,15 @@ async def run(p, *, on_ready=None, on_delivered=None, on_closing=None):
             cleanup["verification_error"] = str(e)
             result["status"] = "FAILED_CLEANUP"
         write_json(p.directory / "cleanup.json", cleanup)
+        # Loop finalization of record (§3.5): every recorded cycle directory
+        # receives the process cleanup, the full retained logs and a final
+        # manifest so each recording can replay independently, including exit
+        # paths that never reach the loop's success branch.
+        for cycle_dir in cycle_records:
+            for name in ("cleanup.json", "stdout.log", "stderr.log"):
+                if (p.directory / name).is_file():
+                    shutil.copyfile(p.directory / name, cycle_dir / name)
+            (cycle_dir / "artifact-manifest.sha256").write_text(manifest(cycle_dir))
         write_json(p.directory / "result.json", result)
         (p.directory / "artifact-manifest.sha256").write_text(manifest(p.directory))
     return result
@@ -2259,6 +2362,131 @@ def verify_receipt(directory):
     return receipt
 
 
+def verify_loop_receipt(directory):
+    """Independent readback of a whole loop attempt: root status and the once
+    recorded funding, then every recorded cycle replayed with the exclude and
+    prior-plan threading the run used, per the §3.5 recording discipline."""
+    from app.simulation.openttd.freight_native_network import (
+        verify_loop_zero_service_cycle,
+        verify_network_receipt,
+    )
+
+    directory = directory.resolve()
+    if manifest(directory) != (directory / "artifact-manifest.sha256").read_text():
+        raise ValueError("loop attempt manifest mismatch")
+    metadata = json.loads((directory / "PRELAUNCH.json").read_bytes())
+    if not (metadata.get("network") and metadata.get("loop_cycles", 1) > 1):
+        raise ValueError("loop verify requires a sealed loop attempt")
+    if sha256(directory / "PRELAUNCH.json") != (directory / "PRELAUNCH.sha256").read_text().strip():
+        raise ValueError("loop prelaunch seal mismatch")
+    result = json.loads((directory / "result.json").read_bytes())
+    status = result.get("status")
+    if status not in ("NATIVE_LOOP_DELIVERED_VERIFIED", "NATIVE_LOOP_ZERO_SERVICES"):
+        raise ValueError("loop attempt did not reach a verified terminal status")
+    loops = result.get("loops")
+    if not isinstance(loops, list):
+        raise ValueError("loop attempt accounting mismatch")
+    entries: list[dict] = []
+    for item in loops:
+        if not isinstance(item, dict):
+            raise ValueError("loop attempt accounting mismatch")
+        entries.append(item)
+    delivered = [entry for entry in entries if entry.get("status") == "DELIVERY_VERIFIED"]
+    if (
+        not 1 <= len(entries) <= metadata["loop_cycles"]
+        or result.get("loop_cycles_planned") != metadata["loop_cycles"]
+        or result.get("loop_cycles_delivered") != len(delivered)
+        or result.get("launches") != 1
+        or result.get("connections") != len(entries)
+        or type(result.get("requests")) is not int
+        or type(result.get("mutations")) is not int
+    ):
+        raise ValueError("loop attempt accounting mismatch")
+    cleanup = json.loads((directory / "cleanup.json").read_bytes())
+    if (
+        not cleanup.get("reaped")
+        or not cleanup.get("workspace_disposed")
+        or not cleanup.get("credential_removed")
+        or cleanup.get("cleanup_error")
+        or cleanup.get("verification_error")
+    ):
+        raise ValueError("loop attempt cleanup incomplete")
+    frames = json.loads((directory / "frames.json").read_bytes())
+    if metadata.get("scenario"):
+        verify_capital_frames(directory, frames[5:9])
+    excluded: set[tuple[int, int, int]] = set()
+    foreign_plans: list[str] = []
+    verified: dict[int, Any] = {}
+    scoped = dict(requests=0, mutations=0, supplemental_requests=0, qualification_requests=0)
+    for cycle, entry in enumerate(entries, start=1):
+        cycle_dir = directory / f"loop-cycle-{cycle}"
+        if not (cycle_dir / "loop-cycle.json").is_file():
+            raise ValueError(f"loop cycle recording missing: loop-cycle-{cycle}")
+        marker = json.loads((cycle_dir / "loop-cycle.json").read_bytes())
+        cycle_frames = json.loads((cycle_dir / "frames.json").read_bytes())
+        if (
+            marker.get("schema") != "ramrom-loop-cycle-v1"
+            or marker.get("cycle") != cycle
+            or entry.get("cycle") != cycle
+            or marker.get("loop_cycles") != metadata["loop_cycles"]
+            or marker.get("funding_frames") != (4 if cycle == 1 else 0)
+            or type(marker.get("frames_start")) is not int
+            or frames[marker["frames_start"] : marker["frames_start"] + len(cycle_frames)]
+            != cycle_frames
+        ):
+            raise ValueError("loop cycle marker mismatch")
+        cycle_result = json.loads(
+            (
+                cycle_dir
+                / ("result.json" if entry["status"] == "DELIVERY_VERIFIED" else "cycle-result.json")
+            ).read_bytes()
+        )
+        for key in scoped:
+            scoped[key] += cycle_result.get(key, 0)
+        if entry["status"] == "DELIVERY_VERIFIED":
+            if (
+                entry.get("abandoned_world")
+                or type(entry.get("selected")) is not list
+                or not entry["selected"]
+                or entry["selected"] != cycle_result.get("selected_services")
+            ):
+                raise ValueError("loop delivered cycle record mismatch")
+            verify_network_receipt(
+                cycle_dir,
+                exclude=tuple(sorted(excluded)),
+                foreign_plans=tuple(foreign_plans),
+            )
+            rows = json.loads((cycle_dir / "loop-excluded-sources.json").read_bytes())
+            if any(type(row) is not list or len(row) != 3 for row in rows):
+                raise ValueError("loop excluded sources record mismatch")
+            excluded.update(tuple(row) for row in rows)
+            foreign_plans.extend(
+                DeliveryPlan.model_validate_json(
+                    (cycle_dir / f"native-plan-{n}.json").read_bytes()
+                ).digest
+                for n in range(len(entry["selected"]))
+            )
+            verified[cycle] = dict(status="DELIVERY_VERIFIED", selected=entry["selected"])
+        elif entry["status"] == "ZERO_SERVICE":
+            if not (
+                type(entry.get("error")) is str
+                and entry["error"].startswith("NO_FEASIBLE_SERVICES")
+            ):
+                raise ValueError("loop zero-service cycle record mismatch")
+            verify_loop_zero_service_cycle(
+                cycle_dir, expected_error=entry["error"], exclude=tuple(sorted(excluded))
+            )
+            verified[cycle] = dict(status="ZERO_SERVICE", error=entry["error"])
+        else:
+            raise ValueError("loop cycle status of record mismatch")
+    if any(result.get(key) != value for key, value in scoped.items()):
+        raise ValueError("loop attempt scope accounting mismatch")
+    return dict(
+        verified_loop_cycles=verified,
+        loop_cycles_delivered=len(delivered),
+    )
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -2321,14 +2549,7 @@ def main():
         if metadata.get("finance_only"):
             print(json.dumps(verify_finance_receipt(directory), sort_keys=True))
         elif metadata.get("network", False) and metadata.get("loop_cycles", 1) > 1:
-            from app.simulation.openttd.freight_native_network import verify_network_receipt
-
-            verified = {}
-            for cycle in range(1, metadata["loop_cycles"] + 1):
-                verified[f"cycle-{cycle}"] = verify_network_receipt(
-                    directory / f"loop-cycle-{cycle}"
-                )
-            print(json.dumps(dict(verified_loop_cycles=verified), sort_keys=True))
+            print(json.dumps(verify_loop_receipt(directory), sort_keys=True))
         elif metadata.get("network", False):
             from app.simulation.openttd.freight_native_network import verify_network_receipt
 

@@ -1328,3 +1328,70 @@ OPENTTD_BINARY and OPENTTD_OPENGFX_ARCHIVE before Python starts):
 .venv/bin/python -m app.simulation.openttd.proof.freight_delivery verify <run-dir>
 # → truthfully prints verified_loop_cycles for every loop-cycle directory
 ```
+
+## 2026-11-07 addendum #3 — loop verify/record fix round (checked)
+
+Offline only: no launch, no AdminPort, no `artifacts/` mutation. Makes
+addendum #2's verify promises true (E143 had claimed them without evidence):
+per-cycle directories now carry their own `frames.json` slice, scoped
+`result.json`/`cycle-result.json`, cleanup/log copies with final manifests,
+`qualification-prefix-frames.json` sliced per connection, funding replayed
+exactly once per attempt, prior-cycle plan digests skip construction-line
+provenance, and `verify_loop_receipt` replays delivery cycles with the
+exclude/foreign threading the run used (zero cycles reproduce the typed
+error + diagnostic). Records: ticket build section
+`.scratch/ramrom-product/issues/05-build-loop-product.md`.
+
+```bash
+# Cycles suites of record (all green together)
+.venv/bin/pytest tests/test_freight_loops.py tests/test_native_freight_network.py \
+  tests/test_freight_network.py tests/test_network_world_preparation.py \
+  tests/test_freight_continuous.py tests/test_openttd_demo.py \
+  tests/test_freight_delivery.py
+# → 160 passed (151 previous + 9 new offline loop-verify tests)
+
+# Touch-path hygiene (this round's files, ty now fully clean on them)
+.venv/bin/ruff check app/openttd_demo.py \
+  app/simulation/openttd/proof/freight_delivery.py \
+  app/simulation/openttd/freight_native_network.py \
+  app/simulation/openttd/freight_runtime_planning.py \
+  app/simulation/openttd/freight_planning_replay.py \
+  tests/test_freight_loops.py
+.venv/bin/ruff format --check app/openttd_demo.py \
+  app/simulation/openttd/proof/freight_delivery.py \
+  app/simulation/openttd/freight_native_network.py \
+  app/simulation/openttd/freight_runtime_planning.py \
+  app/simulation/openttd/freight_planning_replay.py \
+  tests/test_freight_loops.py
+.venv/bin/python -m py_compile app/simulation/openttd/proof/freight_delivery.py \
+  app/simulation/openttd/freight_native_network.py \
+  app/simulation/openttd/freight_runtime_planning.py \
+  app/simulation/openttd/freight_planning_replay.py
+git diff --check
+uvx ty check app/openttd_demo.py \
+  app/simulation/openttd/proof/freight_delivery.py \
+  app/simulation/openttd/freight_native_network.py \
+  app/simulation/openttd/freight_runtime_planning.py \
+  app/simulation/openttd/freight_planning_replay.py \
+  tests/test_freight_loops.py
+# → ruff/format/compile/diff-check clean; ty "All checks passed!" on all six
+#   touched paths (the prior round's E501/UP031 lint regressions and the
+#   verify-side type errors are fixed, not counted).
+
+# Offline preflight of record (no launch): pinned binary/OpenGFX, sealed
+# --cycles 2 budgets, typed verify surface
+.venv/bin/python -c "from app.openttd_demo import check; check(graphical=False)"
+#   (same pinned checks as `run`: OpenTTD 15.3 binary sha256 + OpenGFX
+#   archive identity both pass; no process is started).
+# A python console of record printed, for the command-of-record seal at
+# --cycles 2 (network_service_limit=3, scenario=high-budget-500k,
+# demo budgets 2048-tile/120s capture):
+#   requests 87→174, mutations 33→66, supplemental_requests 33345→66690,
+#   total_seconds 1200→2400, construction_commands 192→384,
+#   selected_services 3, launches 1 (loop-scaled == network_budgets(): True)
+# and `verify` on a loop root without recordings fails typed:
+#   ValueError: loop cycle recording missing: loop-cycle-1  (rc 1)
+```
+
+The native command of record and its per-cycle verify command remain exactly
+the addendum #2 block above; nothing changed there.

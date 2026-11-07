@@ -244,7 +244,10 @@ async def collect_qualified_world(backend, prepared, session, accounting):
     write_json(
         prepared.directory / "qualification-session.json", _public_evidence(asdict(result.evidence))
     )
-    write_json(prepared.directory / "qualification-prefix-frames.json", backend.planning_frames)
+    write_json(
+        prepared.directory / "qualification-prefix-frames.json",
+        backend.planning_frames[getattr(backend, "planning_frames_start", 0) :],
+    )
     write_json(
         prepared.directory / "qualification-log-prefixes.json",
         {

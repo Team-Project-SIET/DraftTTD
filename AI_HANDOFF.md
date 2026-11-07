@@ -422,3 +422,59 @@ cycle delivering ≥1 verified service, per-cycle replay
 `verified_loop_cycles`, pacing fences observed), after which FD-C-2's
 `INCOMPLETE_EVIDENCE` decision gains its first new native evidence under the
 new pacing.
+
+## 2026-11-07 loop verify/record fix-round addendum (offline, E144; corrects E143's false verify claims)
+
+This addendum supersedes the verification claims of the addendum above where
+they conflict; the historical text is retained verbatim. E144 (EVIDENCE
+index) is the operative record; one commit, no push.
+
+**What E143 got wrong:** it claimed `verify_network_receipt` recomputes
+sealed budgets including `loop_cycles`, and that the per-cycle
+`verify <run-dir>` command works. At its commit (`6dbbcf5`) both were false:
+the verify prologue omitted `loop_cycles` (every cycle verify failed typed
+"network seal or budgets mismatch") and the loop-cycle directories carried no
+retrievable per-connection recording, so no loop attempt could have satisfied
+that command. No scientific conclusion ever rested on the false claims —
+no native loop attempt had been run — so the failures were Implementation
+Level and are repaired, never relabeled.
+
+**What this round added (all offline):** per-cycle `loop-cycle-{k}`
+recordings now hold their own `frames.json` (root-frame slice per the sealed
+`loop-cycle.json` marker), a sliced
+`qualification-prefix-frames.json`, a scoped `result.json`/`cycle-result.json`
+pinned at one connection, and cleanup/log copies with final manifests
+written in `run()`'s `finally` (early-exit paths still finalize); fresh
+`ScenarioPlanningAccounting` + `enter("setup")` + re-subscribe on every
+reconnect; funding verified exactly once per attempt (cycle 1 holds the
+capital copies, later cycles skip via the marker, the root funding replays
+once via `verify_capital_frames(root, frames[5:9])`); prior cycles' plan
+digests thread as `foreign_plans` through the construction-line provenance;
+prior-cycle excludes derive from new sealed per-cycle
+`loop-excluded-sources.json` files; and the new `verify_loop_receipt`
+(directory) is the `verify` CLI entry for loop attempts — root checks, then
+per-cycle delivery replay via `verify_network_receipt(exclude=…,
+foreign_plans=…)` or zero-service replay via the new
+`verify_loop_zero_service_cycle`, summing scoped counters back to the root.
+
+**Verification of record:** touched suites of record 160 passed (151
+previous + 9 new offline loop-verify tests); ruff/format/`py_compile` clean
+on all touched paths; `git diff --check` clean; `uvx ty check` "All checks
+passed!" on all six touched paths (the two E143-era repo-gate lint
+regressions are repaired too). Offline preflight of record: binary/OpenGFX
+pinned (`check(graphical=False)`), `--cycles 2` seal budgets
+(requests 87→174, mutations 33→66, supplemental_requests 33345→66690,
+total_seconds 1200→2400, construction_commands 192→384, selected_services
+3, launches 1), and `verify` on a recording-less loop root fails typed rc 1.
+Retained E139 demo directory read-only, `frames.json` prefix==slice intact.
+
+**State:** everything offline is done; the next action is the operator's.
+The native loop command of record (`--cycles 2`) plus its per-cycle
+`verify` printing `verified_loop_cycles` needs ONE fresh per-attempt grant
+(the E141 grant stays consumed; no grant exists). Known risks carried into
+that attempt: native pause behavior on a paused-world console unproven;
+per-cycle `verified_exchanges` byte-counted uniqueness could false-trip on
+identical response bytes across cycles (accepted); reconnect establishment
+never natively exercised; two-cycle pacing budget; abandon semantics
+exercised offline only. FD-C-2's `INCOMPLETE_EVIDENCE` (E142) flips only on
+completed bounded native search evidence.

@@ -76,6 +76,71 @@ prepare kwargs updated for the `loop_cycles` keyword),
 clean; `git diff --check` clean; `ty` reports 1 diagnostic on the touched
 files (the pre-existing `viewer.log.closed` count, never repaired).
 
+## Verify-fix round (2026-11-07 later, E144 offline; fixes E143's false claims)
+
+E143 asserted `verify_network_receipt` recomputes scaled budgets and that
+per-cycle replay works; both were false at `6dbbcf5`. This round makes them
+true and completes the §3.5 recording discipline. All offline, no native
+authority consumed (E141 grant stayed consumed).
+
+Fixed implementation defects (all pre-existing at `6dbbcf5`):
+
+1. `verify_network_receipt` recomputed budgets without `loop_cycles` — every
+   cycle verify failed "network seal or budgets mismatch". The verify prologue
+   is extracted as `_replay_network_world` and seals
+   `network_budgets(..., loop_cycles=metadata.get("loop_cycles", 1))`.
+2. Per-cycle recording was absent: now every `loop-cycle-{k}` dir carries its
+   own `frames.json` (root-frame slice per `loop-cycle.json`'s
+   `frames_start`), `qualification-prefix-frames.json` written as
+   `backend.planning_frames[backend.planning_frames_start:]`
+   (`freight_runtime_planning.py`), scoped per-cycle `result.json` (delivery)
+   or `cycle-result.json` (zero) pinned at one connection, and
+   cleanup/log copies with a final manifest rewrite in `run()`'s `finally`.
+3. Funding is verified once per attempt: cycle 1 gets the capital file copies
+   and `loop-cycle.json` says `funding_frames=4`; later cycles say 0 and
+   `freight_planning_replay.py` skips the funding replay; the root funding of
+   record replays via `verify_capital_frames(root, frames[5:9])` inside
+   `verify_loop_receipt`.
+4. Fresh `ScenarioPlanningAccounting` per connection with `enter("setup")` and
+   re-subscribe on reconnect (the frame machine of record is per single
+   connection; raw rows still append to the shared root `frames` list);
+   `result["connections"]` now counts reconnects.
+5. Prior cycles' plan digests thread as `foreign_plans` through
+   `execute_network` → `service_construction` →
+   `command_readback_evidence`, so the shared one-server-log construction
+   lines of prior cycles are skipped instead of tripping "construction
+   command provenance mismatch".
+6. `on_delivered` receives the cycle's prepared directory, so the demo viewer
+   reads that cycle's `receipt.json` (the root has none in loop mode).
+7. New `verify_loop_receipt(directory)` walks the root status, derives prior
+   cycles' exclude sets from their sealed `loop-excluded-sources.json`
+   (service triples recorded at run time; the demand-id reverse map was
+   dropped as unreliable), and replays each delivery cycle via
+   `verify_network_receipt(exclude=..., foreign_plans=...)` or each
+   zero-service cycle via new `verify_loop_zero_service_cycle` (typed error
+   reproduction + diagnostic + cleanup). The `main()` verify branch calls it.
+8. Repo-gate lint regressions inherited from E143's round are repaired
+   (`drequests` percent-format, one long budget line, one long signature ×2).
+
+Offline top-up tests (9 new; `tests/test_freight_loops.py`, sha256 prefix
+`be63cacc0c4d6f51`): missing/tampered/non-loop/failed loop recordings all fail
+typed before any cycle replay; a bad `loop-cycle.json` marker refuses
+`replay_qualified_world`; `command_readback_evidence` skips known foreign
+plan digests (same cycle and prior cycles) and refuses unknown digests.
+
+Preflight of record (offline only, no launch): binary + OpenGFX pinned
+(`check(graphical=False)`); `--cycles 2` sealed budgets hold
+requests 87→174, mutations 33→66, supplemental_requests 33345→66690,
+total_seconds 1200→2400, construction_commands 192→384, selected_services 3,
+launches 1; `verify` CLI on a loop root fails typed
+("loop cycle recording missing: loop-cycle-1", rc 1); retained E139 demo read
+only, `frames.json`/`qualification-prefix-frames.json` untouched
+(prefix==slice still holds).
+
+Touched suites of record all green again: 160 passed (151 previous + 9 new);
+ruff/format/`py_compile` clean on every touched path (now including the two
+inherited lint fixes); `uvx ty check` clean on all six touched paths.
+
 ## Native proof still owed by this ticket (per-attempt grant required)
 
 1. ONE operator grant: the loop command of record below runs `--cycles 2`.

@@ -71,7 +71,21 @@ async def replay_qualified_world(directory, metadata, runtime, *, recovery=None)
     for direction, raw in prefix[2:5]:
         accounting.observe(direction, bytes.fromhex(raw))
     session = RetainedSession()
-    if metadata.get("scenario"):
+    marker_path = directory / "loop-cycle.json"
+    funding_frames = 0
+    if marker_path.exists():
+        marker = json.loads(marker_path.read_bytes())
+        if marker.get("schema") != "ramrom-loop-cycle-v1" or marker.get("funding_frames") not in (
+            0,
+            4,
+        ):
+            raise ValueError("loop cycle replay marker mismatch")
+        funding_frames = marker["funding_frames"]
+    elif metadata.get("scenario"):
+        funding_frames = 4
+    if funding_frames:
+        # Later loop cycles reconnect to the funded live world; their recording
+        # starts at the reconnect and holds no funding frames of its own.
         from .proof.freight_delivery import verify_capital_frames
 
         verify_capital_frames(directory, prefix[5:9], recovery=recovery)

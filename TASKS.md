@@ -3259,3 +3259,68 @@ sources: `app/simulation/openttd/proof/freight_delivery.py` `7c3e3155…`,
   gate, not run this round.
 
 Evidence index E143.
+
+### 2026-11-07 — Loop verify/record fix round: E143's false verify claims made true, per-cycle recording discipline completed (E144)
+
+Offline only: no OpenTTD launch, no AdminPort connection, no candidate
+staging/signing/claim, no native receipt; retained `artifacts/` bytes
+untouched; one commit, no push. Working tree sha256 prefixes of the touched
+sources: `app/simulation/openttd/proof/freight_delivery.py` `8011b1c2a3c39240`,
+`app/simulation/openttd/freight_native_network.py` `35d4edfa92ee77fd`,
+`app/simulation/openttd/freight_runtime_planning.py` `7217039218d3e92d`,
+`app/simulation/openttd/freight_planning_replay.py` `cd86d3aaece14619`,
+`tests/test_freight_loops.py` `be63cacc0c4d6f51`, `app/openttd_demo.py`
+`394db0f460358c48` (unchanged this round; record doc:
+`.scratch/ramrom-product/issues/05-build-loop-product.md`).
+
+- **Correction of record for E143:** its claims that
+  `verify_network_receipt` recomputes scaled budgets (incl. `loop_cycles`)
+  and that per-cycle replay works were false at its commit `6dbbcf5`; this
+  round makes both true. E143's row is retained verbatim; this row supersedes
+  it where they conflict.
+- **Per-cycle recording:** every `loop-cycle-{k}` directory now carries its
+  own `frames.json` (root-frame slice per the sealed `loop-cycle.json`
+  marker), sliced `qualification-prefix-frames.json`, a scoped
+  `result.json`/`cycle-result.json` pinned at one connection, and
+  cleanup/log copies with final manifests written in `run()`'s `finally` so
+  early-exit paths still finalize; fresh `ScenarioPlanningAccounting` +
+  `enter("setup")` + GameScript re-subscribe per reconnect.
+- **Funding once per attempt:** cycle 1 holds the capital copies
+  (`funding_frames=4`), later cycles 0; `replay_qualified_world` skips the
+  funding replay exactly on the marker; root funding replays once via
+  `verify_capital_frames(root, frames[5:9])` in the new
+  `verify_loop_receipt` (the `verify` CLI entry for loop attempts).
+- **Foreign-plan provenance:** prior cycles' `DeliveryPlan` digests thread as
+  `foreign_plans` through `execute_network` → `service_construction` →
+  `command_readback_evidence`; prior-cycle excludes derive from new sealed
+  per-cycle `loop-excluded-sources.json` (service triples recorded at run
+  time) and cross-check via the P05 replay.
+- **Zero-service replay:** new `verify_loop_zero_service_cycle` replays the
+  typed error exactly, checks the diagnostic FAILED/error/relationships and
+  the cleanup; zero cycles write `cycle-result.json`, delivery cycles
+  `result.json` of the exact legacy shape `(1, 1, 29·N, 11·N, …VERIFIED)`.
+- **Inherited lint repairs:** UP031 `drequests` percent-format, long
+  budget/signature lines (E143-era repo-gate regressions) fixed.
+- **Verification:** 9 new offline tests in `tests/test_freight_loops.py`
+  (missing/tampered/seal/non-loop/failed recordings, bad replay marker,
+  foreign-digest share/skip/refuse contracts); touched suites of record
+  160 passed (151 previous + 9 new); ruff/format/`py_compile` clean on all
+  touched paths; `git diff --check` clean; `uvx ty check` clean on all six
+  touched paths.
+- **Offline preflight:** `check(graphical=False)` passes (binary + OpenGFX
+  pinned); `--cycles 2` seal budgets — requests 87→174, mutations 33→66,
+  supplemental_requests 33345→66690, total_seconds 1200→2400,
+  construction_commands 192→384, selected_services 3, launches 1;
+  `verify` on a recording-less loop root fails typed rc 1; retained E139
+  demo dir read-only intact.
+- **Native remainder (grant-gated, unchanged):** ONE fresh per-attempt
+  operator grant for the loop command of record (`--cycles 2`) + per-cycle
+  `verify` printing `verified_loop_cycles`; FD-C-2 `INCOMPLETE_EVIDENCE`
+  (E142) flips only on completed bounded native search evidence. Risks to
+  carry into the attempt: native pause behavior on a paused-world console
+  unproven; per-cycle `verified_exchanges` byte-counted uniqueness could
+  false-trip on identical response bytes across cycles (accepted);
+  reconnect establishment never natively exercised; two-cycle pacing
+  budget; abandon semantics exercised offline only.
+
+Evidence index E144.
