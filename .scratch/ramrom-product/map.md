@@ -73,3 +73,10 @@ in-session grant.
   process: the operator chose game window + console + HTML report.
 - Relabeling or re-running any consumed attempt: supersession is always
   a fresh identity, never a rerun.
+- The granted seed-2026 widened-seal run (E141) typed
+  `supplemental capture outside final M2 month`: the widened rectangle's
+  capture-read pace raced the in-game month at live speed. Honest note:
+  the funnel advanced past E139's capture-budget wall (n0 captured
+  completely; engines/supply never refused); the binding constraint moved
+  to capture pacing. Candidate fix designs are recorded in the research
+  file §9; no further native attempt without a fresh grant.

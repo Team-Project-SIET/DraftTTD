@@ -43,3 +43,24 @@ operator.
 - No native run this round; no grant consumed; no `artifacts/` byte
   modified; conservation of supersession: failed and aborted attempts
   recorded at their own identities, never relabeled.
+
+## Status log (2026-11-07, granted native proof of ticket 03)
+
+- The operator granted ONE native attempt in session: the widened-seal
+  command of record on seed 2026, world settings of record (towns 3,
+  industries 3). The attempt ran once and is recorded honestly at its own
+  identity (`artifacts/demos/playable-demo-9b9a398e406f4ec1bf8e37a69116ac93`,
+  evidence index E141). Typed terminal:
+  `PlanningFactError: supplemental capture outside final M2 month` — the
+  qualified-month gate refused fact capture whose economy dates crossed the
+  M2 window end (712282) at live game speed. Relationship n0 captured
+  completely (832 reads) inside the window; n1 was interrupted at read 703;
+  2238 capture reads completed overall; no `NO_FEASIBLE_SERVICES` and no
+  engine/supply rejection occurred — the funnel advanced past both E139
+  gates. The acceptance bar `≥1 verified plan+delivery terminal` is NOT
+  met by this run; it stays open evidence-indexed, not relabeled.
+- Next decision of record (unresolved): capture-read pace must fit the
+  qualified in-game month — the candidate design is pausing the world
+  clock during fact capture (recorded in the diagnostic), or an equivalent
+  pacing boundary. No further native attempt is scheduled without a fresh
+  per-attempt operator grant.

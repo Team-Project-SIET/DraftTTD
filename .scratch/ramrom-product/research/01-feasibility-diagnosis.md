@@ -286,3 +286,32 @@ before they feed ticket 03. Verified against the official wiki
 Sources: <https://wiki.openttd.org/en/Manual/Road%20vehicles>,
 <https://wiki.openttd.org/en/Manual/Base%20Set/Road%20Vehicles/Coal%20Trucks>,
 <https://wiki.openttd.org/en/Manual/Drive-through%20Road%20Stops>.
+
+## 9. Seed-2026 widened-seal native addendum (E141, 2026-11-07)
+
+The granted one-attempt run under the widened seal (2048 tiles, pad 6,
+capture-seconds 120) typed `PlanningFactError: supplemental capture outside
+final M2 month` (`app/simulation/openttd/supplemental_planning_facts.py:262`).
+What changed against §1–§4 (all numbers from E141 retained bytes):
+
+- The widened geometry no longer starves freight pairs at 512 tiles: 16
+  compatible relationships were admitted to real capture; spread pairs fail
+  `CAPTURE_TILE_BUDGET` honestly and n0 (industry 0 → a destination within
+  reach) captured completely — 832 reads — inside the qualified M2 month
+  (economy month 2, year 1950, script dates 712254..712282).
+- n1 was interrupted mid-capture at read 703 because its post-capture
+  economy date crossed `month.end_date` (712282) while the game ran at live
+  speed. The M2 gate requires
+  `month.start_date <= before <= after < month.end_date` for every fact
+  capture; it is integrity-correct and was never in issue.
+- New binding constraint, not seen at ≤512 tiles: wall-time of a fact
+  capture scales with region size, and the game clock races it. A 2048-tile
+  capture costs roughly 2.5× a 512-tile one in AdminPort round-trips
+  (tiles + coverage scopes + settings + engines), so at live speed a wide
+  capture can consume more in-game days than remain in the month.
+- Candidate designs for the next decision round (none scheduled to run
+  without a new grant): pause the world clock during fact capture (the
+  game's speed control; the diagnostic records the pause), tighten the
+  capture plan to page-critical tiles first, or widen the qualified month
+  contract deliberately — each trades honesty, cost and spec §2's
+  byte-compatibility clause differently.
