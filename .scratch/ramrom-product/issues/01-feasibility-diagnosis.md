@@ -39,3 +39,14 @@ bytes); budget admission arithmetic 2/2/6/9/11/12 of 16 at budgets
 512/1024/2048/4096/8192/16384. Cheapest no-native confirmations (two
 byte-replay facts already produced by this ticket plus one synthetic
 padding test) are listed in the findings file §6.
+
+## Comments
+
+- 2026-11-07 (post-resolution addendum): operator asked for OpenTTD
+  domain verification via search engine; findings file §8 now records the
+  wiki check — captured engine identified as the base Balogh Coal Truck
+  (1935, cap 20), all temperate freight cargos have base road-truck
+  families, the town-road wall is crossable game-consistently
+  (base drive-through stops / road joining), and a loop-architecture
+  caution was recorded: towns grow roads and industries change, so every
+  planner cycle must re-qualify the world. Ticket status stays resolved.

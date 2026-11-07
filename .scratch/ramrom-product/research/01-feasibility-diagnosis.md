@@ -236,3 +236,53 @@ values are not re-quoted here as fresh evidence.
   crossings) — a semantic decision.
 - Not required by today's evidence: engine/production gates
   (`freight_native_network.py:109-135`) — no rejection exercised them.
+
+## 8. Web addendum: OpenTTD wiki verification of the domain claims (2026-11-07)
+
+Operator instruction: verify OpenTTD domain facts against a search engine
+before they feed ticket 03. Verified against the official wiki
+(wiki.openttd.org), fetched this day:
+
+1. **Captured engine identified — the catalog evidence is sound.**
+   Engine id 123 in this run's capture (`network-facts-0.json:engines[0]`:
+   purchase 4429 GBP, speed 48, running 421 GBP/yr, capacity 20 cargo,
+   default cargo COAL) corresponds to the base temperate **Balogh Coal
+   Truck**: wiki "Coal Trucks" page lists price £4,428, 48 km/h,
+   £421/year, capacity 20 tonnes of coal, designed 1935 — present in 1950
+   play. The one-GBP purchase difference (4428 vs 4429) is a game-side
+   value; provenance UNKNOWN (does not affect any gate).
+2. **Truck coverage by cargo is materially wider than this run's capture.**
+   The base temperate road list (wiki "Road vehicles" page) includes Coal
+   Trucks, **Iron Ore Trucks**, Steel Trucks, Oil Tankers, Goods Trucks,
+   Grain Trucks, Livestock Vans, Wood Trucks and Armoured (Valuables)
+   Trucks — i.e. a base-set road vehicle family exists for every temperate
+   freight cargo observed in this run's compatible table (cargo classes
+   1,3,4,6,7,8). Intro years per family beyond coal (1935) were not
+   individually verified here: UNKNOWN, but the pre-corridor engine gate
+   was never the observed bottleneck. The §4 "engine catalog thinness"
+   cause is downgraded further: the single-engine capture correctly
+   reflects the two captured COAL relationships' scope, not a world-wide
+   shortage.
+3. **The town-road "wall" is not an OpenTTD-forced dead end.** The wiki
+   "Drive-through Road Stops" page documents drive-through road stops as a
+   base-game feature: a stop may be built either on open land or **on an
+   existing stretch of road**, and all road vehicles share the one road
+   network regardless of who built which piece. Consequence for ticket 03:
+   the product's corridor envelope (`vacant()` at
+   `app/planning/p08_road.py:125-137` excludes road tiles, and the native
+   executor is "flat vacant land only; no clearing, slopes, bridges or
+   tunnels", `planning-diagnostic.json:limitations`) is the binding rule,
+   not the game. Building across existing town roads (drive-through stops
+   and/or routing a company road that joins a town road at grade) is a
+   legitimate game-consistent fix lever; whether to adopt it is exactly
+   the "road-crossing rules" decision named in §7.
+4. **Caution for the loop architecture (ticket 04).** Towns grow over time
+   and construct new roads while industries may appear, expand or vanish
+   over decades of play — the world an early cycle captured is not the
+   world a later cycle plays on. Each analyze → plan → play cycle must
+   re-qualify the world from fresh native reads; no cycle may reuse a
+   prior cycle's retained relationship facts for planning decisions.
+
+Sources: <https://wiki.openttd.org/en/Manual/Road%20vehicles>,
+<https://wiki.openttd.org/en/Manual/Base%20Set/Road%20Vehicles/Coal%20Trucks>,
+<https://wiki.openttd.org/en/Manual/Drive-through%20Road%20Stops>.
