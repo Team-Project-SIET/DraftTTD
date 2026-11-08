@@ -750,3 +750,33 @@ loop-receipt instrument refuses the dir typed with no forced relabel.
 a separate operator-approved step, then Attempt 3 needs a fresh explicit
 operator grant with the byte-unchanged command of record. The
 GUI-bearing probe remains a separate later grant.
+
+## E153 addendum (2026-11-08) — shared-stderr cycle-restart fix landed offline
+
+The E152 defect class (per-attempt-shared artifact consumed per-cycle) is
+repaired at its parse seam: `collect_qualified_world` pins
+`backend.stderr_window` (stderr byte offset at the moment the fresh
+cycle's qualification session exists), and both stderr parse sites
+(`qualification_native.evidence()` clock/lifetime loop and the parent
+`structural_native.evidence()` page/cargo/production loop) slice from
+that offset; window absent ⇒ whole file, so corridor and single-cycle
+behavior stays byte-identical. The parent `setup()` startup-marker read
+stays whole-file by design (launch-time marker inside every window-less
+read and needed at connect, not per-cycle). Request ids remain
+byte-identical `freight-plan-clock-N`; per-cycle id namespacing was
+rejected as identity churn.
+
+Offline proof: red-first regression tests in
+`tests/test_qualification_preparation.py` drive the real evidence()
+against one shared stderr — the restart/reuse test reproduced the
+verbatim sealed failure before the fix and passes after; duplicate and
+out-of-order guards still refuse typed. Qualification family 227 passed
++ 1 skipped; adjacent tuple of record 282 passed; hygiene clean
+(ruff/format/py_compile/ty, `git diff --check`). The
+`test_structural_world.py` catalog/enrichment fixture failure is
+pre-existing on this clone (proven by a stashed clean-tree run; outside
+the tuple of record).
+
+**Gate:** Attempt 3 still needs a fresh explicit operator grant with the
+byte-unchanged command of record; FD-C-2 stays `INCOMPLETE_EVIDENCE`.
+The GUI-bearing native probe remains a separate later grant.

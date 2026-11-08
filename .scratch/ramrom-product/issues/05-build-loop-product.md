@@ -400,3 +400,42 @@ cycle-scoped stderr marker window) and its offline round are a separate
 operator-approved step; Attempt 3 then needs a fresh explicit operator
 grant with the byte-unchanged command of record. The GUI-bearing native
 probe remains a separate later grant.
+
+## E153 fix round — shared-stderr cycle-restart repair landed offline (2026-11-08)
+
+Smallest correct fix for the E152-certified defect: the freight loop's
+per-cycle qualification transport is created directly in
+`collect_qualified_world` (never through `configure_transport`, which
+correcting E152's provisional anchor), so that function now pins
+`backend.stderr_window` — the byte offset in the ONE shared attempt
+`stderr.log` at the moment the fresh session exists. Both stderr parse
+sites (`qualification_native.evidence()` for clock/lifetime and the
+parent `structural_native.evidence()` for page/cargo/production) slice
+`read_bytes()[getattr(self, "stderr_window", 0):]`; window absent ⇒
+whole file, so corridor and single-cycle runs stay byte-identical. The
+parent `setup()` startup-marker read stays whole-file on purpose
+(BRIDGE_STARTED is printed at launch, outside any cycle window).
+
+Per-cycle request-id namespacing was REJECTED: canonical ids
+`freight-plan-clock-N` are pinned by the `_read_query` hard check and
+feed world identity (`IndustryInventoryWorld.from_welcome`), so renaming
+would churn identity digests for zero parsing benefit.
+
+Offline proof, red-first: three regression tests in
+`tests/test_qualification_preparation.py` drive the real
+`QualificationNativeBackend.evidence()` over one shared tmp stderr —
+counter reset + legitimate cross-cycle reuse (cycle-2's first poll with
+byte-identical `freight-plan-clock-1` ids; RED before: verbatim
+`ValueError: duplicate/out-of-order native read evidence`; GREEN after
+with cycle-2 window-relative lines (1,2,3,4) proving cycle-1's
+quadruple excluded), same-cycle duplicates still refuse, out-of-order
+rows still refuse. Suites: qualification 6-file family 227 passed +
+1 skipped; adjacent tuple of record 282 passed; ruff/format/py_compile/
+ty clean; `git diff --check` clean. The `test_structural_world.py`
+catalog/enrichment fixture failure is pre-existing on this clone
+(stash-proven at clean `cf23bdf`; outside the tuple).
+
+No native verification is claimed from offline tests; all sealed
+historical bytes untouched. **FD-C-2 stays `INCOMPLETE_EVIDENCE`.
+Attempt 3 needs a fresh explicit operator grant with the byte-unchanged
+command of record.**

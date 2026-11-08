@@ -3633,3 +3633,47 @@ under the grant.
   byte-unchanged command of record.
 
 Evidence index E152.
+
+### 2026-11-08 — E153: shared-stderr cycle-restart fix landed offline (red-first tests; no native action)
+
+Offline fix round for the E152-certified defect. No OpenTTD launch, no
+AdminPort contact, no artifact mutation; attempt-2 grant stays consumed.
+
+- **Fix (smallest correct):** `collect_qualified_world`
+  (`app/simulation/openttd/freight_runtime_planning.py`) pins
+  `backend.stderr_window = prepared.spec.stderr_path.stat().st_size`
+  before the fresh per-cycle session can issue any request;
+  `qualification_native.evidence()` (clock/lifetime loop) and the parent
+  `structural_native.evidence()` (page/cargo/production loop, line ~325)
+  slice `stderr_path.read_bytes()[getattr(self, "stderr_window", 0):]`.
+  `configure_transport` never runs in the loop chain (E152's provisional
+  anchor was corrected): the per-cycle transport is built directly in
+  `collect_qualified_world`, which is the real once-per-connection
+  anchor. The parent `setup()` startup-marker read intentionally keeps
+  whole-file semantics (BRIDGE_STARTED is written at launch, outside any
+  cycle window).
+- **Rejected alternative:** per-cycle request-id namespacing — it would
+  change canonical ids that also feed world identity
+  (`IndustryInventoryWorld.from_welcome` with the coordinator id
+  `freight-plan`) and the `_read_query` hard check, churning digests for
+  zero parsing benefit. Ids stay byte-identical `freight-plan-clock-N`.
+- **Regression tests (tests/test_qualification_preparation.py, driving
+  the real `QualificationNativeBackend.evidence()` over one shared tmp
+  stderr): counter reset + legitimate cross-cycle id reuse (cycle-2
+  first poll with byte-identical `freight-plan-clock-1` ids — was RED
+  with the verbatim sealed error, GREEN with the window; cycle-2
+  line numbers (1,2,3,4) prove cycle-1's quadruple excluded);
+  same-cycle duplicate quadruple still refuses;
+  out-of-order rows still refuse through the sliced path.
+- **Verification:** qualification 6-file family 227 passed + 1 skipped;
+  14-file adjacent tuple of record 282 passed; ruff/format/py_compile/ty
+  clean on all four touched files; `git diff --check` clean. The
+  `test_structural_world.py::test_real_catalog_and_enrichment_regression
+  _fixtures_are_valid_but_separate_runs` failure is pre-existing on this
+  clone (stashed run at clean `cf23bdf` reproduces it; outside the
+  tuple of record; not touched).
+- **Gate unchanged:** FD-C-2 stays `INCOMPLETE_EVIDENCE`; no native
+  verification claimed from offline tests; Attempt 3 needs a fresh
+  explicit operator grant with the byte-unchanged command of record.
+
+Evidence index E153.

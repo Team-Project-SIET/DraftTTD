@@ -322,3 +322,27 @@ operator.
   byte-unchanged command of record. The GUI-bearing native probe
   remains a separate later grant; the 53-legacy-red FULL regression
   stays the wayfinder EXIT gate.
+- **E153 fix round (2026-11-08, offline):** the shared-stderr cycle-restart
+  defect is repaired at its parse seam. `collect_qualified_world` pins
+  `backend.stderr_window` (byte offset of the ONE shared attempt
+  `stderr.log` when the fresh cycle's qualification session exists — the
+  real anchor, since the freight loop never runs
+  `configure_transport`), and both stderr parse sites
+  (`qualification_native.evidence()` and the parent
+  `structural_native.evidence()`) slice from that offset; window absent
+  ⇒ whole file (corridor and single-cycle unchanged). Parent `setup()`
+  startup read stays whole-file (launch-time marker). Request ids stay
+  byte-identical `freight-plan-clock-N`; per-cycle id namespacing was
+  rejected (world-identity digest churn). Red-first tests in
+  `tests/test_qualification_preparation.py` drive the REAL evidence():
+  counter reset + legitimate cross-cycle reuse (RED with the verbatim
+  sealed `ValueError: duplicate/out-of-order native read evidence`,
+  GREEN after, cycle-1's quadruple provably excluded), same-cycle
+  duplicates and out-of-order rows still refuse. Verification:
+  qualification family 227 passed + 1 skipped; adjacent tuple of record
+  282 passed; ruff/format/py_compile/ty and `git diff --check` clean.
+  Pre-existing clone failure `test_structural_world.py` (catalog/
+  enrichment fixtures) stash-proven unrelated. FD-C-2 stays
+  `INCOMPLETE_EVIDENCE`; Attempt 3 needs a fresh explicit operator
+  grant with the byte-unchanged command of record; the GUI-bearing
+  native probe remains a separate later grant.

@@ -1675,3 +1675,44 @@ grep -o "request_id=[^ ]*-clock-[0-9]*" artifacts/demos/playable-demo-e6852692d0
   (per-cycle qualification id namespace or cycle-scoped stderr window)
   is a separate operator-approved step; Attempt 3 then needs a fresh
   explicit operator grant with the byte-unchanged command of record.
+
+## 2026-11-08 addendum #11 — E153: shared-stderr cycle-restart fix landed offline (checked)
+
+The E152 defect (per-cycle qualification polls re-parsing the ONE shared
+attempt `stderr.log` with restart-at-1 poll counters) is fixed with a
+per-cycle stderr byte-window. All commands below are offline; no native
+run, no artifact mutation.
+
+```bash
+# Red-first regression tests (drive the real evidence() over one shared
+# stderr): the restart/reuse test failed RED before the fix with the
+# verbatim sealed error and passes after; guards intact:
+.venv/bin/pytest tests/test_qualification_preparation.py -k "restarted_cycle_poll or same_cycle_duplicate or out_of_order_markers" -q
+
+# Qualification family (227 passed + 1 skipped):
+.venv/bin/pytest tests/test_qualification_preparation.py tests/test_qualification_native.py tests/test_qualification_coordinator.py tests/test_qualification_accounting.py tests/test_qualification_dispatch_repair.py tests/test_two_rollover_qualification.py -q
+
+# Adjacent tuple of record (282 passed, matches 269 + 13 controlled):
+.venv/bin/pytest tests/test_random_capture_budgets.py tests/test_demo_random_native.py tests/test_native_freight_network.py tests/test_network_world_preparation.py tests/test_freight_loops.py tests/test_scenario_capital.py tests/test_freight_canonical_persistence.py tests/test_freight_canonical_transport.py tests/test_freight_continuous.py tests/test_freight_finance.py tests/test_openttd_demo.py tests/test_freight_delivery.py tests/test_freight_network.py tests/test_random_distance.py -q
+
+# Hygiene of record (all four touched files):
+.venv/bin/ruff check tests/test_qualification_preparation.py app/simulation/openttd/freight_runtime_planning.py app/simulation/openttd/proof/qualification_native.py app/simulation/openttd/proof/structural_native.py
+.venv/bin/ruff format --check tests/test_qualification_preparation.py app/simulation/openttd/freight_runtime_planning.py app/simulation/openttd/proof/qualification_native.py app/simulation/openttd/proof/structural_native.py
+.venv/bin/python -m py_compile tests/test_qualification_preparation.py app/simulation/openttd/freight_runtime_planning.py app/simulation/openttd/proof/qualification_native.py app/simulation/openttd/proof/structural_native.py
+uvx ty check tests/test_qualification_preparation.py app/simulation/openttd/freight_runtime_planning.py app/simulation/openttd/proof/qualification_native.py app/simulation/openttd/proof/structural_native.py
+git diff --check
+```
+
+- **Design note of record:** `configure_transport` never runs in the
+  freight loop chain — the per-cycle transport is constructed directly
+  in `collect_qualified_world`, which is therefore the binary window
+  anchor. Window absent ⇒ whole file, so corridor and single-cycle
+  behavior is byte-identical; the parent `setup()` startup-marker read
+  stays whole-file because BRIDGE_STARTED is written at launch time.
+- **Pre-existing clone failure (verified unrelated):**
+  `tests/test_structural_world.py::test_real_catalog_and_enrichment_
+  regression_fixtures_are_valid_but_separate_runs` fails identically
+  with the fix stashed at clean `cf23bdf`; it is outside the tuple of
+  record and was not modified.
+- **Gate:** Attempt 3 needs a fresh explicit operator grant with the
+  byte-unchanged command of record; FD-C-2 stays `INCOMPLETE_EVIDENCE`.

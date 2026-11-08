@@ -206,6 +206,9 @@ async def collect_qualified_world(backend, prepared, session, accounting):
     backend.accounting = accounting
     backend.structural_session = StructuralRecordedSession(session)
     backend.query_operation_baseline = 0
+    # One shared per-attempt stderr carries every cycle's bridge markers; a
+    # fresh session only claims the bytes written after it existed.
+    backend.stderr_window = prepared.spec.stderr_path.stat().st_size
     package = prepared.spec.workspace.game / "RoadFreightProof"
     bridge_digest = hashlib.sha256(
         b"".join(
