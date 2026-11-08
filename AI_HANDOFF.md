@@ -780,3 +780,17 @@ the tuple of record).
 **Gate:** Attempt 3 still needs a fresh explicit operator grant with the
 byte-unchanged command of record; FD-C-2 stays `INCOMPLETE_EVIDENCE`.
 The GUI-bearing native probe remains a separate later grant.
+
+## Attempt-3 gate prepared (2026-11-08) — awaiting fresh explicit operator grant
+
+`524ce13` carries the E153 shared-stderr window fix; tree clean; binary
+`276d5b69…1904c` and OpenGFX `43a0c1da…03be` match the pins; no native
+process. Nothing launched under this gate. The approved one-attempt
+contract (command of record byte-unchanged, one launch / two cycle
+connections, funding on cycle 1 only, loop-scaled sealed budgets, stop
+on any unexpected failure; expected evidence and digest-pinned offline
+evaluator `verify_loop_receipt` with two independently verified cycles)
+is written in full in ticket-05. FD-C-2 stays `INCOMPLETE_EVIDENCE`
+until fresh digest-pinned native evidence exists. Attempt 3 awaits the
+fresh explicit operator grant; the GUI-bearing native probe remains a
+separate later grant.

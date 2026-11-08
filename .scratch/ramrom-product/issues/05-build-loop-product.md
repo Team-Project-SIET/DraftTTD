@@ -439,3 +439,53 @@ No native verification is claimed from offline tests; all sealed
 historical bytes untouched. **FD-C-2 stays `INCOMPLETE_EVIDENCE`.
 Attempt 3 needs a fresh explicit operator grant with the byte-unchanged
 command of record.**
+
+## Attempt-3 gate prepared — awaiting fresh explicit operator grant (2026-11-08, pre-E154)
+
+State verified before the gate: branch `miles/fright-delivery` at
+`524ce13` (E153 shared-stderr window fix present at
+`freight_runtime_planning.py:211`, `qualification_native.py:100`,
+`structural_native.py:325`), tree clean; binary
+`276d5b698a6b706154f3af588f6f885b3aebe518f4ecc8f869abf71383b1904c` and
+OpenGFX `43a0c1dabf39cb865394f3a6cc36d4da5c10ecfaaf55652043104806810903be`
+match the pinned digests; no native process exists. Consumed and void
+grants: E141, E142, E145, attempt-1, attempt-2.
+
+Approved execution contract for the authorized ONE attempt (nothing
+launched yet):
+
+- Command of record, byte-unchanged: `OPENTTD_BINARY=/home/fed/Downloads/
+  openttd-15.3-linux-generic-amd64/openttd
+  OPENTTD_OPENGFX_ARCHIVE=/home/fed/codes/softdev2/artifacts/runtime/
+  verified-assets/opengfx-8.0-all.zip .venv/bin/python -m app.openttd_demo
+  run --headless --random-world --seed 2026 --towns 3 --industries 3
+  --stop-on-delivery --cycles 2`.
+- Scope: exactly one launch, one fresh connection per cycle (2 total),
+  funding on the single cycle-1 connection only, loop-scaled sealed
+  budgets, no retries, no seed change, no additional launch, no scope
+  expansion. Stop immediately on any unexpected failure.
+- Expected digest-pinned evidence at root: `result.json` with a native
+  terminal status, `PRELAUNCH.json`/`PRELAUNCH.sha256`, `CLAIM.json`,
+  `frozen-source.zip`, `graphics-identity.json`, `runtime-identity.json`,
+  `stderr.log`/`stdout.log`, root `artifact-manifest.sha256`,
+  `cleanup.json`, saves, plan and receipts files, a two-cycle `loops`
+  list. Expected per cycle: the five-file copy set (E150),
+  `loop-cycle.json` (`funding_frames=4` cycle 1 / `0` cycle 2;
+  frames_start 0 / reconnect offset), `planning-diagnostic.json`,
+  `native-save-correspondence.json` (cycle 1), candidates and
+  network-facts files, a typed cycle terminal in `cycle-result.json`,
+  per-cycle `cleanup.json`. The E152 collision (`duplicate/out-of-order
+  native read evidence` at cycle-2's first clock poll) must NOT
+  reproduce under the E153 window.
+- Success evaluator of record (offline, after the run):
+  `verify_loop_receipt(root)` must reach a verified terminal status with
+  two independently verified cycles; every retained manifest re-derives
+  digest-for-digest equal; cycle-2 qualification polls must come from
+  cycle-2's own stderr window. FD-C-2 is reassessed ONLY from fresh
+  digest-pinned bytes: truncated searches, zero candidates, or typed
+  attempt failures are never feasibility proof; OBSERVED / DERIVED /
+  CONTROLLED / UNKNOWN stay distinct.
+- Stop conditions: any unexpected typed failure; any manifest mismatch;
+  any requirement to relaunch; cleanup not fully certified; any scope
+  creep. On completion, independently verify both cycles before any
+  closure claim.
