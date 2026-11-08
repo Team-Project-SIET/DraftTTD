@@ -29,6 +29,7 @@ from app.simulation.openttd.freight_native_network import (
     paused_world_clock,
 )
 from app.simulation.openttd.freight_runtime_planning import (
+    PlanningRead,
     PlanningReadback,
     capture_planning_facts,
 )
@@ -702,3 +703,351 @@ def test_sealed_attempt1_failed_bytes_stay_pinned():
         assert (cycle / name).is_file()
     for name in ("cleanup.json", "stdout.log", "stderr.log", "artifact-manifest.sha256"):
         assert (cycle / name).is_file()
+
+
+# --- Cross-cycle request identity (planner_used dedup fix) -------------------
+
+
+def request_id_protocol_valid(value) -> bool:
+    """Mirror of the GameScript ValidRequestID constraint
+    (gamescript_bridge_package/main.nut:15): 1..64 chars, ASCII alnum plus
+    `-`/`_` separators, never leading."""
+    if type(value) is not str or not 1 <= len(value) <= 64:
+        return False
+    for index, ch in enumerate(value):
+        if not (ch.isascii() and ch.isalnum()) and (index == 0 or ch not in "-_"):
+            return False
+    return True
+
+
+PLANNER_CHANNEL_SCHEDULE = (
+    "random-generation",
+    "planning-seal",
+    "planning-n0-0",
+    "planning-n0-452",
+    "planning-n15-2086",
+)
+DELIVERY_CHANNEL_SCHEDULE = (
+    "select-0",
+    "select-1",
+    "activate-0",
+    "s0-build-9",
+    "s0-read-9",
+    "s0-observe-3",
+    "s0-finish",
+    "s0-park",
+    "s0-park-read",
+)
+
+
+def test_cycle_request_ids_keep_legacy_cycle1_and_are_unique_at_cycles_2_and_8():
+    """The cleaner helper keeps cycle 1 byte-identical to the sealed legacy
+    identifiers and suffixes later cycles deterministically; every produced id
+    satisfies the GameScript ValidRequestID protocol constraint."""
+    from app.simulation.openttd.freight_runtime_planning import cycle_request_id
+
+    for schedule in (PLANNER_CHANNEL_SCHEDULE, DELIVERY_CHANNEL_SCHEDULE):
+        assert [cycle_request_id(base, 1) for base in schedule] == list(schedule)
+        for cycle in (2, 8):
+            cycled = [cycle_request_id(base, cycle) for base in schedule]
+            assert cycled == [base + f"-c{cycle}" for base in schedule]
+            assert len(set(cycled + list(schedule))) == len(cycled) + len(schedule)
+            assert all(request_id_protocol_valid(value) for value in cycled)
+    widest = cycle_request_id("planning-n15-2086", 8)
+    assert widest == "planning-n15-2086-c8"
+    assert request_id_protocol_valid(widest) and len(widest) <= 64
+
+
+def test_loop_cycle_marker_is_the_shared_cycle_source_of_truth(tmp_path):
+    from app.simulation.openttd.freight_runtime_planning import loop_cycle
+
+    # A directory without the marker replays as the legacy cycle 1.
+    assert loop_cycle(tmp_path) == 1
+    (tmp_path / "loop-cycle.json").write_text(
+        json.dumps(dict(schema="ramrom-loop-cycle-v1", cycle=3))
+    )
+    assert loop_cycle(tmp_path) == 3
+    (tmp_path / "loop-cycle.json").write_text(json.dumps(dict(schema="other", cycle=3)))
+    with pytest.raises(ValueError, match="loop cycle marker invalid"):
+        loop_cycle(tmp_path)
+    (tmp_path / "loop-cycle.json").write_text(
+        json.dumps(dict(schema="ramrom-loop-cycle-v1", cycle=9))
+    )
+    with pytest.raises(ValueError, match="loop cycle marker out of range"):
+        loop_cycle(tmp_path)
+
+
+class PlannerDrop(Exception):
+    """Offline model of the GameScript planner_used silent drop."""
+
+
+def fake_planning_exchange(tile_data, coverage, used, date_value=10):
+    """Fake exchange that models the persistent planner_used set: a request id
+    already consumed is rejected, and every accepted id is remembered."""
+
+    async def fake(session, request, directory, response_type):
+        if request.request_id in used:
+            raise PlannerDrop(request.request_id)
+        used.add(request.request_id)
+        if request.kind == "settings":
+            row = [1, 0, 0, 3, 0, 10, 50, 100]
+        elif request.kind == "engines":
+            row = [7]
+        elif request.kind == "engine":
+            row = [7, 1, 0, 30, 1000, 365, 40]
+        else:
+            assert request.arg in tile_data
+            row = (
+                [request.arg, 0, 0, 1]
+                + [0] * 10
+                + [
+                    -1,
+                    1,
+                    8,
+                    tile_data[request.arg]["pickup"],
+                    tile_data[request.arg]["delivery"],
+                ]
+            )
+        payload = dict(
+            protocol=1,
+            type="planning_read_result",
+            request_id=request.request_id,
+            kind=request.kind,
+            arg=request.arg,
+            src=request.src,
+            dst=request.dst,
+            cargo=request.cargo,
+            before=date_value,
+            after=date_value,
+            data=row,
+        )
+        raw = json.dumps(payload, separators=(",", ":")).encode()
+        assert len(raw) <= 512
+        (directory / (request.request_id + "-request.json")).write_bytes(request.to_bytes())
+        (directory / (request.request_id + "-response.json")).write_bytes(raw)
+        return PlanningReadback.parse_for(request, raw)
+
+    return fake
+
+
+def _cycle_directory(root: Path, cycle: int) -> Path:
+    cycle_dir = root / f"loop-cycle-{cycle}"
+    cycle_dir.mkdir(parents=True, exist_ok=True)
+    (cycle_dir / "graphics-identity.json").write_text(json.dumps(dict(archive_sha256="a" * 64)))
+    (cycle_dir / "runtime-identity.json").write_text(
+        json.dumps(
+            dict(encrypted=True, welcome=dict(revision="15.3", seed=17, width=64, height=64))
+        )
+    )
+    (cycle_dir / "loop-cycle.json").write_text(
+        json.dumps(dict(schema="ramrom-loop-cycle-v1", cycle=cycle, loop_cycles=8))
+    )
+    return cycle_dir
+
+
+def test_simulated_persistent_planner_used_accepts_all_reads_across_cycles(
+    qualified_vanilla, tmp_path
+):
+    """Drive the real capture against a persistent dedup set over cycles 1,
+    2 and 8: every planner-channel read progresses (request then response), no
+    id is ever replayed, and cycle 1 keeps the legacy identifiers."""
+    from app.simulation.openttd.freight_runtime_planning import cycle_request_id
+
+    world = controlled_input().admitted.world
+    data = controlled_flat_coal_data()
+    capture_date = controlled_input().facts.capture_economy_date_before
+    scopes = {(c["tile_id"], c["role"]): c for c in data["coverage"]}
+    tile_views = {
+        tile["tile_id"]: dict(
+            pickup=int(scopes[tile["tile_id"], "pickup"]["industry_covered"]),
+            delivery=int(scopes[tile["tile_id"], "delivery"]["industry_covered"]),
+        )
+        for tile in data["tiles"]
+    }
+    used: set[str] = set()
+    first_ids: dict[int, list[str]] = {}
+    for cycle in (1, 2, 8):
+        cycle_dir = _cycle_directory(tmp_path, cycle)
+        calls = []
+
+        async def recording(session, request, directory, response_type):
+            calls.append(request)
+            return await fake_planning_exchange(tile_views, scopes, used, capture_date)(
+                session, request, directory, response_type
+            )
+
+        asyncio.run(
+            capture_planning_facts(
+                SimpleNamespace(health=lambda: None, session=object()),
+                SimpleNamespace(directory=cycle_dir),
+                world,
+                read_exchange=recording,
+                relationship=(0, 1, 1),
+                prefix="n0-",
+                capture_budget=DemoBudgets(),
+            )
+        )
+        first_ids[cycle] = [request.request_id for request in calls]
+    # Cycle 1 legacy byte-identity; later cycles suffixed and globally unique.
+    assert first_ids[1][0] == "planning-n0-0" and first_ids[1][-1] == "planning-n0-452"
+    assert first_ids[2][0] == cycle_request_id("planning-n0-0", 2)
+    assert first_ids[8][0] == cycle_request_id("planning-n0-0", 8)
+    everything = first_ids[1] + first_ids[2] + first_ids[8]
+    assert len(everything) == len(set(everything))
+    assert all(request_id_protocol_valid(value) for value in everything)
+
+
+def test_planner_dedup_contract_still_rejects_a_duplicate_id(tmp_path):
+    """The GameScript deduplication contract stays the enforcement mechanism:
+    an unchanged (legacy-style) replay is rejected by the modeled planner_used
+    set, exactly as the native bridge does."""
+    from app.simulation.openttd.freight_runtime_planning import cycle_request_id
+
+    cycle_dir = _cycle_directory(tmp_path, 1)
+    used: set[str] = set()
+    fake = fake_planning_exchange({}, set(), used)
+    request = PlanningRead(
+        request_id="planning-n0-0", kind="settings", arg=0, src=0, dst=1, cargo=1
+    )
+    asyncio.run(fake(None, request, cycle_dir, PlanningReadback))
+    with pytest.raises(PlannerDrop, match="planning-n0-0"):
+        asyncio.run(fake(None, request, cycle_dir, PlanningReadback))
+    request_id, cycle = request.request_id, 2
+    replay = PlanningRead(request_id=f"{request_id}", kind="settings", arg=0, src=0, dst=1, cargo=1)
+    with pytest.raises(PlannerDrop):
+        asyncio.run(fake(None, replay, cycle_dir, PlanningReadback))
+    suffixed = PlanningRead(
+        request_id=cycle_request_id(request_id, cycle),
+        kind="settings",
+        arg=0,
+        src=0,
+        dst=1,
+        cargo=1,
+    )
+    asyncio.run(fake(None, suffixed, cycle_dir, PlanningReadback))  # accepted
+
+
+def test_exchange_read_timeout_is_typed_with_context_and_cause(tmp_path, monkeypatch):
+    """The 20-second per-exchange read timeout surfaces typed, carrying only
+    the request id, operation, duration and cycle; payloads are never exposed."""
+    from app.simulation.openttd.proof import freight_delivery
+
+    class StalledSession:
+        async def send(self, raw):
+            return None
+
+        async def receive(self):
+            await asyncio.sleep(1)
+
+    (tmp_path / "loop-cycle.json").write_text(
+        json.dumps(dict(schema="ramrom-loop-cycle-v1", cycle=2))
+    )
+    monkeypatch.setattr(freight_delivery, "EXCHANGE_SECONDS", 0.05)
+    request = PlanningRead(
+        request_id="planning-seal-c2", kind="settings", arg=0, src=1, dst=2, cargo=1
+    )
+    with pytest.raises(freight_delivery.ExchangeReadTimeout) as exc_info:
+        asyncio.run(freight_delivery.exchange(StalledSession(), request, tmp_path))
+    error = exc_info.value
+    assert isinstance(error, TimeoutError) and type(error) is not TimeoutError
+    assert error.__cause__.__class__ is TimeoutError
+    assert error.request_id == "planning-seal-c2"
+    assert error.op == "settings"
+    assert error.seconds == pytest.approx(0.05)
+    assert error.cycle == 2
+    message = str(error)
+    assert (
+        "request_id=planning-seal-c2" in message
+        and "op=settings" in message
+        and "cycle=2" in message
+        and "data" not in message
+    )
+
+
+def test_exchange_read_timeout_without_cycle_marker_reports_cycle_none(tmp_path, monkeypatch):
+    from app.simulation.openttd.proof import freight_delivery
+
+    class StalledSession:
+        async def send(self, raw):
+            return None
+
+        async def receive(self):
+            await asyncio.sleep(1)
+
+    monkeypatch.setattr(freight_delivery, "EXCHANGE_SECONDS", 0.05)
+    request = PlanningRead(
+        request_id="planning-seal", kind="settings", arg=0, src=1, dst=2, cargo=1
+    )
+    with pytest.raises(freight_delivery.ExchangeReadTimeout) as exc_info:
+        asyncio.run(freight_delivery.exchange(StalledSession(), request, tmp_path))
+    assert exc_info.value.cycle is None and exc_info.value.request_id == "planning-seal"
+
+
+def test_outer_attempt_budget_expires_as_a_bare_timeouterror(tmp_path, monkeypatch):
+    """The outer attempt budget must stay distinguishable from the typed
+    per-exchange read timeout: an outer expiry is never converted."""
+    from app.simulation.openttd.proof import freight_delivery
+
+    class StalledSession:
+        async def send(self, raw):
+            return None
+
+        async def receive(self):
+            await asyncio.sleep(1)
+
+    monkeypatch.setattr(freight_delivery, "EXCHANGE_SECONDS", 5)
+    request = PlanningRead(
+        request_id="planning-seal", kind="settings", arg=0, src=1, dst=2, cargo=1
+    )
+
+    async def attempt():
+        async with asyncio.timeout(0.05):
+            await freight_delivery.exchange(StalledSession(), request, tmp_path)
+
+    with pytest.raises(TimeoutError) as exc_info:
+        asyncio.run(attempt())
+    assert type(exc_info.value) is TimeoutError  # not the typed subclass
+
+
+def test_capture_keeps_exchange_timeout_distinct_from_capture_budget_deadline(tmp_path):
+    """An exchange read timeout propagates typed through the capture; only the
+    capture's own deadline maps to the CAPTURE_TIME_BUDGET conversion."""
+    from app.simulation.openttd.proof.freight_delivery import ExchangeReadTimeout
+
+    backend = SimpleNamespace(health=lambda: None, session=None)
+    world = controlled_input().admitted.world
+
+    class StalledExchange:
+        async def __call__(self, session, request, directory, response_type):
+            raise ExchangeReadTimeout(request.request_id, request.kind, 20, None)
+
+    with pytest.raises(ExchangeReadTimeout):
+        asyncio.run(
+            capture_planning_facts(
+                backend,
+                SimpleNamespace(directory=tmp_path),
+                world,
+                read_exchange=StalledExchange(),
+                relationship=(0, 1, 1),
+                capture_budget=DemoBudgets(),
+            )
+        )
+
+    class SlowExchange:
+        async def __call__(self, session, request, directory, response_type):
+            await asyncio.sleep(0.01)
+            return None
+
+    budget = DemoBudgets().model_copy(update=dict(capture_seconds=0.0))
+    with pytest.raises(ValueError, match="CAPTURE_TIME_BUDGET") as exc_info:
+        asyncio.run(
+            capture_planning_facts(
+                backend,
+                SimpleNamespace(directory=tmp_path),
+                world,
+                read_exchange=SlowExchange(),
+                relationship=(0, 1, 1),
+                capture_budget=budget,
+            )
+        )
+    assert exc_info.value.__cause__.__class__ is TimeoutError

@@ -212,11 +212,16 @@ def replay_planning_binding(directory, metadata, runtime, native_plan):
     )
     if reconstructed != facts:
         raise ValueError("supplemental facts differ from native bounded readbacks")
-    from app.simulation.openttd.freight_runtime_planning import PlanningRead, PlanningReadback
+    from app.simulation.openttd.freight_runtime_planning import (
+        PlanningRead,
+        PlanningReadback,
+        cycle_request_id,
+        loop_cycle,
+    )
 
     scopes = {s.role: s for s in facts.coverage_scopes}
     seal_request = PlanningRead(
-        request_id="planning-seal",
+        request_id=cycle_request_id("planning-seal", loop_cycle(directory)),
         kind="settings",
         arg=0,
         src=scopes["pickup"].industry_id,

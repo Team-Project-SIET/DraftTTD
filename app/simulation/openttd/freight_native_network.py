@@ -316,13 +316,23 @@ async def _plan_network_world(
         write_json(
             prepared.directory / "world-planning-observation.json", json.loads(world.to_bytes())
         )
-        from app.simulation.openttd.freight_runtime_planning import PlanningRead, PlanningReadback
+        from app.simulation.openttd.freight_runtime_planning import (
+            PlanningRead,
+            PlanningReadback,
+            cycle_request_id,
+            loop_cycle,
+        )
         from app.simulation.openttd.proof.freight_delivery import exchange
 
         generated = await exchange(
             session,
             PlanningRead(
-                request_id="random-generation", kind="generation", arg=0, src=0, dst=0, cargo=0
+                request_id=cycle_request_id("random-generation", loop_cycle(prepared.directory)),
+                kind="generation",
+                arg=0,
+                src=0,
+                dst=0,
+                cargo=0,
             ),
             prepared.directory,
             response_type=PlanningReadback,
@@ -723,7 +733,14 @@ def receipt_game_time(directory, index, *, capture_start=False, log_path=None):
             raise ValueError("unique native game-time start/construction markers required")
         start_date, start_tick = map(int, starts[0])
         construction_date, construction_tick = map(int, constructions[0])
-        final = json.loads((directory / f"s{index}-finish-response.json").read_bytes())["s"]
+        from app.simulation.openttd.freight_runtime_planning import cycle_request_id, loop_cycle
+
+        cycle = loop_cycle(directory)
+        final = json.loads(
+            (
+                directory / (cycle_request_id(f"s{index}-finish", cycle) + "-response.json")
+            ).read_bytes()
+        )["s"]
         if (
             not start_date <= construction_date <= final[21] <= final[1]
             or not start_tick <= construction_tick <= final[0]
@@ -731,7 +748,9 @@ def receipt_game_time(directory, index, *, capture_start=False, log_path=None):
             raise ValueError("native game-time marker chronology mismatch")
         metrics["start_basis"] = "bridge_start_before_world_preparation"
         metrics["planning_completion_observed_by_date"] = json.loads(
-            (directory / f"select-{index}-response.json").read_bytes()
+            (
+                directory / (cycle_request_id(f"select-{index}", cycle) + "-response.json")
+            ).read_bytes()
         )["s"][1]
         metrics["simulation_start_date"] = start_date
         metrics["construction_completion_date"] = construction_date
@@ -999,9 +1018,14 @@ async def execute_network(
     foreign_plans=(),
 ):
     validate_game_time_version(metadata)
+    from app.simulation.openttd.freight_runtime_planning import (
+        cycle_request_id,
+        loop_cycle,
+    )
     from app.simulation.openttd.proof.freight_delivery import exchange
     from app.simulation.openttd.proof.road_mutation import save
 
+    cycle = loop_cycle(prepared.directory)
     network, execution, services, source_save = await plan_network_world(
         backend, prepared, session, accounting, before, metadata["delivery_batch_limit"], exclude
     )
@@ -1017,7 +1041,7 @@ async def execute_network(
     )
     admissions, plans, bindings = [], [], []
     for n, (route_id, service) in enumerate(services):
-        request = service.selection_request(request_id=f"select-{n}")
+        request = service.selection_request(request_id=cycle_request_id(f"select-{n}", cycle))
         read = await exchange(session, request, prepared.directory)
         result["requests"] += 1
         native = admit(
@@ -1047,7 +1071,9 @@ async def execute_network(
             result["requests"] += 1
             return await exchange(
                 session,
-                DeliveryRequest(op=op, request_id=name, plan=native.digest, arg=arg),
+                DeliveryRequest(
+                    op=op, request_id=cycle_request_id(name, cycle), plan=native.digest, arg=arg
+                ),
                 prepared.directory,
             )
 
@@ -1255,17 +1281,27 @@ def _replay_network_world(directory, *, recovery=None):
         import zipfile
 
         from app.demo_random_native import generation_observation, validate_generation_config
-        from app.simulation.openttd.freight_runtime_planning import PlanningRead, PlanningReadback
+        from app.simulation.openttd.freight_runtime_planning import (
+            PlanningRead,
+            PlanningReadback,
+            cycle_request_id,
+            loop_cycle,
+        )
 
         with zipfile.ZipFile(directory / "frozen-source.zip") as archive:
             validate_generation_config(metadata, archive.read("staged/openttd.cfg").decode())
         request = PlanningRead(
-            request_id="random-generation", kind="generation", arg=0, src=0, dst=0, cargo=0
+            request_id=cycle_request_id("random-generation", loop_cycle(directory)),
+            kind="generation",
+            arg=0,
+            src=0,
+            dst=0,
+            cargo=0,
         )
-        if (directory / "random-generation-request.json").read_bytes() != request.to_bytes():
+        if (directory / (request.request_id + "-request.json")).read_bytes() != request.to_bytes():
             raise ValueError("random generation request mismatch")
         generated = PlanningReadback.parse_for(
-            request, (directory / "random-generation-response.json").read_bytes()
+            request, (directory / (request.request_id + "-response.json")).read_bytes()
         )
         if generation_observation(metadata, runtime, generated) != json.loads(
             (directory / "generation-observation.json").read_bytes()
@@ -1398,15 +1434,25 @@ def verify_network_receipt(
         )
         return (aggregate, network) if return_network else aggregate
     records, wire_ids = verified_exchanges(directory)
-    expected = [f"select-{n}" for n in range(len(services))]
+    from app.simulation.openttd.freight_runtime_planning import (
+        cycle_request_id,
+        loop_cycle,
+    )
+
+    cycle = loop_cycle(directory)
+    cid = lambda base: cycle_request_id(base, cycle)  # noqa: E731 - id maker shared with producer
+    expected = [cid(f"select-{n}") for n in range(len(services))]
     receipts = []
     bindings = []
     for n, (route_id, service) in enumerate(services):
-        selection = service.selection_request(request_id=f"select-{n}")
-        if selection.to_bytes() != (directory / f"select-{n}-request.json").read_bytes():
+        selection = service.selection_request(request_id=cid(f"select-{n}"))
+        if (
+            selection.to_bytes()
+            != (directory / (selection.request_id + "-request.json")).read_bytes()
+        ):
             raise ValueError("network selected identity changed")
         native = admit(
-            records[f"select-{n}"],
+            records[cid(f"select-{n}")],
             seal,
             links.post_qualification_save_digest,
             None,
@@ -1417,23 +1463,23 @@ def verify_network_receipt(
             (directory / f"native-plan-{n}.json").read_bytes()
         ):
             raise ValueError("network native plan mismatch")
-        binding = service.validate_native_selection(native, records[f"select-{n}"])
+        binding = service.validate_native_selection(native, records[cid(f"select-{n}")])
         bindings.append(binding)
         expected += (
-            [f"activate-{n}"]
-            + [x for i in range(10) for x in (f"s{n}-build-{i}", f"s{n}-read-{i}")]
-            + [f"s{n}-observe-{i}" for i in range(4)]
-            + [f"s{n}-finish", f"s{n}-park", f"s{n}-park-read"]
+            [cid(f"activate-{n}")]
+            + [x for i in range(10) for x in (cid(f"s{n}-build-{i}"), cid(f"s{n}-read-{i}"))]
+            + [cid(f"s{n}-observe-{i}") for i in range(4)]
+            + [cid(f"s{n}-finish"), cid(f"s{n}-park"), cid(f"s{n}-park-read")]
         )
-        service_records = {"inspect-1": records[f"activate-{n}"]}
+        service_records = {"inspect-1": records[cid(f"activate-{n}")]}
         for i in range(10):
             for op in ("build", "read"):
-                service_records[f"{op}-{i}"] = records[f"s{n}-{op}-{i}"]
+                service_records[f"{op}-{i}"] = records[cid(f"s{n}-{op}-{i}")]
         receipt = verify_delivery(
             native,
             service_records["read-8"],
-            [records[f"s{n}-observe-{i}"] for i in range(4)],
-            records[f"s{n}-finish"],
+            [records[cid(f"s{n}-observe-{i}")] for i in range(4)],
+            records[cid(f"s{n}-finish")],
             map_width=metadata["world"]["width"],
         )
         all_plans = tuple(
@@ -1454,7 +1500,7 @@ def verify_network_receipt(
         )
         receipt.update(network_route_readback(directory / "stderr.log", native, service))
         receipt.update(route_id=route_id, planning_binding=binding)
-        parked, independent = records[f"s{n}-park"], records[f"s{n}-park-read"]
+        parked, independent = records[cid(f"s{n}-park")], records[cid(f"s{n}-park-read")]
         verify_snapshot(native, independent)
         if (
             parked.status != "PARKED"

@@ -1278,37 +1278,76 @@ def preflight(p):
     reservation.close()
 
 
+# Per-exchange read budget for every non-observe gamescript exchange.
+EXCHANGE_SECONDS = 20
+
+
+class ExchangeReadTimeout(TimeoutError):
+    """One gamescript exchange read timed out (distinct from the outer attempt
+    budget, which surfaces as a bare TimeoutError). Cause is the original
+    asyncio TimeoutError; context carries only request identity and duration,
+    never payload data."""
+
+    def __init__(self, request_id: str, op, seconds: int, cycle: int | None):
+        self.request_id = request_id
+        self.op = op
+        self.seconds = seconds
+        self.cycle = cycle
+        super().__init__(
+            "exchange read timeout: request_id="
+            + request_id
+            + " op="
+            + str(op)
+            + " seconds="
+            + str(seconds)
+            + " cycle="
+            + str(cycle)
+        )
+
+
 async def exchange(session, q, directory, *, response_type=DeliveryReadback):
+    from app.simulation.openttd.freight_runtime_planning import loop_cycle
+
     raw = q.to_bytes()
     (directory / (q.request_id + "-request.json")).write_bytes(raw)
     await session.send(encode_gamescript(raw))
     decoder = AdminFrameDecoder()
-    async with asyncio.timeout(OBS_SECONDS if getattr(q, "op", None) == "observe" else 20):
-        while True:
-            chunk = await session.receive()
-            if not chunk:
-                raise ConnectionError("secure stream ended")
-            for kind, body in decoder.feed_frames(chunk):
-                if kind != SERVER_GAMESCRIPT:
-                    raise ValueError("unexpected packet")
-                if getattr(q, "type", None) in ("capacity-add", "capacity-read"):
-                    from app.simulation.openttd.freight_capacity_execution import (
-                        decode_capacity_wire,
-                    )
+    seconds = OBS_SECONDS if getattr(q, "op", None) == "observe" else EXCHANGE_SECONDS
+    op = getattr(q, "op", None) or getattr(q, "kind", None)
+    try:
+        async with asyncio.timeout(seconds):
+            while True:
+                chunk = await session.receive()
+                if not chunk:
+                    raise ConnectionError("secure stream ended")
+                for kind, body in decoder.feed_frames(chunk):
+                    if kind != SERVER_GAMESCRIPT:
+                        raise ValueError("unexpected packet")
+                    if getattr(q, "type", None) in ("capacity-add", "capacity-read"):
+                        from app.simulation.openttd.freight_capacity_execution import (
+                            decode_capacity_wire,
+                        )
 
-                    response = decode_capacity_wire(body)
-                elif str(getattr(q, "type", "")).startswith("canonical-"):
-                    if not 1 < len(body) <= 1451 or not body.endswith(b"\0"):
-                        raise ValueError("canonical response wire bound or terminator invalid")
-                    response = body[:-1]
-                elif str(getattr(q, "type", "")).startswith("continuous-"):
-                    from app.simulation.openttd.freight_continuous import decode_continuous_response
+                        response = decode_capacity_wire(body)
+                    elif str(getattr(q, "type", "")).startswith("canonical-"):
+                        if not 1 < len(body) <= 1451 or not body.endswith(b"\0"):
+                            raise ValueError("canonical response wire bound or terminator invalid")
+                        response = body[:-1]
+                    elif str(getattr(q, "type", "")).startswith("continuous-"):
+                        from app.simulation.openttd.freight_continuous import (
+                            decode_continuous_response,
+                        )
 
-                    response = decode_continuous_response(body)
-                else:
-                    response = decode_gamescript(body)
-                (directory / (q.request_id + "-response.json")).write_bytes(response)
-                return response_type.parse_for(getattr(q, "admission_request", q), response)
+                        response = decode_continuous_response(body)
+                    else:
+                        response = decode_gamescript(body)
+                    (directory / (q.request_id + "-response.json")).write_bytes(response)
+                    return response_type.parse_for(getattr(q, "admission_request", q), response)
+    except TimeoutError as error:
+        cycle = loop_cycle(directory)
+        raise ExchangeReadTimeout(
+            q.request_id, op, seconds, cycle if cycle != 1 else None
+        ) from error
 
 
 def construction_evidence(
