@@ -3775,3 +3775,42 @@ failures proven pre-existing on clean `61b655d` (names in E155 row);
 ruff/format/py_compile/ty clean. Offline readiness gates for a future
 Attempt 4 all pass at `d6342cc` (pins, preflight `check`, no native
 process, clean tree) — E155 row of record; still no grant, no launch.
+
+### 2026-11-09 — Attempt 4 executed once under an explicit operator grant; FAILED typed at the month-pacing gate in cycle-1 capture; sealed and verified read-only (E156)
+
+The operator granted exactly one Attempt 4 (command of record
+byte-identical); it was executed once, spent 240.04 s against a sealed
+2400 s budget, and ended `exit=1` in run dir
+`artifacts/demos/playable-demo-da185e2c41dd45278e4152dcd7521af8` with
+`result.json` `status=FAILED`, error verbatim
+`PlanningFactError: supplemental capture outside final M2 month`
+(root error text; for the E154-attributed budget and dedup classes this
+is a DIFFERENT class). One launch, one connection, one funding; no
+cycle-2 stage. Cycle-1 staged: qualification COMPLETED (no failure, no
+reconnects, E153 window mechanism trivially exercised — 113 unique
+monotone clock reads), world observation written (qualified_month M2
+[712254,712282)), `random-generation` exchanged with the legacy
+unsuffixed disc byte-identical to attempt-3's (contract-consistent),
+16 compatible relationships disclosed (pair_checks=146 is the
+discovery counter, not P08), accepted 6; capture completed 4,032
+planner exchange pairs (8,064 discs, zero orphans, all responses
+present — no timeout class and no dedup drop) across sessions n0/n1/n2
+of the accepted set; sessions 0/1 validated and were persisted
+(`network-facts-0.json` [712286,712286], `network-facts-1.json`
+[712287,712306]); session 2's exchanges straddled the month-3 window
+[712282,712313) with dates crossing into month 4 at n2-501
+(before=after=712313) and a final sealed exchange n2-1793 at
+[712330,712330], so `SupplementalPlanningFacts.require_world`
+(`supplemental_planning_facts.py:253-262`) refused before
+`network-facts-2.json` could exist. That exact refusal string is
+pre-recognized by `phase_c_feasibility.py:529-538` as the typed
+month-pacing gate (no feasibility implication): pre-recognized class,
+first observed natively; NOT the attempt-3 classes, and nothing in it
+implicates the E155 reader fixes (the abort runs upstream of them).
+`verify_loop_receipt` refused typed verbatim (`ValueError: loop
+attempt did not reach a verified terminal status`); manifests root 18 /
+cycle-1 8,092 entries verify rc=0; cleanup certified; failure.sav
+retained. FD-C-2 unchanged `INCOMPLETE_EVIDENCE` (no fresh successful
+native evidence); Ticket-05/Phase C stay OPEN; the one authorization
+was consumed by the one attempt — no retry, no relaunch, no GUI probe,
+no push, sealed bytes untouched. Evidence index E156.

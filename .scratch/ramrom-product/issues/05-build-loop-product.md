@@ -575,3 +575,47 @@ test) removes the "budget-seal amendment" prerequisite — the remaining
 Attempt-4 prerequisite is the operator's explicit fresh grant (and the
 operator's own decision on cycle 2's observed zero-service world),
 with offline readiness gates passing at `d6342cc` (E155 row).
+
+## Attempt 4 execution record (2026-11-09, E156) — executed once under an explicit grant; FAILED typed at the month-pacing gate in cycle-1 capture
+
+The operator's one-attempt authorization was consumed by exactly one
+byte-identical execution (240.04 s elapsed against the sealed
+`total_seconds=2400`; no budget or parameter change; repo `7273a37`).
+Run dir of record, now sealed:
+`artifacts/demos/playable-demo-da185e2c41dd45278e4152dcd7521af8`.
+Root `result.json`: `status=FAILED`, error verbatim
+`PlanningFactError: supplemental capture outside final M2 month`,
+launches 1 / connections 1 / requests 0 / mutations 0 / preflight PASS.
+Cycle 1 staged (no cycle-2 directory — cycle 2 not reached):
+qualification session COMPLETED with 113 unique monotone clock reads;
+16 compatible relationships disclosed (accepted 6); capture completed
+all 4,032 planner exchange pairs (8,064 discs, zero orphans, no
+ExchangeReadTimeout, no outer timeout, no dedup drop); sessions 0/1
+persisted (`network-facts-0.json` [712286,712286],
+`network-facts-1.json` [712287,712306]); session 2's 1,794 exchanges
+crossed the month-3 observation window [712282,712313) into month 4
+(exchange n2-501: before=after=712313; final n2-1793: 712330), so
+`SupplementalPlanningFacts.require_world`
+(`supplemental_planning_facts.py:253-262`) refused before
+`network-facts-2.json` could be written. That exact refusal string is
+pre-recognized as the typed month-pacing gate row by
+`phase_c_feasibility.py:529-538` (documented no-feasibility
+implication): this is a NEW native observation of a PRE-RECOGNIZED
+class — not the attempt-3 zero-service or dedup/budget classes, and
+not caused by the E155 reader fixes. `verify_loop_receipt` refused
+typed verbatim (`ValueError: loop attempt did not reach a verified
+terminal status`); root manifest 18 entries and cycle-1 manifest
+8,092 entries all verify rc=0; cleanup certified by the sealed bytes
+(graceful quit, process reaped, endpoints closed, credentials removed,
+frame accounting failed=false); `failure.sav`/`before.sav` retained.
+
+Ticket-05 and Phase C remain OPEN. Outcomes: Attempt 4 stays FAILED
+and SEALED; FD-C-2 stays `INCOMPLETE_EVIDENCE` (no fresh successful
+native evidence); the one authorization = the one attempt (consumed) —
+no retry, no relaunch, no GUI probe, no push. Missing evidence for any
+future acceptance: (a) capture sessions paced inside the observation's
+month window on BOTH cycles (this attempt proved the pacing fence
+refuses overshoot exactly as coded; a pacing/fence remedy would be a
+reviewed code change with its own round), then (b) a fresh explicit
+operator grant for a new attempt, then (c) both cycles' verified
+receipts via `verify_loop_receipt`. Evidence index E156.

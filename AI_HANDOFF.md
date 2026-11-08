@@ -863,3 +863,42 @@ planner reads fits). Attempt 4 remains gated on ONE fresh explicit
 operator grant (readiness is not authorization); the operator also
 decides on cycle 2's observed zero-service world. Append-only proposal
 of record: `.scratch/ramrom-product/research/02-attempt3-root-cause-doc-correction.md`.
+
+## E156 addendum (2026-11-09) — Attempt 4 executed once under the operator's explicit grant; FAILED typed at the pre-recognized month-pacing gate in cycle-1 capture; sealed dir verified read-only
+
+One byte-identical execution of the command of record at repo `7273a37`
+consumed the one-attempt authorization: 240.04 s elapsed (sealed budget
+2400 s untouched), run dir
+`artifacts/demos/playable-demo-da185e2c41dd45278e4152dcd7521af8`, root
+`result.json` `status=FAILED`, error verbatim
+`PlanningFactError: supplemental capture outside final M2 month`, one
+launch / one connection / zero network requests / zero mutations,
+preflight PASS, cleanup certified (graceful quit, process reaped,
+endpoints closed, credentials removed), `failure.sav` retained, no
+second session. Only cycle-1 staged: qualification COMPLETED (113
+unique monotone clock reads; the E153 stderr window had nothing to
+restart against in a single session), 16 compatible relationships
+disclosed, accepted 6, and capture completed all 4,032 planner
+exchange pairs (8,064 discs, zero orphans — **no ExchangeReadTimeout,
+no outer timeout, no dedup drop; cycle-1 ids legacy-unsuffixed as
+`cycle_request_id` mandates**, with attempt-4's `random-generation`
+disc byte-identical to attempt-3's). Sessions 0/1 validated and
+persisted (`network-facts-0.json` [712286,712286], `network-facts-1.json`
+[712287,712306], inside the observation's month window
+[712282,712313)); session 2 straddled that window (exchange n2-501
+crosses into month 4 at 712313; final n2-1793 at 712330) and was
+refused by `SupplementalPlanningFacts.require_world`
+(`supplemental_planning_facts.py:253-262`) before any facts-2 write.
+`phase_c_feasibility.py:529-538` pre-recognizes that exact string as
+the typed month-pacing gate with no feasibility implication — this is
+that class observed natively for the first time, not a new failure
+mechanism and not any of the attempt-3 classes (nor caused by the E155
+fixes, which sit downstream and are unexercised here). `verify_loop_receipt`
+refused typed verbatim (`ValueError: loop attempt did not reach a
+verified terminal status`); manifests root 18 / cycle-1 8,092 entries
+verify rc=0. Attempt 4 stays FAILED and SEALED; FD-C-2 stays
+`INCOMPLETE_EVIDENCE`; Ticket-05/Phase C stay OPEN; no retry, no
+relaunch, no GUI probe, no push. Next-cycle pacing inside the
+observation month on both cycles is the identified missing-evidence
+dimension; any fence/pacing remedy is a separate reviewed code change
+plus a fresh explicit operator grant. Evidence index E156.
