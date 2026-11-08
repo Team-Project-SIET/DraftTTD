@@ -758,6 +758,52 @@ def test_cycle_request_ids_keep_legacy_cycle1_and_are_unique_at_cycles_2_and_8()
     assert request_id_protocol_valid(widest) and len(widest) <= 64
 
 
+def test_cycle_ids_satisfy_the_python_wire_contracts():
+    """The GameScript guard allows 1..64 chars, but the Python wire contracts
+    are the tighter bound of record: PlanningRead's field pattern (`1..32`,
+    alnum plus `-`) on the planner channel and DeliveryRequest.to_bytes
+    (`<=32`, ASCII alnum plus `-`) on the delivery channel. The cycled
+    identities must satisfy the models the exchange layer actually wires."""
+    from typing import Literal
+
+    from app.simulation.openttd.freight_delivery import DeliveryRequest
+    from app.simulation.openttd.freight_runtime_planning import PlanningRead, cycle_request_id
+
+    plan_digest = "a" * 64
+    op_for: dict[str, Literal["inspect", "build", "read", "observe", "finish"]] = {
+        "select-0": "inspect",
+        "select-1": "inspect",
+        "activate-0": "read",
+        "s0-build-9": "build",
+        "s0-read-9": "read",
+        "s0-observe-3": "observe",
+        "s0-finish": "finish",
+        "s0-park": "finish",
+        "s0-park-read": "read",
+    }
+    for schedule in (PLANNER_CHANNEL_SCHEDULE, DELIVERY_CHANNEL_SCHEDULE):
+        for base in schedule:
+            request_id = cycle_request_id(base, 1)
+            for cycle in (2, 8):
+                cycled = cycle_request_id(base, cycle)
+                if base in PLANNER_CHANNEL_SCHEDULE:
+                    PlanningRead(
+                        request_id=request_id, kind="settings", arg=0, src=0, dst=0, cargo=0
+                    )
+                    PlanningRead(request_id=cycled, kind="settings", arg=0, src=0, dst=0, cargo=0)
+                else:
+                    DeliveryRequest(
+                        op=op_for[base], request_id=request_id, plan=plan_digest
+                    ).to_bytes()
+                    DeliveryRequest(op=op_for[base], request_id=cycled, plan=plan_digest).to_bytes()
+            assert len(request_id) <= 32 and len(cycled) <= 32
+
+    # A 33-char id passes the GameScript guard but is rejected by the Python
+    # wire guard of record.
+    with pytest.raises(ValueError):
+        DeliveryRequest(op="read", request_id="a" * 33, plan=plan_digest).to_bytes()
+
+
 def test_loop_cycle_marker_is_the_shared_cycle_source_of_truth(tmp_path):
     from app.simulation.openttd.freight_runtime_planning import loop_cycle
 

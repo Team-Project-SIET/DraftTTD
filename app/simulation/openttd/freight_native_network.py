@@ -693,6 +693,13 @@ def validate_game_time_version(metadata):
 
 def receipt_game_time(directory, index, *, capture_start=False, log_path=None):
     """Replay correlated milestone readbacks; exact unsampled events remain unknown."""
+    from app.simulation.openttd.freight_runtime_planning import cycle_request_id, loop_cycle
+
+    cycle = loop_cycle(directory)
+
+    def cid(base):
+        return cycle_request_id(base, cycle)
+
     fields = (
         "simulation_start_date",
         "planning_completion_date",
@@ -713,7 +720,7 @@ def receipt_game_time(directory, index, *, capture_start=False, log_path=None):
         ("observe-1", "pickup_observed_by_date", 1),
         ("finish", "final_cargo_delivery_date", 21),
     ):
-        name = f"s{index}-{stage}-response.json"
+        name = cid(f"s{index}-{stage}") + "-response.json"
         state = json.loads((directory / name).read_bytes())["s"]
         metrics[field] = state[position] if state[position] >= 0 else None
         refs.append(name)
@@ -733,14 +740,9 @@ def receipt_game_time(directory, index, *, capture_start=False, log_path=None):
             raise ValueError("unique native game-time start/construction markers required")
         start_date, start_tick = map(int, starts[0])
         construction_date, construction_tick = map(int, constructions[0])
-        from app.simulation.openttd.freight_runtime_planning import cycle_request_id, loop_cycle
-
-        cycle = loop_cycle(directory)
-        final = json.loads(
-            (
-                directory / (cycle_request_id(f"s{index}-finish", cycle) + "-response.json")
-            ).read_bytes()
-        )["s"]
+        final = json.loads((directory / (cid(f"s{index}-finish") + "-response.json")).read_bytes())[
+            "s"
+        ]
         if (
             not start_date <= construction_date <= final[21] <= final[1]
             or not start_tick <= construction_tick <= final[0]
@@ -748,9 +750,7 @@ def receipt_game_time(directory, index, *, capture_start=False, log_path=None):
             raise ValueError("native game-time marker chronology mismatch")
         metrics["start_basis"] = "bridge_start_before_world_preparation"
         metrics["planning_completion_observed_by_date"] = json.loads(
-            (
-                directory / (cycle_request_id(f"select-{index}", cycle) + "-response.json")
-            ).read_bytes()
+            (directory / (cid(f"select-{index}") + "-response.json")).read_bytes()
         )["s"][1]
         metrics["simulation_start_date"] = start_date
         metrics["construction_completion_date"] = construction_date
@@ -1177,11 +1177,13 @@ async def execute_network(
         qualified_save_sha256=source_save,
         after_save_sha256=await save(backend, prepared, "after"),
     )
+    tail_keys = ("select-0", f"s{len(services) - 1}-park-read")
+    tail_records = tuple((name, cycle_request_id(name, cycle)) for name in tail_keys)
     finance_records = {
-        name: DeliveryReadback.model_validate_json(
-            (prepared.directory / f"{name}-response.json").read_bytes()
+        logical: DeliveryReadback.model_validate_json(
+            (prepared.directory / f"{disc}-response.json").read_bytes()
         )
-        for name in ("select-0", f"s{len(services) - 1}-park-read")
+        for logical, disc in tail_records
     }
     write_json(
         prepared.directory / "financial-reconciliation.json",
