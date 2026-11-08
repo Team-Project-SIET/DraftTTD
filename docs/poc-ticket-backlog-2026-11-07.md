@@ -295,3 +295,30 @@ operator.
   grants (E141, E142, E145, attempt-1) void for reuse; FD-C-2 stays
   `INCOMPLETE_EVIDENCE`; the 53-legacy-red FULL regression stays the
   wayfinder EXIT gate.
+- **E152 attempt-2 (2026-11-08, native):** the fresh explicit grant ran
+  the byte-unchanged command of record once; it failed typed and was
+  sealed (`playable-demo-e6852692d0ef40199db0c71b101b2dda`:
+  `duplicate/out-of-order native read evidence`, launches 1 /
+  connections 2, owned failure save completed and retained, cleanup
+  fully certified at root and both cycles). Outcomes: the E150
+  per-cycle copy set is proven live (the crash seam of attempt 1
+  passed); cycle 1 completed a full native recording to a typed
+  zero-service terminal (`NATIVE_LOOP_ZERO_SERVICES`, 9,702/9,702
+  capture pairs, `pause_pairs=6`, truncated search / candidates 0);
+  cycle 2 died at its first qualification clock poll — per-cycle poll
+  counters restart at 1 under the constant `freight-plan` session id,
+  so every clock request id appears twice in the ONE shared server
+  `stderr.log` and the typed duplicate guard fired before cycle-2's own
+  markers (same defect family as E150: per-attempt-shared artifact
+  consumed per-cycle; new surface).
+- **FD-C-2:** still `INCOMPLETE_EVIDENCE` (truncated search, candidates
+  0; zero-service observed, never a completed feasibility search). All
+  three retained manifests re-derive equal; the loop-receipt instrument
+  refuses the dir typed, no forced relabel; no native process remains.
+- **Gate of record:** no fix under the consumed attempt-2 grant; an
+  offline repair round (per-cycle qualification id namespace or
+  cycle-scoped stderr window) is a separate operator-approved step;
+  Attempt 3 then needs a fresh explicit operator grant with the
+  byte-unchanged command of record. The GUI-bearing native probe
+  remains a separate later grant; the 53-legacy-red FULL regression
+  stays the wayfinder EXIT gate.

@@ -3574,3 +3574,62 @@ unchanged; one commit, no push).
   separate later grant.
 
 Evidence index E151.
+
+### 2026-11-08 — Ticket-05 Phase C attempt-2 FAILED once under the fresh explicit grant; per-cycle copy set proven live; new shared-log id collision certified (E152)
+
+Offline post-mortem under the operator's Attempt-2 grant ("...No retry, no
+seed change, no additional launch, and no execution outside this scope.
+Stop immediately on any unexpected failure. Preserve all sealed historical
+evidence. After execution, independently verify both cycles and reassess
+FD-C-2 using fresh digest-pinned evidence."): the byte-unchanged command of
+record ran exactly once and stopped on the first unexpected failure —
+no retry, no relaunch, no artifact mutation; strictly no code change
+under the grant.
+
+- **Run dir of record (sealed, read-only):**
+  `artifacts/demos/playable-demo-e6852692d0ef40199db0c71b101b2dda`.
+  Root result: `status=FAILED`, error
+  `ValueError: duplicate/out-of-order native read evidence`, launches 1 /
+  connections 2 / requests 0 / mutations 0, funding 2/1 retained,
+  `failure_save_error=None` (the owned failure save COMPLETED and
+  `failure.sav` is retained — attempt-1's save defect does not recur).
+- **Cycle 1 recorded natively end-to-end to a typed zero-service
+  terminal:** full five-file per-cycle copy set present per the E150 fix
+  (the crash seam of attempt 1 passed live), capital funding retained,
+  `loop-cycle.json` frames_start 0 / funding_frames 4, 9,702/9,702
+  capture pairs completed (attempt-1 saw only 832), `pause_pairs=6` with
+  no `pause_resume_error`, compatible 16 / captured 6 / `search_truncated
+  =true` / candidates 0, and `cycle-result.json`
+  `NATIVE_LOOP_ZERO_SERVICES` typed
+  `ValueError: NO_FEASIBLE_SERVICES: no supported full-load road engine
+  and supply`; per-cycle cleanup fully certified.
+- **Cycle 2 staged correctly (copy set + runtime identity + marker,
+  frames_start 20463 / funding_frames 0) and failed typed at its first
+  qualification clock poll before any capture**: certified root cause —
+  the qualification evidence parser reads the ONE shared per-attempt
+  server `stderr.log`, while per-cycle qualification sessions restart
+  their poll counters at 1 under the constant session id `freight-plan`;
+  every clock request id therefore appears in the retained stderr
+  exactly twice (e.g. `freight-plan-clock-1` at lines 87–89 and again at
+  1143–1145), so cycle-2's poll re-matched cycle-1's completed marker
+  quadruple and tripped the typed duplicate guard
+  (`ValueError: duplicate/out-of-order native read evidence`,
+  `qualification_evidence.py`), never the deadline. Same defect family
+  as E150: a per-attempt-shared artifact consumed per-cycle with
+  per-cycle-reset identity state; second instance, new surface.
+- **FD-C-2: still `INCOMPLETE_EVIDENCE`** from fresh digest-pinned
+  evidence — the truncated-search rule binds; cycle-1's zero-service
+  terminal is an observed typed outcome, never a completed feasibility
+  search.
+- **Verification of record:** all three retained manifests re-derive
+  digest-for-digest equal (root 18, cycle-1 19,440, cycle-2 13 entries);
+  the independent loop-receipt instrument refuses the dir typed
+  (`loop attempt did not reach a verified terminal status`) with no
+  forced relabel; no native OpenTTD process remains.
+- **Stop point:** no fix applied under the consumed attempt-2 grant — an
+  offline repair round (per-cycle qualification id namespace or
+  cycle-scoped stderr window) is a separate operator-approved step;
+  Attempt 3 then needs a fresh explicit operator grant with the
+  byte-unchanged command of record.
+
+Evidence index E152.

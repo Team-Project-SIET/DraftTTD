@@ -1627,3 +1627,51 @@ git diff --check
 - The command of record stays byte-unchanged; Attempt 2 still waits on a
   fresh explicit operator grant, and the sealed attempt-1 dir keeps its
   FAILED terminal identity forever.
+
+## 2026-11-08 addendum #10 — E152: attempt-2 sealed FAILED; copy set proven live; shared-log id collision certified (checked)
+
+The fresh explicit Attempt-2 grant ran the byte-unchanged command of
+record once; it stopped typed on the first unexpected failure
+(`ATTEMPT-EXIT=1`). Run dir of record (sealed, read-only forever):
+`artifacts/demos/playable-demo-e6852692d0ef40199db0c71b101b2dda`.
+
+```bash
+# Post-mortem readback of the sealed attempt (read-only; never mutate):
+.venv/bin/python - <<'PY'
+import json
+from pathlib import Path
+from app.simulation.openttd.proof.freight_delivery import verify_loop_receipt
+from app.simulation.openttd.proof.harness import manifest
+d = Path("artifacts/demos/playable-demo-e6852692d0ef40199db0c71b101b2dda")
+r = json.loads((d / "result.json").read_bytes())
+print(r["status"], "|", r["error"], "| launches", r["launches"], "connections", r["connections"])
+for c in ("loop-cycle-1", "loop-cycle-2"):
+    print(c, "manifest-equal:", manifest(d / c) == (d / c / "artifact-manifest.sha256").read_text())
+diag = json.loads((d / "loop-cycle-1/planning-diagnostic.json").read_bytes())
+print("cycle1 capture", diag["capture_requests_completed"], "pause_pairs", diag["pause_pairs"],
+      "captured", diag["captured_relationships"], "truncated", diag["search_truncated"])
+print("cycle1 zero-service:", json.loads((d / "loop-cycle-1/cycle-result.json").read_bytes())["status"])
+try:
+    verify_loop_receipt(d)
+    print("VERIFY-OK")
+except ValueError as e:
+    print("VERIFY-TYPED-REFUSAL:", e)
+PY
+
+# Shared-log collision certification ((stderr clock ids appear exactly
+# twice — once per cycle) in the one shared per-attempt stderr log:
+grep -o "request_id=[^ ]*-clock-[0-9]*" artifacts/demos/playable-demo-e6852692d0ef40199db0c71b101b2dda/stderr.log | sort | uniq -c | awk '$1>1' | head -12
+```
+
+- **Classification:** same family as E150 — a per-attempt-shared
+  artifact (the single server `stderr.log` of the one-launch loop)
+  consumed by the qualification evidence parser with per-cycle-reset
+  identity state (poll counters restart at 1 under the constant session
+  id `freight-plan`); second instance, new surface.
+- **FD-C-2:** still `INCOMPLETE_EVIDENCE` (cycle-1 search truncated,
+  candidates 0; the zero-service terminal is observed, never a completed
+  feasibility search).
+- **Next:** no fix under the consumed grant; an offline repair round
+  (per-cycle qualification id namespace or cycle-scoped stderr window)
+  is a separate operator-approved step; Attempt 3 then needs a fresh
+  explicit operator grant with the byte-unchanged command of record.

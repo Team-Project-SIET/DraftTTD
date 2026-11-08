@@ -350,3 +350,53 @@ record unchanged from E150; FD-C-2 stays `INCOMPLETE_EVIDENCE`. The
 command of record stays byte-unchanged; Attempt 2 waits on a fresh
 explicit operator grant (consumed: E141, E142, E145, attempt-1 — void
 for reuse); the GUI-bearing native probe remains a separate later grant.
+
+## Attempt-2 record — Phase C loop qualification: EXECUTED ONCE, FAILED, SEALED (2026-11-08, E152)
+
+The operator's fresh explicit grant ran the byte-unchanged command of
+record once (seed 2026, 3 towns / 3 industries, headless random world,
+two cycles, one launch with one qualified connection per cycle). It
+stopped typed on the first unexpected failure — no retry, no relaunch,
+no artifact mutation, strictly no code change under the grant. Run dir
+of record: `artifacts/demos/playable-demo-e6852692d0ef40199db0c71b101b2dda`
+(root `status=FAILED`, `ValueError: duplicate/out-of-order native read
+evidence`, launches 1 / connections 2 / requests 0 / mutations 0,
+funding 2/1, owned failure save completed and retained — attempt-1's
+save defect does not recur).
+
+The E150 per-cycle copy-set fix is PROVEN LIVE: `graphics-identity.json`
+is present and digest-covered in both cycle dirs and the chain passed
+attempt-1's crash seam. Cycle 1 recorded natively end-to-end to a typed
+zero-service terminal: `cycle-result.json`
+`NATIVE_LOOP_ZERO_SERVICES` with `planning_error="ValueError:
+NO_FEASIBLE_SERVICES: no supported full-load road engine and supply"`,
+9,702/9,702 capture pairs completed, `pause_pairs=6` with no
+`pause_resume_error`, compatible 16 / captured 6 / `search_truncated
+=true` / candidates 0, per-cycle cleanup fully certified. Cycle 2 staged
+correctly (full copy set + runtime identity + `loop-cycle.json`
+frames_start 20463 / funding_frames 0) and failed at its first
+qualification clock poll before any capture: the qualification evidence
+parser reads the ONE shared per-attempt server `stderr.log` while
+per-cycle sessions restart poll counters at 1 under the constant session
+id `freight-plan`, so every clock request id appears exactly twice in
+the retained stderr (e.g. `freight-plan-clock-1` at lines 87–89 and
+1143–1145) and the typed duplicate/out-of-order guard fired before
+cycle-2's own markers — never the deadline. Classification: the same
+defect family as E150 (a per-attempt-shared artifact consumed per-cycle
+with per-cycle-reset identity state), second instance, new surface.
+
+FD-C-2 stays `INCOMPLETE_EVIDENCE` from fresh digest-pinned evidence:
+cycle-1's search is typed truncated with candidates 0, and its
+zero-service terminal is an observed outcome, never a completed
+feasibility search. All three retained manifests re-derive digest-for-
+digest equal (root 18, cycle-1 19,440, cycle-2 13 entries); the loop-
+receipt instrument refuses the dir typed
+(`loop attempt did not reach a verified terminal status`) with no forced
+relabel; no native OpenTTD process remains.
+
+**Stop point:** no fix applied under the consumed attempt-2 grant. The
+repair design (per-cycle qualification request-id namespace or a
+cycle-scoped stderr marker window) and its offline round are a separate
+operator-approved step; Attempt 3 then needs a fresh explicit operator
+grant with the byte-unchanged command of record. The GUI-bearing native
+probe remains a separate later grant.

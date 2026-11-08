@@ -717,3 +717,36 @@ E141/E142/E145 grants and the attempt-1 grant are all consumed and void
 for reuse; the offline success evaluator stays `verify <run-dir>` →
 `verified_loop_cycles`; the GUI-bearing probe remains a separate later
 grant.
+
+## E152 addendum (2026-11-08) — attempt-2: copy set proven live; cycle-1 zero-service; cycle-2 shared-log id collision
+
+Attempt 2 ran exactly once under the operator's fresh explicit grant and
+failed typed with exit 1; sealed run dir of record
+`artifacts/demos/playable-demo-e6852692d0ef40199db0c71b101b2dda`
+(`status=FAILED`, `ValueError: duplicate/out-of-order native read
+evidence`, launches 1 / connections 2 / funding 2/1, owned failure save
+completed and retained, cleanup fully certified at root and both cycles).
+The E150 per-cycle copy-set fix is proven live: `graphics-identity.json`
+is present in both cycle dirs and the chain passed attempt-1's crash
+seam. Cycle 1 recorded natively end-to-end to a typed zero-service
+terminal (`NATIVE_LOOP_ZERO_SERVICES`, `NO_FEASIBLE_SERVICES: no
+supported full-load road engine and supply`) with 9,702/9,702 capture
+pairs, `pause_pairs=6` without a `pause_resume_error`, and
+`search_truncated=true` / candidates 0. Cycle 2 staged correctly and
+died at its first qualification clock poll: per-cycle sessions restart
+poll counters at 1 under the constant session id `freight-plan`, so each
+clock request id appears twice in the one shared server `stderr.log`
+(e.g. `freight-plan-clock-1` at lines 87–89 and 1143–1145) and the
+typed duplicate/out-of-order guard fired before cycle-2's own markers.
+Same defect family as E150 (per-attempt-shared artifact consumed
+per-cycle), new surface.
+
+**FD-C-2 stays `INCOMPLETE_EVIDENCE`** from fresh digest-pinned
+evidence: truncated search, observed zero-service, never a completed
+feasibility search. All three retained manifests re-derive equal; the
+loop-receipt instrument refuses the dir typed with no forced relabel.
+**Stop:** no fix under the consumed grant; an offline repair round
+(per-cycle qualification id namespace or cycle-scoped stderr window) is
+a separate operator-approved step, then Attempt 3 needs a fresh explicit
+operator grant with the byte-unchanged command of record. The
+GUI-bearing probe remains a separate later grant.
