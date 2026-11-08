@@ -3520,3 +3520,57 @@ ticket-05 attempt record, map line, backlog status-log entry.
   fresh explicit operator grant (all earlier grants consumed and void).
 
 Evidence index E150.
+
+### 2026-11-08 — Ticket-05 Phase C follow-up: cycle-chain artifact audit closed + e2e offline tests + attempt-1 pin (E151)
+
+Offline only (branch `miles/fright-delivery` from `81eba19`; no launch, no
+AdminPort, no staging, no claim, no `artifacts/` write; app code
+unchanged; one commit, no push).
+
+- **Audit verdict:** the full run-time cycle-1 recording and planning
+  path was re-audited for additional missing-artifact defects like the
+  E150 crash; nothing further is missing. Every plain-constant
+  `prepared.directory` read in the chain classifies per occurrence into
+  exactly six names: root-stage copies (`PRELAUNCH.json`,
+  `graphics-identity.json`), the per-cycle staging self-write
+  (`runtime-identity.json`), the chain self-write before read
+  (`qualification-prefix-frames.json`), and exchange-disc packets
+  (`capacity-add-response.json`, `capacity-read-response.json`). The
+  audit itself is pinned by a new AST drift-guard test, so any future
+  unclassified chain read fails its own test.
+- **Three new offline tests** (`tests/test_freight_loops.py`, 283 lines
+  added, 26 passed = 23 prior + 3): (1) the drift guard (staging tuple
+  equality, the per-cycle `runtime-identity.json` write pin, the capital
+  funding five-file tuple pin); (2) an end-to-end capture test stages an
+  `attempt/loop-cycle-1` exactly like `run_loops` does and drives the
+  real `capture_planning_facts` offline against the staged recording
+  alone (450 tiles / 900 coverage, region == `relationship_region(...)`,
+  `content_digest` == sha256 of the staged per-cycle
+  `graphics-identity.json`, `generation_seed` 17 read from the per-cycle
+  runtime identity, `supplemental-planning-facts.json` retained,
+  `require_world` passes, the `planning-n0-*` packets land in the cycle
+  dir) — the exact seam attempt 1 died at; (3) a read-only pin test
+  re-derives the sealed attempt-1 manifest at root and `loop-cycle-1/`,
+  its typed FAILED identity (verbatim error shape, 1/1 launches/-
+  connections, 0/0 requests/mutations, funding 2/1,
+  `failure_save_error="owned native save completion missing"`, no
+  `loop-cycle-2`, 832/832 capture, `pause_pairs` 1, 16 compatible, no
+  `pause_resume_error`, qualified M2 month) — a clone without the
+  retained bytes fails as missing evidence, never regeneration.
+- **Verification:** the 13-file adjacent tuple of record 269 passed /
+  0 failed (E150's 266 + 3) plus `tests/test_random_distance.py` 13 in
+  the same run (rc 0); ruff/format/`py_compile`/`git diff --check`
+  clean; `ty` clean on the test file + both chain modules +
+  `freight_delivery.py` (the single pre-existing counted
+  `viewer.log.closed` diagnostic stands). Digests of record unchanged
+  from E150; FD-C-2 stays `INCOMPLETE_EVIDENCE` and every truncated-
+  search limitation binds.
+- **Status:** Attempt 2 still waits on a fresh explicit operator grant
+  with the byte-unchanged command of record (`--headless --random-world
+  --seed 2026 --towns 3 --industries 3 --stop-on-delivery --cycles 2`);
+  consumed grants (E141, E142, E145, attempt-1) are void for reuse; the
+  offline success evaluator stays `verify <run-dir>` →
+  `verified_loop_cycles`; the GUI-bearing native probe remains a
+  separate later grant.
+
+Evidence index E151.

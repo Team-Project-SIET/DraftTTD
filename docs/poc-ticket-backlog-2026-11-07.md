@@ -273,3 +273,25 @@ operator.
   grants: E141, E142, E145, attempt-1 — all void for reuse); the
   GUI-bearing native probe remains a separate later grant; the 53-legacy-red
   FULL regression stays the wayfinder EXIT gate.
+- **E151 offline follow-up (2026-11-08):** the full run-time cycle-1
+  chain audit found nothing further missing after the E150 fix — every
+  plain-constant `prepared.directory` read in
+  `freight_native_network.py` + `freight_runtime_planning.py`
+  classifies per occurrence into exactly six names (root-stage copies
+  `PRELAUNCH.json`/`graphics-identity.json`, the per-cycle staging
+  self-write `runtime-identity.json`, the chain self-write
+  `qualification-prefix-frames.json`, and exchange-disc packets
+  `capacity-add-response.json`/`capacity-read-response.json`), pinned by
+  an AST drift-guard test in `tests/test_freight_loops.py` (three new
+  tests: drift guard, staged-cycle-dir e2e capture through the real
+  `capture_planning_facts` — 450 tiles / 900 coverage, digest-bound
+  `content_digest`, `generation_seed` 17 from the per-cycle identity —
+  and the sealed attempt-1 read-only pin re-deriving its manifest and
+  typed FAILED identity). 13-file adjacent tuple 269 passed / 0 failed
+  plus `tests/random_distance` 13; hygiene clean; `ty` clean on touched
+  files; no app code changed (digests unchanged from E150).
+- **Gate of record:** unchanged — Attempt 2 waits on a fresh explicit
+  operator grant with the byte-unchanged command of record; consumed
+  grants (E141, E142, E145, attempt-1) void for reuse; FD-C-2 stays
+  `INCOMPLETE_EVIDENCE`; the 53-legacy-red FULL regression stays the
+  wayfinder EXIT gate.

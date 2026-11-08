@@ -1,25 +1,36 @@
 """Ticket-05 loop engine, offline fixtures: sealed cycles, built-service
 exclusion, pause pacing and CLI gating qualify without any native process."""
 
+import ast
 import asyncio
+import hashlib
 import io
 import json
+import re
+import shutil
 from datetime import date
 from decimal import Decimal
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
 import pytest
 from test_qualification_coordinator import QualificationWire, collect
+from test_random_distance import controlled_flat_coal_data, controlled_input
 from test_supplemental_planning_contracts import correspondence, fact_dict, facts
 
 import app.simulation.openttd.proof.road_mutation as road_mutation
+from app.demo_random import DemoBudgets, relationship_region
 from app.openttd_demo import main as demo_main
 from app.planning.p08_adapter import MonthlyBatchPolicy
 from app.simulation.openttd.cargo_page import CargoCatalogRecord
 from app.simulation.openttd.freight_native_network import (
     network_from_facts,
     paused_world_clock,
+)
+from app.simulation.openttd.freight_runtime_planning import (
+    PlanningReadback,
+    capture_planning_facts,
 )
 from app.simulation.openttd.proof.freight_delivery import (
     NETWORK_BUDGETS,
@@ -418,3 +429,276 @@ def test_command_readback_refuses_unknown_plan_lines(tmp_path):
             network_plans=(PLAN_Y,),
             foreign_plans=(PLAN_F,),
         )
+
+
+# --- E150 follow-up audit: per-cycle artifact surface of the loop chain -------
+
+SEALED_ATTEMPT1 = Path("artifacts/demos/playable-demo-246dc3a4f4fc4b40aee0f73696455473")
+
+
+def test_cycle_copy_set_covers_every_prepared_directory_read_of_the_chain():
+    """Audit of record (E150 follow-up): every plain constant path touched
+    under prepared.directory by the per-cycle chain (freight_native_network +
+    freight_runtime_planning) must be one of: a root-stage copy carried by the
+    loop staging tuple of freight_delivery.py, a per-cycle file the flow
+    writes itself before the read, or an exchange packet written by the
+    exchange() disc into the cycle dir in the same flow. Any new read fails
+    here until its source is classified and staged."""
+    chain = []
+    tree = ast.parse(Path("app/simulation/openttd/freight_native_network.py").read_text())
+    chain.append(("freight_native_network", tree))
+    tree = ast.parse(Path("app/simulation/openttd/freight_runtime_planning.py").read_text())
+    chain.append(("freight_runtime_planning", tree))
+
+    def prepared_directory(node):
+        """Run-time cycle receiver: the `prepared.directory` attribute the
+        loop chain passes down (the exact receiver attempt-1 died at).
+        Verify-path plain `directory` names are a different layer, replayed
+        against recordings by the E150 pin and the addendum #8 readback."""
+        return (
+            isinstance(node, ast.Attribute)
+            and isinstance(node.value, ast.Name)
+            and node.value.id == "prepared"
+            and node.attr == "directory"
+        )
+
+    def write_target(node):
+        return (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Name)
+            and node.func.id == "write_json"
+            and node.args
+            and isinstance(node.args[0], ast.BinOp)
+            and prepared_directory(node.args[0].left)
+            and isinstance(node.args[0].right, ast.Constant)
+            and isinstance(node.args[0].right.value, str)
+        )
+
+    def constant_paths(walk):
+        for node in walk:
+            if (
+                isinstance(node, ast.BinOp)
+                and isinstance(node.op, ast.Div)
+                and prepared_directory(node.left)
+                and isinstance(node.right, ast.Constant)
+                and isinstance(node.right.value, str)
+            ):
+                yield node
+
+    # A write_json call's args[0] path node WRITES the record; every other
+    # occurrence of the same path — an sha256 digest nested in a write's
+    # payload, an open/json read — is a READ. Classify per occurrence, then
+    # per name.
+    write_ids = set()
+    for _module, walk in chain:
+        for node in ast.walk(walk):
+            if isinstance(node, ast.Call) and write_target(node):
+                write_ids.add(id(node.args[0]))
+
+    roles: dict[str, set[str]] = {}
+    for module, walk in chain:
+        for node in constant_paths(ast.walk(walk)):
+            roles.setdefault(node.right.value, set()).add(
+                "write" if id(node) in write_ids else "read"
+            )
+
+    staging = Path("app/simulation/openttd/proof/freight_delivery.py").read_text()
+    copied_match = re.search(
+        r"Per-cycle copies of every root artifact.*?for name in \(([^)]*)\)", staging, re.S
+    )
+    assert copied_match is not None
+    copied_names = set(re.findall(r'"([A-Za-z0-9._-]+)"', copied_match.group(1)))
+    # The staging source of truth: per-cycle copies of every root-only
+    # artifact the chain reads, plus the seal companions the verify replay
+    # needs; runtime-identity.json is written per cycle by run_loops itself.
+    assert copied_names == {
+        "PRELAUNCH.json",
+        "PRELAUNCH.sha256",
+        "CLAIM.json",
+        "frozen-source.zip",
+        "graphics-identity.json",
+    }
+    assert re.search(r'write_json\(\n\s+cycle_dir / "runtime-identity\.json"', staging)
+    # Read partition of the chain's plain constant prepared.directory paths:
+    # root-stage copies, per-cycle staging self-writes, chain self-writes
+    # before read (qualification-prefix-frames.json from
+    # collect_qualified_world), and exchange-disc packets (capacity digests
+    # read the same connection's retained responses). Write-only names are
+    # exactly the complement and are never read.
+    reads = {name for name, level in roles.items() if "read" in level}
+    assert reads == {
+        "PRELAUNCH.json",
+        "graphics-identity.json",
+        "runtime-identity.json",
+        "qualification-prefix-frames.json",
+        "capacity-add-response.json",
+        "capacity-read-response.json",
+    }, sorted(reads)
+    write_only = set(roles) - reads
+    assert write_only and all(
+        level == {"write"} for name, level in roles.items() if name in write_only
+    )
+    funding = re.search(r"for name in \(([^)]*capital-initialize-request[^)]*)\)", staging, re.S)
+    assert funding is not None
+    assert set(re.findall(r'"([A-Za-z0-9._-]+)"', funding.group(1))) == {
+        "capital-initialize-request.json",
+        "capital-initialize-response.json",
+        "capital-read-request.json",
+        "capital-read-response.json",
+        "scenario-capital.json",
+    }
+
+
+def test_cycle_capture_builds_supplemental_facts_from_the_staged_cycle_dir(tmp_path):
+    """E150 follow-up, end to end offline: stage loop-cycle-1 exactly like
+    run_loops does (the extended copy set + per-cycle runtime-identity and
+    loop marker), then drive the real supplemental-facts capture against the
+    staged recording alone — attempt 1 died natively at exactly this seam on
+    the missing per-cycle graphics-identity.json."""
+    root = tmp_path / "attempt"
+    cycle_dir = root / "loop-cycle-1"
+    cycle_dir.mkdir(parents=True)
+    (root / "PRELAUNCH.json").write_text(
+        json.dumps(dict(planner=True, network=True, loop_cycles=2))
+    )
+    seal = hashlib.sha256((root / "PRELAUNCH.json").read_bytes()).hexdigest()
+    (root / "PRELAUNCH.sha256").write_text(seal + "\n")
+    (root / "CLAIM.json").write_text(
+        json.dumps(dict(consumed=True, prelaunch_digest=seal, launches_allowed=1, retries=0))
+    )
+    (root / "frozen-source.zip").write_bytes(b"loop-cycle-pinning")
+    (root / "graphics-identity.json").write_text(json.dumps(dict(archive_sha256="a" * 64)))
+    for name in (
+        "PRELAUNCH.json",
+        "PRELAUNCH.sha256",
+        "CLAIM.json",
+        "frozen-source.zip",
+        "graphics-identity.json",
+    ):
+        shutil.copyfile(root / name, cycle_dir / name)
+    (cycle_dir / "runtime-identity.json").write_text(
+        json.dumps(
+            dict(encrypted=True, welcome=dict(revision="15.3", seed=17, width=64, height=64))
+        )
+    )
+    (cycle_dir / "loop-cycle.json").write_text(
+        json.dumps(dict(schema="ramrom-loop-cycle-v1", cycle=1, loop_cycles=2, funding_frames=4))
+    )
+    value = controlled_input()
+    world = value.admitted.world
+    data = controlled_flat_coal_data()
+    lookup = {t["tile_id"]: t for t in data["tiles"]}
+    scopes = {(c["tile_id"], c["role"]): c for c in data["coverage"]}
+    calls = []
+
+    async def exchange(session, request, directory, response_type):
+        calls.append(request)
+        assert directory == cycle_dir  # every planning packet lands in the cycle recording
+        if request.kind == "settings":
+            row = [1, 0, 0, 3, 0, 10, 50, 100]
+        elif request.kind == "engines":
+            row = [7]
+        elif request.kind == "engine":
+            row = [7, 1, 0, 30, 1000, 365, 40]
+        else:
+            assert request.arg in lookup
+            row = (
+                [request.arg, 0, 0, 1]
+                + [0] * 10
+                + [
+                    -1,
+                    1,
+                    8,
+                    int(scopes[request.arg, "pickup"]["industry_covered"]),
+                    int(scopes[request.arg, "delivery"]["industry_covered"]),
+                ]
+            )
+        date_value = value.facts.capture_economy_date_before
+        payload = dict(
+            protocol=1,
+            type="planning_read_result",
+            request_id=request.request_id,
+            kind=request.kind,
+            arg=request.arg,
+            src=request.src,
+            dst=request.dst,
+            cargo=request.cargo,
+            before=date_value,
+            after=date_value,
+            data=row,
+        )
+        raw = json.dumps(payload, separators=(",", ":")).encode()
+        assert len(raw) <= 512
+        (directory / (request.request_id + "-request.json")).write_bytes(request.to_bytes())
+        (directory / (request.request_id + "-response.json")).write_bytes(raw)
+        return PlanningReadback.parse_for(request, raw)
+
+    captured = asyncio.run(
+        capture_planning_facts(
+            SimpleNamespace(health=lambda: None, session=object()),
+            SimpleNamespace(directory=cycle_dir, endpoints=(1, 2)),
+            world,
+            read_exchange=exchange,
+            relationship=(0, 1, 1),
+            prefix="n0-",
+            capture_budget=DemoBudgets(),
+        )
+    )
+    assert len(captured.tiles) == 450 and len(captured.coverage) == 900
+    region = relationship_region(world, (0, 1, 1), 512)
+    assert dict(captured.region.model_dump()) == region
+    digest = hashlib.sha256((cycle_dir / "graphics-identity.json").read_bytes()).hexdigest()
+    assert captured.source.content_digest == digest
+    assert captured.settings.generation_seed == 17
+    stored = json.loads((cycle_dir / "supplemental-planning-facts.json").read_text())
+    assert stored["source"]["content_digest"] == digest
+    assert [scope.role for scope in captured.coverage_scopes] == ["pickup", "delivery"]
+    captured.require_world(world)
+    assert len({request.kind for request in calls}) == 4
+    assert (cycle_dir / "planning-n0-0-request.json").is_file()
+    assert (cycle_dir / "planning-n0-452-response.json").is_file()
+
+
+def test_sealed_attempt1_failed_bytes_stay_pinned():
+    """Attempt-1 of record keeps its sealed typed FAILED identity forever;
+    this read-only pin re-derives its manifest integrity and its recorded
+    facts exactly as E150 recorded them (a clone without the retained bytes
+    fails here meaning missing evidence, never regeneration)."""
+    result = json.loads((SEALED_ATTEMPT1 / "result.json").read_bytes())
+    assert result["status"] == "FAILED"
+    assert result["error"].startswith("FileNotFoundError: [Errno 2] No such file or directory: ")
+    assert result["error"].endswith("/loop-cycle-1/graphics-identity.json'")
+    assert result["launches"] == 1 and result["connections"] == 1
+    assert result["requests"] == 0 and result["mutations"] == 0
+    assert (result["funding_requests"], result["funding_mutations"]) == (2, 1)
+    assert result["failure_save_error"] == "owned native save completion missing"
+    assert not (SEALED_ATTEMPT1 / "loop-cycle-2").exists()
+    assert manifest(SEALED_ATTEMPT1) == (SEALED_ATTEMPT1 / "artifact-manifest.sha256").read_text()
+    cycle = SEALED_ATTEMPT1 / "loop-cycle-1"
+    assert manifest(cycle) == (cycle / "artifact-manifest.sha256").read_text()
+    diagnostic = json.loads((cycle / "planning-diagnostic.json").read_bytes())
+    assert diagnostic["status"] == "FAILED"
+    assert diagnostic["capture_requests_attempted"] == 832
+    assert diagnostic["capture_requests_completed"] == 832
+    assert diagnostic["pause_pairs"] == 1
+    assert "pause_resume_error" not in diagnostic
+    assert diagnostic["captured_relationships"] == 0 and diagnostic["search_truncated"] is True
+    assert diagnostic["candidate_count"] is None and diagnostic["selected_service_count"] is None
+    assert len(diagnostic["compatible_relationships"]) == 16
+    observation = json.loads((cycle / "world-planning-observation.json").read_bytes())
+    assert observation["qualified_month"]["economy_month"] == 2
+    for name in (
+        "capital-initialize-request.json",
+        "capital-initialize-response.json",
+        "capital-read-request.json",
+        "capital-read-response.json",
+        "scenario-capital.json",
+        "before.sav",
+        "planning-n0-0-request.json",
+        "planning-n0-0-response.json",
+        "loop-cycle.json",
+        "network-candidates.json",
+    ):
+        assert (cycle / name).is_file()
+    for name in ("cleanup.json", "stdout.log", "stderr.log", "artifact-manifest.sha256"):
+        assert (cycle / name).is_file()

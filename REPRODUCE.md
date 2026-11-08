@@ -1586,3 +1586,44 @@ The `--headless` loop command of record and its per-cycle verify command
 remain unchanged; the next attempt still requires a fresh explicit
 operator grant, and the sealed attempt-1 dir keeps its FAILED terminal
 identity forever — it is never relabeled, rerun or regenerated.
+
+## 2026-11-08 addendum #9 — E151: cycle-chain artifact audit closed + e2e offline tests + attempt-1 pin (checked)
+
+Offline-only follow-up of record after the E150 fix (no app code changed;
+the only tree change is 283 lines in `tests/test_freight_loops.py`).
+
+- **Audit of record:** every plain-constant `prepared.directory` read in
+  the run-time cycle chain (`freight_native_network.py` +
+  `freight_runtime_planning.py`) classifies into exactly six names —
+  root-stage copies (`PRELAUNCH.json`, `graphics-identity.json`), the
+  per-cycle staging self-write (`runtime-identity.json`), the chain
+  self-write before read (`qualification-prefix-frames.json`), and
+  exchange-disc packets (`capacity-add-response.json`,
+  `capacity-read-response.json`). No unclassified remainder; nothing
+  further missing.
+- **Pinned by tests of record (all offline, controlled):**
+
+```bash
+# The three new tests + the suite (26 passed: 23 prior + 3 new):
+.venv/bin/pytest tests/test_freight_loops.py -q
+
+# 13-file adjacent tuple of record at 269 passed (E150's 266 + 3) plus the
+# new controlled-harness import source (13 more), one run, rc 0:
+.venv/bin/pytest tests/test_random_capture_budgets.py tests/test_demo_random_native.py tests/test_native_freight_network.py tests/test_network_world_preparation.py tests/test_freight_loops.py tests/test_scenario_capital.py tests/test_freight_canonical_persistence.py tests/test_freight_canonical_transport.py tests/test_freight_continuous.py tests/test_freight_finance.py tests/test_openttd_demo.py tests/test_freight_delivery.py tests/test_freight_network.py tests/test_random_distance.py -q
+
+# Hygiene of record:
+.venv/bin/ruff check tests/test_freight_loops.py
+.venv/bin/ruff format --check tests/test_freight_loops.py
+.venv/bin/python -m py_compile tests/test_freight_loops.py
+uvx ty check tests/test_freight_loops.py app/simulation/openttd/proof/freight_delivery.py app/simulation/openttd/freight_native_network.py app/simulation/openttd/freight_runtime_planning.py
+git diff --check
+```
+
+- Digests of record unchanged from E150 (freight_delivery
+  `6f913b555e05ca05`, openttd_demo `db2051dea8885642`,
+  test_openttd_demo `2934214451eb1e2d`); the one pre-existing counted
+  `viewer.log.closed` diagnostic in `test_openttd_demo.py` stands
+  untouched.
+- The command of record stays byte-unchanged; Attempt 2 still waits on a
+  fresh explicit operator grant, and the sealed attempt-1 dir keeps its
+  FAILED terminal identity forever.

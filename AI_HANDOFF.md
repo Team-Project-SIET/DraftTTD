@@ -674,3 +674,46 @@ diagnostic.
 launch, `--cycles 2`, stopped at the fresh-explicit-grant gate; the
 E141/E142/E145 grants and the attempt-1 grant are all consumed and void for
 reuse; the GUI-bearing probe remains a separate later grant.
+
+## E151 addendum (2026-11-08) — cycle-chain audit closed; e2e offline tests; attempt-1 pinned
+
+Ticket-05 Phase C follow-up, offline only, no app code changed (one
+commit, no push). The full run-time cycle-1 recording and planning path
+was audited once more for missing artifacts after the E150 fix: nothing
+further is missing. Every plain-constant `prepared.directory` read in
+the run-time chain (`freight_native_network.py` +
+`freight_runtime_planning.py`) classifies per occurrence into exactly
+six names — root-stage copies (`PRELAUNCH.json`, `graphics-identity.json`),
+the per-cycle staging self-write (`runtime-identity.json`), the chain
+self-write before read (`qualification-prefix-frames.json`), and
+exchange-disc packets (`capacity-add-response.json`,
+`capacity-read-response.json`); verify-path plain `directory` reads are
+a different layer covered by the E150 copy set plus the finalize
+copies. The audit is pinned by an AST drift-guard test that refuses any
+future unclassified chain read.
+
+Three new offline tests in `tests/test_freight_loops.py` (26 total
+passed): the drift guard; an end-to-end capture test that stages an
+`attempt/loop-cycle-1` exactly like `run_loops` does and drives the
+real `capture_planning_facts` offline against the staged recording
+alone (450 tiles / 900 coverage, digest-bound `content_digest` from the
+per-cycle `graphics-identity.json`, `generation_seed` 17 from the
+per-cycle runtime identity, retained `supplemental-planning-facts.json`
+and `planning-n0-*` packets) — the exact seam attempt 1 died at; and a
+read-only pin test re-deriving the sealed attempt-1 manifest at root and
+`loop-cycle-1/` with its typed FAILED identity verbatim (a clone
+without the retained bytes fails as missing evidence, never
+regeneration).
+
+Verification: the 13-file adjacent tuple of record 269 passed / 0
+failed plus `tests/test_random_distance.py` 13, rc 0; ruff/format/
+`py_compile`/`git diff --check` clean; `ty` clean on the touched files
+(the single pre-existing counted `viewer.log.closed` diagnostic stands).
+Digests of record unchanged from E150; FD-C-2 stays `INCOMPLETE_EVIDENCE`.
+
+**Next attempt:** command of record byte-unchanged (addenda #2–#9), one
+launch, `--cycles 2`, stopped at the fresh-explicit-grant gate; the
+E141/E142/E145 grants and the attempt-1 grant are all consumed and void
+for reuse; the offline success evaluator stays `verify <run-dir>` →
+`verified_loop_cycles`; the GUI-bearing probe remains a separate later
+grant.
