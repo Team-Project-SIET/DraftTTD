@@ -3482,3 +3482,41 @@ lands with its deterministic tests; the native GUI probe stays owed.
   AdminPort boundaries, staging suites still green).
 
 Evidence index E149.
+
+### 2026-11-08 — E150 attempt-1 of the loop qualification executed once under grant and FAILED (typed); root cause fixed offline
+
+The verbatim one-attempt grant was consumed on 2026-11-08: the command of
+record ran exactly once, failed, and the stop constraint was honored (no
+retry, no relaunch, no seed change; sealed bytes untouched by the
+post-mortem). Recorded at E150 (`EVIDENCE_INDEX.md`), REPRODUCE addendum #8,
+ticket-05 attempt record, map line, backlog status-log entry.
+
+- **Sealed failure of record:** run dir
+  `artifacts/demos/playable-demo-246dc3a4f4fc4b40aee0f73696455473`,
+  `status=FAILED` with
+  `FileNotFoundError: [Errno 2] No such file or directory:
+  '.../loop-cycle-1/graphics-identity.json'`, launches 1 / connections 1 /
+  requests 0 / mutations 0, the funded cycle-1 capital retained
+  (funding_requests 2, funding_mutations 1),
+  `failure_save_error="owned native save completion missing"`, cleanup fully
+  reaped at root and cycle level, no `loop-cycle-2`, attempt exit 1.
+- **Native pacing datum:** cycle-1 capture ran 832/832 read pairs natively
+  inside the qualified M2 month with `pause_pairs=1`, no
+  `pause_resume_error` — the E143 pacing fence held natively;
+  `compatible_relationships=16`; `search_truncated=true`,
+  `captured_relationships=0`.
+- **FD-C-2: `INCOMPLETE_EVIDENCE` (unchanged)** — no performing search
+  completed; a truncated search never supports a feasibility claim.
+- **Root cause + smallest fix:** the cycle flow digests
+  `graphics-identity.json` from the cycle dir while the per-cycle copy set
+  carried only PRELAUNCH/sha256/CLAIM/frozen-source — the copy set now
+  includes a content-identical `graphics-identity.json`
+  (`freight_delivery.py` `6f913b555e05ca05`), superseding E143's guaranteed
+  per-cycle list; pin test
+  `test_loop_cycle_recording_copies_the_graphics_identity_per_cycle` in
+  `tests/test_openttd_demo.py` (`2934214451eb1e2d`).
+- **Status:** adjacent tuple 266 passed / 0 failed; hygiene clean; the
+  command of record stays byte-unchanged and the next attempt waits on a
+  fresh explicit operator grant (all earlier grants consumed and void).
+
+Evidence index E150.

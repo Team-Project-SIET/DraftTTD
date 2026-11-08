@@ -628,3 +628,49 @@ unproven natively behind a fresh per-attempt grant (GUI run of the product
 line without `--stop-on-delivery`). Headless loop of record byte-preserved:
 the ticket-05 command of record, budgets, AdminPort boundaries and the
 staging/lifecycle suites are untouched and still green.
+
+## 2026-11-08 E150 addendum — attempt-1 loop qualification FAILED (sealed); per-cycle `graphics-identity.json` fix landed offline
+
+The one-attempt grant was consumed exactly once on 2026-11-08; the attempt
+failed and the stop constraint was honored. Post-mortem and fix round:
+offline only; sealed run bytes read, never modified; one commit, no push.
+Record: E150 in `EVIDENCE_INDEX.md`, TASKS ledger row, `REPRODUCE.md`
+addendum #8, ticket-05 attempt-1 record, map line, backlog status log.
+
+**Sealed facts (run dir
+`artifacts/demos/playable-demo-246dc3a4f4fc4b40aee0f73696455473`):**
+`status=FAILED`, error
+`FileNotFoundError: [Errno 2] No such file or directory:
+'.../loop-cycle-1/graphics-identity.json'`, launches 1 / connections 1 /
+requests 0 / mutations 0, funding recorded once (2 requests, 1 mutation),
+`failure_save_error="owned native save completion missing"`, cleanup fully
+reaped/disposed at root and cycle level, no `loop-cycle-2`, ATTEMPT-EXIT=1.
+The cycle-1 diagnostic shows the native capture phase succeeded before the
+crash: 832/832 capture requests completed inside the qualified M2 month,
+`pause_pairs=1`, no `pause_resume_error` (the E143 pacing fence held
+natively — first native confirmation), `compatible_relationships=16`,
+`captured_relationships=0`, `search_truncated=true`.
+
+**FD-C-2 stays `INCOMPLETE_EVIDENCE`:** the attempt failed before any
+performing search completed and every captured search is truncated; nothing
+from this attempt may support a feasibility claim.
+
+**Root cause and fix of record:** the cycle-1 `execute_network` flow
+digests `graphics-identity.json` from the cycle dir (supplemental planning
+facts content digest, `freight_runtime_planning.py`), while E143's
+per-cycle copy set guaranteed only `PRELAUNCH.json`, `PRELAUNCH.sha256`,
+`CLAIM.json` and `frozen-source.zip`. The cycle staging now copies a
+content-identical `graphics-identity.json` per cycle
+(`app/simulation/openttd/proof/freight_delivery.py`, digest
+`6f913b555e05ca05`; E143's guaranteed per-cycle list is superseded by the
+E150 row), pinned by
+`test_loop_cycle_recording_copies_the_graphics_identity_per_cycle` in
+`tests/test_openttd_demo.py` (`2934214451eb1e2d`). Adjacent tuple
+266 passed / 0 failed; ruff/format/`py_compile`/`git diff --check` clean;
+`ty` clean on both app files with the single pre-existing counted test-file
+diagnostic.
+
+**Next attempt:** command of record byte-unchanged (addenda #2–#5), one
+launch, `--cycles 2`, stopped at the fresh-explicit-grant gate; the
+E141/E142/E145 grants and the attempt-1 grant are all consumed and void for
+reuse; the GUI-bearing probe remains a separate later grant.

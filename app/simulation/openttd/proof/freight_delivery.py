@@ -1767,11 +1767,16 @@ async def run(p, *, on_ready=None, on_delivered=None, on_closing=None):
                         cycle_dir = p.directory / f"loop-cycle-{cycle}"
                         cycle_dir.mkdir(exist_ok=False)
                         cycle_records.append(cycle_dir)
+                        # Per-cycle copies of every root artifact the cycle flow
+                        # re-reads under prepared.directory (E150: the
+                        # supplemental planning facts digest
+                        # graphics-identity.json from the cycle dir).
                         for name in (
                             "PRELAUNCH.json",
                             "PRELAUNCH.sha256",
                             "CLAIM.json",
                             "frozen-source.zip",
+                            "graphics-identity.json",
                         ):
                             shutil.copyfile(p.directory / name, cycle_dir / name)
                         write_json(

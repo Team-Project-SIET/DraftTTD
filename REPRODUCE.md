@@ -1549,3 +1549,40 @@ process, the real window close, the view hold and the ended-by-operator
 record stay unproven natively behind a fresh per-attempt grant (GUI run
 without `--stop-on-delivery`). The `--headless` loop command of record and
 its per-cycle verify command remain unchanged (addenda #2–#5).
+
+## 2026-11-08 addendum #8 — E150: attempt-1 loop qualification recorded FAILED; per-cycle `graphics-identity.json` fix (checked)
+
+The verbatim one-attempt grant ran the command of record once on
+2026-11-08; it failed and was sealed. Post-mortem and fix offline; sealed
+run dir read-only. Run dir of record:
+`artifacts/demos/playable-demo-246dc3a4f4fc4b40aee0f73696455473`
+(`status=FAILED`, error `FileNotFoundError: [Errno 2] No such file or
+directory: '.../loop-cycle-1/graphics-identity.json'`,
+`failure_save_error="owned native save completion missing"`, cleanup fully
+reaped at root and cycle level, no `loop-cycle-2`, ATTEMPT-EXIT=1).
+
+```bash
+# Post-mortem readback of the sealed attempt (read-only; never mutate):
+.venv/bin/python - <<'PY'
+import json
+from pathlib import Path
+d = Path("artifacts/demos/playable-demo-246dc3a4f4fc4b40aee0f73696455473")
+result = json.loads((d / "result.json").read_bytes())
+diag = json.loads((d / "loop-cycle-1/planning-diagnostic.json").read_bytes())
+print(result["status"], "|", result["error"])
+print("capture", diag["capture_requests_attempted"], diag["capture_requests_completed"],
+      "pause_pairs", diag["pause_pairs"], "truncated", diag["search_truncated"])
+PY
+
+# Offline pin test of record (the fix: per-cycle content-identical
+# graphics-identity.json copy; drives the loop harness to cycle-1 staging):
+.venv/bin/pytest "tests/test_openttd_demo.py::test_loop_cycle_recording_copies_the_graphics_identity_per_cycle"
+
+# Adjacent tuple of record (13 files): 266 passed / 0 failed (same files as
+# addendum #7, at digests freight_delivery 6f913b555e05ca05, tests 2934214451eb1e2d)
+```
+
+The `--headless` loop command of record and its per-cycle verify command
+remain unchanged; the next attempt still requires a fresh explicit
+operator grant, and the sealed attempt-1 dir keeps its FAILED terminal
+identity forever — it is never relabeled, rerun or regenerated.

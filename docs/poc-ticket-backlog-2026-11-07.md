@@ -230,3 +230,46 @@ operator.
   record need the GUI-bearing native probe (product line without
   `--stop-on-delivery`) behind its own fresh per-attempt grant; no
   feasibility or product-scope claim is made until that evidence exists.
+
+## Status log (2026-11-08, Phase C continuation — attempt-1 loop qualification consumed one grant and FAILED; sealed; offline fix)
+
+- The operator's verbatim one-attempt grant authorized the Phase C loop
+  qualification attempt of record; it executed exactly once with the
+  unchanged command of record (headless, `--seed 2026`, `--cycles 2`) and
+  FAILED with exit 1 before any cycle completed; the stop constraint was
+  honored with no retry, no relaunch and no seed change. Recorded at E150
+  (`EVIDENCE_INDEX.md`), the TASKS ledger, `AI_HANDOFF.md`,
+  `REPRODUCE.md` addendum #8, ticket-05 attempt-1 record and
+  `.scratch/ramrom-product/map.md`.
+- **Sealed failure of record (run dir
+  `artifacts/demos/playable-demo-246dc3a4f4fc4b40aee0f73696455473`,
+  read-only hereafter):** `status=FAILED`, error
+  `FileNotFoundError: [Errno 2] No such file or directory:
+  '.../loop-cycle-1/graphics-identity.json'`, launches 1 / connections 1 /
+  requests 0 / mutations 0, cycle-1 funding retained (2 requests, 1
+  mutation), `failure_save_error="owned native save completion missing"`,
+  cleanup fully reaped/disposed at root and cycle level, no `loop-cycle-2`.
+- **Native pacing datum (first of its kind):** the cycle-1 diagnostic shows
+  the capture phase completed 832/832 read pairs inside the qualified M2
+  month with `pause_pairs=1` and no `pause_resume_error` — the E143 pacing
+  fence held natively; `compatible_relationships=16`;
+  `captured_relationships=0`, `search_truncated=true`.
+- **FD-C-2 stays `INCOMPLETE_EVIDENCE`:** the attempt failed before any
+  performing search completed and every captured search is truncated; no
+  feasibility or infeasibility claim may be built on attempt 1.
+- **Root cause + fix (offline, smallest):** the cycle flow digests
+  `graphics-identity.json` from the cycle dir while E143's per-cycle copy
+  set carried only `PRELAUNCH.json`, `PRELAUNCH.sha256`, `CLAIM.json` and
+  `frozen-source.zip`; the copy set now includes a content-identical
+  `graphics-identity.json` (`freight_delivery.py` `6f913b555e05ca05`,
+  superseding E143's guaranteed per-cycle list), pinned by
+  `test_loop_cycle_recording_copies_the_graphics_identity_per_cycle`
+  (`tests/test_openttd_demo.py` `2934214451eb1e2d`). Adjacent tuple
+  266 passed / 0 failed; ruff/format/`py_compile`/`git diff --check`
+  clean; `ty` clean on both app files with the single pre-existing counted
+  test-file diagnostic.
+- **Gate of record:** the command of record stays byte-unchanged; the next
+  Phase C attempt waits on a fresh explicit operator grant (consumed
+  grants: E141, E142, E145, attempt-1 — all void for reuse); the
+  GUI-bearing native probe remains a separate later grant; the 53-legacy-red
+  FULL regression stays the wayfinder EXIT gate.

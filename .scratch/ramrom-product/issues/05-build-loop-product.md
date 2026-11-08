@@ -265,3 +265,49 @@ probe stays owed. Touched files and digests of record:
   `--stop-on-delivery` short-circuit, headless Viewer branches, budgets,
   AdminPort boundaries, the ticket-05 command of record and its staging
   suites are untouched and green.
+
+## Attempt-1 record — Phase C headless loop qualification: EXECUTED ONCE, FAILED, SEALED (2026-11-08, E150)
+
+The operator's verbatim one-attempt grant ("No retry, no seed change, no
+additional launch, and no execution outside the approved scope. Stop
+immediately on any unexpected failure. Preserve all sealed historical
+evidence. After execution, independently verify both cycles and reassess
+FD-C-2 using fresh digest-pinned evidence.") authorized the single attempt
+of record; it ran exactly once with the unchanged command of record and
+FAILED with exit 1 before any cycle completed, so the stop constraint was
+honored with no retry, no relaunch and no seed change. The run dir of
+record `artifacts/demos/playable-demo-246dc3a4f4fc4b40aee0f73696455473` is
+sealed and immutable: `status=FAILED`, error
+`FileNotFoundError: [Errno 2] No such file or directory:
+'.../loop-cycle-1/graphics-identity.json'`, launches 1 / connections 1 /
+requests 0 / mutations 0 with the cycle-1 funding retained (2 requests, 1
+mutation), `failure_save_error="owned native save completion missing"`,
+cleanup fully reaped at root and cycle level, and no `loop-cycle-2`.
+
+Facts captured before the crash stay evidence: the native capture phase
+completed 832/832 read pairs inside the qualified M2 month with
+`pause_pairs=1` and no `pause_resume_error` (first native confirmation of
+the E143 pacing fence), `compatible_relationships=16`, and the retained
+`planning-n0-*` pairs; `search_truncated=true` and
+`captured_relationships=0` type the search as truncated, so FD-C-2 stays
+`INCOMPLETE_EVIDENCE` — no feasibility claim may be built on attempt 1.
+
+Root cause: the cycle-1 `execute_network` flow digests
+`graphics-identity.json` from the cycle dir (supplemental planning facts
+content digest in `freight_runtime_planning.py`) while the per-cycle copy
+set carried only `PRELAUNCH.json`, `PRELAUNCH.sha256`, `CLAIM.json` and
+`frozen-source.zip`. Fix of record (E150 offline round): the cycle staging
+copies a content-identical `graphics-identity.json` per cycle
+(`app/simulation/openttd/proof/freight_delivery.py`, digest
+`6f913b555e05ca05`; E143's guaranteed per-cycle list is superseded by the
+E150 row), pinned by
+`test_loop_cycle_recording_copies_the_graphics_identity_per_cycle` in
+`tests/test_openttd_demo.py` (`2934214451eb1e2d`). Adjacent tuple
+266 passed / 0 failed; ruff/format/`py_compile`/`git diff --check` clean;
+`ty` clean on both app files with the single pre-existing counted
+diagnostic on the test file.
+
+The command of record stays byte-unchanged for the next attempt, which
+waits on a fresh explicit operator grant; consumed grants (E141, E142,
+E145, attempt-1) are void for reuse. The GUI-bearing native probe remains
+a separate, later grant.

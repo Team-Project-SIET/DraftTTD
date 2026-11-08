@@ -441,6 +441,67 @@ def test_operator_soft_end_surfaces_with_sealed_cleanup(tmp_path, monkeypatch):
     assert (tmp_path / "artifact-manifest.sha256").is_file()
 
 
+def test_loop_cycle_recording_copies_the_graphics_identity_per_cycle(tmp_path, monkeypatch):
+    """E150 pin: attempt 1 failed natively because the supplemental planning
+    facts digest graphics-identity.json from the cycle dir, which was never
+    copied per cycle; the recording now carries a content-identical copy."""
+    calls = []
+    prepared, Session, Backend, noop = _soft_end_harness(tmp_path, monkeypatch, calls)
+    (tmp_path / "PRELAUNCH.json").write_text(
+        json.dumps(
+            dict(
+                planner=True,
+                network=True,
+                loop_cycles=2,
+                budgets={"total_seconds": 5, "requests": 10},
+            )
+        )
+    )
+    (tmp_path / "graphics-identity.json").write_text(json.dumps(dict(archive_sha256="a" * 64)))
+    (tmp_path / "PRELAUNCH.sha256").write_text(native.sha256(tmp_path / "PRELAUNCH.json") + "\n")
+    (tmp_path / "frozen-source.zip").write_bytes(b"pin")
+
+    async def execute_network(*args, **kwargs):
+        calls.append("cycle-execute-start")
+        assert kwargs.get("exclude", ()) == () and kwargs.get("foreign_plans", ()) == ()
+        raise RuntimeError("pin: cycle recording carries the projection of record")
+
+    monkeypatch.setattr(native, "preflight", lambda _: None)
+    monkeypatch.setattr(native, "backend_for", lambda _: Backend())
+    monkeypatch.setattr(
+        native,
+        "ScenarioPlanningAccounting",
+        lambda _: SimpleNamespace(observe=lambda *a: None, enter=lambda *a: None),
+    )
+    monkeypatch.setattr(native, "PlannerDeliverySession", Session)
+    monkeypatch.setattr(native, "GameScriptTransport", lambda *a: SimpleNamespace(subscribe=noop))
+    monkeypatch.setattr(native, "wait_log", noop)
+    monkeypatch.setattr(native, "save", noop)
+    monkeypatch.setattr(native, "verify_cleanup_endpoints", lambda *a: {})
+    from app.simulation.openttd import freight_native_network
+
+    monkeypatch.setattr(freight_native_network, "execute_network", execute_network)
+    result = asyncio.run(native.run(prepared))
+    assert result["status"] == "FAILED"
+    assert "pin: cycle recording carries the projection of record" in result["error"]
+    assert calls == ["server-start", "secure-connect", "cycle-execute-start", "server-close"]
+    cycle_dir = tmp_path / "loop-cycle-1"
+    assert not (tmp_path / "loop-cycle-2").exists()
+    for name in (
+        "PRELAUNCH.json",
+        "PRELAUNCH.sha256",
+        "CLAIM.json",
+        "frozen-source.zip",
+        "graphics-identity.json",
+    ):
+        assert (cycle_dir / name).is_file()
+        assert (cycle_dir / name).read_bytes() == (tmp_path / name).read_bytes()
+    assert json.loads((cycle_dir / "loop-cycle.json").read_text())["loop_cycles"] == 2
+    stored = json.loads((tmp_path / "result.json").read_text())
+    assert stored["status"] == "FAILED"
+    assert (tmp_path / "cleanup.json").is_file()
+
+
 def test_closing_during_the_view_hold_ends_softly_after_a_verified_delivery(tmp_path, capsys):
     viewer = demo.Viewer(tmp_path, headless=False, view_seconds=5)
     polls = {"n": 0}
