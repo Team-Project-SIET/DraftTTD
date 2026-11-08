@@ -281,3 +281,215 @@ def test_public_run_uses_fresh_identity_existing_executor_and_p07(tmp_path, monk
     monkeypatch.setattr(demo, "report", report)
     assert demo.main(["run", "--headless", "--stop-on-delivery"]) == 0
     assert calls == ["existing-native-runner", "p07"]
+
+
+# --- GUI product scope (spec §1/§3.3, E148 owed element; offline typing) ----
+
+
+def test_viewer_types_the_operator_window_close_as_the_soft_end(tmp_path):
+    backend = SimpleNamespace(client_soft=None)
+    viewer = demo.Viewer(tmp_path, headless=False, view_seconds=0)
+    viewer.backend = backend
+    viewer.process = SimpleNamespace(returncode=0, poll=lambda: 0)  # ty: ignore[invalid-assignment]
+    with pytest.raises(native.OperatorWindowClosed) as soft:
+        asyncio.run(viewer.progress(tmp_path))
+    message = "spectator window closed by operator (client exited 0)"
+    assert str(soft.value) == message
+    assert backend.client_soft == message
+
+    viewer.process = SimpleNamespace(returncode=7, poll=lambda: 7)  # ty: ignore[invalid-assignment]
+    backend.client_soft = None
+    with pytest.raises(RuntimeError) as crash:
+        viewer.check_client_exit()
+    assert type(crash.value) is RuntimeError
+    assert str(crash.value) == f"Graphical client exited (7); see {tmp_path / 'client/client.log'}"
+    assert backend.client_soft is None
+
+
+def _soft_end_harness(tmp_path, monkeypatch, calls):
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    keys = tmp_path / ".admin-secret"
+    keys.write_bytes(native.AuthorizedKey.generate()._secret)
+    workspace = tmp_path / "workspace"
+    prepared = SimpleNamespace(
+        directory=tmp_path,
+        key_path=keys,
+        endpoints=(1, 2),
+        spec=SimpleNamespace(
+            workspace=SimpleNamespace(
+                root=workspace, logs=tmp_path / "logs", close=lambda: shutil.rmtree(workspace)
+            )
+        ),
+    )
+
+    @dataclass
+    class Welcome:
+        revision: str = "15.3"
+        seed: int = 42
+        width: int = 64
+        height: int = 64
+
+    class Session:
+        welcome = Welcome()
+        protocol = object()
+        state = native.AuthState.ACTIVE
+
+        @classmethod
+        async def connect_secure(cls, *args, **kwargs):
+            calls.append("secure-connect")
+            return cls()
+
+        async def authenticate(self, *args, **kwargs):
+            pass
+
+    class Backend:
+        process = None
+        planning_read_count = 0
+
+        async def launch(self, p):
+            self.process = object()
+            calls.append("server-start")
+
+        async def cleanup(self, p):
+            calls.append("server-close")
+            return dict(reaped=True, cleanup_error=[], sockets_closed=True)
+
+    async def noop(*args, **kwargs):
+        pass
+
+    return prepared, Session, Backend, noop
+
+
+def test_operator_window_close_gates_the_attempt_at_the_exchange_boundary(tmp_path, monkeypatch):
+    calls = []
+    prepared, Session, Backend, noop = _soft_end_harness(tmp_path, monkeypatch, calls)
+    (tmp_path / "PRELAUNCH.json").write_text(json.dumps(dict(budgets={"total_seconds": 5})))
+
+    async def ready(backend, p):
+        calls.append("client-ready")
+        backend.client_soft = "spectator window closed by operator (client exited 0)"
+
+    monkeypatch.setattr(native, "preflight", lambda _: None)
+    monkeypatch.setattr(native, "backend_for", lambda _: Backend())
+    monkeypatch.setattr(native, "DeliverySession", Session)
+    monkeypatch.setattr(native, "GameScriptTransport", lambda *a: SimpleNamespace(subscribe=noop))
+    monkeypatch.setattr(native, "wait_log", noop)
+    monkeypatch.setattr(native, "save", noop)
+    monkeypatch.setattr(native, "verify_cleanup_endpoints", lambda *a: {})
+    result = asyncio.run(native.run(prepared, on_ready=ready))
+    assert result["status"] == "ENDED_BY_OPERATOR"
+    assert result["operator_soft_end"] == "spectator window closed by operator (client exited 0)"
+    assert "error" not in result
+    assert result["launches"] == 1 and result["connections"] == 1 and result["requests"] == 0
+    assert calls.index("client-ready") < calls.index("server-close")
+    assert not (tmp_path / "workspace").exists()
+    stored = json.loads((tmp_path / "result.json").read_text())
+    assert stored["status"] == "ENDED_BY_OPERATOR"
+    assert (tmp_path / "cleanup.json").is_file()
+    assert (tmp_path / "artifact-manifest.sha256").is_file()
+
+
+def test_operator_soft_end_surfaces_with_sealed_cleanup(tmp_path, monkeypatch):
+    calls = []
+    prepared, Session, Backend, noop = _soft_end_harness(tmp_path, monkeypatch, calls)
+    (tmp_path / "PRELAUNCH.json").write_text(
+        json.dumps(dict(demo=True, planner=True, network=True, budgets={"total_seconds": 5}))
+    )
+
+    async def execute(session, *args):
+        calls.append("native-three-service-executor")
+        raise native.OperatorWindowClosed("spectator window closed by operator (client exited 0)")
+
+    async def ready(*args):
+        calls.append("client-ready")
+
+    async def delivered(*args):
+        calls.append("delivery-view")
+
+    async def closing(*args):
+        calls.append("client-close")
+
+    from app.simulation.openttd import freight_native_network
+
+    monkeypatch.setattr(native, "preflight", lambda _: None)
+    monkeypatch.setattr(native, "backend_for", lambda _: Backend())
+    monkeypatch.setattr(
+        native,
+        "ScenarioPlanningAccounting",
+        lambda _: SimpleNamespace(observe=lambda *a: None, enter=lambda *a: None),
+    )
+    monkeypatch.setattr(native, "PlannerDeliverySession", Session)
+    monkeypatch.setattr(native, "GameScriptTransport", lambda *a: SimpleNamespace(subscribe=noop))
+    monkeypatch.setattr(native, "wait_log", noop)
+    monkeypatch.setattr(native, "save", noop)
+    monkeypatch.setattr(native, "console", lambda *a: None)
+    monkeypatch.setattr(native, "verify_cleanup_endpoints", lambda *a: {})
+    monkeypatch.setattr(freight_native_network, "execute_network", execute)
+    result = asyncio.run(
+        native.run(prepared, on_ready=ready, on_delivered=delivered, on_closing=closing)
+    )
+    assert result["status"] == "ENDED_BY_OPERATOR"
+    assert result["operator_soft_end"] == "spectator window closed by operator (client exited 0)"
+    assert "error" not in result
+    assert calls.index("client-close") < calls.index("server-close")
+    assert calls.index("native-three-service-executor") < calls.index("client-close")
+    assert not (tmp_path / "workspace").exists()
+    stored = json.loads((tmp_path / "result.json").read_text())
+    assert stored["status"] == "ENDED_BY_OPERATOR"
+    assert (tmp_path / "cleanup.json").is_file()
+    assert (tmp_path / "artifact-manifest.sha256").is_file()
+
+
+def test_closing_during_the_view_hold_ends_softly_after_a_verified_delivery(tmp_path, capsys):
+    viewer = demo.Viewer(tmp_path, headless=False, view_seconds=5)
+    polls = {"n": 0}
+
+    class HoldProcess:
+        returncode = None
+
+        def poll(self):
+            polls["n"] += 1
+            return 0 if polls["n"] > 1 else None
+
+    viewer.process = HoldProcess()  # ty: ignore[invalid-assignment]
+    directory = tmp_path / "run"
+    directory.mkdir()
+    (directory / "receipt.json").write_bytes(
+        json.dumps(
+            {"services": [{"source": 4, "destination": 5, "delivered": 20, "payment_income": 341}]}
+        ).encode()
+    )
+    (directory / "financial-reconciliation.json").write_bytes(
+        json.dumps(
+            {
+                "final_cash": 471492,
+                "freight_revenue": 1018,
+                "command_construction_purchase_costs": 28459,
+                "unallocated_company_cash_decrease": 1067,
+            }
+        ).encode()
+    )
+    backend = SimpleNamespace(health=lambda: None)
+    asyncio.run(viewer.delivered(backend, SimpleNamespace(directory=directory)))
+    assert "Deliveries complete" in capsys.readouterr().out
+
+
+def test_run_demo_maps_the_operator_soft_end_to_a_clean_zero_exit(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(demo, "check", lambda **kwargs: None)
+    monkeypatch.setattr(demo, "RUNS", tmp_path)
+
+    def prepare(root, **kwargs):
+        return SimpleNamespace(directory=root)
+
+    async def run(prepared, **kwargs):
+        assert set(kwargs) == {"on_ready", "on_delivered", "on_closing"}
+        return dict(
+            status="ENDED_BY_OPERATOR",
+            operator_soft_end="spectator window closed by operator (client exited 0)",
+        )
+
+    monkeypatch.setattr(native, "prepare", prepare)
+    monkeypatch.setattr(native, "run", run)
+    assert demo.main(["run", "--headless", "--stop-on-delivery"]) == 0
+    assert "ended-by-operator" in capsys.readouterr().out

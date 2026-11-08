@@ -3448,3 +3448,37 @@ map decision line, backlog status-log entry.
   a fresh explicit operator grant (E145 grant consumed, not reusable).
 
 Evidence index E148.
+
+### 2026-11-08 — E149 GUI product scope implemented offline: typed `ENDED_BY_OPERATOR` soft end
+
+Offline only; no launch, no AdminPort connection, no staging, no claim, no
+`artifacts/` mutation; one commit, no push. The E148 owed element's code half
+lands with its deterministic tests; the native GUI probe stays owed.
+
+- **Typed soft end:** `OperatorWindowClosed` + `backend.client_soft` flag +
+  `soft_gate()` at the AdminPort exchange boundaries (`query()`, both capital
+  exchanges, the planner admission exchange, the `before` save) in
+  `app/simulation/openttd/proof/freight_delivery.py` (`4bbff81a0cd5fc52`);
+  `run` types `result["status"] = "ENDED_BY_OPERATOR"` with
+  `operator_soft_end` and no `error` key — a system failure is never typed
+  for an operator close; cleanup/manifest/result.json finalization and every
+  verifier's exact-status refusals are unchanged.
+- **Viewer classification:** `Viewer.check_client_exit()` in
+  `app/openttd_demo.py` (`db2051dea8885642`) — rc 0 = operator soft end
+  (flag stamped, typed soft end raised); rc != 0 = the exact E140-shape
+  failure; startup `require_alive()` keeps its hard typing; a close during
+  the delivered view-hold never retypes a verified run; `run_demo` maps the
+  soft end to rc 0 with the honest ended-by-operator print.
+- **Tests:** 5 new offline tests in `tests/test_openttd_demo.py`
+  (`9c38d38f334d77fc`) under the file's autouse no-native guard; adjacent
+  tuple 265 passed / 0 failed; ruff/format/`py_compile`/`git diff --check`
+  clean; `uvx ty check` clean on both app files, one pre-existing
+  book-recorded diagnostic on the test file (counted, never repaired).
+- **Status split:** `IMPLEMENTATION VERIFIED` (offline) /
+  `NATIVE GUI VERIFICATION PENDING` — the native GUI-bearing probe (product
+  line without `--stop-on-delivery`, with the view hold, real window close,
+  ended-by-operator record) stays owed behind a fresh per-attempt grant;
+  headless loop of record byte-preserved (command of record, budgets,
+  AdminPort boundaries, staging suites still green).
+
+Evidence index E149.

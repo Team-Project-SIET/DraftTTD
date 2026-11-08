@@ -224,3 +224,44 @@ separately granted GUI-bearing element must exercise natively (without
 as a system failure); until then they are owed, not satisfied: a headless
 run's only operator soft end is Ctrl+C. No command, criterion or budget of
 the record changed.
+
+## GUI product-scope build record (2026-11-08 offline round, E149)
+
+The E148 owed element's code half is implemented offline; the native GUI
+probe stays owed. Touched files and digests of record:
+`app/simulation/openttd/proof/freight_delivery.py` (`4bbff81a0cd5fc52`) and
+`app/openttd_demo.py` (`db2051dea8885642`), tests
+`tests/test_openttd_demo.py` (`9c38d38f334d77fc`).
+
+- **Typed soft end (harness):** new `OperatorWindowClosed(RuntimeError)`
+  documented as the spec §1/§3.3 soft ended-by-operator phase end;
+  `run` initializes `backend.client_soft = None` and `soft_gate()` raises
+  the typed soft end from the flag — planted at the AdminPort exchange
+  boundaries (`query()`, both scenario-capital exchanges, the planner
+  admission exchange, the `before` save); the new
+  `except OperatorWindowClosed` branch types `result` as
+  `ENDED_BY_OPERATOR` with `operator_soft_end` and no `error` key; the
+  unchanged `finally` still seals the retained receipts, saves, frames,
+  cleanup and manifest exactly as before, and every verifier keeps
+  refusing the non-verified root status (exact-status comparisons).
+- **Viewer classification (demo):** `Viewer.check_client_exit()` — an owned
+  spectator client exiting rc 0 raises the typed soft end after stamping
+  `backend.client_soft`; a non-zero exit keeps the exact E140-shape typed
+  failure; the watch loop and `delivered()` use it; the startup
+  `require_alive()` keeps its hard typing (the E8 spectator class); a close
+  during the delivered view-hold ends the hold softly after completion and
+  never retypes a verified run; `run_demo` maps `ENDED_BY_OPERATOR` to a
+  clean rc 0 honest print.
+- **Tests of record:** 5 new offline tests (viewer classification pair,
+  exchange-boundary gate, network-path surfacing with sealed cleanup,
+  view-hold close, run_demo rc-0 mapping) under the file's autouse
+  no-native guard; adjacent tuple 265 passed / 0 failed; ruff/format/
+  `py_compile`/`git diff --check` clean; `ty` clean on both app files,
+  one pre-existing counted diagnostic on the test file.
+- **Not claimed:** no native GUI evidence exists. The GUI-bearing native
+  probe (product line WITHOUT `--stop-on-delivery`, with the view hold,
+  real window close, ended-by-operator record) stays owed behind a fresh
+  per-attempt grant. Headless loop behavior of record is byte-preserved:
+  `--stop-on-delivery` short-circuit, headless Viewer branches, budgets,
+  AdminPort boundaries, the ticket-05 command of record and its staging
+  suites are untouched and green.

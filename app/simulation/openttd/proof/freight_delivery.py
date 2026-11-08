@@ -1567,6 +1567,17 @@ def verify_capital_frames(directory, frames, *, recovery=None):
     return financing
 
 
+class OperatorWindowClosed(RuntimeError):
+    """Spec §1/§3.3 of record: the operator closed the spectator window.
+
+    This is the soft ended-by-operator phase end — never a system failure.
+    Whatever landed before the close stays retained (sealed receipts, saves,
+    frames, cleanup); the attempt stops at the next AdminPort exchange
+    boundary and the run types `ENDED_BY_OPERATOR`, which every verifier
+    refuses like any other non-verified terminal.
+    """
+
+
 async def run(p, *, on_ready=None, on_delivered=None, on_closing=None):
     preflight(p)
     seal = sha256(p.directory / "PRELAUNCH.json")
@@ -1576,6 +1587,15 @@ async def run(p, *, on_ready=None, on_delivered=None, on_closing=None):
         dict(consumed=True, prelaunch_digest=seal, launches_allowed=1, retries=0),
     )
     backend = backend_for(m)
+    # GUI product scope §1/§3.3: the spectator watcher records the operator's
+    # window close on this flag; the attempt then stops at the next AdminPort
+    # exchange boundary through `soft_gate` and types ENDED_BY_OPERATOR.
+    backend.client_soft = None
+
+    def soft_gate():
+        if backend.client_soft is not None:
+            raise OperatorWindowClosed(backend.client_soft)
+
     frames = []
     accounting = None
     if m.get("planner", False):
@@ -1636,6 +1656,7 @@ async def run(p, *, on_ready=None, on_delivered=None, on_closing=None):
                 if accounting is None:
                     raise ValueError("capital scenario requires planner accounting")
                 accounting.begin_funding()
+                soft_gate()
                 initial = await exchange(
                     session,
                     ScenarioCapitalRequest(request_id="capital-initialize", op="initialize"),
@@ -1649,6 +1670,7 @@ async def run(p, *, on_ready=None, on_delivered=None, on_closing=None):
                     response_type=ScenarioCapitalReadback,
                 )
                 accounting.end_funding()
+                soft_gate()
                 financing = verify_capital(initial, check)
                 if m.get("company_policy"):
                     from app.simulation.openttd.scenario_capital import require_company_policy
@@ -1659,6 +1681,7 @@ async def run(p, *, on_ready=None, on_delivered=None, on_closing=None):
                 if m.get("company_policy"):
                     result["company_policy_mutations"] = 1
                 write_json(p.directory / "scenario-capital.json", financing)
+            soft_gate()
             before = await save(backend, p, "before")
             if m.get("company_policy"):
                 from app.simulation.openttd.scenario_capital import company_policy_provenance
@@ -1686,6 +1709,7 @@ async def run(p, *, on_ready=None, on_delivered=None, on_closing=None):
                 return result
 
             async def query(op, id, arg=0, plan=seal):
+                soft_gate()
                 if result["requests"] >= m["budgets"]["requests"]:
                     raise ValueError("request budget exhausted")
                 if op == "build":
@@ -1907,6 +1931,7 @@ async def run(p, *, on_ready=None, on_delivered=None, on_closing=None):
                     for _, v in service.road.input.admitted.world.qualification.evidence.phase_usage
                 )
                 request = service.selection_request()
+                soft_gate()
                 admission = await exchange(session, request, p.directory)
                 result["requests"] += 1
             else:
@@ -1965,6 +1990,13 @@ async def run(p, *, on_ready=None, on_delivered=None, on_closing=None):
             )
             write_json(p.directory / "receipt.json", receipt)
             result["status"] = "NATIVE_DELIVERY_VERIFIED"
+    except OperatorWindowClosed as e:
+        # Spec §1/§3.3: the operator's window close is the soft
+        # ended-by-operator phase end — typed, never a system failure, never
+        # a fabricated receipt: everything landed before the close stays
+        # sealed and every verifier keeps refusing a non-verified status.
+        result["status"] = "ENDED_BY_OPERATOR"
+        result["operator_soft_end"] = str(e)
     except Exception as e:
         result["error"] = type(e).__name__ + ": " + str(e)
         if backend.process is not None:

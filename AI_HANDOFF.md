@@ -591,3 +591,40 @@ digests of record unchanged (`258ba9dbe19c7284`, `2cce3070c125bd41`,
 
 **Status: decision recorded. The attempt remains gated on a fresh explicit
 operator grant (E145 grant consumed, not reusable).**
+
+## 2026-11-08 E149 addendum — GUI product scope §1/§3.3 implemented offline (typed `ENDED_BY_OPERATOR` soft end)
+
+The E148 owed element's code half is implemented and deterministically
+tested on 2026-11-08 (offline; no launch, no AdminPort connection, no
+staging, no `artifacts/` mutation, no grant consumed; one commit, no push).
+Record: E149 in `EVIDENCE_INDEX.md`, TASKS ledger row, `REPRODUCE.md`
+addendum #7, ticket-05 GUI build-record section, map decision line, backlog
+status-log entry.
+
+**Implementation (two files):** `OperatorWindowClosed` (typed
+ended-by-operator soft end), `backend.client_soft` flag and `soft_gate()`
+at the AdminPort exchange boundaries (`query()`, both scenario-capital
+exchanges, the planner admission exchange, the `before` save) in
+`app/simulation/openttd/proof/freight_delivery.py` (`4bbff81a0cd5fc52`);
+`run` types `ENDED_BY_OPERATOR` with `operator_soft_end` and no `error`
+key, keeping the unchanged cleanup/manifest/result.json finalization and
+the verifiers' exact-status typed refusals. `Viewer.check_client_exit()` in
+`app/openttd_demo.py` (`db2051dea8885642`): owned spectator client rc 0 =
+operator soft end (flag stamped, typed soft end raised); rc != 0 = the
+exact E140-shape `RuntimeError: Graphical client exited (...)`; startup
+`require_alive()` typing unchanged; a close during the delivered view-hold
+never retypes a verified run; `run_demo` maps the soft end to rc 0.
+
+**Tests and hygiene:** 5 new offline tests in `tests/test_openttd_demo.py`
+(`9c38d38f334d77fc`); adjacent tuple 265 passed / 0 failed;
+ruff/format/`py_compile`/`git diff --check` clean; `uvx ty check` clean on
+both app files, one pre-existing book-recorded diagnostic on the test file
+(`viewer.log.closed`; counted, never repaired).
+
+**Status split: `IMPLEMENTATION VERIFIED` / `NATIVE GUI VERIFICATION
+PENDING`.** The spectator window process, the real window close
+interaction, the view hold and the ended-by-operator record remain
+unproven natively behind a fresh per-attempt grant (GUI run of the product
+line without `--stop-on-delivery`). Headless loop of record byte-preserved:
+the ticket-05 command of record, budgets, AdminPort boundaries and the
+staging/lifecycle suites are untouched and still green.

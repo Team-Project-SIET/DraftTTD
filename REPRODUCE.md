@@ -1505,3 +1505,47 @@ git diff --check
 
 The native command of record is unchanged (addenda #2–#5, ticket-05 lines
 194–208); the next attempt still requires a fresh explicit operator grant.
+
+## 2026-11-08 addendum #7 — E149: GUI product scope §1/§3.3 implemented offline (typed `ENDED_BY_OPERATOR` soft end) (checked)
+
+Offline implementation round: no launch, no AdminPort connection, no
+staging, no `artifacts/` mutation, no grant consumed; one commit, no push.
+The E148 owed element's code half: the operator's spectator window close is
+now the typed soft end of record (`ENDED_BY_OPERATOR`, `operator_soft_end`,
+no `error` key), stopping the attempt at the next AdminPort exchange
+boundary; a non-zero client exit keeps the exact E140-shape typed failure;
+headless loop behavior and the command of record are byte-preserved.
+
+```bash
+# Deterministic offline tests of record (all fake-driven; the suite's
+# autouse guard forbids any native process)
+.venv/bin/pytest tests/test_openttd_demo.py
+# → includes the 5 new GUI-scope pins; the file's part of the adjacent tuple
+
+# Adjacent tuple of record (13 files): 265 passed / 0 failed
+.venv/bin/pytest tests/test_openttd_demo.py tests/test_freight_delivery.py \
+  tests/test_freight_loops.py tests/test_random_capture_budgets.py \
+  tests/test_demo_random_native.py tests/test_native_freight_network.py \
+  tests/test_network_world_preparation.py tests/test_freight_network.py \
+  tests/test_freight_continuous.py tests/test_scenario_capital.py \
+  tests/test_freight_canonical_persistence.py \
+  tests/test_freight_canonical_transport.py tests/test_freight_finance.py
+
+# Hygiene (touched paths)
+.venv/bin/ruff check app/openttd_demo.py \
+  app/simulation/openttd/proof/freight_delivery.py tests/test_openttd_demo.py
+.venv/bin/ruff format --check app/openttd_demo.py \
+  app/simulation/openttd/proof/freight_delivery.py
+.venv/bin/python -m py_compile app/openttd_demo.py \
+  app/simulation/openttd/proof/freight_delivery.py tests/test_openttd_demo.py
+git diff --check
+uvx ty check app/openttd_demo.py app/simulation/openttd/proof/freight_delivery.py
+# → app files clean; test file carries the one pre-existing book-recorded
+#   `viewer.log.closed` diagnostic (counted, never repaired)
+```
+
+What is NOT claimed: no native GUI evidence exists — the spectator window
+process, the real window close, the view hold and the ended-by-operator
+record stay unproven natively behind a fresh per-attempt grant (GUI run
+without `--stop-on-delivery`). The `--headless` loop command of record and
+its per-cycle verify command remain unchanged (addenda #2–#5).

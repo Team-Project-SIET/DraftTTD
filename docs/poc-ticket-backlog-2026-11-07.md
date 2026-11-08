@@ -189,3 +189,44 @@ operator.
   (`258ba9dbe19c7284`, `2cce3070c125bd41`, `f6a432e2b771231b`). No code
   change; the native command of record is unchanged and remains gated on a
   fresh explicit operator grant.
+
+## Status log (2026-11-08, Phase C continuation — GUI product scope §1/§3.3 implemented offline: typed `ENDED_BY_OPERATOR` soft end)
+
+- Offline implementation round: no OpenTTD launch, no AdminPort connection,
+  no staging, no claim consumption, no native receipt, no `artifacts/` byte
+  modified; one commit, no push. Recorded at E149 (`EVIDENCE_INDEX.md`), the
+  TASKS ledger, `AI_HANDOFF.md`, `REPRODUCE.md` addendum #7, ticket-05 (GUI
+  build-record section) and `.scratch/ramrom-product/map.md`.
+- **The operator's spectator window close is now the typed soft end of
+  record.** `OperatorWindowClosed` (a typed ended-by-operator soft end,
+  never a system failure) plus `backend.client_soft` and `soft_gate()` in
+  `app/simulation/openttd/proof/freight_delivery.py` (`4bbff81a0cd5fc52`):
+  the attempt stops at the next AdminPort exchange boundary (`query()`,
+  both scenario-capital exchanges, the planner admission exchange, the
+  `before` save) and `run` types `result["status"] = "ENDED_BY_OPERATOR"`
+  with `operator_soft_end` and no `error` key; the unchanged `finally`
+  still seals receipts, saves, frames, cleanup and the manifest, and every
+  verifier keeps refusing the non-verified root status.
+- **Viewer classification** in `app/openttd_demo.py` (`db2051dea8885642`):
+  `Viewer.check_client_exit()` types an owned client's rc 0 exit as the
+  operator soft end and a non-zero exit as the exact E140-shape
+  `RuntimeError: Graphical client exited (...)`; the startup
+  `require_alive()` keeps its hard typing; a close during the delivered
+  view-hold never retypes a verified run; `run_demo` maps the soft end to
+  a clean rc 0.
+- **Tests of record:** 5 new offline tests in `tests/test_openttd_demo.py`
+  (`9c38d38f334d77fc`) under the file's autouse no-native guard; the
+  adjacent tuple (13 files total) 265 passed / 0 failed; ruff/format/
+  `py_compile`/`git diff --check` clean; `uvx ty check` clean on both app
+  files with the one pre-existing counted `viewer.log.closed` diagnostic on
+  the test file.
+- **Kept separate from Phase C headless verification:** the headless loop
+  command of record, its budgets, AdminPort boundaries and the
+  staging/lifecycle suites are untouched and still green; `--stop-on-delivery`
+  still short-circuits the view hold headlessly.
+- **Native GUI verification pending:** the `IMPLEMENTATION VERIFIED` /
+  `NATIVE GUI VERIFICATION PENDING` split of E149 holds — the spectator
+  window process, the real close interaction and the ended-by-operator
+  record need the GUI-bearing native probe (product line without
+  `--stop-on-delivery`) behind its own fresh per-attempt grant; no
+  feasibility or product-scope claim is made until that evidence exists.

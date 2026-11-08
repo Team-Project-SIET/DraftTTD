@@ -90,8 +90,10 @@ class Viewer:
         self.process = None
         self.log = None
         self.watcher = None
+        self.backend = None
 
     async def ready(self, backend, prepared):
+        self.backend = backend
         self.watcher = asyncio.create_task(self.progress(prepared.directory))
         if self.headless:
             print("Headless mode: GUI/playability is not being tested.", flush=True)
@@ -135,13 +137,29 @@ class Viewer:
                 f"see {self.root / 'client/client.log'}"
             )
 
+    def check_client_exit(self):
+        """Typed client-exit classification of record (spec §1/§3.3): the
+        operator's window close is the soft ended-by-operator end; a crashed
+        client stays the honest typed failure of E140's shape."""
+        code = None if self.process is None else self.process.poll()
+        if code is None:
+            return
+        if code == 0:
+            message = "spectator window closed by operator (client exited 0)"
+            if self.backend is not None:
+                self.backend.client_soft = message
+            raise native.OperatorWindowClosed(message)
+        raise RuntimeError(
+            f"Graphical client exited ({code}); see {self.root / 'client/client.log'}"
+        )
+
     async def progress(self, directory):
         shown = set()
         service_count = 0
         previous_status = None
         last_status_time = 0.0
         while True:
-            self.require_alive()
+            self.check_client_exit()
             if "plan" not in shown:
                 try:
                     rows = selections(directory)
@@ -183,7 +201,7 @@ class Viewer:
     async def delivered(self, backend, prepared):
         if self.watcher is not None and self.watcher.done():
             await self.watcher  # Surface a client startup/runtime failure.
-        self.require_alive()
+        self.check_client_exit()
         show_results(prepared.directory)
         if self.headless or self.view_seconds == 0:
             return
@@ -336,6 +354,14 @@ def run_demo(
         (output / "loops.md").write_text("\n".join(lines) + "\n")
         print(f"Loop results: {output / 'loops.md'}", flush=True)
         return 0 if result["status"] == "NATIVE_LOOP_DELIVERED_VERIFIED" else 1
+    if result["status"] == "ENDED_BY_OPERATOR":
+        print(
+            f"Spectator window closed by operator; run ended softly "
+            f"(ended-by-operator, never a system failure). "
+            f"Sealed receipts and cleanup records: {root}",
+            flush=True,
+        )
+        return 0
     print(f"Demo failed: {result.get('error', result['status'])}. Logs: {root}", file=sys.stderr)
     return 1
 
