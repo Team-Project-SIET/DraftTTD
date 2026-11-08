@@ -545,3 +545,33 @@ forced relabel; no native OpenTTD process remains.
 decision and (b) a fresh explicit operator grant with the command of
 record byte-unchanged. The GUI-bearing native probe remains a separate
 later grant. Evidence index E154.
+
+## Correction (2026-11-09, E155) — the Attempt-3 gateway sentences in the section above are superseded
+
+The section above attributed attempt 3's terminal `error=TimeoutError: `
+to the outer `asyncio.timeout` on a `total_seconds=1800` loop budget and
+closed with a "budget-seal amendment" gate. Per the proposal of record
+(`.scratch/ramrom-product/research/02-attempt3-root-cause-doc-correction.md`)
+and evidence row E155, that interpretation is corrected while the
+original wording above is preserved verbatim as history: the attempt
+aborted ~20.05 s into cycle 2's FIRST planner exchange (sealed mtimes
+`10:32:01.349311` → `10:32:21.399356`) after the GameScript
+`planner_used` dedup silently dropped cycle-2's byte-identical
+`random-generation` request id (request disc 124 bytes, sha256
+`519e626b5efed716beb2029d232a05766f42bbec611e516b28d9ff8def2bafd1`;
+cycle-1 response exists, cycle-2 response does not; sealed staged guard
+`planner_requests>=33345`), so the Python per-exchange read timeout
+(`EXCHANGE_SECONDS=20`) expired, the sealed outer budget
+`total_seconds=2400` was never reached (~537 s elapsed), cycle 2 never
+reached capture or P08 (`capture_requests_attempted=0`,
+`pair_checks=146` is a frozen diagnostic counter, not P08 execution),
+and E153's stderr-window fix held live (`phase=COMPLETED`,
+`failure=None`). Attempt 3 remains FAILED and SEALED, FD-C-2 remains
+`INCOMPLETE_EVIDENCE`, Ticket-05/Phase C stay OPEN; no artifact, status
+or budget changed. Gate update: the code-side request-identity work of
+`7b3ac47` plus this round's `d6342cc` (two live-cycle reader fixes, the
+two-cycle receipt contract test and the real-wire 32-char contract
+test) removes the "budget-seal amendment" prerequisite — the remaining
+Attempt-4 prerequisite is the operator's explicit fresh grant (and the
+operator's own decision on cycle 2's observed zero-service world),
+with offline readiness gates passing at `d6342cc` (E155 row).

@@ -820,3 +820,46 @@ underestimates per-cycle requalification cost (§3.2 design); attempt 4
 needs that seal decision plus a fresh explicit operator grant,
 command otherwise byte-unchanged. The GUI-bearing probe remains a
 separate later grant.
+
+## E155 addendum (2026-11-09) — attempt-3 root cause corrected; two live-cycle reader fixes; offline readiness gates pass at `d6342cc`
+
+Correction of the E154 addendum above (append-only; original preserved):
+attempt-3's terminal `error="TimeoutError: "` was NOT the outer
+`asyncio.timeout(total_seconds=1800)` and the failure was NOT a budget
+seal — the root cause is the cross-cycle `planner_used` request-ID
+collision: cycle 2 re-sent the byte-identical `random-generation`
+request id, the GameScript persistent dedup silently dropped it, and
+Python's **20-second per-exchange read timeout** (`EXCHANGE_SECONDS=20`)
+expired (sealed mtimes `10:32:01.349311` → `10:32:21.399356` ≈ +20.05 s;
+request disc sha256 `519e626b…2bafd1` byte-identical across cycles;
+cycle-1's response disc exists, cycle-2's does not; sealed staged guard
+`planner_requests>=33345`). The sealed outer budget `total_seconds=2400`
+was never reached (~537 s), cycle-2 qualification completed cleanly
+before the failure (`phase=COMPLETED`, `failure=None`), cycle 2 never
+reached capture or P08 (`capture_requests_attempted=0`;
+`pair_checks=146` is a frozen diagnostic counter, not P08 execution),
+and E153's stderr-window fix held live. Attempt 3 stays FAILED and
+SEALED; FD-C-2 stays `INCOMPLETE_EVIDENCE`.
+
+Status of the fix chain at `d6342cc`: `7b3ac47` introduced the
+cycle-scoped `cycle_request_id` maker; the 2026-11-09 offline review
+round found and fixed through `d6342cc` the two remaining live-cycle
+READER regressions (`receipt_game_time` and the `execute_network`
+financial tail still opened legacy literal response discs at cycle 2),
+added the two-cycle receipt contract test (`tests/test_game_time.py`,
+14 passed) and the real-wire 32-char contract test
+(`tests/test_freight_loops.py`, 35 passed); battery 1,075 passed /
+2 failed / 1 skipped with both failures proven pre-existing on clean
+`61b655d` (`test_world_correspondence.py::test_fallback_schedule_is_sealed_and_explicit`,
+`test_corridor_cargoflow2_vm.py::test_ladder_of_record_runs_green`);
+ruff/format/py_compile/ty clean. Offline Attempt-4 readiness gates all
+pass at `d6342cc`: binary/OpenGFX SHA-256s match the `REPRODUCE.md`
+pins, offline preflight `check` passes (no game launched), no native
+process, clean tree after the docs commit, budget chain unchanged
+(staged per-instance cap 33345 with the command of record's default
+`--capture-tiles 2048`; Python-side `supplemental_requests` scales ×2
+to 66,690 for `--cycles 2`; observed seed-2026 need ≈19,404 cumulative
+planner reads fits). Attempt 4 remains gated on ONE fresh explicit
+operator grant (readiness is not authorization); the operator also
+decides on cycle 2's observed zero-service world. Append-only proposal
+of record: `.scratch/ramrom-product/research/02-attempt3-root-cause-doc-correction.md`.

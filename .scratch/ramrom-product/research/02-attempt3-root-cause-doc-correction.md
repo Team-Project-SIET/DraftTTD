@@ -117,3 +117,26 @@ byte-identical `random-generation` request id (sha256 `519e626b…afd1`);
 the outer `total_seconds=2400` attempt budget never expired (~537 s
 consumed). Original prose preserved above; no status change." Keep it to
 five sentences per record; do not rewrite the historical rows.
+
+## Application of record (2026-11-09)
+
+APPLIED append-only in the 2026-11-09 round at commit `d6342cc` plus the
+docs commit minted with this note, per evidence row E155, after
+re-verifying all ten claims of this proposal against the sealed bytes
+(including the 124-byte/`519e626b5efed716bebd…2bafd1` request disc
+byte-identity, the sealed staged guard `planner_requests>=33345`, the
+mtime window `10:32:01.349311790` → `10:32:21.399356`, the sealed
+`total_seconds=2400` and `loop_cycles=2`, and cycle-2's completed
+qualification session). Corrections landed in `EVIDENCE_INDEX.md`
+(new row E155; E154 row untouched), `TASKS.md` (dated correction
+section after the 2026-11-08 attempt-3 entry),
+`.scratch/ramrom-product/issues/05-build-loop-product.md`
+("Correction (2026-11-09, E155)" section after the Attempt-3 record)
+and `AI_HANDOFF.md` ("E155 addendum" after the E154 addendum). The
+proposal's claim citations referenced two line-precise sources worth
+noting for future readers: the per-instance staged cap verbatim
+(`staged/network-parent.nut:34` inside the attempt's own
+`frozen-source.zip`) and `EXCHANGE_SECONDS=20` at
+`app/simulation/openttd/proof/freight_delivery.py:1282`. No sealed
+artifact, terminal status, FD-C-2 state, budget value or ticket state
+changed.

@@ -3732,3 +3732,46 @@ code change under the grant).
   separate later grant.
 
 Evidence index E154.
+
+### 2026-11-09 — Post-attempt-3 doc correction applied append-only (E155); two live-cycle reader regressions fixed offline; receipt game-time cycle contract tested; Attempt-4 offline readiness gates pass at `d6342cc`
+
+Correction (2026-11-09, per
+`.scratch/ramrom-product/research/02-attempt3-root-cause-doc-correction.md`
+and evidence row E155): the attempt-3 terminal `TimeoutError: ` recorded
+in the 2026-11-08 entry above was **NOT the outer
+`asyncio.timeout(total_seconds=1800)` expiring mid-cycle-2 P08** — that
+sentence in this entry is superseded. The sealed evidence says: root
+`result.json` `status=FAILED`, `error="TimeoutError: "`, sealed
+`PRELAUNCH.json` `budgets.total_seconds=2400` (`loop_cycles=2`) — never
+reached, ~537 s elapsed — cycle 2 re-sent the byte-identical
+`random-generation` request (124-byte disc, sha256
+`519e626b5efed716beb2029d232a05766f42bbec611e516b28d9ff8def2bafd1`;
+cycle-1's response disc exists, cycle-2's does not), whose disc mtimes
+bound the abort window at `10:32:01.349311` → `10:32:21.399356` ≈
++20.05 s; the GameScript `planner_used` dedup silently dropped the
+duplicate (sealed staged guard `staged/network-parent.nut:34` =
+`planner_requests>=33345`), Python's 20-second per-exchange read
+timeout (`EXCHANGE_SECONDS=20`) expired, and cycle 2 reached planning
+but NOT capture or P08 (`capture_requests_attempted=0`; `pair_checks
+=146` is the frozen diagnostic counter, not P08 execution). E153's
+stderr-window fix held live natively (cycle-2 qualification
+`phase=COMPLETED`, `failure=None`, no duplicate trip); attempt 3 stays
+FAILED and SEALED; FD-C-2 stays `INCOMPLETE_EVIDENCE`; no status,
+
+no artifact, and no budget changed. Everything the entry above reports
+about the E153 fix's live validation, cycle-1's typed zero-service
+terminal and the retained manifests is unaffected.
+
+This round also closed the two reader regressions for record: the
+R5/R7-audited `receipt_game_time` and `execute_network` financial-tail
+readers still named legacy literal response discs at cycle 2 (both
+would end `FileNotFoundError` in a future attempt), and commit
+`d6342cc` fixes both via the producer's `cycle_request_id` maker, adds
+the two-cycle receipt contract test (`tests/test_game_time.py`, 14
+passed) and the real-wire contract test
+(`tests/test_freight_loops.py`, 35 passed);
+battery at `d6342cc` = 1,075 passed / 2 failed / 1 skipped with both
+failures proven pre-existing on clean `61b655d` (names in E155 row);
+ruff/format/py_compile/ty clean. Offline readiness gates for a future
+Attempt 4 all pass at `d6342cc` (pins, preflight `check`, no native
+process, clean tree) — E155 row of record; still no grant, no launch.
