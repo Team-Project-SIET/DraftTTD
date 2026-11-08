@@ -346,3 +346,30 @@ operator.
   `INCOMPLETE_EVIDENCE`; Attempt 3 needs a fresh explicit operator
   grant with the byte-unchanged command of record; the GUI-bearing
   native probe remains a separate later grant.
+- **E154 attempt-3 (2026-11-08, native):** the explicit grant ran the
+  byte-unchanged command of record once; the E153 window fix is proven
+  live — cycle-2 completed its entire qualification session
+  (`phase=COMPLETED`, `failure=None`, 85 clock polls; every clock id
+  exactly 2× in the one shared stderr, byte-identical ids, no
+  duplicate-guard trip; the E152 defect class is closed). Cycle 1
+  reproduced the typed zero-service terminal exactly (9,702/9,702
+  capture pairs, 16 compatible / 6 captured / truncated / candidates
+  0). Cycle 2 burned the remaining sealed budget during qualification
+  re-collection + P08 pair checks (`pair_checks=146`) before any
+  capture; the outer `asyncio.timeout(total_seconds=1800)` expired and
+  the attempt sealed FAILED (`error=TimeoutError: `, `failure.sav`
+  retained, cleanup certified). Classification: the loop's
+  `total_seconds` scaling underestimates per-cycle requalification cost
+  (§3.2 one-connection-per-cycle design) — a budget-seal amendment
+  decision for the operator, not a code defect.
+- **FD-C-2:** still `INCOMPLETE_EVIDENCE` from fresh digest-pinned
+  evidence — no completed feasibility search exists (cycle-1 truncated
+  zero-candidate observed terminal; cycle-2 interrupted before
+  capture). All three retained manifests re-derive equal; the
+  loop-receipt instrument refuses the dir typed, no forced relabel; no
+  native process remains.
+- **Gate of record:** Attempt 4 needs (a) the operator's budget-seal
+  amendment decision and (b) a fresh explicit operator grant with the
+  command of record byte-unchanged. The GUI-bearing native probe
+  remains a separate later grant; the 53-legacy-red FULL regression
+  stays the wayfinder EXIT gate.

@@ -489,3 +489,59 @@ launched yet):
   any requirement to relaunch; cleanup not fully certified; any scope
   creep. On completion, independently verify both cycles before any
   closure claim.
+
+## Attempt-3 record — Phase C loop qualification: EXECUTED ONCE, FAILED AT THE BUDGET SEAL, SEALED (2026-11-08, E154)
+
+The operator's fresh explicit grant ran the byte-unchanged command of
+record once (seed 2026, 3 towns / 3 industries, headless random world,
+two cycles, one launch, two cycle connections). It stopped typed on the
+first unexpected failure — no retry, no relaunch, no artifact mutation,
+no code change under the grant. Run dir of record:
+`artifacts/demos/playable-demo-f4a9e00063814bb381af2903fb4a5a88`
+(root `status=FAILED`, `error=TimeoutError: ` from the outer
+`asyncio.timeout` on the sealed `total_seconds=1800` loop budget,
+launches 1 / connections 2, funding 2/1, `failure.sav` retained,
+cleanup certified root and both cycles).
+
+**The E153 shared-stderr window fix is PROVEN LIVE NATIVELY** — the
+core validation of this attempt: cycle-2 completed its entire
+qualification session against the windowed shared stderr
+(`qualification-session.json`: `phase=COMPLETED`, `failure=None`,
+`reconnects=0`, `retries=0`, clock usage `[85, 17993, 340]`,
+anchor/final/production complete), every clock request id appears
+exactly 2× in the one shared stderr (one full quadruple per cycle,
+byte-identical `freight-plan-clock-N` ids across cycles) and the typed
+duplicate guard never tripped. The E152 defect class is closed.
+
+Cycle 1 again recorded its full native loop discipline to the same
+typed zero-service terminal: `cycle-result.json`
+`NATIVE_LOOP_ZERO_SERVICES` typed `ValueError: NO_FEASIBLE_SERVICES:
+no supported full-load road engine and supply` with 9,702/9,702 capture
+pairs (19,404 discs), `pause_pairs=6`, compatible 16 / captured 6 /
+`search_truncated=true` / candidates 0, `qualified.sav` and the full
+recording set retained, cleanup certified — a second independent
+observation of the same deterministic truncated zero-candidate
+incidence under seed 2026.
+
+Cycle 2 staged fully (18-entry manifest) and its qualification plus P08
+pair checks consumed the remaining sealed budget before any capture
+(`pair_checks=146`, `capture_requests_attempted=0`,
+`p07=REQUIRES_COMPLETED_NATIVE_RECEIPT`, `error=TimeoutError: `). The
+loop's `total_seconds` scaling underestimates the per-cycle
+requalification cost that the §3.2 one-connection-per-cycle design
+requires. Classification: a budget-seal amendment decision for the
+operator — not a code defect; the wire, capture, recording, funding,
+and cleanup layers held natively again.
+
+FD-C-2 stays `INCOMPLETE_EVIDENCE` from fresh digest-pinned evidence:
+no completed feasibility search exists (cycle 1 truncated zero-candidate
+observed terminal; cycle 2 interrupted before capture). All three
+retained manifests re-derive digest-for-digest equal (root 18, cycle-1
+19,440, cycle-2 18 entries); `verify_loop_receipt` refuses the dir
+typed (`loop attempt did not reach a verified terminal status`) with no
+forced relabel; no native OpenTTD process remains.
+
+**Gate:** Attempt 4 needs (a) the operator's budget-seal amendment
+decision and (b) a fresh explicit operator grant with the command of
+record byte-unchanged. The GUI-bearing native probe remains a separate
+later grant. Evidence index E154.

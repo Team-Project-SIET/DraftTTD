@@ -3677,3 +3677,58 @@ AdminPort contact, no artifact mutation; attempt-2 grant stays consumed.
   explicit operator grant with the byte-unchanged command of record.
 
 Evidence index E153.
+
+### 2026-11-08 — Ticket-05 Phase C attempt-3 FAILED once under the fresh explicit grant; E153 window fix proven live natively; failure is the sealed attempt budget (E154)
+
+Offline post-mortem under the Attempt-3 grant (stop honored on first
+unexpected failure — no retry, no relaunch, no artifact mutation, no
+code change under the grant).
+
+- **Run dir of record (sealed, read-only):**
+  `artifacts/demos/playable-demo-f4a9e00063814bb381af2903fb4a5a88`.
+  Root result: `status=FAILED`, `error=TimeoutError: ` (the outer
+  `asyncio.timeout` on the sealed `total_seconds=1800` loop budget),
+  launches 1 / connections 2, funding 2/1 retained,
+  `failure_save_error=None` (`failure.sav` retained), root cleanup
+  certified.
+- **E153 shared-stderr window fix PROVEN LIVE NATIVELY** — the decisive
+  validation: both earlier crash seams passed and the E152 collision is
+  gone. Every clock request id appears exactly 2× in the one shared
+  stderr (two full quadruples, once per cycle, byte-identical ids) and
+  the duplicate guard never tripped. Cycle-2's retained
+  `qualification-session.json`: `phase=COMPLETED`, `failure=None`,
+  85 clock polls (`[85, 17993, 340]`), anchor/final/production
+  complete, 0 reconnects / 0 retries — full qualification re-collection
+  now runs per cycle cleanly.
+- **Cycle 1 reproduced attempt-2's typed zero-service terminal
+  exactly:** `NATIVE_LOOP_ZERO_SERVICES` typed
+  `ValueError: NO_FEASIBLE_SERVICES: no supported full-load road engine
+  and supply`, 9,702/9,702 capture pairs (19,404 discs) completed,
+  `pause_pairs=6`, compatible 16 / captured 6 / `search_truncated
+  =true` / candidates 0, `qualified.sav` + full recording set retained,
+  cleanup certified. Second independent observation of the same
+  truncated zero-candidate incidence under seed 2026 — richer evidence,
+  still NOT a feasibility/infeasibility verdict.
+- **Cycle 2 burned the sealed budget BEFORE any capture:** full staged
+  set retained (18-entry manifest); its diagnostic records
+  `pair_checks=146`, compatible 16, `capture_requests_attempted=0`,
+  `error=TimeoutError: `, `p07=REQUIRES_COMPLETED_NATIVE_RECEIPT`,
+  cleanup certified. The loop's `total_seconds` scaling (1800 for two
+  cycles) underestimates the per-cycle requalification cost required by
+  the §3.2 one-connection-per-cycle design. Classification: a budget
+  seal amendment decision for the operator — not a code defect; the
+  wire, capture, recording, and cleanup layers held.
+- **FD-C-2: still `INCOMPLETE_EVIDENCE`** from fresh digest-pinned
+  evidence — no completed feasibility search exists (cycle 1 truncated
+  with candidates 0; cycle 2 interrupted before capture).
+- **Verification of record:** all three retained manifests re-derive
+  digest-for-digest equal (root 18, cycle-1 19,440, cycle-2 18
+  entries); `verify_loop_receipt` refuses the dir typed
+  (`loop attempt did not reach a verified terminal status`) with no
+  forced relabel; no native OpenTTD process remains.
+- **Gate:** a budget-seal amendment (operator decision, command of
+  otherwise byte-unchanged) plus a fresh explicit operator grant
+  precede any Attempt 4. The GUI-bearing native probe remains a
+  separate later grant.
+
+Evidence index E154.

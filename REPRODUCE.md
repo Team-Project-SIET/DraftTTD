@@ -1716,3 +1716,54 @@ git diff --check
   record and was not modified.
 - **Gate:** Attempt 3 needs a fresh explicit operator grant with the
   byte-unchanged command of record; FD-C-2 stays `INCOMPLETE_EVIDENCE`.
+
+## 2026-11-08 addendum #12 — E154: attempt-3 sealed FAILED at the budget seal; window fix proven live (checked)
+
+The explicit Attempt-3 grant ran the byte-unchanged command of record
+once; it stopped typed on the first unexpected failure
+(`ATTEMPT-EXIT=1`, `error=TimeoutError:`). Run dir of record (sealed,
+read-only forever):
+`artifacts/demos/playable-demo-f4a9e00063814bb381af2903fb4a5a88`.
+
+```bash
+# Post-mortem readback of the sealed attempt (read-only; never mutate):
+.venv/bin/python - <<'PY'
+import json
+from pathlib import Path
+from app.simulation.openttd.proof.freight_delivery import verify_loop_receipt, network_budgets
+from app.simulation.openttd.proof.harness import manifest
+d = Path("artifacts/demos/playable-demo-f4a9e00063814bb381af2903fb4a5a88")
+r = json.loads((d / "result.json").read_bytes())
+print(r["status"], "|", r["error"], "| launches", r["launches"], "connections", r["connections"])
+for c in (d / "loop-cycle-1", d / "loop-cycle-2"):
+    print(c.name, "manifest-equal:",
+          manifest(c) == (c / "artifact-manifest.sha256").read_text())
+q2 = json.loads((d / "loop-cycle-2/qualification-session.json").read_bytes())
+print("cycle-2 qualification:", q2["phase"], "| failure:", q2["failure"], "| clock usage:", q2["phase_usage"][0])
+d2 = json.loads((d / "loop-cycle-2/planning-diagnostic.json").read_bytes())
+print("cycle-2 diag:", d2["pair_checks"], "pair checks,", d2["capture_requests_completed"], "captures,",
+      d2["search_truncated"], d2["candidate_count"])
+try:
+    verify_loop_receipt(d)
+    print("VERIFY-OK")
+except ValueError as e:
+    print("VERIFY-TYPED-REFUSAL:", e)
+PY
+
+# Window-fix live certification: every clock id exactly 2x in the ONE
+# shared stderr (one full quadruple per cycle, byte-identical ids):
+grep -o "request_id=[^ ]*-clock-[0-9]*" artifacts/demos/playable-demo-f4a9e00063814bb381af2903fb4a5a88/stderr.log | sort | uniq -c | awk '$1>1' | head
+```
+
+- **Classification:** the attempt budget itself expired mid-cycle-2 P08
+  (`total_seconds=1800` for two cycles; per-cycle requalification under
+  the §3.2 one-connection-per-cycle design costs more than the scaled
+  budget allows). Budget seal amendment is an OPERATOR decision; no
+  code defect regressed; E153 validated live.
+- **FD-C-2:** still `INCOMPLETE_EVIDENCE` (cycle 1 truncated
+  zero-candidate observed terminal; cycle 2 interrupted before any
+  capture; no completed feasibility search).
+- **Gate:** Attempt 4 needs (a) any budget-seal amendment decision and
+  (b) a fresh explicit operator grant with the command of record
+  byte-unchanged. The GUI-bearing native probe remains a separate later
+  grant.

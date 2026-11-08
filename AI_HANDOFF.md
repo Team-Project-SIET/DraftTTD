@@ -794,3 +794,29 @@ is written in full in ticket-05. FD-C-2 stays `INCOMPLETE_EVIDENCE`
 until fresh digest-pinned native evidence exists. Attempt 3 awaits the
 fresh explicit operator grant; the GUI-bearing native probe remains a
 separate later grant.
+
+## E154 addendum (2026-11-08) — attempt-3: window fix proven live; budget seal expired mid-cycle-2
+
+Attempt 3 ran once under the fresh explicit grant and failed typed with
+exit 1 at the sealed attempt budget: `result.json` error
+`TimeoutError: ` from the outer `asyncio.timeout(total_seconds=1800)`
+while cycle-2's P08 was still in pair checks (`pair_checks=146`,
+capture 0/0). Sealed dir of record:
+`artifacts/demos/playable-demo-f4a9e00063814bb381af2903fb4a5a88`
+(`failure.sav` retained, cleanup certified root and both cycles).
+
+**E153 is proven live natively:** cycle-2 completed its ENTIRE
+qualification session against the windowed shared stderr
+(`phase=COMPLETED`, `failure=None`, 85 clock polls, all clock ids
+exactly 2× = one quadruple per cycle, byte-identical ids over both
+cycles, no duplicate-guard trip). The E152 defect class is closed.
+
+Cycle-1 again reached the typed zero-service terminal
+(`NATIVE_LOOP_ZERO_SERVICES`, 9,702/9,702 capture pairs, 16 compatible /
+6 captured / truncated / candidates 0). FD-C-2 stays
+`INCOMPLETE_EVIDENCE` (no completed feasibility search). Budget-seal
+decision for the operator: the loop `total_seconds` scaling
+underestimates per-cycle requalification cost (§3.2 design); attempt 4
+needs that seal decision plus a fresh explicit operator grant,
+command otherwise byte-unchanged. The GUI-bearing probe remains a
+separate later grant.
