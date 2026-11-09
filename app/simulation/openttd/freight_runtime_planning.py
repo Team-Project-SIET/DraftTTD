@@ -17,6 +17,7 @@ from app.planning.domain import Contract, PreparedWorldManifest
 from app.planning.optimizer import optimize_candidate_network
 from app.planning.p08_adapter import MonthlyBatchPolicy, adapt_planning_facts
 from app.planning.p08_road import NoRoadScenario, generate_road_scenario
+from app.simulation.openttd.capture_scheduling import CaptureWindowExceeded, qualified_capture_month
 from app.simulation.openttd.freight_planning import compile_freight_service
 from app.simulation.openttd.gamescript_bridge import BridgePackage
 from app.simulation.openttd.industry_inventory import IndustryInventoryWorld
@@ -344,6 +345,11 @@ async def capture_planning_facts(
         else None
     )
     responses = []
+    # E156 runtime guard: validate every exchange bracket against the active
+    # qualified observation month while capture proceeds; the produced
+    # request/response discs stay on disk, no facts artifact is written, and
+    # counts never report the offending exchange as received data.
+    window_month = qualified_capture_month(world)
 
     async def read(kind, arg=0):
         backend.health()
@@ -369,6 +375,22 @@ async def capture_planning_facts(
             raise
         except TimeoutError as error:
             raise ValueError("CAPTURE_TIME_BUDGET: planning capture deadline expired") from error
+        if not (
+            window_month.start_date
+            <= response.before
+            <= response.after
+            < window_month.end_date
+        ):
+            raise CaptureWindowExceeded(
+                relationship=(src, dst, cargo),
+                request_id=request.request_id,
+                cycle=cycle,
+                before=response.before,
+                after=response.after,
+                month_start=window_month.start_date,
+                month_end=window_month.end_date,
+                exchanges_so_far=len(responses),
+            )
         responses.append(response)
         backend.planning_read_count = len(responses)
         return response.data

@@ -14,6 +14,12 @@ from app.planning.domain import ExecutionPlan, PlanningScenario, PreparedWorldMa
 from app.planning.optimizer import optimize_candidate_network
 from app.planning.p08_adapter import MonthlyBatchPolicy, adapt_planning_facts
 from app.planning.p08_network import generate_freight_network
+from app.simulation.openttd.capture_scheduling import (
+    build_forecasts,
+    plan_sessions,
+    qualified_capture_month,
+    require_planned,
+)
 from app.simulation.openttd.freight_delivery import (
     DeliveryPlan,
     DeliveryReadback,
@@ -363,8 +369,20 @@ async def _plan_network_world(
         if diagnostic is not None:
             diagnostic["candidate_count"] = 0
         raise ValueError(reason + ": no compatible freight OD within capture budgets")
+    month = qualified_capture_month(world)
+    schedule = plan_sessions(
+        relationships,
+        month,
+        month.start_date,
+        build_forecasts(relationships, world, capture_budget),
+    )
+    if diagnostic is not None:
+        diagnostic["capture_preflight"] = schedule.diagnostic()
+    require_planned(schedule)
     facts, count = [], 1 if metadata.get("random_world") else 0
-    for n, relationship in enumerate(relationships):
+    facts_by_position = {}
+    for decision in schedule.planned:
+        relationship = decision.relationship
         paused = (
             paused_world_clock(backend, diagnostic=diagnostic)
             if metadata.get("random_world")
@@ -377,7 +395,7 @@ async def _plan_network_world(
                     prepared,
                     world,
                     relationship=relationship,
-                    prefix=f"n{n}-",
+                    prefix=f"n{decision.position}-",
                     retain=False,
                     capture_budget=capture_budget,
                 )
@@ -386,10 +404,14 @@ async def _plan_network_world(
                 diagnostic["capture_requests_attempted"] += backend.planning_read_attempts
                 diagnostic["capture_requests_completed"] += backend.planning_read_count
         count += backend.planning_read_count
-        facts.append(value)
+        facts_by_position[decision.position] = value
         if diagnostic is not None:
-            diagnostic["captured_relationships"] = len(facts)
-        write_json(prepared.directory / f"network-facts-{n}.json", value.model_dump(mode="json"))
+            diagnostic["captured_relationships"] = len(facts_by_position)
+        write_json(
+            prepared.directory / f"network-facts-{decision.position}.json",
+            value.model_dump(mode="json"),
+        )
+    facts = [facts_by_position[position] for position in sorted(facts_by_position)]
     backend.planning_read_count = count
     final = await save(backend, prepared, "qualified")
     source_manifest = PreparedWorldManifest(
@@ -1213,22 +1235,44 @@ def replay_network_capture(directory, world, metadata):
     capture_budget = (
         DemoBudgets.from_sealed(metadata["random_budget"]) if metadata.get("random_world") else None
     )
+    diagnostic_path = directory / "planning-diagnostic.json"
+    schedule_era = diagnostic_path.is_file() and "capture_preflight" in json.loads(
+        diagnostic_path.read_bytes()
+    )
+    if schedule_era:
+        month = qualified_capture_month(world)
+        schedule = plan_sessions(
+            relationships,
+            month,
+            month.start_date,
+            build_forecasts(relationships, world, capture_budget),
+        )
+        for decision in schedule.deferred:
+            if (directory / f"network-facts-{decision.position}.json").is_file():
+                raise ValueError(
+                    "network facts artifact present for deferred relationship "
+                    + str(list(decision.relationship))
+                )
+        positions = sorted(d.position for d in schedule.planned)
+    else:
+        positions = list(range(len(relationships)))
     facts = []
-    for n, relationship in enumerate(relationships):
+    for position in positions:
+        relationship = relationships[position]
         f = asyncio.run(
             capture_planning_facts(
                 SimpleNamespace(health=lambda: None, session=None),
                 SimpleNamespace(directory=directory),
                 world,
                 relationship=relationship,
-                prefix=f"n{n}-",
+                prefix=f"n{position}-",
                 read_exchange=retained_read,
                 retain=False,
                 capture_budget=capture_budget,
             )
         )
         if f.model_dump(mode="json") != json.loads(
-            (directory / f"network-facts-{n}.json").read_bytes()
+            (directory / f"network-facts-{position}.json").read_bytes()
         ):
             raise ValueError("network facts differ from actual readbacks")
         facts.append(f)
