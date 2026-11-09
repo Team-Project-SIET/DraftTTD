@@ -3732,3 +3732,5 @@ code change under the grant).
   separate later grant.
 
 Evidence index E154.
+
+Correction (2026-11-08, per research/02-attempt3-root-cause-doc-correction.md): the attempt-3 terminal `TimeoutError: ` was the 20-second per-exchange read timeout after the GameScript `planner_used` dedup silently dropped cycle-2's byte-identical `random-generation` request id (sha256 `519e626b…afd1`); the outer `total_seconds=2400` attempt budget never expired (~537 s consumed). Original prose preserved above; no status change.
