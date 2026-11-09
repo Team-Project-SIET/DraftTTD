@@ -14,9 +14,10 @@ import json
 from types import SimpleNamespace as NS
 
 import pytest
-from test_random_distance import seed17_world
+from test_random_distance import RUN, seed17_world
 from test_supplemental_planning_contracts import world_for
 
+import app.simulation.openttd.capture_scheduling as capture_scheduling
 import app.simulation.openttd.freight_native_network as native_network
 from app.demo_random import DemoBudgets
 from app.simulation.openttd.capture_scheduling import (
@@ -30,15 +31,22 @@ from app.simulation.openttd.capture_scheduling import (
     SessionForecast,
     build_forecasts,
     forecast_session,
+    observed_capture_start,
     plan_sessions,
+    preflight_schedule,
     qualified_capture_month,
     require_planned,
 )
 from app.simulation.openttd.freight_native_network import (
     bounded_relationships,
+    plan_network_world,
     replay_network_capture,
 )
-from app.simulation.openttd.freight_runtime_planning import capture_planning_facts, cycle_request_id
+from app.simulation.openttd.freight_runtime_planning import (
+    PlanningReadback,
+    capture_planning_facts,
+    cycle_request_id,
+)
 from app.simulation.openttd.production_observation import EconomyMonth
 
 GATE_MONTH = EconomyMonth(year=1950, month=3, start_date=712282, end_date=712313)
@@ -46,7 +54,9 @@ ANCHOR_MONTH = EconomyMonth(year=1950, month=2, start_date=712254, end_date=7122
 MARCH_START = GATE_MONTH.start_date
 
 
-def fc(relationship, position=0, estimate=700, ceiling=546, tiles=450):
+def fc(relationship, position=0, estimate=700, ceiling=4000, tiles=450):
+    # ceiling defaults well above the estimate so generic scheduling tests
+    # exercise the capacity branch, not the unified budget gate.
     return SessionForecast(
         relationship=relationship,
         position=position,
@@ -221,6 +231,7 @@ def test_forecast_session_unknown_region_fails_closed():
     forecast = forecast_session(world, (987, 986, 63), position=3, tile_limit=512, edge_pad=0)
     assert forecast.exchange_estimate is None
     assert forecast.exchange_ceiling == 512 + 34
+    assert forecast.refusal_reason is None  # KeyError = genuinely uncomputable
 
 
 # ------------------------------------------------------------ month identity
@@ -482,6 +493,160 @@ def test_replay_refuses_facts_artifact_for_deferred_relationship(tmp_path, monke
             )
         )
 
-    monkeypatch.setattr(native_network, "plan_sessions", deferred_plan)
+    monkeypatch.setattr(capture_scheduling, "plan_sessions", deferred_plan)
     with pytest.raises(ValueError, match="deferred relationship"):
         replay_network_capture(tmp_path, world, metadata)
+
+
+# ------------------------------------------------------------ finding 1: date
+
+
+def test_observed_capture_start_is_last_qualification_clock_sample():
+    world = seed17_world()
+    start = observed_capture_start(world)
+    gate = world.production.qualification.current_month
+    assert start == 712284  # qualification's last native clock sample
+    assert gate.start_date <= start < gate.end_date
+    # Delayed start: the observed date is not the observation month start.
+    assert start > gate.start_date
+
+
+def test_observed_capture_start_on_day_one_world():
+    world = world_for()
+    assert observed_capture_start(world) == (
+        world.production.qualification.current_month.start_date
+    )
+
+
+def test_observed_capture_start_fails_closed_without_clock_sample():
+    world = NS(qualification=NS(clock=NS(last_sample=None)))
+    with pytest.raises(CaptureCapacityError, match="CAPTURE_CURRENT_DATE_UNKNOWN"):
+        observed_capture_start(world)
+
+
+def test_observed_capture_start_refuses_stale_sample():
+    world = NS(
+        qualification=NS(clock=NS(last_sample=NS(economy_date=712254))),
+        production=NS(qualification=NS(current_month=GATE_MONTH)),
+    )
+    with pytest.raises(CaptureCapacityError, match="CAPTURE_CURRENT_DATE_STALE"):
+        observed_capture_start(world)
+
+
+def test_late_start_consumes_remaining_capacity():
+    # 9 remaining days from 712304: a 740-exchange session (10d at the
+    # heuristic rate) reaches the exclusive end -> refused.
+    schedule = plan_sessions([(0, 1, 1)], GATE_MONTH, 712304, [fc((0, 1, 1), 0, estimate=740)])
+    assert not schedule.planned
+    assert schedule.deferred[0].remaining_window_days == 9
+    assert "INSUFFICIENT_CAPACITY" in (schedule.deferred[0].reason or "")
+
+
+def test_plan_sessions_refuses_pre_window_current_date():
+    with pytest.raises(CaptureCapacityError, match="CAPTURE_CURRENT_DATE_PRE_MONTH"):
+        plan_sessions([(0, 1, 1)], GATE_MONTH, 712281, [fc((0, 1, 1))])
+
+
+def test_preflight_schedule_uses_observed_date_and_gate_month():
+    world = seed17_world()
+    schedule = preflight_schedule(world, [(0, 1, 1)], DemoBudgets())
+    assert schedule.planned
+    decision = schedule.planned[0]
+    assert decision.planned_first_date == observed_capture_start(world)
+
+
+# --------------------------------------------------- finding 3: budget model
+
+
+def test_preflight_budget_uses_full_capture_read_model():
+    # 540-tile region: tile-only accounting (540 + 2 <= 546) passed preflight
+    # and aborted mid-run at CAPTURE_REQUEST_BUDGET; the unified model
+    # (540 + 2 + 32 = 574 reads) refuses at capture open.
+    schedule = plan_sessions(
+        [(0, 1, 1)],
+        GATE_MONTH,
+        MARCH_START,
+        [fc((0, 1, 1), 0, estimate=574, tiles=540, ceiling=546)],
+    )
+    assert not schedule.planned
+    assert "CAPTURE_READ_BUDGET" in (schedule.deferred[0].reason or "")
+
+
+def test_budget_boundary_tile_limit_region_fits():
+    # A region exactly at the tile limit stays within the budget under the
+    # unified model: 512 + 2 + 32 = 546 = the capture read ceiling.
+    schedule = plan_sessions(
+        [(0, 1, 1)],
+        GATE_MONTH,
+        MARCH_START,
+        [fc((0, 1, 1), 0, estimate=546, tiles=512, ceiling=546)],
+    )
+    assert schedule.planned
+
+
+# ---------------------------------------------- finding 4: refusal reason ids
+
+
+@pytest.mark.parametrize(
+    "code",
+    ["CAPTURE_MAP_BOUND", "CAPTURE_PROFILE_UNSUPPORTED", "CAPTURE_TILE_BUDGET"],
+)
+def test_regional_refusal_codes_preserved(monkeypatch, code):
+    def region(world, relationship, tile_limit, edge_pad=0):
+        raise ValueError(code + ": controlled regional refusal")
+
+    monkeypatch.setattr("app.demo_random.relationship_region", region)
+    world = seed17_world()
+    forecast = forecast_session(world, (0, 1, 1), position=0, tile_limit=512, edge_pad=0)
+    assert forecast.exchange_estimate is None
+    assert forecast.refusal_reason == code
+    schedule = plan_sessions([(0, 1, 1)], GATE_MONTH, MARCH_START, [forecast])
+    assert not schedule.planned
+    assert (schedule.deferred[0].reason or "").startswith(code)
+
+
+# --------------------------------------------- finding 2: integration refusal
+
+
+def test_plan_network_world_refuses_before_capture_requests(tmp_path, monkeypatch):
+    from app.simulation.openttd.proof import freight_delivery as native
+
+    metadata = json.loads((RUN / "PRELAUNCH.json").read_bytes())
+    metadata["random_budget"] = DemoBudgets().model_dump()
+    (tmp_path / "PRELAUNCH.json").write_text(json.dumps(metadata))
+    _prepare(tmp_path)
+    # generation_observation validates against the run's own runtime identity.
+    (tmp_path / "runtime-identity.json").write_bytes((RUN / "runtime-identity.json").read_bytes())
+    world = seed17_world()
+
+    async def collect(*args):
+        return world
+
+    kinds = []
+
+    async def generation(session, request, directory, response_type):
+        kinds.append(request.kind)
+        return PlanningReadback.model_validate_json(
+            (RUN / "random-generation-response.json").read_bytes()
+        )
+
+    def inflated(relationships, forecast_world, capture_budget):
+        return tuple(fc(r, i, estimate=3588, ceiling=4000) for i, r in enumerate(relationships))
+
+    monkeypatch.setattr(native_network, "collect_qualified_world", collect)
+    monkeypatch.setattr(capture_scheduling, "build_forecasts", inflated)
+    monkeypatch.setattr(native, "exchange", generation)
+    with pytest.raises(CaptureCapacityError) as info:
+        asyncio.run(plan_network_world(None, NS(directory=tmp_path), None, None, "a" * 64, 30))
+    assert str(info.value).startswith("CAPTURE_SCHEDULE_EMPTY")
+    assert "NO_FEASIBLE_SERVICES" not in str(info.value)
+    # Only the legacy random-generation read; zero capture exchanges issued.
+    assert kinds == ["generation"]
+    assert not list(tmp_path.glob("planning-*-request.json"))
+    assert not list(tmp_path.glob("*-response.json"))
+    assert not list(tmp_path.glob("network-facts-*.json"))
+    assert not (tmp_path / "supplemental-planning-facts.json").exists()
+    diagnostic = json.loads((tmp_path / "planning-diagnostic.json").read_bytes())
+    assert diagnostic["status"] == "FAILED"
+    assert diagnostic["capture_preflight"]["planned"] == []
+    assert diagnostic.get("capture_requests_attempted", 0) == 0

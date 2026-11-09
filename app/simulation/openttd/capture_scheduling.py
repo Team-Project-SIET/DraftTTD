@@ -126,6 +126,9 @@ class SessionForecast:
     region_tiles: int
     exchange_estimate: int | None  # None = unknown capacity; scheduler fails closed
     exchange_ceiling: int
+    # Original regional refusal code (CAPTURE_MAP_BOUND, CAPTURE_PROFILE_UNSUPPORTED,
+    # CAPTURE_TILE_BUDGET); None = genuinely unknown/uncomputable -> CAPACITY_UNKNOWN.
+    refusal_reason: str | None = None
 
 
 @dataclass(frozen=True)
@@ -195,8 +198,12 @@ def forecast_session(
     engine count is only observable at runtime, so estimates never imply a
     completion guarantee. The guaranteed bound is the capture read budget
     itself (``tile_limit + CAPTURE_BUDGET_OVERHEAD``), beyond which the
-    session aborts with ``CAPTURE_REQUEST_BUDGET``. A region that cannot be
-    computed offline fails closed with an unknown estimate.
+    session aborts with ``CAPTURE_REQUEST_BUDGET``; because
+    ``relationship_region`` refuses regions above the tile limit, every
+    admitted region satisfies ``estimate <= budget`` under this same
+    accounting model. A region that cannot be computed offline fails closed
+    with an unknown estimate, keeping the regional refusal code
+    (``refusal_reason``) when the failure was a typed ``CAPTURE_*`` refusal.
     """
     ceiling = tile_limit + CAPTURE_BUDGET_OVERHEAD
     try:
@@ -204,7 +211,19 @@ def forecast_session(
 
         region = relationship_region(world, relationship, tile_limit, edge_pad=edge_pad)
         tiles = region["width"] * region["height"]
-    except ValueError, KeyError:
+    except ValueError as error:
+        # Typed regional refusals keep their original code (CAPTURE_MAP_BOUND,
+        # CAPTURE_PROFILE_UNSUPPORTED, CAPTURE_TILE_BUDGET); CAPACITY_UNKNOWN
+        # stays reserved for genuinely uncomputable regions.
+        return SessionForecast(
+            relationship=relationship,
+            position=position,
+            region_tiles=0,
+            exchange_estimate=None,
+            exchange_ceiling=ceiling,
+            refusal_reason=str(error).split(":", 1)[0],
+        )
+    except KeyError:
         return SessionForecast(
             relationship=relationship,
             position=position,
@@ -263,13 +282,26 @@ def plan_sessions(
     inter-session gap counted against the next session's open; a planned
     session is not a promise of completion - the runtime guard
     (`CaptureWindowExceeded`) and the per-session ``require_world`` gate
-    remain the authoritative stop points. ``current_date`` is the caller's
-    best known world date; the exclusive month end (``after < end_date``)
-    is preserved: a session whose planned last day is ``end_date - 1`` fits,
-    one whose planned last day reaches ``end_date`` or later is deferred.
+    remain the authoritative stop points. ``current_date`` must be an
+    actually observed game date (see ``observed_capture_start``); a date
+    before ``month.start_date`` is refused instead of widening the window.
+    The exclusive month end (``after < end_date``) is preserved: a session
+    whose planned last day is ``end_date - 1`` fits, one whose planned last
+    day reaches ``end_date`` or later is deferred. The budget gate uses the
+    same accounting model as the estimate (``tiles + fixed reads + engine
+    allowance``) against the enforced ``CAPTURE_REQUEST_BUDGET`` ceiling,
+    so a planned session cannot abort on the request budget mid-run.
     """
     if len(relationships) != len(forecasts):
         raise ValueError("capture schedule forecast mismatch")
+    if current_date < month.start_date:
+        raise CaptureCapacityError(
+            "CAPTURE_CURRENT_DATE_PRE_MONTH: current game date "
+            + str(current_date)
+            + " precedes the qualified observation window start "
+            + str(month.start_date)
+            + "; refusing instead of widening the window"
+        )
 
     def estimate(f: SessionForecast) -> tuple[float, tuple[int, int, int]]:
         return (
@@ -293,11 +325,12 @@ def plan_sessions(
                     planned_last_date=None,
                     remaining_window_days=remaining,
                     fits=False,
-                    reason="CAPACITY_UNKNOWN: region forecast unavailable; failing closed",
+                    reason=(forecast.refusal_reason or "CAPACITY_UNKNOWN")
+                    + ": region forecast unavailable; failing closed",
                 )
             )
             continue
-        if forecast.region_tiles + CAPTURE_FIXED_EXCHANGES > forecast.exchange_ceiling:
+        if forecast.exchange_estimate > forecast.exchange_ceiling:
             decisions.append(
                 SessionDecision(
                     relationship=forecast.relationship,
@@ -309,8 +342,8 @@ def plan_sessions(
                     remaining_window_days=remaining,
                     fits=False,
                     reason=(
-                        "CAPTURE_READ_BUDGET: region tiles "
-                        + str(forecast.region_tiles)
+                        "CAPTURE_READ_BUDGET: estimated capture reads "
+                        + str(forecast.exchange_estimate)
                         + " exceed capture read budget "
                         + str(forecast.exchange_ceiling)
                         + "; session would abort with CAPTURE_REQUEST_BUDGET"
@@ -349,6 +382,59 @@ def plan_sessions(
         if fits:
             planned_date = planned_date + day_span + policy.inter_session_days
     return CaptureSchedule(tuple(decisions))
+
+
+def observed_capture_start(world) -> int:
+    """Trustworthy current game date at capture open.
+
+    Returns the most recent economy date actually observed from the native
+    clock during qualification (``world.qualification.clock.last_sample``);
+    never a wall-clock value or filesystem mtime, and it issues no
+    additional wire request (the sample was already collected as evidence).
+    The qualified-month identity and exclusive-end semantics are untouched.
+    If the qualification evidence carries no clock sample, fail closed with
+    a typed capacity refusal rather than assuming the observation month
+    starts at the current date. Documented limitation: any unobserved
+    live-clock drift between qualification close and capture open is not
+    accounted for here - the runtime guard (``CaptureWindowExceeded``)
+    remains the stop point for drift that occurs after this estimate.
+    """
+    sample = getattr(world.qualification.clock, "last_sample", None)
+    if sample is None:
+        raise CaptureCapacityError(
+            "CAPTURE_CURRENT_DATE_UNKNOWN: qualification evidence carries no "
+            "native clock sample; current game date unavailable, failing closed"
+        )
+    date = sample.economy_date
+    gate_month = world.production.qualification.current_month
+    if date < gate_month.start_date:
+        raise CaptureCapacityError(
+            "CAPTURE_CURRENT_DATE_STALE: last observed game date "
+            + str(date)
+            + " precedes the qualified observation month start "
+            + str(gate_month.start_date)
+            + "; refusing instead of widening the window"
+        )
+    return date
+
+
+def preflight_schedule(world, relationships, capture_budget=None) -> CaptureSchedule:
+    """Deterministic capture schedule from the qualified world's own evidence.
+
+    Shared by the native capture loop and offline replay: the gate month is
+    ``world.production.qualification.current_month`` (March
+    ``[712282, 712313)`` on the attempt-4 chain), the current game date is
+    the qualification's last observed clock sample, and forecasts come from
+    bounded region geometry. Derived only from runtime objects and retained
+    evidence - no mtime, no wall-clock, no wire requests.
+    """
+    month = qualified_capture_month(world)
+    return plan_sessions(
+        relationships,
+        month,
+        observed_capture_start(world),
+        build_forecasts(relationships, world, capture_budget),
+    )
 
 
 def require_planned(schedule: CaptureSchedule, *, context: str = "capture open") -> CaptureSchedule:

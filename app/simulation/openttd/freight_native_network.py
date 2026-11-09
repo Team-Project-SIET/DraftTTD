@@ -14,12 +14,7 @@ from app.planning.domain import ExecutionPlan, PlanningScenario, PreparedWorldMa
 from app.planning.optimizer import optimize_candidate_network
 from app.planning.p08_adapter import MonthlyBatchPolicy, adapt_planning_facts
 from app.planning.p08_network import generate_freight_network
-from app.simulation.openttd.capture_scheduling import (
-    build_forecasts,
-    plan_sessions,
-    qualified_capture_month,
-    require_planned,
-)
+from app.simulation.openttd.capture_scheduling import preflight_schedule, require_planned
 from app.simulation.openttd.freight_delivery import (
     DeliveryPlan,
     DeliveryReadback,
@@ -369,13 +364,7 @@ async def _plan_network_world(
         if diagnostic is not None:
             diagnostic["candidate_count"] = 0
         raise ValueError(reason + ": no compatible freight OD within capture budgets")
-    month = qualified_capture_month(world)
-    schedule = plan_sessions(
-        relationships,
-        month,
-        month.start_date,
-        build_forecasts(relationships, world, capture_budget),
-    )
+    schedule = preflight_schedule(world, relationships, capture_budget)
     if diagnostic is not None:
         diagnostic["capture_preflight"] = schedule.diagnostic()
     require_planned(schedule)
@@ -1240,13 +1229,7 @@ def replay_network_capture(directory, world, metadata):
         diagnostic_path.read_bytes()
     )
     if schedule_era:
-        month = qualified_capture_month(world)
-        schedule = plan_sessions(
-            relationships,
-            month,
-            month.start_date,
-            build_forecasts(relationships, world, capture_budget),
-        )
+        schedule = preflight_schedule(world, relationships, capture_budget)
         for decision in schedule.deferred:
             if (directory / f"network-facts-{decision.position}.json").is_file():
                 raise ValueError(
