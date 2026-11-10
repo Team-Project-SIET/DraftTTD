@@ -925,7 +925,7 @@ giving month window [712282, 712313) and clock sample 712286 inside
 it), 16 compatible relationships disclosed, and capture of the first
 relationship completed 832 planner exchange pairs (`planning-n0-0..831`,
 legacy-unsuffixed as `cycle_request_id` mandates), `network-facts-0.json`
-window [712286, 712286] inside the month window — the E156 month-pacing
+window [712287, 712287] inside the month window — the E156 month-pacing
 remediation gates (capture-start date, pre-month bounding, unified
 budget accounting) held; no month-crossing occurred. Immediately after
 the final readback (23:02:47.65) the runner issued the per-cycle
@@ -940,13 +940,29 @@ after issue, the save itself ≈0.1 s; `qualified.sav` retained,
 sha256 `4993714a90c1fc8c551889bbff3ba9d581fd18d6e548e58e7955acf999c45030`,
 80,516 bytes) — a strict-guard latency miss, not a save failure and
 not a retry: the failure-path `save "failure"` processed normally a
-moment later. Root cause of the game-side console-processing stall is
-UNKNOWN on the sealed bytes alone (`frames.json` carries no per-frame
-timestamps; GameScript stderr is silent 23:02:22 → 23:03:02); it is
-neither attributed to the remediation commits (the guard and save path
-are pre-remediation code that ran clean through attempts 3-4) nor a
-pre-recognized month-pacing class; classification of the stall is
-UNKNOWN pending a reviewed read-only follow-up. `verify_loop_receipt`
+moment later. Root cause of the console-command stall, resolved by the
+read-only forensics of record
+(`.scratch/ramrom-product/research/03-attempt5-save-stall-forensics.md`):
+the runner issued `unpause` and the per-cycle `save "qualified"` as two
+unacknowledged stdin lines back-to-back (paused-capture exit seam,
+`freight_native_network.py` `paused_world_clock` finally →
+`road_mutation.save`); OpenTTD 15.3's dedicated input loop
+(`DedicatedHandleKeyInput`, select-gated `std::getline` per iteration)
+can consume both lines in one `read(2)`, execute only the first and
+leave the `save` line in the C++ streambuf — invisible to that
+select's readiness test — so the queued save never ran until the
+failure-path `save "failure"` write made fd 0 readable again; the
+buffered qualified save then executed 23:03:02.93, into the typed
+FAILED guard by 0.13 s. The class is the unacknowledged
+fire-and-forget console protocol times the game's select-gated line
+consumption; first lossy incidence under the `unpause → save`
+adjacency (attempt-4's three stride-clean `pause`/`unpause` pairs and
+its `unpause → save(failure)` pairing ran clean — a timing race, not an
+every-pair poison). Remedy of record: per-command echo handshake
+`console_ack` for `pause`/`unpause` in `paused_world_clock`, ticket
+`.scratch/ramrom-product/issues/06-console-echo-handshake.md`; no
+retry, no relabel, no push; any implementation plus a native proof
+needs a fresh explicit operator grant. `verify_loop_receipt`
 refused typed verbatim (`ValueError: loop attempt did not reach a
 verified terminal status`), rc=1. Attempt 5 stays FAILED and SEALED;
 FD-C-2 stays `INCOMPLETE_EVIDENCE`; Ticket-05/Phase C stay OPEN; no
