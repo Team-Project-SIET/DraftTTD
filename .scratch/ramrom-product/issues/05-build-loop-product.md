@@ -619,3 +619,49 @@ refuses overshoot exactly as coded; a pacing/fence remedy would be a
 reviewed code change with its own round), then (b) a fresh explicit
 operator grant for a new attempt, then (c) both cycles' verified
 receipts via `verify_loop_receipt`. Evidence index E156.
+
+## Attempt-7 gate prepared — awaiting fresh explicit operator grant (2026-11-11, post-E160)
+
+Final offline readiness audit of the FD-C-2 remediation (`71f6e7d` fix
++ sealed pins, `9194184` docs) verdict
+**READY_FOR_OPERATOR_AUTHORIZATION** — no blockers in the audited state
+(audit of record:
+`.scratch/ramrom-product/research/06-attempt7-fd-c2-readiness-audit.md`,
+E160; 154-targeted-set / routing / scoped statics / sealed replay
+integrity / e2e failure attribution / git + runtime prereqs all
+verified fresh). State before the gate: branch `miles/fright-delivery`
+clean at `9194184`, binary
+`276d5b698a6b706154f3af588f6f885b3aebe518f4ecc8f869abf71383b1904c` and
+OpenGFX
+`43a0c1dabf39cb865394f3a6cc36d4da5c10ecfaaf55652043104806810903be`
+re-hashed against the pins, offline preflight `check` passed with no
+game launched, `pgrep -x openttd` empty. Consumed and void grants:
+E141, E142, E145, attempts 1–6.
+
+Approved execution contract for the authorized ONE attempt (nothing
+launched; the audit file and this gate authorize nothing by
+themselves):
+
+- Command of record, byte-unchanged since attempt-1:
+  `OPENTTD_BINARY=/home/fed/Downloads/openttd-15.3-linux-generic-amd64/openttd
+  OPENTTD_OPENGFX_ARCHIVE=/home/fed/codes/softdev2/artifacts/runtime/verified-assets/opengfx-8.0-all.zip
+  .venv/bin/python -m app.openttd_demo run --headless --random-world
+  --seed 2026 --towns 3 --industries 3 --stop-on-delivery --cycles 2`.
+- Code state under test: `71f6e7d` (reviewed pair-loop bound skip +
+  witness pruning; `9194184` docs), tree clean, sealed pins green.
+- Scope: exactly one launch, one fresh connection per cycle (2 total),
+  funding on the single cycle-1 connection only, loop-scaled sealed
+  budgets, no retries, no seed change, no additional launch, no scope
+  expansion. Stop immediately on any unexpected failure.
+- Success evaluator of record (offline, after the run): verify of
+  record
+  `app.simulation.openttd.proof.freight_delivery verify <run-dir>` →
+  rc 0 with both cycles in `verified_loop_cycles` independently
+  verified, every retained manifest digest-equal, cycle-2 polls from
+  cycle-2's own stderr window. FD-C-2 reassessed ONLY from fresh
+  digest-pinned bytes; truncated searches and typed failures stay
+  `INCOMPLETE_EVIDENCE`.
+- Stop conditions: any unexpected typed failure; any manifest
+  mismatch; any requirement to relaunch; cleanup not fully certified;
+  any scope creep. On completion, independently verify both cycles
+  before any closure claim.

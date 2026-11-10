@@ -1170,3 +1170,41 @@ Not claimed: no feasibility or infeasibility claim (all recorded
 searches truncated); a native rerun with candidates still requires a
 fresh explicit operator grant (all consumed grants void: E141, E142,
 E145, attempts 1–6). No push. Evidence index E159.
+
+## 2026-11-11 Final offline readiness audit of the FD-C-2 remediation (E160): READY_FOR_OPERATOR_AUTHORIZATION; Attempt-7 package prepared, not executed
+
+Consolidated audit at `9194184` (file
+`.scratch/ramrom-product/research/06-attempt7-fd-c2-readiness-audit.md`),
+fully offline, nothing executed. Everything measured fresh, everything
+green:
+
+- Fix body verified in place (`app/planning/p08_road.py`): shared
+  corridor-interior constants, pair-loop bound skip, witness pruning
+  without budget charge — recorded refusals can never flip to
+  `SEARCH_LIMIT_EXCEEDED`, over-bound-only worlds keep their explicit
+  terminals.
+- Tests fresh: six-file set of record 154 passed / 0 failed; routing
+  18 passed. Scoped statics on the four touched paths clean (repo-wide
+  ruff/format dirt is pre-existing untouched committed WIP, counted,
+  not relabeled, not a blocker).
+- `tests/test_p08_controlled_e2e.py` 51 failed / 11 passed re-proven by
+  ID, not just count: detached worktree at pre-fix `a8bc8e3` (venv +
+  artifacts symlink-bound) reproduced the identical 51 FAILED IDs.
+- Sealed evidence read-only: `sha256sum -c` from inside all six
+  verification roots (attempt-6 + attempt-2, root + cycles) 0
+  mismatches; verify of record rc 0, both `ZERO_SERVICE` receipts
+  verbatim; manifest/result.json hash snapshot byte-identical before
+  and after every replay-bearing probe.
+- Git state clean at `9194184`, `stash@{0}` untouched, unpushed.
+  Runtime prereqs for a native attempt verified offline: binary
+  `276d5b698a…` and OpenGFX `43a0c1da…` pins re-hashed equal, offline
+  preflight `check` → `… no game launched.`, `pgrep -x openttd` empty.
+
+Verdict: **READY_FOR_OPERATOR_AUTHORIZATION** — no blockers. Attempt 7
+still needs a fresh explicit operator grant in its own session (E141,
+E142, E145, attempts 1–6 all void). Package (command of record
+byte-unchanged, one launch, no retries, stop-on-unexpected, offline
+verify evaluator `verified_loop_cycles`, reviewed change `71f6e7d`) is
+prepared in the audit file and authorizes nothing by itself. FD-C-2
+stays `INCOMPLETE_EVIDENCE` (`search_truncated=true` throughout; no
+feasibility or infeasibility claim). No push. Evidence index E160.
