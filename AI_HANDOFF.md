@@ -1103,10 +1103,70 @@ files) 151 passed / 0 failed; `test_random_distance.py` 13 passed; ruff,
 format, py_compile, `uvx ty check`, `git diff --check` all clean.
 
 Status: ticket 07 implemented offline (status page in the ticket file);
+
 ticket 06 already proven live in Attempt 6 (E157). FD-C-2 unchanged
 `INCOMPLETE_EVIDENCE` — the receipt reproduces the truncated
 zero-candidate terminal as recorded evidence and is itself a feasibility
+
 claim for nothing; zero-candidate remediation is still its own reviewed
 change plus a fresh explicit operator grant (every consumed grant void:
 E141, E142, E145, attempts 1–6). No retry, no relaunch, no relabel, no
 evidence regeneration, no push. Evidence index E158.
+
+## 2026-11-11 FD-C-2 candidate-funnel root cause closed offline (E159); the latent pair-loop masking defect fixed smallest; sealed bytes everywhere read-only
+
+Investigation of record (research file
+`.scratch/ramrom-product/research/05-fd-c2-funnel-root-cause.md`): the
+funnel was driven read-only from sealed recordings through the ticket-07
+replay machinery. Attempt-2 cycle-1 (deepest recorded depth, ALL SIX
+bounded candidates captured) and attempt-6 both cycles replay their
+per-candidate rejections BYTE-IDENTICALLY, with the corridor geometry
+independently re-derived (complete reachability over all eligible
+vacant stops): over-bound minima 49 and 56 interiors for the two
+connected candidates, complete-search disconnection (0 corridors,
+recorded stop counts reproduced exactly) for the four others, engine
+admission never refusing a fact.
+
+Verdict of record: the zero-candidate terminal is an HONEST bounded
+refusal chain — truncated discovery (16 = max_relationships cap,
+`search_truncated=true`), region admission (6/16, `CAPTURE_TILE_BUDGET` /
+`CANDIDATE_SEARCH_LIMIT`), capture budget/pacing, and complete-search
+corridor classifications for every captured candidate. NOT a code
+defect; FD-C-2's feasibility stance stays `INCOMPLETE_EVIDENCE` and the
+"no feasibility outside this slice implied" bounds bind as written.
+
+One latent defect found and fixed (commit `71f6e7d`): the incumbent
+pair loop in `generate_road_scenario` (`app/planning/p08_road.py`)
+returned the FIRST examined pair's corridor regardless of length, so an
+in-bounds supported corridor between a later pair could be masked by an
+earlier over-bound route and the candidate died at the native admission
+check even though `witness_order` ranks supported interiors first.
+Fix: shared `CORRIDOR_INTERIOR_MIN/MAX = 2, 47` + `CORRIDOR_INTERIOR`
+constants; the pair loop skips assembled paths outside the bound and
+prunes pairs whose delivery's complete-reachability witness is
+over-bound WITHOUT charging the aggregate expansion budget (keeps the
+sealed `NATIVE_CORRIDOR_BOUND` vocabulary byte-stable, never flipping
+recorded refusals to `SEARCH_LIMIT_EXCEEDED`); over-bound-only worlds
+still assemble an over-bound route for the explicit native-bound
+rejection. Red/green proof: `test_incumbent_pair_loop_skips_an_over_
+bound_first_pair` (test_p08_bounded_routing.py, red at HEAD with
+interior 66, green after with the straight 2-interior corridor; the
+seed-17 retained-replay corridor pin reproduces unchanged).
+
+Regressions: +3 sealed pins in `tests/test_freight_loops.py`
+(attempt-2 rejections byte-parity incl. the capture-rejection mix;
+attempt-2 no-miss complete-witness guard; attempt-6 per-cycle reason
+parity), all skip-typed on clones and never mutating sealed bytes.
+Suites: six-file targeted set of record 154 passed / 0 failed; routing
+18 passed; random_distance + supplemental contracts 78; four-file loop
+tuple 76. Pre-existing (stash-verified at HEAD `a8bc8e3`, unchanged by
+the fix): `test_p08_controlled_e2e.py` 51 failed / 11 passed, outside
+the corridor chain, left for its own reviewed round. Statics ruff /
+format / py_compile / `uvx ty check` / `git diff --check` clean; final
+verify of record rc 0 with both `ZERO_SERVICE` receipts and all sealed
+manifests re-derived equal after every replay.
+
+Not claimed: no feasibility or infeasibility claim (all recorded
+searches truncated); a native rerun with candidates still requires a
+fresh explicit operator grant (all consumed grants void: E141, E142,
+E145, attempts 1–6). No push. Evidence index E159.
