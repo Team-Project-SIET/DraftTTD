@@ -1053,8 +1053,18 @@ def test_genuine_candidate_change_changes_manifest_identity(owned):
 
 def test_no_native_activity_and_inputs_unchanged(owned, monkeypatch):
     before = {p.name: digest(p.read_bytes()) for p in owned.iterdir() if p.is_file()}
+    real_connect = socket.socket.connect
 
-    def denied(*args, **kwargs):
+    def denied(sock, *args, **kwargs):
+        # On Windows, asyncio event loop init uses _fallback_socketpair on localhost.
+        if args and isinstance(args[0], tuple) and len(args[0]) >= 2:
+            host, port = args[0][:2]
+            if host in ("127.0.0.1", "::1", "localhost") and port != 3977:
+                import inspect
+
+                caller_names = {f.function for f in inspect.stack()[:6]}
+                if "_fallback_socketpair" in caller_names:
+                    return real_connect(sock, *args, **kwargs)
         pytest.fail("controlled integration attempted native activity")
 
     monkeypatch.setattr(socket.socket, "connect", denied)

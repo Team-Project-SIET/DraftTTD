@@ -57,30 +57,48 @@ def _owned_bytes(root: Path, relative: str) -> bytes:
     ):
         raise PlanningFactError("unsafe artifact path")
     # Traverse directory descriptors with NOFOLLOW: reject symlinks, including parents.
-    fd = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
-    try:
-        for part in path.parts[:-1]:
-            child = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=fd)
-            os.close(fd)
-            fd = child
-        owned = os.open(path.parts[-1], os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=fd)
+    if hasattr(os, "O_DIRECTORY") and hasattr(os, "O_NOFOLLOW"):
+        fd = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
         try:
-            st = os.fstat(owned)
-            if not stat.S_ISREG(st.st_mode) or st.st_size > MAX_ARTIFACT_BYTES:
-                raise PlanningFactError("artifact must be a bounded regular file")
-            chunks = bytearray()
-            while len(chunks) <= MAX_ARTIFACT_BYTES:
-                chunk = os.read(owned, min(65536, MAX_ARTIFACT_BYTES + 1 - len(chunks)))
-                if not chunk:
-                    break
-                chunks.extend(chunk)
-            if len(chunks) > MAX_ARTIFACT_BYTES:
-                raise PlanningFactError("artifact exceeds size limit")
-            return bytes(chunks)
+            for part in path.parts[:-1]:
+                child = os.open(part, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=fd)
+                os.close(fd)
+                fd = child
+            owned = os.open(path.parts[-1], os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=fd)
+            try:
+                st = os.fstat(owned)
+                if not stat.S_ISREG(st.st_mode) or st.st_size > MAX_ARTIFACT_BYTES:
+                    raise PlanningFactError("artifact must be a bounded regular file")
+                chunks = bytearray()
+                while len(chunks) <= MAX_ARTIFACT_BYTES:
+                    chunk = os.read(owned, min(65536, MAX_ARTIFACT_BYTES + 1 - len(chunks)))
+                    if not chunk:
+                        break
+                    chunks.extend(chunk)
+                if len(chunks) > MAX_ARTIFACT_BYTES:
+                    raise PlanningFactError("artifact exceeds size limit")
+                return bytes(chunks)
+            finally:
+                os.close(owned)
         finally:
-            os.close(owned)
-    finally:
-        os.close(fd)
+            os.close(fd)
+    else:
+        target = root / path
+        current = root
+        for part in path.parts:
+            current = current / part
+            if current.is_symlink():
+                raise PlanningFactError("artifact must be a bounded regular file")
+        if (
+            not target.exists()
+            or not target.is_file()
+            or target.stat().st_size > MAX_ARTIFACT_BYTES
+        ):
+            raise PlanningFactError("artifact must be a bounded regular file")
+        raw = target.read_bytes()
+        if len(raw) > MAX_ARTIFACT_BYTES:
+            raise PlanningFactError("artifact exceeds size limit")
+        return raw
 
 
 def _unique_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
