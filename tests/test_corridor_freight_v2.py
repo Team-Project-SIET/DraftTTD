@@ -386,11 +386,23 @@ class GSCargo {
 class GSOrder {
     /* N2: the real 15.x flag values (OF_FULL_LOAD is documented forbidden). */
     static OF_NONE = 0;
+    static OF_UNLOAD = 4;
+    static OF_TRANSFER = 8;
+    static OF_NO_UNLOAD = 16;
     static OF_FULL_LOAD = 64;
+    static OF_NO_LOAD = 128;
+    static OF_DELIVERY = 132;
     static function AreOrderFlagsValid(dest, flags) {
         /* N3: the two-argument 15.x destination form. */
         ::n3_calls.append([dest, flags]);
-        return (flags == GSOrder.OF_NONE || flags == 128) && (dest in ::stops);
+        local valid_flags = (
+            flags == GSOrder.OF_NONE ||
+            flags == GSOrder.OF_UNLOAD ||
+            flags == GSOrder.OF_NO_LOAD ||
+            flags == GSOrder.OF_DELIVERY ||
+            flags == (GSOrder.OF_UNLOAD | GSOrder.OF_NO_LOAD)
+        );
+        return valid_flags && (dest in ::stops);
     }
     static function AppendOrder(id, dest, flags) {
         /* N1 (15.3, E92): the append takes the stop TILE and stores the
@@ -800,13 +812,13 @@ def test_full_attempt_completes_and_verifies_attempt_end_to_end():
     order0, order1 = exchanges[4][1], exchanges[5][1]
     assert (order0.dest, order0.flags, order0.goto) == (PICKUP, cfv.OF_NONE_V2, True)
     assert (order1.dest, order1.flags, order1.goto) == (
-        DELIVERY, cfv.OF_NO_LOAD_V2, True,
+        DELIVERY, cfv.OF_DELIVERY_V2, True,
     )
     inventory = exchanges[6][1]
     assert (inventory.order_len, inventory.dest0, inventory.dest1) == (
         2, PICKUP, DELIVERY,
     )
-    assert (inventory.flags0, inventory.flags1) == (cfv.OF_NONE_V2, cfv.OF_NO_LOAD_V2)
+    assert (inventory.flags0, inventory.flags1) == (cfv.OF_NONE_V2, cfv.OF_DELIVERY_V2)
     monitors = exchanges[7][1]
     assert monitors.status == "ARMED"
     assert monitors.pickup_amount == 0 and monitors.delivery_amount == 0
@@ -2038,10 +2050,10 @@ def test_stub_appends_carry_tile_destinations_and_real_flags():
     append_calls = [list(entry) for entry in vm_root(vm)["append_calls"]]
     n3_calls = [list(entry) for entry in vm_root(vm)["n3_calls"]]
     # The stub appended tiles (N1), not station ids, exactly once per stop.
-    assert append_calls == [[PICKUP, cfv.OF_NONE_V2], [DELIVERY, cfv.OF_NO_LOAD_V2]]
+    assert append_calls == [[PICKUP, cfv.OF_NONE_V2], [DELIVERY, cfv.OF_DELIVERY_V2]]
     assert n3_calls == append_calls  # the two-arg form saw identical inputs
     appended_flags = {flags for _, flags in append_calls}
-    assert appended_flags == {cfv.OF_NONE_V2, cfv.OF_NO_LOAD_V2}
+    assert appended_flags == {cfv.OF_NONE_V2, cfv.OF_DELIVERY_V2}
     # OF_FULL_LOAD is documented forbidden: no order carriage ever ships it.
     assert cfv.OF_FULL_LOAD_FORBIDDEN_V2 == 64
     assert cfv.OF_FULL_LOAD_FORBIDDEN_V2 not in appended_flags
@@ -2055,7 +2067,7 @@ def test_stub_appends_carry_tile_destinations_and_real_flags():
     orders = vm_root(vm)["sniffer"]
     assert (orders["o0"]["d"], orders["o0"]["f"]) == (PICKUP, cfv.OF_NONE_V2)
     assert orders["o0"]["sid"] == 0
-    assert (orders["o1"]["d"], orders["o1"]["f"]) == (DELIVERY, cfv.OF_NO_LOAD_V2)
+    assert (orders["o1"]["d"], orders["o1"]["f"]) == (DELIVERY, cfv.OF_DELIVERY_V2)
     assert orders["o1"]["sid"] == 2
 
 
@@ -2122,7 +2134,7 @@ def test_python_level_order_verifier_refuses_the_three_defects():
     appends = (
         append0,
         _order_readback(
-            op="order", order_index=1, dest=DELIVERY, flags=cfv.OF_NO_LOAD_V2, goto=True
+            op="order", order_index=1, dest=DELIVERY, flags=cfv.OF_DELIVERY_V2, goto=True
         ),
     )
     inventory = _order_readback(
@@ -2133,16 +2145,29 @@ def test_python_level_order_verifier_refuses_the_three_defects():
         flags0=cfv.OF_NONE_V2,
         goto0=True,
         dest1=DELIVERY,
-        flags1=cfv.OF_NO_LOAD_V2,
+        flags1=cfv.OF_DELIVERY_V2,
         goto1=True,
     )
     verify_freight_order_set_v2(appends, inventory, vehicle=1, plan=plan)
+    # The delivery order requires the explicit unload directive: legacy OF_NO_LOAD alone is refused.
+    with pytest.raises(ValueError, match=r"\(N2\)"):
+        verify_freight_order_v2(
+            appends[1].model_copy(update={"flags": cfv.OF_NO_LOAD_V2}),
+            index=1,
+            vehicle=1,
+            plan=plan,
+        )
     # The inventory carries the defect: a drifted order destination or flag
     # is refused against the planned v2 inventory (the appended receipts
     # stay bound to the same stop indexes).
     with pytest.raises(ValueError, match="planned v2 inventory"):
         verify_freight_order_set_v2(
             appends, inventory.model_copy(update={"dest1": DELIVERY_FRONT}),
+            vehicle=1, plan=plan,
+        )
+    with pytest.raises(ValueError, match="planned v2 inventory"):
+        verify_freight_order_set_v2(
+            appends, inventory.model_copy(update={"flags1": cfv.OF_NO_LOAD_V2}),
             vehicle=1, plan=plan,
         )
     with pytest.raises(ValueError, match="exactly two orders"):
@@ -2184,8 +2209,12 @@ def test_package_pinned_constants_match_the_frozen_module():
         ("FREIGHT_CARGO", 1),
         ("ENGINE_PIN", 123),
         ("OF_NONE", 0),
+        ("OF_UNLOAD", 4),
+        ("OF_TRANSFER", 8),
+        ("OF_NO_UNLOAD", 16),
         ("OF_FULL_LOAD_FORBIDDEN", 64),
         ("OF_NO_LOAD", 128),
+        ("OF_DELIVERY", 132),
         ("MAX_TICKS", cfv.WATCH_MAX_TICKS_V2),
         ("MAX_DAYS", cfv.FREIGHT_DAY_BUDGET_V2),
         ("FLEET_ECHO", cfv.MAX_FREIGHT_FLEET_ECHO_V2),
@@ -2210,3 +2239,85 @@ def test_local_vm_stubs_stay_single_purpose():
     first = build_vm()
     second = build_vm()
     assert first is not second
+
+
+def test_delivery_order_composition_requires_unload_directive():
+    """Reproduce defect and lock down order composition:
+    - Real 15.x order flags: OF_UNLOAD=4, OF_TRANSFER=8, OF_NO_UNLOAD=16,
+      OF_FULL_LOAD_FORBIDDEN=64, OF_NO_LOAD=128, OF_DELIVERY=132 (OF_UNLOAD | OF_NO_LOAD).
+    - Delivery bay order requires OF_DELIVERY (132).
+    - Legacy OF_NO_LOAD (128) lacks the unload directive and is refused.
+    - Forbidden flags (OF_FULL_LOAD, OF_TRANSFER, OF_NO_UNLOAD) are refused.
+    - Full two-order set requires (OF_NONE_V2, OF_DELIVERY_V2) == (0, 132).
+    """
+    assert cfv.OF_NONE_V2 == 0
+    assert cfv.OF_UNLOAD_V2 == 4
+    assert cfv.OF_TRANSFER_V2 == 8
+    assert cfv.OF_NO_UNLOAD_V2 == 16
+    assert cfv.OF_FULL_LOAD_FORBIDDEN_V2 == 64
+    assert cfv.OF_NO_LOAD_V2 == 128
+    assert cfv.OF_DELIVERY_V2 == cfv.OF_UNLOAD_V2 | cfv.OF_NO_LOAD_V2 == 132
+
+    from app.simulation.openttd.corridor_freight_v2 import (
+        verify_freight_order_set_v2,
+        verify_freight_order_v2,
+    )
+
+    plan = work.freight_plan_v2()
+
+    # Valid delivery order with explicit unload directive (OF_DELIVERY = OF_UNLOAD | OF_NO_LOAD)
+    delivery_readback = _order_readback(
+        op="order", order_index=1, dest=DELIVERY, flags=cfv.OF_DELIVERY_V2, goto=True
+    )
+    receipt = verify_freight_order_v2(delivery_readback, index=1, vehicle=1, plan=plan)
+    assert receipt["flags"] == 132
+    assert receipt["dest"] == DELIVERY
+    assert receipt["stop"] == "delivery"
+
+    # Defect reproduction: legacy order with OF_NO_LOAD (128) only lacks OF_UNLOAD directive
+    legacy_no_unload = delivery_readback.model_copy(update={"flags": cfv.OF_NO_LOAD_V2})
+    with pytest.raises(ValueError, match=r"\(N2\)"):
+        verify_freight_order_v2(legacy_no_unload, index=1, vehicle=1, plan=plan)
+
+    # Forbidden / alternative flags refused at delivery stop
+    for bad_flag in (
+        cfv.OF_FULL_LOAD_FORBIDDEN_V2,
+        cfv.OF_TRANSFER_V2,
+        cfv.OF_NO_UNLOAD_V2,
+        cfv.OF_NONE_V2,
+    ):
+        with pytest.raises(ValueError, match=r"\(N2\)"):
+            verify_freight_order_v2(
+                delivery_readback.model_copy(update={"flags": bad_flag}),
+                index=1,
+                vehicle=1,
+                plan=plan,
+            )
+
+    # Full two-order set lockdown: pickup=0, delivery=132
+    pickup_readback = _order_readback(
+        op="order", order_index=0, dest=PICKUP, flags=cfv.OF_NONE_V2, goto=True
+    )
+    inventory = _order_readback(
+        op="order-read",
+        order_index=-1,
+        order_len=2,
+        dest0=PICKUP,
+        flags0=cfv.OF_NONE_V2,
+        goto0=True,
+        dest1=DELIVERY,
+        flags1=cfv.OF_DELIVERY_V2,
+        goto1=True,
+    )
+    set_receipt = verify_freight_order_set_v2(
+        (pickup_readback, delivery_readback), inventory, vehicle=1, plan=plan
+    )
+    assert set_receipt["orders"][0]["flags"] == 0
+    assert set_receipt["orders"][1]["flags"] == 132
+
+    # Inventory with legacy delivery flag (128) fails
+    legacy_inventory = inventory.model_copy(update={"flags1": cfv.OF_NO_LOAD_V2})
+    with pytest.raises(ValueError, match="planned v2 inventory"):
+        verify_freight_order_set_v2(
+            (pickup_readback, delivery_readback), legacy_inventory, vehicle=1, plan=plan
+        )

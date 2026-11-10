@@ -24,9 +24,10 @@ depot-mutation world of record instead — the consumed
 - F-4 (order flags): the real 15.x flag values are pinned: ``OF_NONE``
   == 0, ``OF_FULL_LOAD`` == 64 (documented so it can never silently
   return), ``OF_NO_LOAD`` == 128. v2 orders use OF_NONE at the pickup
-  stop and OF_NO_LOAD at the delivery bay; OF_FULL_LOAD must never be
-  issued. ``AreOrderFlagsValid`` is the two-argument 15.x form and every
-  append takes a stop TILE, not a station id (N1/N2/N3).
+  stop and OF_DELIVERY (OF_UNLOAD | OF_NO_LOAD == 132) at the delivery bay;
+  OF_FULL_LOAD must never be issued. ``AreOrderFlagsValid`` is the
+  two-argument 15.x form and every append takes a stop TILE, not a station
+  id (N1/N2/N3).
 - F-5 (schedule): cycle-looped ``load``/``transit``/``deliver`` windows
   with per-cycle snapshot discipline — the departure snapshot gates
   ``0 < observed_load <= capacity``, the delivery exchange enforces
@@ -172,9 +173,16 @@ FREIGHT_DAY_BUDGET_V2 = 60
 FREIGHT_CYCLE_WALL_CAP_SECONDS_V2 = 180
 # Order-flag pins from the real 15.x header (N2). OF_FULL_LOAD is documented
 # so the forbidden value can never silently return; v2 orders never use it.
+# OF_UNLOAD (4) provides the explicit unload directive required at the delivery
+# bay to trigger cargo unloading and station acceptance; combined with OF_NO_LOAD (128)
+# it enforces unloading without taking new cargo (OF_DELIVERY_V2 = 132).
 OF_NONE_V2 = 0
+OF_UNLOAD_V2 = 4
+OF_TRANSFER_V2 = 8
+OF_NO_UNLOAD_V2 = 16
 OF_FULL_LOAD_FORBIDDEN_V2 = 64
 OF_NO_LOAD_V2 = 128
+OF_DELIVERY_V2 = OF_UNLOAD_V2 | OF_NO_LOAD_V2
 # Per-window caps: the economy-day cap is the F-7 lease of record; the tick
 # cap is the same 2048-tick window bound protocol 5 carried.
 WATCH_MAX_TICKS_V2 = 2048
@@ -1515,8 +1523,8 @@ def verify_freight_order_v2(
 
     Destination ids are stop TILES: the pickup stop tile for order 0
     (flags OF_NONE) and pinned delivery bay tile for order 1 (flags
-    OF_NO_LOAD). Destination tiles resolve to their stations natively; the
-    readback echoes the tile the append actually carried.
+    OF_DELIVERY = OF_UNLOAD | OF_NO_LOAD). Destination tiles resolve to
+    their stations natively; the readback echoes the tile the append actually carried.
     """
     if read.op != "order" or read.status != "ORDERED" or read.cost != 0:
         raise ValueError("order append result mismatch")
@@ -1525,7 +1533,7 @@ def verify_freight_order_v2(
     if read.order_index != index:
         raise ValueError("order append index mismatch")
     expected_dest = plan.pickup if index == 0 else plan.delivery
-    expected_flags = OF_NONE_V2 if index == 0 else OF_NO_LOAD_V2
+    expected_flags = OF_NONE_V2 if index == 0 else OF_DELIVERY_V2
     if read.dest is None or read.dest != expected_dest:
         raise ValueError("order destination must be the pinned stop tile (N1)")
     if read.flags is None or read.flags != expected_flags:
@@ -1572,7 +1580,7 @@ def verify_freight_order_set_v2(
     )
     if triples != (
         (plan.pickup, OF_NONE_V2, True),
-        (plan.delivery, OF_NO_LOAD_V2, True),
+        (plan.delivery, OF_DELIVERY_V2, True),
     ):
         raise ValueError("order set drifted from the planned v2 inventory")
     return dict(
@@ -1581,7 +1589,7 @@ def verify_freight_order_set_v2(
         append_request_ids=(appends[0].request_id, appends[1].request_id),
         orders=(
             dict(stop="pickup", dest=plan.pickup, flags=OF_NONE_V2, goto=True),
-            dict(stop="delivery", dest=plan.delivery, flags=OF_NO_LOAD_V2, goto=True),
+            dict(stop="delivery", dest=plan.delivery, flags=OF_DELIVERY_V2, goto=True),
         ),
         funds=inventory.funds,
         verification="NATIVE_ORDER_SET_VERIFIED",
