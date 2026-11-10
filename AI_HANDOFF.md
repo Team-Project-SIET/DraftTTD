@@ -1208,3 +1208,64 @@ verify evaluator `verified_loop_cycles`, reviewed change `71f6e7d`) is
 prepared in the audit file and authorizes nothing by itself. FD-C-2
 stays `INCOMPLETE_EVIDENCE` (`search_truncated=true` throughout; no
 feasibility or infeasibility claim). No push. Evidence index E160.
+
+## 2026-11-11 Phase B opened — T-030 exercise conductor built offline (E161); dependency map closed, the MISSING fourth piece now exists; attempt package prepared at the authorization gate
+
+Phase A is terminally closed (T-022, E127). Phase B's first item is
+T-030 (fleet/capacity native exercise; `docs/roadmap-and-scope-2026-11-05.md`
+§3). This round mapped its dependencies, built the one missing offline
+piece, and stopped at the authorization gate.
+
+Dependency map of record (all five legs audited against retained
+bytes):
+
+1. Phase A closed — DONE (E127).
+2. F06/F11 prerequisites — DONE: canonical constructed-fleet creation
+   + fresh-process reload-only correspondence (E2,
+   `canonical-fleet-create-q3`/`canonical-fleet-reload-q3`); both run
+   dirs' manifests re-verified today, 0 mismatches, no byte modified.
+3. Exercise machinery offline — DONE at HEAD: the dispatch wire
+   (`freight_canonical_dispatch`: boundaries, `dispatch_common`,
+   `qualify_paused_purchase`, `unpause_native`, `dispatch_loaded_arm`),
+   collectors (`verify_intervention_snapshot`, `verify_reloaded`), and
+   the byte-pinned staged bridge whose `main.nut` `Handle(q)` carries
+   the full exercise handler vocabulary (`canonical-arm`,
+   `canonical-start`, `canonical-dispatch-read`,
+   `canonical-dispatched`, `capacity-add` pause/date-gated,
+   `capacity-read`); the q3-era exact-15.3 VM validation record
+   (`artifacts/validation/canonical-fleet-reload-q3/suspension.json`,
+   source_commit `14ec60f2…`) still matches `package_bytes()`
+   composition byte-for-byte at HEAD. Lane suites green: 31 + 25 + 70
+   across the nine lane files.
+4. Runnable exercise stage of record — was the MISSING piece; **built
+   this round**: `app/simulation/openttd/proof/canonical_fleet_exercise.py`
+   (commit `c6ec803`, additive; frozen `proof/canonical_fleet.py`
+   byte-untouched, the q3 no-purchase reload contract and its
+   tripwire `test_canonical_reload_only.py` stay green). New identity
+   `canonical-fleet-exercise-t030-1`, own contract
+   (purchase/dispatch/unpause true, intervention_service=1), prepare
+   staged from the E2 created evidence under the q3 byte-pin,
+   preflight fail-closed, conduct proves reload correspondence first
+   then ONE `dispatch_loaded_arm(arm="B")` purchase→dispatch→unpause
+   with the three receipt digests bound in
+   `exercise-correspondence.json`, typed
+   `CANONICAL_FLEET_EXERCISE_VERIFIED`. 12 offline regression tests
+   (`tests/test_canonical_fleet_exercise.py`); statics clean (ruff,
+   format, py_compile, scoped `uvx ty`, `git diff --check`).
+   Reconciliation note: the real `verify_reloaded` signature takes the
+   source save sha256 internally from `created`; the frozen
+   `canonical_fleet.py` call site already matches it — no latent
+   inconsistency exists.
+5. Gate ladder — OFFLINE preparable; the launch is operator-gated.
+   Attempt package of record:
+   `.scratch/phase-b-t030/issues/02-attempt-package.md` (staging →
+   preflight → ONE run under `--authorize-one-launch` → independent
+   verify; preconditions, grant text, fail-closed rules). It
+   authorizes nothing by itself; every prior grant is void for reuse.
+6. Post-run receipts + E-row — after the authorization.
+
+Spec of record: `docs/specs/t030-fleet-capacity-exercise.md`; tickets:
+`.scratch/phase-b-t030/issues/01-exercise-conductor.md` (resolved) and
+`02-attempt-package.md` (claimed, at the gate). No launch, no
+AdminPort, no staging executed, no `artifacts/` byte touched this
+round. Evidence index E161.

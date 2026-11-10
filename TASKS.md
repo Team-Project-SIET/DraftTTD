@@ -3814,3 +3814,27 @@ retained. FD-C-2 unchanged `INCOMPLETE_EVIDENCE` (no fresh successful
 native evidence); Ticket-05/Phase C stay OPEN; the one authorization
 was consumed by the one attempt — no retry, no relaunch, no GUI probe,
 no push, sealed bytes untouched. Evidence index E156.
+
+12. **T-030 Phase B opener (2026-11-11, offline only, zero launches /
+    zero AdminPort / no `artifacts/` byte touched; code+tests commit
+    `c6ec803`, docs commit this one; no push).** Dependency map of
+    record closed: Phase A closed (E127); F06/F11 prerequisites DONE
+    (E2, both q3 manifests re-verified 0 mismatches); exercise
+    machinery offline verified at HEAD (dispatch wire, collectors,
+    byte-pinned staged bridge with the full handler vocabulary, the
+    q3-era VM validation record still matching `package_bytes()`
+    composition byte-for-byte); the MISSING runnable exercise stage
+    BUILT: `app/simulation/openttd/proof/canonical_fleet_exercise.py`
+    (identity `canonical-fleet-exercise-t030-1`, own contract,
+    prepare from the E2 created evidence under the q3 byte-pin,
+    fail-closed preflight, reload correspondence first then ONE
+    `dispatch_loaded_arm(arm="B")`, typed
+    `CANONICAL_FLEET_EXERCISE_VERIFIED`, frozen reload lane
+    byte-untouched and tripwire-stayed-green); 12 offline tests +
+    lane suites 126 passed / 0 failed; statics clean. Attempt package
+    prepared (`.scratch/phase-b-t030/issues/02-attempt-package.md`):
+    staging → preflight → ONE run under `--authorize-one-launch` →
+    independent verify. BLOCKED at the authorization gate: the native
+    attempt needs a fresh explicit operator grant (all prior grants
+    void); no feasibility/economics claim outside the receipts.
+    Evidence index E161.
