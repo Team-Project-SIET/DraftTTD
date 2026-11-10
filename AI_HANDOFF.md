@@ -902,3 +902,54 @@ relaunch, no GUI probe, no push. Next-cycle pacing inside the
 observation month on both cycles is the identified missing-evidence
 dimension; any fence/pacing remedy is a separate reviewed code change
 plus a fresh explicit operator grant. Evidence index E156.
+
+## E156 addendum 2 (2026-11-10) — Attempt 5 executed once under the operator's explicit in-session grant; FAILED typed at the owned-save completion guard after full cycle-1 qualification and capture; sealed dir verified read-only
+
+One execution of the command of record at repo `42bbe5f` consumed the
+one-attempt authorization granted in-session (the authorization
+package's verdict layer held: readiness never authorized a run).
+Identity of record re-verified immediately pre-launch: pinned binary
+and OpenGFX SHA-256s matched the `REPRODUCE.md` pins, offline `check`
+exit 0, tree clean, no prior openttd process. 170 s elapsed 23:00:13
+→ 23:03:03 (sealed budget 2400 s untouched); run dir
+`artifacts/demos/playable-demo-48abc4b955c14e0fadea7730cd487d86`; root
+`result.json` `status=FAILED`, error verbatim
+`TimeoutError: owned native save completion missing`; one launch /
+one connection / zero network requests / zero mutations / 2 funding
+requests / 1 funding mutation; preflight PASS; cleanup certified
+(graceful quit, reaped, returncode 0, credential removed, workspace
+disposed); `failure.sav` retained; claim `launches_allowed=1`
+`retries=0`. Cycle-1 staged: qualification COMPLETED (qualification
+session phase=COMPLETED with nothing partial after `freight-plan-clock-112`
+giving month window [712282, 712313) and clock sample 712286 inside
+it), 16 compatible relationships disclosed, and capture of the first
+relationship completed 832 planner exchange pairs (`planning-n0-0..831`,
+legacy-unsuffixed as `cycle_request_id` mandates), `network-facts-0.json`
+window [712286, 712286] inside the month window — the E156 month-pacing
+remediation gates (capture-start date, pre-month bounding, unified
+budget accounting) held; no month-crossing occurred. Immediately after
+the final readback (23:02:47.65) the runner issued the per-cycle
+`save "qualified"` console command (23:02:47.8); the game printed no
+`Map successfully saved` marker within the strict 15 s owned-save
+guard (`road_mutation.save`, pre-existing code never touched by the
+remediation commits), so `TimeoutError: owned native save completion
+missing` typed the run FAIL at 23:03:02.87. Decisive latency record:
+the game then completed that very same save at 23:03:02.93 — about
+0.13 s after the guard fired (console command processed ≈15.1 s
+after issue, the save itself ≈0.1 s; `qualified.sav` retained,
+sha256 `4993714a90c1fc8c551889bbff3ba9d581fd18d6e548e58e7955acf999c45030`,
+80,516 bytes) — a strict-guard latency miss, not a save failure and
+not a retry: the failure-path `save "failure"` processed normally a
+moment later. Root cause of the game-side console-processing stall is
+UNKNOWN on the sealed bytes alone (`frames.json` carries no per-frame
+timestamps; GameScript stderr is silent 23:02:22 → 23:03:02); it is
+neither attributed to the remediation commits (the guard and save path
+are pre-remediation code that ran clean through attempts 3-4) nor a
+pre-recognized month-pacing class; classification of the stall is
+UNKNOWN pending a reviewed read-only follow-up. `verify_loop_receipt`
+refused typed verbatim (`ValueError: loop attempt did not reach a
+verified terminal status`), rc=1. Attempt 5 stays FAILED and SEALED;
+FD-C-2 stays `INCOMPLETE_EVIDENCE`; Ticket-05/Phase C stay OPEN; no
+retry, no relaunch, no seed change, no push. Any next attempt or
+guard-timing remedy is a separate reviewed code change plus a fresh
+explicit operator grant. Evidence index E156.
