@@ -376,10 +376,7 @@ async def capture_planning_facts(
         except TimeoutError as error:
             raise ValueError("CAPTURE_TIME_BUDGET: planning capture deadline expired") from error
         if not (
-            window_month.start_date
-            <= response.before
-            <= response.after
-            < window_month.end_date
+            window_month.start_date <= response.before <= response.after < window_month.end_date
         ):
             raise CaptureWindowExceeded(
                 relationship=(src, dst, cargo),
