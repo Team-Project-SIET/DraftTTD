@@ -969,3 +969,86 @@ FD-C-2 stays `INCOMPLETE_EVIDENCE`; Ticket-05/Phase C stay OPEN; no
 retry, no relaunch, no seed change, no push. Any next attempt or
 guard-timing remedy is a separate reviewed code change plus a fresh
 explicit operator grant. Evidence index E156.
+
+## 2026-11-11 native attempt E157 — Attempt 6 executed once under the operator's explicit grant at `e3e05c8`; ticket-06 handshake PROVEN LIVE (two clean pause→unpause→save adjacencies); the full two-cycle lifecycle ran to its designed §3.5 terminal `NATIVE_LOOP_ZERO_SERVICES`; the independent verify instrument then refused typed at a NEW verify-side stderr-window seam (ticket 07); sealed, never relabeled
+
+Preflight re-run per the attempt-5 precedent before the byte-identical
+command of record (`.venv/bin/python -m app.openttd_demo run --headless
+--random-world --seed 2026 --towns 3 --industries 3 --stop-on-delivery
+--cycles 2`, pinned binary + OpenGFX): HEAD `e3e05c82c435…` clean,
+`stash@{0}` intact, binary/OpenGFX sha256 == pins (OpenGFX digest equals
+the sealed attempt-5 identity), `check --headless` exit 0, no openttd
+process (`pgrep -x openttd` rc 1; the `pgrep -af` hits were the checker
+shell itself). The attempt ran exactly once, exit 1, 170+ s; run dir of
+record (sealed, read-only hereafter)
+`artifacts/demos/playable-demo-0751d73c44054941bd77f05300b6c1a5`, loop
+report at `-loop-report/loops.md`.
+
+Root `result.json`: `status=NATIVE_LOOP_ZERO_SERVICES` — the §3.5
+designed terminal, not a system failure — `preflight=PASS`, launches 1 /
+connections 2 / requests 0 / mutations 0 / funding 2 requests / 1
+mutation / `loop_cycles_delivered=0`; loops: cycle 1 `ZERO_SERVICE`
+(error verbatim `NO_FEASIBLE_SERVICES: no supported full-load road
+engine and supply`), cycle 2 `ZERO_SERVICE` + `abandoned_world: true`
+(the K=2 automatic fencing, in-engine per E143).
+
+**Ticket 06 verdict: the Attempt-5 loss class is CLOSED natively.**
+`stdout.log` lines 5–18 show twice the clean adjacency `*** Game paused
+(manual)` → `*** Game unpaused (manual)` → `Map successfully saved` to
+each cycle's `qualified.sav`; zero swallow, zero stall, no
+`pause_resume_error` anywhere (`pause_pairs=1` per cycle); the
+per-cycle `save "qualified"` issued strictly after the unpause echo was
+observed (`console_ack`, commit `1023cca`). E146 per-cycle staging held
+natively at `--cycles 2` for the first time (both cycle dirs complete,
+no STAGING_SEAM_DRIFT). Per-cycle funnel identical in both cycles:
+832/832 capture attempted/completed, `captured_relationships=1`, 16
+compatible, `candidate_count=0`, `selected_service_count=null`,
+`search_truncated=true`; diagnostic `status=FAILED` is the E150
+random-planning-section precedent, not the root terminal. Cleanup
+certified (reaped / workspace_disposed / credential_removed /
+returncode 0 / remaining_processes [] / sockets_closed). Evidence
+integrity: root manifest 18/18 OK; cycle manifests verified from
+INSIDE each cycle dir (cycle-1 1695/1695 OK, cycle-2 0 mismatches; a
+root-cwd invocation bogus-fails because entries are path-relative).
+
+**Independent verify of record:** the loop-attempt `verify` CLI entry
+is the proof module's own command (`.venv/bin/python -m
+app.simulation.openttd.proof.freight_delivery verify <run-dir>`; the
+demo CLI has no `verify` subcommand). It passed the ENTIRE root
+prologue (manifest, PRELAUNCH seal, CLAIM one-launch, cycle markers +
+frames slices, cleanup, verified terminal status) and then refused
+typed rc=1 at the FIRST cycle's retained qualification replay:
+`ValueError: qualification log prefix digest mismatch`
+(`freight_planning_replay.py:157`). Classification: NEW verify-side
+seam defect (attempts 1–5 never reached the cycle-replay body; their
+refusals fired at the prologue status check), disjoint from the run:
+the replay harness at that seam is launch-free by construction
+(`backend.process = object()`), the run dir bytes were untouched, and
+all sealed manifests still re-verify. Read-only localization: ALL 263
+recorded prefix entries in `loop-cycle-1/` and ALL 253 in
+`loop-cycle-2/` mismatch; each cycle's `stderr.log` is byte-identical
+to the root shared stderr (324,124 bytes, sha256
+`4e64bf7aaf5dd6351470246f50a206d5287efc0910ec41990cad7a967c887a26`);
+the recorded digests are window-relative segments
+(`backend.stderr_window` claimed at `freight_runtime_planning.py:212`,
+digests at `:249-261`), loop finalization copies the FULL shared logs
+into every cycle dir (`freight_delivery.py:2080`), and the replay cuts
+`stderr.log[:len]` from byte 0 (`freight_planning_replay.py:146-162`)
+— the two contracts can never agree in any loop cycle. Offline gap of
+record: the 9 E144 loop-verify tests stop at prologue refusals, so the
+retained-replay digest seam was never exercised offline. Ticket of
+record: `.scratch/ramrom-product/issues/07-loop-verify-stderr-window-seam.md`
+(open; offline reviewed fix; re-running verify against the sealed
+bytes after the fix is read-only, no grant).
+
+Status: Attempt 6 = ZERO_SERVICE terminal (designed) and SEALED;
+ticket 06 CLOSED for its native proof; ticket 07 OPEN. FD-C-2
+unchanged `INCOMPLETE_EVIDENCE` (both cycles
+`candidate_count=0` on truncated searches; no delivered service has
+ever existed natively). The zero-candidate world remediation
+(16 compatible → 1 captured → 832/832 reads → 0 candidates, twice
+under the same seed) needs its own reviewed change plus a FRESH
+explicit operator grant; every consumed grant (E141, E142, E145,
+attempts 1–5, this Attempt 6) is void for reuse. No retry, no
+relaunch, no relabel, no evidence regeneration, no push; the sealed
+dir was read, never modified. Evidence index E157.
