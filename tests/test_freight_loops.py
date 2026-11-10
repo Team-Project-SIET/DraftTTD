@@ -1218,6 +1218,178 @@ def test_retained_stderr_start_keeps_whole_file_recordings_compatible():
     assert _retained_stderr_start(log, prefixes, Path("absent.json")) == 0
 
 
+ATTEMPT2_RUNTIME = "artifacts/demos/playable-demo-e6852692d0ef40199db0c71b101b2dda"
+
+
+def _replay_candidate_rejections(run_dir, cycle_name):
+    """Replay one sealed zero-service cycle's planning admission read-only and
+    return (facts, reproduced rejections, recorded rejections, diagnostic)."""
+    from app.simulation.openttd.freight_native_network import _replay_network_world
+
+    cycle = (Path(run_dir) / cycle_name).resolve()
+    metadata, _, world, facts, links, cleanup, source, policy = _replay_network_world(
+        cycle, zero_service=True
+    )
+    rejections = []
+    with pytest.raises(
+        ValueError, match=r"^NO_FEASIBLE_SERVICES: no supported full-load road engine and supply$"
+    ):
+        network_from_facts(
+            world,
+            facts,
+            source,
+            policy,
+            max_vehicles=metadata.get("network_service_limit", 2),
+            service_batches=bool(metadata.get("random_world")),
+            planning_rejections=rejections,
+        )
+    diagnostic = json.loads((cycle / "planning-diagnostic.json").read_bytes())
+    return cycle, facts, rejections, diagnostic
+
+
+def test_sealed_attempt2_candidate_rejections_replay():
+    """E159: the funnel's deepest recorded depth (attempt-2 cycle-1, all six
+    bounded candidates captured) replays its per-candidate refusal chain
+    byte-identically. The zero-candidate terminal of record was an honest
+    bounded refusal chain — engine admission passed for every fact, and every
+    refusal is a complete-search corridor classification, not a filtering
+    artifact."""
+    root = Path(ATTEMPT2_RUNTIME)
+    if not root.is_dir():
+        pytest.skip("sealed attempt-2 run dir missing (clone without retained evidence)")
+    cycle, facts, rejections, diagnostic = _replay_candidate_rejections(root, "loop-cycle-1")
+    assert len(facts) == diagnostic["captured_relationships"] == 6
+    assert diagnostic["search_truncated"] is True
+    assert diagnostic["candidate_count"] == 0
+    reasons = [r["reason"] for r in diagnostic.get("capture_rejections") or []]
+    assert reasons.count("CAPTURE_TILE_BUDGET") == 10
+    assert reasons.count("CANDIDATE_SEARCH_LIMIT") == 1
+    assert rejections == diagnostic["candidate_rejections"]
+    assert [r["reason"] for r in rejections] == [
+        "NATIVE_CORRIDOR_BOUND: requires 2..47 road tiles",
+        (
+            "NO_BOUNDED_CORRIDOR: bounded corridor search exhausted; 39 eligible pickup "
+            "and 18 eligible delivery stops are disconnected across all supported "
+            "corridor tiles; no feasibility outside this slice implied"
+        ),
+        "NO_BOUNDED_CORRIDOR: bounded corridor search exhausted; 17 eligible pickup "
+        "and 24 eligible delivery stops are disconnected across all supported corridor "
+        "tiles; no feasibility outside this slice implied",
+        "NO_BOUNDED_CORRIDOR: bounded corridor search exhausted; 17 eligible pickup "
+        "and 24 eligible delivery stops are disconnected across all supported corridor "
+        "tiles; no feasibility outside this slice implied",
+        "NO_BOUNDED_CORRIDOR: bounded corridor search exhausted; 38 eligible pickup "
+        "and 30 eligible delivery stops are disconnected across all supported corridor "
+        "tiles; no feasibility outside this slice implied",
+        "NATIVE_CORRIDOR_BOUND: requires 2..47 road tiles",
+    ]
+
+
+def test_sealed_attempt2_witness_refusals_are_complete():
+    """E159: for every captured candidate of attempt-2 cycle-1, the complete
+    supported-corridor reachability (all eligible vacant stops, not just the
+    incumbent first-four) yields NO depot-bearing corridor inside the native
+    2..47 admission bound — the refusals of record were never a first-four
+    artifact and no in-bounds corridor existed to miss."""
+    from app.planning.p08_adapter import MAX_PATH_EXPANSIONS, adapt_planning_facts
+    from app.planning.p08_road import (
+        CORRIDOR_INTERIOR,
+        Benchmark,
+        corridor_reachability,
+        find_depot,
+        select_benchmark,
+        station_tiles,
+        vacant,
+    )
+    from app.simulation.openttd.freight_native_network import _replay_network_world
+    from app.simulation.openttd.planning_fact_input import ValidatedPlanningFactInput
+
+    root = Path(ATTEMPT2_RUNTIME)
+    if not root.is_dir():
+        pytest.skip("sealed attempt-2 run dir missing (clone without retained evidence)")
+    cycle = (root / "loop-cycle-1").resolve()
+    metadata, _, world, facts, links, cleanup, source, policy = _replay_network_world(
+        cycle, zero_service=True
+    )
+    before = min(f.capture_economy_date_before for f in facts)
+    after = max(f.capture_economy_date_after for f in facts)
+    for f0 in facts:
+        scopes = {c.role: c for c in f0.coverage_scopes}
+        pickup = scopes["pickup"]
+        supply = next(
+            r.last_month_produced
+            for r in world.production.records
+            if r.industry_id == pickup.industry_id and r.cargo_id == pickup.cargo_id
+        )
+        capacities = sorted(
+            {
+                e.capacity_cargo_units
+                for e in f0.engines
+                if e.default_cargo_id == pickup.cargo_id and 0 < e.capacity_cargo_units <= supply
+            }
+        )
+        assert capacities  # engine admission of record never refused a fact
+        package = adapt_planning_facts(
+            ValidatedPlanningFactInput(
+                world,
+                f0.model_copy(
+                    update={
+                        "capture_economy_date_before": before,
+                        "capture_economy_date_after": after,
+                    }
+                ),
+                source,
+            ),
+            policy.model_copy(update={"delivery_batch_limit": capacities[0]}),
+        )
+        benchmark = select_benchmark(package)
+        if not isinstance(benchmark, Benchmark):
+            raise AssertionError(benchmark)
+        tiles = {t.tile_id: t for t in package.facts.tiles if vacant(t)}
+        eligible_pickups = station_tiles(package, benchmark, "pickup", limit=None)
+        eligible_deliveries = station_tiles(package, benchmark, "delivery", limit=None)
+        witnesses, _, exhausted = corridor_reachability(
+            eligible_pickups,
+            eligible_deliveries,
+            tiles,
+            package.manifest.width_tiles,
+            budget=MAX_PATH_EXPANSIONS,
+        )
+        assert not exhausted
+        masked = [
+            path
+            for path in witnesses.values()
+            if len(path) >= 3
+            and len(path) - 2 in CORRIDOR_INTERIOR
+            and find_depot(path, tiles, package.manifest.width_tiles) is not None
+        ]
+        assert not masked
+
+
+def test_sealed_attempt6_candidate_rejections_replay():
+    """E159: both attempt-6 cycles replay their single captured candidate's
+    refusal of record byte-identically (cycle-1 corridor beyond the native
+    bound; cycle-2 disconnected across the captured slice)."""
+    root = Path(EVIDENCE_RUNTIME)
+    if not root.is_dir():
+        pytest.skip("sealed Attempt 6 run dir missing (clone without retained evidence)")
+    expected = {
+        "loop-cycle-1": "NATIVE_CORRIDOR_BOUND: requires 2..47 road tiles",
+        "loop-cycle-2": (
+            "NO_BOUNDED_CORRIDOR: bounded corridor search exhausted; 38 eligible pickup "
+            "and 20 eligible delivery stops are disconnected across all supported "
+            "corridor tiles; no feasibility outside this slice implied"
+        ),
+    }
+    for cycle_name, reason in expected.items():
+        cycle, facts, rejections, diagnostic = _replay_candidate_rejections(root, cycle_name)
+        assert len(facts) == diagnostic["captured_relationships"] == 1
+        assert diagnostic["search_truncated"] is True
+        assert diagnostic["candidate_count"] == 0
+        assert rejections == [dict(source=0, destination=1, cargo=1, reason=reason)]
+        assert rejections == diagnostic["candidate_rejections"]
+
+
 def test_sealed_attempt6_zero_service_verify_of_record():
     """E158 acceptance: the independent verify instrument of record replays
     the sealed Attempt 6 end to end, READ-ONLY — the typed terminal of record

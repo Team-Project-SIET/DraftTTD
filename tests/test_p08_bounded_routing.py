@@ -425,3 +425,36 @@ def test_fixed_demo_retained_corridor_regression():
         assert chosen is not None
         expected = frozen[f"pickup-{chosen[0]}"]
         assert [(tiles[t].x, tiles[t].y) for t in chosen] == expected
+
+
+def test_incumbent_pair_loop_skips_an_over_bound_first_pair(world):
+    """E159: a supported corridor between later stop pairs must not be masked
+    by the first examined pair's over-long route.
+
+    Geometry of record (16x16, 256 tiles): one eligible pickup stop (0,1);
+    water columns at x=6, 10, 13 with single alternating edge gaps force the
+    FIRST-ranked delivery stop (15,7) onto a ~63-interior round trip beyond
+    the native 2..47 admission bound, while the second-ranked stop (3,1) has
+    a straight supported 2-interior corridor along y=1. Before the bound skip
+    the incumbent pair loop assembled the over-bound corridor and the native
+    admission rejected the candidate outright, although a supported corridor
+    existed between stop pairs the same loop still had in its first-four
+    examination set. Witness order (supported interior first) defines the
+    intended precedence; this pin keeps the incumbent loop honest to it."""
+    d = region_facts(world, width=16, height=16)
+    block(
+        d,
+        lambda t: t["x"] in (6, 10, 13) and (t["x"], t["y"]) not in ((6, 15), (10, 0), (13, 15)),
+        "water",
+    )
+    restrict_delivery(d, {(15, 7), (3, 1)})
+    r = generated(world, d)
+    assert isinstance(r, ControlledRoadScenario), r
+    corridor_adjacent(r)
+    assert 2 <= len(r.corridor) - 2 <= 47
+    # Deterministic straight supported corridor between the second pair.
+    tiles_by_id = {t.tile_id: t for t in r.input.facts.tiles}
+    assert [(tiles_by_id[t].x, tiles_by_id[t].y) for t in r.corridor] == [
+        (x, 1) for x in range(0, 4)
+    ]
+    assert scenario_hash(r.scenario) == scenario_hash(generated(world, d).scenario)
