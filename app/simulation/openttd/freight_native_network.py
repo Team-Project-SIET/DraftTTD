@@ -221,7 +221,7 @@ def network_from_facts(
 
 
 @asynccontextmanager
-async def paused_world_clock(backend, *, diagnostic=None):
+async def paused_world_clock(backend, prepared, *, diagnostic=None):
     """M2 capture pacing of record (ticket 03 family): pause the world clock for
     the duration of one bounded supplemental capture, resume after.
 
@@ -230,15 +230,20 @@ async def paused_world_clock(backend, *, diagnostic=None):
     wall-clock race (a 2048-tile capture running past `month.end_date`) cannot
     happen. The wall-clock capture budget stays unchanged, so the pause never
     unbounds an attempt; each pair is logged via the owned console and counted
-    in the planning diagnostic for per-attempt evidence."""
-    from .proof.road_mutation import console
+    in the planning diagnostic for per-attempt evidence.
 
-    console(backend, "pause")
+    Both commands are handshaken via road_mutation.console_ack (ticket 06): the
+    echo acknowledgement keeps at most one unacknowledged console command in
+    flight, so a later save() can never be swallowed behind an unexecuted line
+    by the OpenTTD dedicated input loop (the Attempt-5 loss class)."""
+    from .proof.road_mutation import console_ack
+
+    await console_ack(backend, prepared, "pause", "Game paused (manual)")
     try:
         yield
     finally:
         try:
-            console(backend, "unpause")
+            await console_ack(backend, prepared, "unpause", "Game unpaused (manual)")
         except Exception as error:
             if diagnostic is not None:
                 diagnostic["pause_resume_error"] = str(error)
@@ -373,7 +378,7 @@ async def _plan_network_world(
     for decision in schedule.planned:
         relationship = decision.relationship
         paused = (
-            paused_world_clock(backend, diagnostic=diagnostic)
+            paused_world_clock(backend, prepared, diagnostic=diagnostic)
             if metadata.get("random_world")
             else _live_clock()
         )

@@ -4,7 +4,6 @@ exclusion, pause pacing and CLI gating qualify without any native process."""
 import ast
 import asyncio
 import hashlib
-import io
 import json
 import re
 import shutil
@@ -15,6 +14,13 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 import pytest
+from test_console_echo_handshake import (
+    PAUSE_ECHO,
+    Backend,
+    EchoingGame,
+    prepared_for,
+    tail,
+)
 from test_qualification_coordinator import QualificationWire, collect
 from test_random_distance import controlled_flat_coal_data, controlled_input
 from test_supplemental_planning_contracts import correspondence, fact_dict, facts
@@ -167,34 +173,39 @@ def test_all_excluded_relationships_raise_typed_zero_service(qualified_vanilla):
     )
 
 
-def test_pause_pair_pauses_and_resumes_once():
-    backend = SimpleNamespace(process=SimpleNamespace(stdin=io.BytesIO()))
+def test_pause_pair_pauses_and_resumes_once(tmp_path):
+    prepared = prepared_for(tmp_path)
+    game = EchoingGame(prepared.spec.stdout_path)
+    backend = Backend(game)
     diagnostic = {}
 
     async def drive():
-        async with paused_world_clock(backend, diagnostic=diagnostic):
-            assert backend.process.stdin.getvalue() == b"pause\n"
+        async with paused_world_clock(backend, prepared, diagnostic=diagnostic):
+            assert game.stream.getvalue() == b"pause\n"
+            assert PAUSE_ECHO in tail(prepared)
 
     asyncio.run(drive())
-    assert backend.process.stdin.getvalue() == b"pause\nunpause\n"
+    assert game.stream.getvalue() == b"pause\nunpause\n"
     assert diagnostic == dict(pause_pairs=1)
 
 
-def test_failed_resume_is_recorded_never_silent(monkeypatch):
-    real = road_mutation.console
+def test_failed_resume_is_recorded_never_silent(monkeypatch, tmp_path):
+    real_ack = road_mutation.console_ack
 
-    def console(process, command):
+    def console_ack(backend, prepared, command, marker, **kwargs):
         if command == "unpause":
             raise RuntimeError("owned console missing")
-        return real(process, command)
+        return real_ack(backend, prepared, command, marker, **kwargs)
 
-    monkeypatch.setattr(road_mutation, "console", console)
-    backend = SimpleNamespace(process=SimpleNamespace(stdin=io.BytesIO()))
+    monkeypatch.setattr(road_mutation, "console_ack", console_ack)
+    prepared = prepared_for(tmp_path)
+    game = EchoingGame(prepared.spec.stdout_path)
+    backend = Backend(game)
     diagnostic = {}
 
     async def drive():
         with pytest.raises(RuntimeError, match="pausing capture"):
-            async with paused_world_clock(backend, diagnostic=diagnostic):
+            async with paused_world_clock(backend, prepared, diagnostic=diagnostic):
                 raise RuntimeError("pausing capture failed")
 
     asyncio.run(drive())
