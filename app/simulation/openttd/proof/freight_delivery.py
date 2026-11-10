@@ -2556,7 +2556,11 @@ def verify_loop_receipt(directory):
             verified[cycle] = dict(status="ZERO_SERVICE", error=entry["error"])
         else:
             raise ValueError("loop cycle status of record mismatch")
-    if any(result.get(key) != value for key, value in scoped.items()):
+    if any(result.get(key, 0) != value for key, value in scoped.items()):
+        # Zero-service cycles raise before execute_network updates the shared
+        # scope counters, so a root result of record (E157) legitimately lacks
+        # supplemental_requests/qualification_requests; `.get(..., 0)` keeps
+        # the sums pinned whenever genuine counters exist.
         raise ValueError("loop attempt scope accounting mismatch")
     return dict(
         verified_loop_cycles=verified,

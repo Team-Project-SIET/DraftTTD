@@ -210,6 +210,14 @@ async def collect_qualified_world(backend, prepared, session, accounting):
     # One shared per-attempt stderr carries every cycle's bridge markers; a
     # fresh session only claims the bytes written after it existed.
     backend.stderr_window = prepared.spec.stderr_path.stat().st_size
+    # Self-record the claimed window origin (E158): the retained replay cuts
+    # this exact byte range instead of re-deriving it from the staged log.
+    from .proof.harness import write_json
+
+    write_json(
+        prepared.directory / "qualification-log-window.json",
+        dict(schema="qualification-stderr-window-v1", start=int(backend.stderr_window)),
+    )
     package = prepared.spec.workspace.game / "RoadFreightProof"
     bridge_digest = hashlib.sha256(
         b"".join(

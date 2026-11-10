@@ -1108,3 +1108,135 @@ def test_capture_keeps_exchange_timeout_distinct_from_capture_budget_deadline(tm
             )
         )
     assert exc_info.value.__cause__.__class__ is TimeoutError
+
+
+EVIDENCE_RUNTIME = "artifacts/demos/playable-demo-0751d73c44054941bd77f05300b6c1a5"
+
+
+@pytest.fixture()
+def attempt_like_log():
+    """Two claimed windows inside one shared stderr with a non-empty prelude
+    and inter-session content, mirroring Attempt 6's byte shape: marker lines
+    carry per-request identities and never repeat byte-exactly."""
+    prelude = b"dbg: opener prelude line\n" * 3
+
+    def session(width, tag):
+        return b"".join(
+            f"dbg: [script:4] session {tag} clock-{index:02d} native read marker\n".encode()
+            for index in range(width)
+        )
+
+    interlude = b"dbg: between two claimed windows\n"
+    cycle_1 = session(7, "one")
+    cycle_2 = session(5, "two")
+    log = prelude + cycle_1 + interlude + cycle_2
+    windows = [
+        (len(prelude), len(prelude) + len(cycle_1)),
+        (len(prelude) + len(cycle_1) + len(interlude), len(log)),
+    ]
+    return log, windows
+
+
+def _prefixes(log, window_start, session_end):
+    """Recorded digest entries for one session: cumulative window-relative
+    slices with per-request sizes growing to the session EOF — sliced from at
+    least two complete marker lines, the way a live request's raw window
+    always carries a whole marker quadruple (~0.6 kB)."""
+    entries = {}
+    first = min(97, session_end - window_start)
+    for size in range(first, session_end - window_start + 1):
+        entries[f"freight-plan-clock-{size}"] = dict(
+            bytes=size,
+            sha256=hashlib.sha256(log[window_start : window_start + size]).hexdigest(),
+        )
+    return entries
+
+
+def test_retained_stderr_start_prefers_the_self_recorded_window(attempt_like_log, tmp_path):
+    from app.simulation.openttd.freight_planning_replay import _retained_stderr_start
+
+    log, windows = attempt_like_log
+    start, session_end = windows[0]
+    (tmp_path / "qualification-log-window.json").write_text(json.dumps(dict(start=start)))
+    prefixes = _prefixes(log, start, session_end)
+    assert (
+        _retained_stderr_start(log, prefixes, tmp_path / "qualification-log-window.json") == start
+    )
+
+
+def test_retained_stderr_start_verifies_every_recorded_digest(tmp_path):
+    from app.simulation.openttd.freight_planning_replay import _retained_stderr_start
+
+    log = b"head\n" + b"body line\n" * 6
+    (tmp_path / "qualification-log-window.json").write_text(json.dumps(dict(start=5)))
+    prefixes = dict(clock_1=dict(bytes=6, sha256=hashlib.sha256(b"body ").hexdigest()))
+    with pytest.raises(ValueError, match="qualification log prefix digest mismatch"):
+        _retained_stderr_start(log, prefixes, tmp_path / "qualification-log-window.json")
+
+
+def test_retained_stderr_start_invalid_record_typed(tmp_path):
+    from app.simulation.openttd.freight_planning_replay import _retained_stderr_start
+
+    (tmp_path / "qualification-log-window.json").write_text(json.dumps(dict(start="x")))
+    with pytest.raises(ValueError, match="qualification log window record invalid"):
+        _retained_stderr_start(b"log\n", {}, tmp_path / "qualification-log-window.json")
+
+
+def test_retained_stderr_start_derives_the_legacy_attempt6_anchors(attempt_like_log):
+    from app.simulation.openttd.freight_planning_replay import _retained_stderr_start
+
+    log, windows = attempt_like_log
+    # No self-recorded window (Attempt 6 shape): line-boundary digest
+    # anchoring resolves each session's exact claimed cut, including the
+    # second session's interior origin.
+    absent = Path("does-not-exist-window.json")
+    for window_start, session_end in windows:
+        prefixes = _prefixes(log, window_start, session_end)
+        assert _retained_stderr_start(log, prefixes, absent) == window_start
+
+
+def test_retained_stderr_start_rejects_ambiguous_anchors(attempt_like_log):
+    from app.simulation.openttd.freight_planning_replay import _retained_stderr_start
+
+    log, windows = attempt_like_log
+    window_start, session_end = windows[0]
+    session = log[window_start:session_end]
+    duplicated = session + session
+    prefixes = _prefixes(duplicated, 0, len(session))
+    with pytest.raises(ValueError, match="qualification log prefix window start ambiguous"):
+        _retained_stderr_start(duplicated, prefixes, Path("absent.json"))
+
+
+def test_retained_stderr_start_keeps_whole_file_recordings_compatible():
+    """Pre-window recordings (E153 era, byte-exact): digests were cut from
+    byte zero of the whole staged file — the derivation must resolve 0 and
+    keep the exact legacy semantics."""
+    from app.simulation.openttd.freight_planning_replay import _retained_stderr_start
+
+    log = b"root before-session lines\n" * 4 + b"session\n" * 3
+    prefixes = dict(clock_1=dict(bytes=len(log), sha256=hashlib.sha256(log).hexdigest()))
+    assert _retained_stderr_start(log, prefixes, Path("absent.json")) == 0
+
+
+def test_sealed_attempt6_zero_service_verify_of_record():
+    """E158 acceptance: the independent verify instrument of record replays
+    the sealed Attempt 6 end to end, READ-ONLY — the typed terminal of record
+    is reproduced per cycle, and every sealed byte stays identical."""
+    root = Path(EVIDENCE_RUNTIME)
+    if not root.is_dir():
+        pytest.skip("sealed Attempt 6 run dir missing (clone without retained evidence)")
+    manifest_before = (root / "artifact-manifest.sha256").read_bytes()
+    result_before = (root / "result.json").read_bytes()
+    try:
+        receipt = verify_loop_receipt(root)
+    finally:
+        assert (root / "artifact-manifest.sha256").read_bytes() == manifest_before
+        assert (root / "result.json").read_bytes() == result_before
+    error = "NO_FEASIBLE_SERVICES: no supported full-load road engine and supply"
+    assert receipt == dict(
+        verified_loop_cycles={
+            1: dict(status="ZERO_SERVICE", error=error),
+            2: dict(status="ZERO_SERVICE", error=error),
+        },
+        loop_cycles_delivered=0,
+    )

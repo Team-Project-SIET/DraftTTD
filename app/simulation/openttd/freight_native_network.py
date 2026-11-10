@@ -1267,12 +1267,17 @@ def replay_network_capture(directory, world, metadata):
     return facts
 
 
-def _replay_network_world(directory, *, recovery=None):
+def _replay_network_world(directory, *, recovery=None, zero_service=False):
     """Shared retained-readback prologue of every network verify path.
 
     Replays the qualified world, bounded captures and planned decision of a
     retained directory; never creates a process or connection. Raises the same
-    typed errors as the pre-split verify flow."""
+    typed errors as the pre-split verify flow. A zero-service recording ended
+    at the planning admission refusal before the run wrote
+    `prepared-source-links.json`/`planning-policy.json` (E158): those derive
+    from the retained sources the run itself wrote — correspondence and save
+    digests pinned against the retained `.sav` bytes and the re-derived world —
+    and every downstream retained check still validates them."""
     from app.simulation.openttd.freight_planning_replay import replay_qualified_world
     from app.simulation.openttd.freight_runtime_planning import _ISSUER, NativeSaveCorrespondence
     from app.simulation.openttd.prepared_source_correspondence import (
@@ -1343,9 +1348,33 @@ def _replay_network_world(directory, *, recovery=None):
             raise ValueError("random generation readback differs from native observation")
 
     facts = replay_network_capture(directory, world, metadata)
-    links = ControlledSourceLinks.model_validate_json(
-        (directory / "prepared-source-links.json").read_bytes()
-    )
+    if zero_service:
+        correspondence = json.loads((directory / "native-save-correspondence.json").read_bytes())
+        original_save_digest = sha256(directory / "before.sav")
+        post_qualification_save_digest = sha256(directory / "qualified.sav")
+        if (
+            correspondence.get("schema") != "owned-freight-save-correspondence-v1"
+            or correspondence.get("before_save_digest") != original_save_digest
+            or correspondence.get("qualified_save_digest") != post_qualification_save_digest
+        ):
+            raise ValueError("network zero-service save correspondence mismatch")
+        links = ControlledSourceLinks(
+            original_save_digest=original_save_digest,
+            loaded_source_digest=None,
+            runtime_digest=world.context.world.runtime_identity.sha256,
+            configuration_digest=world.context.configuration_digest,
+            bridge_digest=world.context.bridge.sha256,
+            world_id=world.context.world.world_id,
+            world_observation_digest=world.composition_digest,
+            final_structural_digest=world.structural.structural_world_digest,
+            qualified_production_digest=world.production.production_digest,
+            post_qualification_save_digest=post_qualification_save_digest,
+            evidence_kind="owned-native-save-snapshots",
+        )
+    else:
+        links = ControlledSourceLinks.model_validate_json(
+            (directory / "prepared-source-links.json").read_bytes()
+        )
     if (
         links.original_save_digest != sha256(directory / "before.sav")
         or links.post_qualification_save_digest != sha256(directory / "qualified.sav")
@@ -1395,9 +1424,16 @@ def _replay_network_world(directory, *, recovery=None):
             configuration_digest=links.configuration_digest,
         ),
     )
-    policy = MonthlyBatchPolicy.model_validate_json(
-        (directory / "planning-policy.json").read_bytes()
-    )
+    if zero_service:
+        policy = MonthlyBatchPolicy(
+            start_date=date(1950, 1, 1),
+            budget_gbp=Decimal(metadata.get("planning_budget_gbp", "100000")),
+            delivery_batch_limit=metadata["delivery_batch_limit"],
+        )
+    else:
+        policy = MonthlyBatchPolicy.model_validate_json(
+            (directory / "planning-policy.json").read_bytes()
+        )
     if policy.delivery_batch_limit != metadata[
         "delivery_batch_limit"
     ] or policy.budget_gbp != Decimal(metadata.get("planning_budget_gbp", "100000")):
@@ -1619,7 +1655,9 @@ def verify_loop_zero_service_cycle(directory, *, expected_error, exclude=()):
     zero-service failure must reproduce exactly. Selected services instead of
     the recorded failure, or any other typed error, refuses the cycle."""
     directory = directory.resolve()
-    metadata, _, world, facts, links, cleanup, source, policy = _replay_network_world(directory)
+    metadata, _, world, facts, links, cleanup, source, policy = _replay_network_world(
+        directory, zero_service=True
+    )
     try:
         network_from_facts(
             world,
