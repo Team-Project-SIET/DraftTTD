@@ -1052,3 +1052,61 @@ explicit operator grant; every consumed grant (E141, E142, E145,
 attempts 1–5, this Attempt 6) is void for reuse. No retry, no
 relaunch, no relabel, no evidence regeneration, no push; the sealed
 dir was read, never modified. Evidence index E157.
+
+## 2026-11-11 ticket 07 — loop-verify stderr-window seam fixed offline (E158); the sealed Attempt 6 now carries the independent receipt its own terminal always described; no evidence byte modified, no native run, no grant consumed
+
+The fix of record (commit `5118f8c`, docs commit this one) reconciles three
+contracts so staging and replay use identical byte ranges while every
+retained digest stays pinned:
+
+1. **Recording:** `collect_qualified_world` self-writes
+   `qualification-log-window.json`
+   (`{"schema": "qualification-stderr-window-v1", "start": <bytes>}`) at the
+   per-cycle window claim; future recordings carry their own cut origin and
+   the staging copy set stays unchanged (chain self-write).
+2. **Replay:** `_retained_stderr_start` (`freight_planning_replay.py`)
+   prefers that record (validated shape, and still re-verifies every
+   recorded digest); for recordings made before the record existed it
+   resolves the origin by line-boundary digest anchoring — exactly one
+   unique anchor required, then every digest re-verified; zero matches keep
+   the verbatim `ValueError: qualification log prefix digest mismatch`,
+   multiple matches raise the new typed
+   `ValueError: qualification log prefix window start ambiguous`;
+   pre-window whole-file recordings derive 0 and keep legacy byte
+   semantics. Attempt 6's windows resolved to `7549` and `168958`, unique,
+   with all 516 recorded digests then confirmed — never corruption, no
+   byte touched or regenerated.
+3. **Zero-service receipts:** zero-service recordings end at the
+   `network_from_facts` refusal before `prepared-source-links.json` and
+   `planning-policy.json` exist and before
+   `supplemental_requests/qualification_requests` counters move
+   (`execute_network` at `freight_native_network.py:1050`), so
+   `_replay_network_world` takes `zero_service=True` (only
+   `verify_loop_zero_service_cycle` uses it): links derive from the
+   retained `native-save-correspondence.json` with save digests pinned
+   against fresh `sha256` of the retained `.sav` files; policy derives from
+   the seal metadata and every downstream retained check still validates it;
+   `verify_loop_receipt`'s root scope compare uses `result.get(key, 0)` —
+   the delivery path is byte-identical (`zero_service` defaults False).
+
+Verify of record after the fix: `.venv/bin/python -m
+app.simulation.openttd.proof.freight_delivery verify
+artifacts/demos/playable-demo-0751d73c44054941bd77f05300b6c1a5` → rc=0,
+both cycles replayed to their recorded `ZERO_SERVICE` terminal with the
+verbatim error, diagnostics, captured-relationship counts and cleanup,
+root scope sums reconciled; byte-read-only proven (root manifest,
+`result.json`, both cycle manifests re-hashed byte-identical before and
+after). Offline regressions: 7 new tests in `tests/test_freight_loops.py`
+including the sealed Attempt-6 e2e pin with exact-receipt equality and
+manifest/result byte-pins; targeted set of record (the six audit-era
+files) 151 passed / 0 failed; `test_random_distance.py` 13 passed; ruff,
+format, py_compile, `uvx ty check`, `git diff --check` all clean.
+
+Status: ticket 07 implemented offline (status page in the ticket file);
+ticket 06 already proven live in Attempt 6 (E157). FD-C-2 unchanged
+`INCOMPLETE_EVIDENCE` — the receipt reproduces the truncated
+zero-candidate terminal as recorded evidence and is itself a feasibility
+claim for nothing; zero-candidate remediation is still its own reviewed
+change plus a fresh explicit operator grant (every consumed grant void:
+E141, E142, E145, attempts 1–6). No retry, no relaunch, no relabel, no
+evidence regeneration, no push. Evidence index E158.

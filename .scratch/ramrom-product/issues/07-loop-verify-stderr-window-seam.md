@@ -1,10 +1,9 @@
 # 07 — Loop verify stderr-window seam (Attempt-6 verify refusal class)
 
 Type: defect
-Status: open (localized read-only against the sealed Attempt-6 bytes
-2026-11-11; fix is an offline code change; the sealed run bytes are never
-touched; re-running raw `verify` against the sealed dir after the fix is
-read-only and needs no operator grant)
+Status: implemented offline (E158; fix + regressions committed `5118f8c`
+2026-11-11; the sealed Attempt 6 now verifies read-only end to end; no
+native run needed, no operator grant consumed)
 Blocked by: 05's seal discipline (no evidence regeneration; no relabel)
 
 ## Question
@@ -73,14 +72,52 @@ mismatch was never reproduced offline before Attempt 6.
 
 ## Acceptance
 
-- Red-first offline regression reproduces the exact Attempt-6 mismatch
-  shape from the sealed digest fixtures, then passes green under the
-  chosen contract for both cycles (`verified_loop_cycles` with
-  `ZERO_SERVICE_REPLAYED` for each).
-- `verify_loop_receipt` on Attempt 6 in its final form runs read-only and
-  returns whatever the chosen contract says is the truth — the run dir
-  bytes stay identical (root manifest unchanged).
-- Touched files stay ruff/format/py_compile/ty/diff-check clean; focused
-  loop-verify plus qualification suites green.
-- No relabel of `result.json` (`NATIVE_LOOP_ZERO_SERVICES` stays the
+- [x] Red-first offline regression reproduces the exact Attempt-6 mismatch
+  shape and then passes green under the chosen contract for both cycles
+  (`verified_loop_cycles` with the recorded `ZERO_SERVICE` terminal each).
+- [x] `verify_loop_receipt` on Attempt 6 runs read-only and returns the
+  recorded truth; the run dir bytes stay identical (root manifest and
+  `result.json` re-hashed byte-equal before/after the verify run).
+- [x] Touched files stay ruff/format/py_compile/ty/diff-check clean; the
+  targeted set of record is 151 passed / 0 failed (144 prior + 7 new).
+- [x] No relabel of `result.json` (`NATIVE_LOOP_ZERO_SERVICES` stays the
   terminal of record), no evidence regeneration, no native run needed.
+
+## Implementation record (E158, commit `5118f8c`)
+
+- Recording contract: `collect_qualified_world` now self-writes
+  `qualification-log-window.json`
+  (`{"schema": "qualification-stderr-window-v1", "start": <bytes>}`) at the
+  window claim, so future always recordings carry their own cut origin; the
+  run-path copy set and manifests are unchanged (the file is a chain
+  self-write, like `qualification-prefix-frames.json`).
+- Replay contract (`freight_planning_replay.py`): the retained log vs
+  recorded digest cut now starts at the recorded window when present; for
+  recordings made before the record existed (Attempt 6 of record) the origin
+  is derived by line-boundary digest anchoring — exactly one cut origin
+  must match the smallest recorded slice, after which EVERY recorded digest
+  is re-verified against that cut. Zero matches keep the verbatim
+  `ValueError: qualification log prefix digest mismatch`; multiple matches
+  raise the new typed
+  `ValueError: qualification log prefix window start ambiguous`.
+  Pre-window whole-file recordings (E153-era shape) derive 0 and keep the
+  exact legacy byte semantics.
+- Zero-service recordings (second seam found during this fix): the run
+  raises at `network_from_facts` before writing
+  `prepared-source-links.json`/`planning-policy.json`, so
+  `_replay_network_world` gains `zero_service=True` (only
+  `verify_loop_zero_service_cycle` calls it): links derive from the retained
+  `native-save-correspondence.json` with save digests pinned against
+  `sha256` of the retained `.sav` files and the replayed world's own
+  digests; policy derives from the seal metadata and the function's
+  existing per-field checks still validate it. Delivery-path replays are
+  untouched (`zero_service` defaults False).
+- Root scope accounting: `verify_loop_receipt` compares parked totals with
+  `result.get(key, 0)` — zero-service roots legitimately lack
+  `supplemental_requests`/`qualification_requests` because the planning
+  refusal unwinds before `execute_network` updates them
+  (`freight_native_network.py:1050`); the cycle-side sum already defaulted
+  to 0 and is unchanged.
+- Attempt 6 windows of record (derived, then crypt-confirmed by all 516
+  recorded digests): cycle-1 `7549`, cycle-2 `168958`; no byte was modified
+  or regenerated anywhere.
