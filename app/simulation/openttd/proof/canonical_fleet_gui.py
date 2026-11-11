@@ -105,9 +105,21 @@ class GuiClient:
     shows), so the AdminPort allowlist stays untouched.
     """
 
-    def __init__(self, prepared):
+    def __init__(
+        self,
+        prepared,
+        *,
+        client_name=CLIENT_NAME,
+        identity=GUI_PROBE,
+        join_marker=JOIN_MARKER,
+        schema="canonical-fleet-gui-client-v1",
+    ):
         self.prepared = prepared
         self.directory = prepared.directory / "gui-client"
+        self.client_name = client_name
+        self.identity = identity
+        self.join_marker = join_marker
+        self.schema = schema
         self.process = None
         self.exit = None
 
@@ -117,7 +129,9 @@ class GuiClient:
         self.directory.mkdir()
         shutil.copytree(self.prepared.spec.workspace.root / "baseset", self.directory / "baseset")
         cfg = self.directory / "openttd.cfg"
-        cfg.write_text(f"[misc]\ngraphicsset = OpenGFX\n[network]\nclient_name = {CLIENT_NAME}\n")
+        cfg.write_text(
+            f"[misc]\ngraphicsset = OpenGFX\n[network]\nclient_name = {self.client_name}\n"
+        )
         log = (self.directory / "client.log").open("wb")
         argv = (
             str(BINARY),
@@ -162,12 +176,14 @@ class GuiClient:
         stdout_path = self.prepared.spec.stdout_path
         while True:
             backend.health()
-            if JOIN_MARKER in stdout_path.read_text(errors="replace"):
+            if self.join_marker in stdout_path.read_text(errors="replace"):
                 return True
             self.client_exit()
             self.require_alive()
             if time.monotonic() >= deadline:
-                raise TimeoutError("server-side GUI client join marker missing: " + JOIN_MARKER)
+                raise TimeoutError(
+                    "server-side GUI client join marker missing: " + self.join_marker
+                )
             await asyncio.sleep(0.5)
 
     async def observe(self, backend, deadline_seconds=OBSERVATION_SECONDS):
@@ -212,14 +228,14 @@ class GuiClient:
     def receipt(self, *, argv, display_env, join_verified, observation, owned_stop):
         log = self.directory / "client.log"
         return dict(
-            schema="canonical-fleet-gui-client-v1",
-            identity=GUI_PROBE,
+            schema=self.schema,
+            identity=self.identity,
             client_argv=list(argv),
-            client_name=CLIENT_NAME,
+            client_name=self.client_name,
             spectator_company="255",
             display_env=display_env,
             server_stdout_path="stdout.log",
-            join_marker=JOIN_MARKER,
+            join_marker=self.join_marker,
             join_verified=join_verified,
             observation=observation,
             client_log_sha256=sha256(log) if log.is_file() else None,
