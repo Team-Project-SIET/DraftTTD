@@ -29,6 +29,61 @@ from .proof.qualification_native import QualificationNativeBackend, Qualificatio
 from .proof.structural_native import StructuralRecordedSession
 
 
+def _retained_stderr_start(log: bytes, prefixes: dict, window_path) -> int:
+    """Byte origin of one cycle's claimed stderr window inside the staged
+    copy of the shared per-attempt stderr (E158).
+
+    A run self-records the window it claimed in
+    `qualification-log-window.json`. Recordings created before that record
+    existed — Attempt 6 of record — are resolved by line-boundary digest
+    anchoring: the smallest recorded slice's digest must locate exactly one
+    cut origin, and afterwards every recorded digest is re-verified against
+    that cut, so the derivation can only ever succeed on cryptographically
+    confirmed bytes and never fabricates a match."""
+    window_record = None
+    if window_path.is_file():
+        window_record = json.loads(window_path.read_bytes())
+        if (
+            not isinstance(window_record, dict)
+            or type(window_record.get("start")) is not int
+            or not 0 <= window_record["start"] <= len(log)
+        ):
+            raise ValueError("qualification log window record invalid")
+
+    def verify(start: int) -> None:
+        for request_id, entry in sorted(prefixes.items()):
+            size = entry["bytes"]
+            if type(size) is not int or not 0 < size <= len(log) - start:
+                raise ValueError("qualification log prefix extent mismatch")
+            if hashlib.sha256(log[start : start + size]).hexdigest() != entry["sha256"]:
+                raise ValueError("qualification log prefix digest mismatch")
+
+    if window_record is not None:
+        start = window_record["start"]
+        verify(start)
+        return start
+    anchors = [0]
+    for position, byte in enumerate(log):
+        if byte == 10 and position + 1 < len(log):
+            anchors.append(position + 1)
+    smallest = min(
+        prefixes.values(),
+        key=lambda entry: (entry["bytes"], entry["sha256"]),
+    )
+    matches = [
+        start
+        for start in anchors
+        if start + smallest["bytes"] <= len(log)
+        and hashlib.sha256(log[start : start + smallest["bytes"]]).hexdigest() == smallest["sha256"]
+    ]
+    if len(matches) > 1:
+        raise ValueError("qualification log prefix window start ambiguous")
+    if not matches:
+        raise ValueError("qualification log prefix digest mismatch")
+    verify(matches[0])
+    return matches[0]
+
+
 async def replay_qualified_world(directory, metadata, runtime, *, recovery=None):
     from .proof.freight_delivery import PlannerBackend
 
@@ -144,6 +199,7 @@ async def replay_qualified_world(directory, metadata, runtime, *, recovery=None)
     backend.qualification_coordinator = coordinator
     log = (directory / "stderr.log").read_bytes()
     prefixes = json.loads((directory / "qualification-log-prefixes.json").read_bytes())
+    start = _retained_stderr_start(log, prefixes, directory / "qualification-log-window.json")
 
     class RetainedLog:
         def read_bytes(self):
@@ -152,7 +208,7 @@ async def replay_qualified_world(directory, metadata, runtime, *, recovery=None)
             size = entry["bytes"]
             if type(size) is not int or not 0 < size <= len(log):
                 raise ValueError("qualification log prefix extent mismatch")
-            raw = log[:size]
+            raw = log[start : start + size]
             if hashlib.sha256(raw).hexdigest() != entry["sha256"]:
                 raise ValueError("qualification log prefix digest mismatch")
             return raw

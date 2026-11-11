@@ -14,6 +14,7 @@ from app.planning.domain import ExecutionPlan, PlanningScenario, PreparedWorldMa
 from app.planning.optimizer import optimize_candidate_network
 from app.planning.p08_adapter import MonthlyBatchPolicy, adapt_planning_facts
 from app.planning.p08_network import generate_freight_network
+from app.simulation.openttd.capture_scheduling import preflight_schedule, require_planned
 from app.simulation.openttd.freight_delivery import (
     DeliveryPlan,
     DeliveryReadback,
@@ -220,7 +221,7 @@ def network_from_facts(
 
 
 @asynccontextmanager
-async def paused_world_clock(backend, *, diagnostic=None):
+async def paused_world_clock(backend, prepared, *, diagnostic=None):
     """M2 capture pacing of record (ticket 03 family): pause the world clock for
     the duration of one bounded supplemental capture, resume after.
 
@@ -229,15 +230,20 @@ async def paused_world_clock(backend, *, diagnostic=None):
     wall-clock race (a 2048-tile capture running past `month.end_date`) cannot
     happen. The wall-clock capture budget stays unchanged, so the pause never
     unbounds an attempt; each pair is logged via the owned console and counted
-    in the planning diagnostic for per-attempt evidence."""
-    from .proof.road_mutation import console
+    in the planning diagnostic for per-attempt evidence.
 
-    console(backend, "pause")
+    Both commands are handshaken via road_mutation.console_ack (ticket 06): the
+    echo acknowledgement keeps at most one unacknowledged console command in
+    flight, so a later save() can never be swallowed behind an unexecuted line
+    by the OpenTTD dedicated input loop (the Attempt-5 loss class)."""
+    from .proof.road_mutation import console_ack
+
+    await console_ack(backend, prepared, "pause", "Game paused (manual)")
     try:
         yield
     finally:
         try:
-            console(backend, "unpause")
+            await console_ack(backend, prepared, "unpause", "Game unpaused (manual)")
         except Exception as error:
             if diagnostic is not None:
                 diagnostic["pause_resume_error"] = str(error)
@@ -363,10 +369,16 @@ async def _plan_network_world(
         if diagnostic is not None:
             diagnostic["candidate_count"] = 0
         raise ValueError(reason + ": no compatible freight OD within capture budgets")
+    schedule = preflight_schedule(world, relationships, capture_budget)
+    if diagnostic is not None:
+        diagnostic["capture_preflight"] = schedule.diagnostic()
+    require_planned(schedule)
     facts, count = [], 1 if metadata.get("random_world") else 0
-    for n, relationship in enumerate(relationships):
+    facts_by_position = {}
+    for decision in schedule.planned:
+        relationship = decision.relationship
         paused = (
-            paused_world_clock(backend, diagnostic=diagnostic)
+            paused_world_clock(backend, prepared, diagnostic=diagnostic)
             if metadata.get("random_world")
             else _live_clock()
         )
@@ -377,7 +389,7 @@ async def _plan_network_world(
                     prepared,
                     world,
                     relationship=relationship,
-                    prefix=f"n{n}-",
+                    prefix=f"n{decision.position}-",
                     retain=False,
                     capture_budget=capture_budget,
                 )
@@ -386,10 +398,14 @@ async def _plan_network_world(
                 diagnostic["capture_requests_attempted"] += backend.planning_read_attempts
                 diagnostic["capture_requests_completed"] += backend.planning_read_count
         count += backend.planning_read_count
-        facts.append(value)
+        facts_by_position[decision.position] = value
         if diagnostic is not None:
-            diagnostic["captured_relationships"] = len(facts)
-        write_json(prepared.directory / f"network-facts-{n}.json", value.model_dump(mode="json"))
+            diagnostic["captured_relationships"] = len(facts_by_position)
+        write_json(
+            prepared.directory / f"network-facts-{decision.position}.json",
+            value.model_dump(mode="json"),
+        )
+    facts = [facts_by_position[position] for position in sorted(facts_by_position)]
     backend.planning_read_count = count
     final = await save(backend, prepared, "qualified")
     source_manifest = PreparedWorldManifest(
@@ -693,6 +709,13 @@ def validate_game_time_version(metadata):
 
 def receipt_game_time(directory, index, *, capture_start=False, log_path=None):
     """Replay correlated milestone readbacks; exact unsampled events remain unknown."""
+    from app.simulation.openttd.freight_runtime_planning import cycle_request_id, loop_cycle
+
+    cycle = loop_cycle(directory)
+
+    def cid(base):
+        return cycle_request_id(base, cycle)
+
     fields = (
         "simulation_start_date",
         "planning_completion_date",
@@ -713,7 +736,7 @@ def receipt_game_time(directory, index, *, capture_start=False, log_path=None):
         ("observe-1", "pickup_observed_by_date", 1),
         ("finish", "final_cargo_delivery_date", 21),
     ):
-        name = f"s{index}-{stage}-response.json"
+        name = cid(f"s{index}-{stage}") + "-response.json"
         state = json.loads((directory / name).read_bytes())["s"]
         metrics[field] = state[position] if state[position] >= 0 else None
         refs.append(name)
@@ -733,14 +756,9 @@ def receipt_game_time(directory, index, *, capture_start=False, log_path=None):
             raise ValueError("unique native game-time start/construction markers required")
         start_date, start_tick = map(int, starts[0])
         construction_date, construction_tick = map(int, constructions[0])
-        from app.simulation.openttd.freight_runtime_planning import cycle_request_id, loop_cycle
-
-        cycle = loop_cycle(directory)
-        final = json.loads(
-            (
-                directory / (cycle_request_id(f"s{index}-finish", cycle) + "-response.json")
-            ).read_bytes()
-        )["s"]
+        final = json.loads((directory / (cid(f"s{index}-finish") + "-response.json")).read_bytes())[
+            "s"
+        ]
         if (
             not start_date <= construction_date <= final[21] <= final[1]
             or not start_tick <= construction_tick <= final[0]
@@ -748,9 +766,7 @@ def receipt_game_time(directory, index, *, capture_start=False, log_path=None):
             raise ValueError("native game-time marker chronology mismatch")
         metrics["start_basis"] = "bridge_start_before_world_preparation"
         metrics["planning_completion_observed_by_date"] = json.loads(
-            (
-                directory / (cycle_request_id(f"select-{index}", cycle) + "-response.json")
-            ).read_bytes()
+            (directory / (cid(f"select-{index}") + "-response.json")).read_bytes()
         )["s"][1]
         metrics["simulation_start_date"] = start_date
         metrics["construction_completion_date"] = construction_date
@@ -1177,11 +1193,13 @@ async def execute_network(
         qualified_save_sha256=source_save,
         after_save_sha256=await save(backend, prepared, "after"),
     )
+    tail_keys = ("select-0", f"s{len(services) - 1}-park-read")
+    tail_records = tuple((name, cycle_request_id(name, cycle)) for name in tail_keys)
     finance_records = {
-        name: DeliveryReadback.model_validate_json(
-            (prepared.directory / f"{name}-response.json").read_bytes()
+        logical: DeliveryReadback.model_validate_json(
+            (prepared.directory / f"{disc}-response.json").read_bytes()
         )
-        for name in ("select-0", f"s{len(services) - 1}-park-read")
+        for logical, disc in tail_records
     }
     write_json(
         prepared.directory / "financial-reconciliation.json",
@@ -1211,34 +1229,55 @@ def replay_network_capture(directory, world, metadata):
     capture_budget = (
         DemoBudgets.from_sealed(metadata["random_budget"]) if metadata.get("random_world") else None
     )
+    diagnostic_path = directory / "planning-diagnostic.json"
+    schedule_era = diagnostic_path.is_file() and "capture_preflight" in json.loads(
+        diagnostic_path.read_bytes()
+    )
+    if schedule_era:
+        schedule = preflight_schedule(world, relationships, capture_budget)
+        for decision in schedule.deferred:
+            if (directory / f"network-facts-{decision.position}.json").is_file():
+                raise ValueError(
+                    "network facts artifact present for deferred relationship "
+                    + str(list(decision.relationship))
+                )
+        positions = sorted(d.position for d in schedule.planned)
+    else:
+        positions = list(range(len(relationships)))
     facts = []
-    for n, relationship in enumerate(relationships):
+    for position in positions:
+        relationship = relationships[position]
         f = asyncio.run(
             capture_planning_facts(
                 SimpleNamespace(health=lambda: None, session=None),
                 SimpleNamespace(directory=directory),
                 world,
                 relationship=relationship,
-                prefix=f"n{n}-",
+                prefix=f"n{position}-",
                 read_exchange=retained_read,
                 retain=False,
                 capture_budget=capture_budget,
             )
         )
         if f.model_dump(mode="json") != json.loads(
-            (directory / f"network-facts-{n}.json").read_bytes()
+            (directory / f"network-facts-{position}.json").read_bytes()
         ):
             raise ValueError("network facts differ from actual readbacks")
         facts.append(f)
     return facts
 
 
-def _replay_network_world(directory, *, recovery=None):
+def _replay_network_world(directory, *, recovery=None, zero_service=False):
     """Shared retained-readback prologue of every network verify path.
 
     Replays the qualified world, bounded captures and planned decision of a
     retained directory; never creates a process or connection. Raises the same
-    typed errors as the pre-split verify flow."""
+    typed errors as the pre-split verify flow. A zero-service recording ended
+    at the planning admission refusal before the run wrote
+    `prepared-source-links.json`/`planning-policy.json` (E158): those derive
+    from the retained sources the run itself wrote — correspondence and save
+    digests pinned against the retained `.sav` bytes and the re-derived world —
+    and every downstream retained check still validates them."""
     from app.simulation.openttd.freight_planning_replay import replay_qualified_world
     from app.simulation.openttd.freight_runtime_planning import _ISSUER, NativeSaveCorrespondence
     from app.simulation.openttd.prepared_source_correspondence import (
@@ -1309,9 +1348,33 @@ def _replay_network_world(directory, *, recovery=None):
             raise ValueError("random generation readback differs from native observation")
 
     facts = replay_network_capture(directory, world, metadata)
-    links = ControlledSourceLinks.model_validate_json(
-        (directory / "prepared-source-links.json").read_bytes()
-    )
+    if zero_service:
+        correspondence = json.loads((directory / "native-save-correspondence.json").read_bytes())
+        original_save_digest = sha256(directory / "before.sav")
+        post_qualification_save_digest = sha256(directory / "qualified.sav")
+        if (
+            correspondence.get("schema") != "owned-freight-save-correspondence-v1"
+            or correspondence.get("before_save_digest") != original_save_digest
+            or correspondence.get("qualified_save_digest") != post_qualification_save_digest
+        ):
+            raise ValueError("network zero-service save correspondence mismatch")
+        links = ControlledSourceLinks(
+            original_save_digest=original_save_digest,
+            loaded_source_digest=None,
+            runtime_digest=world.context.world.runtime_identity.sha256,
+            configuration_digest=world.context.configuration_digest,
+            bridge_digest=world.context.bridge.sha256,
+            world_id=world.context.world.world_id,
+            world_observation_digest=world.composition_digest,
+            final_structural_digest=world.structural.structural_world_digest,
+            qualified_production_digest=world.production.production_digest,
+            post_qualification_save_digest=post_qualification_save_digest,
+            evidence_kind="owned-native-save-snapshots",
+        )
+    else:
+        links = ControlledSourceLinks.model_validate_json(
+            (directory / "prepared-source-links.json").read_bytes()
+        )
     if (
         links.original_save_digest != sha256(directory / "before.sav")
         or links.post_qualification_save_digest != sha256(directory / "qualified.sav")
@@ -1361,9 +1424,16 @@ def _replay_network_world(directory, *, recovery=None):
             configuration_digest=links.configuration_digest,
         ),
     )
-    policy = MonthlyBatchPolicy.model_validate_json(
-        (directory / "planning-policy.json").read_bytes()
-    )
+    if zero_service:
+        policy = MonthlyBatchPolicy(
+            start_date=date(1950, 1, 1),
+            budget_gbp=Decimal(metadata.get("planning_budget_gbp", "100000")),
+            delivery_batch_limit=metadata["delivery_batch_limit"],
+        )
+    else:
+        policy = MonthlyBatchPolicy.model_validate_json(
+            (directory / "planning-policy.json").read_bytes()
+        )
     if policy.delivery_batch_limit != metadata[
         "delivery_batch_limit"
     ] or policy.budget_gbp != Decimal(metadata.get("planning_budget_gbp", "100000")):
@@ -1585,7 +1655,9 @@ def verify_loop_zero_service_cycle(directory, *, expected_error, exclude=()):
     zero-service failure must reproduce exactly. Selected services instead of
     the recorded failure, or any other typed error, refuses the cycle."""
     directory = directory.resolve()
-    metadata, _, world, facts, links, cleanup, source, policy = _replay_network_world(directory)
+    metadata, _, world, facts, links, cleanup, source, policy = _replay_network_world(
+        directory, zero_service=True
+    )
     try:
         network_from_facts(
             world,

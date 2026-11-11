@@ -1767,3 +1767,52 @@ grep -o "request_id=[^ ]*-clock-[0-9]*" artifacts/demos/playable-demo-f4a9e00063
   (b) a fresh explicit operator grant with the command of record
   byte-unchanged. The GUI-bearing native probe remains a separate later
   grant.
+
+## 2026-11-11 addendum #13 — E161: T-030 exercise conductor built offline; commands of record for the canonical-fleet-exercise stage (checked)
+
+The Phase B opener built the runnable T-030 exercise stage of record
+(`app/simulation/openttd/proof/canonical_fleet_exercise.py`, commit
+`c6ec803`, additive — the frozen `proof/canonical_fleet.py` reload
+lane untouched). Commands of record (attempt package:
+`.scratch/phase-b-t030/issues/02-attempt-package.md`; staging is
+offline and argv never executes; the RUN command is
+operator-gated and must not be executed without a fresh explicit
+grant):
+
+```
+# Offline focused regression (12 tests):
+PYTHONDONTWRITEBYTECODE=1 .venv/bin/pytest tests/test_canonical_fleet_exercise.py -q
+# Full lane set of record (three groups, 126 passed / 0 failed):
+PYTHONDONTWRITEBYTECODE=1 .venv/bin/pytest tests/test_canonical_fleet_exercise.py \
+    tests/test_canonical_fleet_driver.py -q
+PYTHONDONTWRITEBYTECODE=1 .venv/bin/pytest tests/test_freight_canonical_dispatch.py \
+    tests/test_freight_canonical_integration.py tests/test_freight_canonical_transport.py -q
+PYTHONDONTWRITEBYTECODE=1 .venv/bin/pytest tests/test_canonical_reload_only.py \
+    tests/test_canonical_reload_context.py tests/test_canonical_failure_reporting.py \
+    tests/test_freight_canonical_runtime.py -q
+# Stage (offline; identity dir name is checked == canonical-fleet-exercise-t030-1):
+.venv/bin/python -m app.simulation.openttd.proof.canonical_fleet_exercise \
+    prepare artifacts/runtime/canonical-fleet-exercise-t030-1 \
+    --canonical artifacts/runtime/canonical-fleet-create-q3
+# Preflight (offline):
+.venv/bin/python -m app.simulation.openttd.proof.canonical_fleet_exercise \
+    preflight artifacts/runtime/canonical-fleet-exercise-t030-1
+# Independent verify (offline; after a run):
+.venv/bin/python -m app.simulation.openttd.proof.canonical_fleet_exercise \
+    verify artifacts/runtime/canonical-fleet-exercise-t030-1
+# THE RUN — fresh explicit operator authorization required (one launch):
+# .venv/bin/python -m app.simulation.openttd.proof.canonical_fleet_exercise \
+#     run artifacts/runtime/canonical-fleet-exercise-t030-1 --authorize-one-launch
+```
+
+- **Byte-pin of record:** the staged bridge package must equal the
+  q3-era validation record
+  `artifacts/validation/canonical-fleet-reload-q3/suspension.json`
+  (source_commit `14ec60f2…`, per-file SHA-256s); verified matching at
+  HEAD `c6ec803`; any drift refuses prepare/preflight.
+- **Static checks of record:** `ruff check` + `ruff format --check` +
+  `py_compile` + scoped `uvx ty check` on the two touched paths — all
+  clean; `git diff --check` clean.
+- **Blocked:** the run command itself (fresh explicit grant; all prior
+  grants void). No launch, no AdminPort, no staging executed this
+  round; no `artifacts/` byte touched.

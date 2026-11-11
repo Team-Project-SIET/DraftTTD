@@ -546,4 +546,122 @@ decision and (b) a fresh explicit operator grant with the command of
 record byte-unchanged. The GUI-bearing native probe remains a separate
 later grant. Evidence index E154.
 
-Correction (2026-11-08, per research/02-attempt3-root-cause-doc-correction.md): the attempt-3 terminal `TimeoutError: ` was the 20-second per-exchange read timeout after the GameScript `planner_used` dedup silently dropped cycle-2's byte-identical `random-generation` request id (sha256 `519e626b…afd1`); the outer `total_seconds=2400` attempt budget never expired (~537 s consumed). Original prose preserved above; no status change.
+## Correction (2026-11-09, E155) — the Attempt-3 gateway sentences in the section above are superseded
+
+The section above attributed attempt 3's terminal `error=TimeoutError: `
+to the outer `asyncio.timeout` on a `total_seconds=1800` loop budget and
+closed with a "budget-seal amendment" gate. Per the proposal of record
+(`.scratch/ramrom-product/research/02-attempt3-root-cause-doc-correction.md`)
+and evidence row E155, that interpretation is corrected while the
+original wording above is preserved verbatim as history: the attempt
+aborted ~20.05 s into cycle 2's FIRST planner exchange (sealed mtimes
+`10:32:01.349311` → `10:32:21.399356`) after the GameScript
+`planner_used` dedup silently dropped cycle-2's byte-identical
+`random-generation` request id (request disc 124 bytes, sha256
+`519e626b5efed716beb2029d232a05766f42bbec611e516b28d9ff8def2bafd1`;
+cycle-1 response exists, cycle-2 response does not; sealed staged guard
+`planner_requests>=33345`), so the Python per-exchange read timeout
+(`EXCHANGE_SECONDS=20`) expired, the sealed outer budget
+`total_seconds=2400` was never reached (~537 s elapsed), cycle 2 never
+reached capture or P08 (`capture_requests_attempted=0`,
+`pair_checks=146` is a frozen diagnostic counter, not P08 execution),
+and E153's stderr-window fix held live (`phase=COMPLETED`,
+`failure=None`). Attempt 3 remains FAILED and SEALED, FD-C-2 remains
+`INCOMPLETE_EVIDENCE`, Ticket-05/Phase C stay OPEN; no artifact, status
+or budget changed. Gate update: the code-side request-identity work of
+`7b3ac47` plus this round's `d6342cc` (two live-cycle reader fixes, the
+two-cycle receipt contract test and the real-wire 32-char contract
+test) removes the "budget-seal amendment" prerequisite — the remaining
+Attempt-4 prerequisite is the operator's explicit fresh grant (and the
+operator's own decision on cycle 2's observed zero-service world),
+with offline readiness gates passing at `d6342cc` (E155 row).
+
+## Attempt 4 execution record (2026-11-09, E156) — executed once under an explicit grant; FAILED typed at the month-pacing gate in cycle-1 capture
+
+The operator's one-attempt authorization was consumed by exactly one
+byte-identical execution (240.04 s elapsed against the sealed
+`total_seconds=2400`; no budget or parameter change; repo `7273a37`).
+Run dir of record, now sealed:
+`artifacts/demos/playable-demo-da185e2c41dd45278e4152dcd7521af8`.
+Root `result.json`: `status=FAILED`, error verbatim
+`PlanningFactError: supplemental capture outside final M2 month`,
+launches 1 / connections 1 / requests 0 / mutations 0 / preflight PASS.
+Cycle 1 staged (no cycle-2 directory — cycle 2 not reached):
+qualification session COMPLETED with 113 unique monotone clock reads;
+16 compatible relationships disclosed (accepted 6); capture completed
+all 4,032 planner exchange pairs (8,064 discs, zero orphans, no
+ExchangeReadTimeout, no outer timeout, no dedup drop); sessions 0/1
+persisted (`network-facts-0.json` [712286,712286],
+`network-facts-1.json` [712287,712306]); session 2's 1,794 exchanges
+crossed the month-3 observation window [712282,712313) into month 4
+(exchange n2-501: before=after=712313; final n2-1793: 712330), so
+`SupplementalPlanningFacts.require_world`
+(`supplemental_planning_facts.py:253-262`) refused before
+`network-facts-2.json` could be written. That exact refusal string is
+pre-recognized as the typed month-pacing gate row by
+`phase_c_feasibility.py:529-538` (documented no-feasibility
+implication): this is a NEW native observation of a PRE-RECOGNIZED
+class — not the attempt-3 zero-service or dedup/budget classes, and
+not caused by the E155 reader fixes. `verify_loop_receipt` refused
+typed verbatim (`ValueError: loop attempt did not reach a verified
+terminal status`); root manifest 18 entries and cycle-1 manifest
+8,092 entries all verify rc=0; cleanup certified by the sealed bytes
+(graceful quit, process reaped, endpoints closed, credentials removed,
+frame accounting failed=false); `failure.sav`/`before.sav` retained.
+
+Ticket-05 and Phase C remain OPEN. Outcomes: Attempt 4 stays FAILED
+and SEALED; FD-C-2 stays `INCOMPLETE_EVIDENCE` (no fresh successful
+native evidence); the one authorization = the one attempt (consumed) —
+no retry, no relaunch, no GUI probe, no push. Missing evidence for any
+future acceptance: (a) capture sessions paced inside the observation's
+month window on BOTH cycles (this attempt proved the pacing fence
+refuses overshoot exactly as coded; a pacing/fence remedy would be a
+reviewed code change with its own round), then (b) a fresh explicit
+operator grant for a new attempt, then (c) both cycles' verified
+receipts via `verify_loop_receipt`. Evidence index E156.
+
+## Attempt-7 gate prepared — awaiting fresh explicit operator grant (2026-11-11, post-E160)
+
+Final offline readiness audit of the FD-C-2 remediation (`71f6e7d` fix
++ sealed pins, `9194184` docs) verdict
+**READY_FOR_OPERATOR_AUTHORIZATION** — no blockers in the audited state
+(audit of record:
+`.scratch/ramrom-product/research/06-attempt7-fd-c2-readiness-audit.md`,
+E160; 154-targeted-set / routing / scoped statics / sealed replay
+integrity / e2e failure attribution / git + runtime prereqs all
+verified fresh). State before the gate: branch `miles/fright-delivery`
+clean at `9194184`, binary
+`276d5b698a6b706154f3af588f6f885b3aebe518f4ecc8f869abf71383b1904c` and
+OpenGFX
+`43a0c1dabf39cb865394f3a6cc36d4da5c10ecfaaf55652043104806810903be`
+re-hashed against the pins, offline preflight `check` passed with no
+game launched, `pgrep -x openttd` empty. Consumed and void grants:
+E141, E142, E145, attempts 1–6.
+
+Approved execution contract for the authorized ONE attempt (nothing
+launched; the audit file and this gate authorize nothing by
+themselves):
+
+- Command of record, byte-unchanged since attempt-1:
+  `OPENTTD_BINARY=/home/fed/Downloads/openttd-15.3-linux-generic-amd64/openttd
+  OPENTTD_OPENGFX_ARCHIVE=/home/fed/codes/softdev2/artifacts/runtime/verified-assets/opengfx-8.0-all.zip
+  .venv/bin/python -m app.openttd_demo run --headless --random-world
+  --seed 2026 --towns 3 --industries 3 --stop-on-delivery --cycles 2`.
+- Code state under test: `71f6e7d` (reviewed pair-loop bound skip +
+  witness pruning; `9194184` docs), tree clean, sealed pins green.
+- Scope: exactly one launch, one fresh connection per cycle (2 total),
+  funding on the single cycle-1 connection only, loop-scaled sealed
+  budgets, no retries, no seed change, no additional launch, no scope
+  expansion. Stop immediately on any unexpected failure.
+- Success evaluator of record (offline, after the run): verify of
+  record
+  `app.simulation.openttd.proof.freight_delivery verify <run-dir>` →
+  rc 0 with both cycles in `verified_loop_cycles` independently
+  verified, every retained manifest digest-equal, cycle-2 polls from
+  cycle-2's own stderr window. FD-C-2 reassessed ONLY from fresh
+  digest-pinned bytes; truncated searches and typed failures stay
+  `INCOMPLETE_EVIDENCE`.
+- Stop conditions: any unexpected typed failure; any manifest
+  mismatch; any requirement to relaunch; cleanup not fully certified;
+  any scope creep. On completion, independently verify both cycles
+  before any closure claim.

@@ -4,7 +4,6 @@ exclusion, pause pacing and CLI gating qualify without any native process."""
 import ast
 import asyncio
 import hashlib
-import io
 import json
 import re
 import shutil
@@ -15,6 +14,13 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 import pytest
+from test_console_echo_handshake import (
+    PAUSE_ECHO,
+    Backend,
+    EchoingGame,
+    prepared_for,
+    tail,
+)
 from test_qualification_coordinator import QualificationWire, collect
 from test_random_distance import controlled_flat_coal_data, controlled_input
 from test_supplemental_planning_contracts import correspondence, fact_dict, facts
@@ -167,34 +173,39 @@ def test_all_excluded_relationships_raise_typed_zero_service(qualified_vanilla):
     )
 
 
-def test_pause_pair_pauses_and_resumes_once():
-    backend = SimpleNamespace(process=SimpleNamespace(stdin=io.BytesIO()))
+def test_pause_pair_pauses_and_resumes_once(tmp_path):
+    prepared = prepared_for(tmp_path)
+    game = EchoingGame(prepared.spec.stdout_path)
+    backend = Backend(game)
     diagnostic = {}
 
     async def drive():
-        async with paused_world_clock(backend, diagnostic=diagnostic):
-            assert backend.process.stdin.getvalue() == b"pause\n"
+        async with paused_world_clock(backend, prepared, diagnostic=diagnostic):
+            assert game.stream.getvalue() == b"pause\n"
+            assert PAUSE_ECHO in tail(prepared)
 
     asyncio.run(drive())
-    assert backend.process.stdin.getvalue() == b"pause\nunpause\n"
+    assert game.stream.getvalue() == b"pause\nunpause\n"
     assert diagnostic == dict(pause_pairs=1)
 
 
-def test_failed_resume_is_recorded_never_silent(monkeypatch):
-    real = road_mutation.console
+def test_failed_resume_is_recorded_never_silent(monkeypatch, tmp_path):
+    real_ack = road_mutation.console_ack
 
-    def console(process, command):
+    def console_ack(backend, prepared, command, marker, **kwargs):
         if command == "unpause":
             raise RuntimeError("owned console missing")
-        return real(process, command)
+        return real_ack(backend, prepared, command, marker, **kwargs)
 
-    monkeypatch.setattr(road_mutation, "console", console)
-    backend = SimpleNamespace(process=SimpleNamespace(stdin=io.BytesIO()))
+    monkeypatch.setattr(road_mutation, "console_ack", console_ack)
+    prepared = prepared_for(tmp_path)
+    game = EchoingGame(prepared.spec.stdout_path)
+    backend = Backend(game)
     diagnostic = {}
 
     async def drive():
         with pytest.raises(RuntimeError, match="pausing capture"):
-            async with paused_world_clock(backend, diagnostic=diagnostic):
+            async with paused_world_clock(backend, prepared, diagnostic=diagnostic):
                 raise RuntimeError("pausing capture failed")
 
     asyncio.run(drive())
@@ -758,6 +769,52 @@ def test_cycle_request_ids_keep_legacy_cycle1_and_are_unique_at_cycles_2_and_8()
     assert request_id_protocol_valid(widest) and len(widest) <= 64
 
 
+def test_cycle_ids_satisfy_the_python_wire_contracts():
+    """The GameScript guard allows 1..64 chars, but the Python wire contracts
+    are the tighter bound of record: PlanningRead's field pattern (`1..32`,
+    alnum plus `-`) on the planner channel and DeliveryRequest.to_bytes
+    (`<=32`, ASCII alnum plus `-`) on the delivery channel. The cycled
+    identities must satisfy the models the exchange layer actually wires."""
+    from typing import Literal
+
+    from app.simulation.openttd.freight_delivery import DeliveryRequest
+    from app.simulation.openttd.freight_runtime_planning import PlanningRead, cycle_request_id
+
+    plan_digest = "a" * 64
+    op_for: dict[str, Literal["inspect", "build", "read", "observe", "finish"]] = {
+        "select-0": "inspect",
+        "select-1": "inspect",
+        "activate-0": "read",
+        "s0-build-9": "build",
+        "s0-read-9": "read",
+        "s0-observe-3": "observe",
+        "s0-finish": "finish",
+        "s0-park": "finish",
+        "s0-park-read": "read",
+    }
+    for schedule in (PLANNER_CHANNEL_SCHEDULE, DELIVERY_CHANNEL_SCHEDULE):
+        for base in schedule:
+            request_id = cycle_request_id(base, 1)
+            for cycle in (2, 8):
+                cycled = cycle_request_id(base, cycle)
+                if base in PLANNER_CHANNEL_SCHEDULE:
+                    PlanningRead(
+                        request_id=request_id, kind="settings", arg=0, src=0, dst=0, cargo=0
+                    )
+                    PlanningRead(request_id=cycled, kind="settings", arg=0, src=0, dst=0, cargo=0)
+                else:
+                    DeliveryRequest(
+                        op=op_for[base], request_id=request_id, plan=plan_digest
+                    ).to_bytes()
+                    DeliveryRequest(op=op_for[base], request_id=cycled, plan=plan_digest).to_bytes()
+            assert len(request_id) <= 32 and len(cycled) <= 32
+
+    # A 33-char id passes the GameScript guard but is rejected by the Python
+    # wire guard of record.
+    with pytest.raises(ValueError):
+        DeliveryRequest(op="read", request_id="a" * 33, plan=plan_digest).to_bytes()
+
+
 def test_loop_cycle_marker_is_the_shared_cycle_source_of_truth(tmp_path):
     from app.simulation.openttd.freight_runtime_planning import loop_cycle
 
@@ -1051,3 +1108,307 @@ def test_capture_keeps_exchange_timeout_distinct_from_capture_budget_deadline(tm
             )
         )
     assert exc_info.value.__cause__.__class__ is TimeoutError
+
+
+EVIDENCE_RUNTIME = "artifacts/demos/playable-demo-0751d73c44054941bd77f05300b6c1a5"
+
+
+@pytest.fixture()
+def attempt_like_log():
+    """Two claimed windows inside one shared stderr with a non-empty prelude
+    and inter-session content, mirroring Attempt 6's byte shape: marker lines
+    carry per-request identities and never repeat byte-exactly."""
+    prelude = b"dbg: opener prelude line\n" * 3
+
+    def session(width, tag):
+        return b"".join(
+            f"dbg: [script:4] session {tag} clock-{index:02d} native read marker\n".encode()
+            for index in range(width)
+        )
+
+    interlude = b"dbg: between two claimed windows\n"
+    cycle_1 = session(7, "one")
+    cycle_2 = session(5, "two")
+    log = prelude + cycle_1 + interlude + cycle_2
+    windows = [
+        (len(prelude), len(prelude) + len(cycle_1)),
+        (len(prelude) + len(cycle_1) + len(interlude), len(log)),
+    ]
+    return log, windows
+
+
+def _prefixes(log, window_start, session_end):
+    """Recorded digest entries for one session: cumulative window-relative
+    slices with per-request sizes growing to the session EOF — sliced from at
+    least two complete marker lines, the way a live request's raw window
+    always carries a whole marker quadruple (~0.6 kB)."""
+    entries = {}
+    first = min(97, session_end - window_start)
+    for size in range(first, session_end - window_start + 1):
+        entries[f"freight-plan-clock-{size}"] = dict(
+            bytes=size,
+            sha256=hashlib.sha256(log[window_start : window_start + size]).hexdigest(),
+        )
+    return entries
+
+
+def test_retained_stderr_start_prefers_the_self_recorded_window(attempt_like_log, tmp_path):
+    from app.simulation.openttd.freight_planning_replay import _retained_stderr_start
+
+    log, windows = attempt_like_log
+    start, session_end = windows[0]
+    (tmp_path / "qualification-log-window.json").write_text(json.dumps(dict(start=start)))
+    prefixes = _prefixes(log, start, session_end)
+    assert (
+        _retained_stderr_start(log, prefixes, tmp_path / "qualification-log-window.json") == start
+    )
+
+
+def test_retained_stderr_start_verifies_every_recorded_digest(tmp_path):
+    from app.simulation.openttd.freight_planning_replay import _retained_stderr_start
+
+    log = b"head\n" + b"body line\n" * 6
+    (tmp_path / "qualification-log-window.json").write_text(json.dumps(dict(start=5)))
+    prefixes = dict(clock_1=dict(bytes=6, sha256=hashlib.sha256(b"body ").hexdigest()))
+    with pytest.raises(ValueError, match="qualification log prefix digest mismatch"):
+        _retained_stderr_start(log, prefixes, tmp_path / "qualification-log-window.json")
+
+
+def test_retained_stderr_start_invalid_record_typed(tmp_path):
+    from app.simulation.openttd.freight_planning_replay import _retained_stderr_start
+
+    (tmp_path / "qualification-log-window.json").write_text(json.dumps(dict(start="x")))
+    with pytest.raises(ValueError, match="qualification log window record invalid"):
+        _retained_stderr_start(b"log\n", {}, tmp_path / "qualification-log-window.json")
+
+
+def test_retained_stderr_start_derives_the_legacy_attempt6_anchors(attempt_like_log):
+    from app.simulation.openttd.freight_planning_replay import _retained_stderr_start
+
+    log, windows = attempt_like_log
+    # No self-recorded window (Attempt 6 shape): line-boundary digest
+    # anchoring resolves each session's exact claimed cut, including the
+    # second session's interior origin.
+    absent = Path("does-not-exist-window.json")
+    for window_start, session_end in windows:
+        prefixes = _prefixes(log, window_start, session_end)
+        assert _retained_stderr_start(log, prefixes, absent) == window_start
+
+
+def test_retained_stderr_start_rejects_ambiguous_anchors(attempt_like_log):
+    from app.simulation.openttd.freight_planning_replay import _retained_stderr_start
+
+    log, windows = attempt_like_log
+    window_start, session_end = windows[0]
+    session = log[window_start:session_end]
+    duplicated = session + session
+    prefixes = _prefixes(duplicated, 0, len(session))
+    with pytest.raises(ValueError, match="qualification log prefix window start ambiguous"):
+        _retained_stderr_start(duplicated, prefixes, Path("absent.json"))
+
+
+def test_retained_stderr_start_keeps_whole_file_recordings_compatible():
+    """Pre-window recordings (E153 era, byte-exact): digests were cut from
+    byte zero of the whole staged file — the derivation must resolve 0 and
+    keep the exact legacy semantics."""
+    from app.simulation.openttd.freight_planning_replay import _retained_stderr_start
+
+    log = b"root before-session lines\n" * 4 + b"session\n" * 3
+    prefixes = dict(clock_1=dict(bytes=len(log), sha256=hashlib.sha256(log).hexdigest()))
+    assert _retained_stderr_start(log, prefixes, Path("absent.json")) == 0
+
+
+ATTEMPT2_RUNTIME = "artifacts/demos/playable-demo-e6852692d0ef40199db0c71b101b2dda"
+
+
+def _replay_candidate_rejections(run_dir, cycle_name):
+    """Replay one sealed zero-service cycle's planning admission read-only and
+    return (facts, reproduced rejections, recorded rejections, diagnostic)."""
+    from app.simulation.openttd.freight_native_network import _replay_network_world
+
+    cycle = (Path(run_dir) / cycle_name).resolve()
+    metadata, _, world, facts, links, cleanup, source, policy = _replay_network_world(
+        cycle, zero_service=True
+    )
+    rejections = []
+    with pytest.raises(
+        ValueError, match=r"^NO_FEASIBLE_SERVICES: no supported full-load road engine and supply$"
+    ):
+        network_from_facts(
+            world,
+            facts,
+            source,
+            policy,
+            max_vehicles=metadata.get("network_service_limit", 2),
+            service_batches=bool(metadata.get("random_world")),
+            planning_rejections=rejections,
+        )
+    diagnostic = json.loads((cycle / "planning-diagnostic.json").read_bytes())
+    return cycle, facts, rejections, diagnostic
+
+
+def test_sealed_attempt2_candidate_rejections_replay():
+    """E159: the funnel's deepest recorded depth (attempt-2 cycle-1, all six
+    bounded candidates captured) replays its per-candidate refusal chain
+    byte-identically. The zero-candidate terminal of record was an honest
+    bounded refusal chain — engine admission passed for every fact, and every
+    refusal is a complete-search corridor classification, not a filtering
+    artifact."""
+    root = Path(ATTEMPT2_RUNTIME)
+    if not root.is_dir():
+        pytest.skip("sealed attempt-2 run dir missing (clone without retained evidence)")
+    cycle, facts, rejections, diagnostic = _replay_candidate_rejections(root, "loop-cycle-1")
+    assert len(facts) == diagnostic["captured_relationships"] == 6
+    assert diagnostic["search_truncated"] is True
+    assert diagnostic["candidate_count"] == 0
+    reasons = [r["reason"] for r in diagnostic.get("capture_rejections") or []]
+    assert reasons.count("CAPTURE_TILE_BUDGET") == 10
+    assert reasons.count("CANDIDATE_SEARCH_LIMIT") == 1
+    assert rejections == diagnostic["candidate_rejections"]
+    assert [r["reason"] for r in rejections] == [
+        "NATIVE_CORRIDOR_BOUND: requires 2..47 road tiles",
+        (
+            "NO_BOUNDED_CORRIDOR: bounded corridor search exhausted; 39 eligible pickup "
+            "and 18 eligible delivery stops are disconnected across all supported "
+            "corridor tiles; no feasibility outside this slice implied"
+        ),
+        "NO_BOUNDED_CORRIDOR: bounded corridor search exhausted; 17 eligible pickup "
+        "and 24 eligible delivery stops are disconnected across all supported corridor "
+        "tiles; no feasibility outside this slice implied",
+        "NO_BOUNDED_CORRIDOR: bounded corridor search exhausted; 17 eligible pickup "
+        "and 24 eligible delivery stops are disconnected across all supported corridor "
+        "tiles; no feasibility outside this slice implied",
+        "NO_BOUNDED_CORRIDOR: bounded corridor search exhausted; 38 eligible pickup "
+        "and 30 eligible delivery stops are disconnected across all supported corridor "
+        "tiles; no feasibility outside this slice implied",
+        "NATIVE_CORRIDOR_BOUND: requires 2..47 road tiles",
+    ]
+
+
+def test_sealed_attempt2_witness_refusals_are_complete():
+    """E159: for every captured candidate of attempt-2 cycle-1, the complete
+    supported-corridor reachability (all eligible vacant stops, not just the
+    incumbent first-four) yields NO depot-bearing corridor inside the native
+    2..47 admission bound — the refusals of record were never a first-four
+    artifact and no in-bounds corridor existed to miss."""
+    from app.planning.p08_adapter import MAX_PATH_EXPANSIONS, adapt_planning_facts
+    from app.planning.p08_road import (
+        CORRIDOR_INTERIOR,
+        Benchmark,
+        corridor_reachability,
+        find_depot,
+        select_benchmark,
+        station_tiles,
+        vacant,
+    )
+    from app.simulation.openttd.freight_native_network import _replay_network_world
+    from app.simulation.openttd.planning_fact_input import ValidatedPlanningFactInput
+
+    root = Path(ATTEMPT2_RUNTIME)
+    if not root.is_dir():
+        pytest.skip("sealed attempt-2 run dir missing (clone without retained evidence)")
+    cycle = (root / "loop-cycle-1").resolve()
+    metadata, _, world, facts, links, cleanup, source, policy = _replay_network_world(
+        cycle, zero_service=True
+    )
+    before = min(f.capture_economy_date_before for f in facts)
+    after = max(f.capture_economy_date_after for f in facts)
+    for f0 in facts:
+        scopes = {c.role: c for c in f0.coverage_scopes}
+        pickup = scopes["pickup"]
+        supply = next(
+            r.last_month_produced
+            for r in world.production.records
+            if r.industry_id == pickup.industry_id and r.cargo_id == pickup.cargo_id
+        )
+        capacities = sorted(
+            {
+                e.capacity_cargo_units
+                for e in f0.engines
+                if e.default_cargo_id == pickup.cargo_id and 0 < e.capacity_cargo_units <= supply
+            }
+        )
+        assert capacities  # engine admission of record never refused a fact
+        package = adapt_planning_facts(
+            ValidatedPlanningFactInput(
+                world,
+                f0.model_copy(
+                    update={
+                        "capture_economy_date_before": before,
+                        "capture_economy_date_after": after,
+                    }
+                ),
+                source,
+            ),
+            policy.model_copy(update={"delivery_batch_limit": capacities[0]}),
+        )
+        benchmark = select_benchmark(package)
+        if not isinstance(benchmark, Benchmark):
+            raise AssertionError(benchmark)
+        tiles = {t.tile_id: t for t in package.facts.tiles if vacant(t)}
+        eligible_pickups = station_tiles(package, benchmark, "pickup", limit=None)
+        eligible_deliveries = station_tiles(package, benchmark, "delivery", limit=None)
+        witnesses, _, exhausted = corridor_reachability(
+            eligible_pickups,
+            eligible_deliveries,
+            tiles,
+            package.manifest.width_tiles,
+            budget=MAX_PATH_EXPANSIONS,
+        )
+        assert not exhausted
+        masked = [
+            path
+            for path in witnesses.values()
+            if len(path) >= 3
+            and len(path) - 2 in CORRIDOR_INTERIOR
+            and find_depot(path, tiles, package.manifest.width_tiles) is not None
+        ]
+        assert not masked
+
+
+def test_sealed_attempt6_candidate_rejections_replay():
+    """E159: both attempt-6 cycles replay their single captured candidate's
+    refusal of record byte-identically (cycle-1 corridor beyond the native
+    bound; cycle-2 disconnected across the captured slice)."""
+    root = Path(EVIDENCE_RUNTIME)
+    if not root.is_dir():
+        pytest.skip("sealed Attempt 6 run dir missing (clone without retained evidence)")
+    expected = {
+        "loop-cycle-1": "NATIVE_CORRIDOR_BOUND: requires 2..47 road tiles",
+        "loop-cycle-2": (
+            "NO_BOUNDED_CORRIDOR: bounded corridor search exhausted; 38 eligible pickup "
+            "and 20 eligible delivery stops are disconnected across all supported "
+            "corridor tiles; no feasibility outside this slice implied"
+        ),
+    }
+    for cycle_name, reason in expected.items():
+        cycle, facts, rejections, diagnostic = _replay_candidate_rejections(root, cycle_name)
+        assert len(facts) == diagnostic["captured_relationships"] == 1
+        assert diagnostic["search_truncated"] is True
+        assert diagnostic["candidate_count"] == 0
+        assert rejections == [dict(source=0, destination=1, cargo=1, reason=reason)]
+        assert rejections == diagnostic["candidate_rejections"]
+
+
+def test_sealed_attempt6_zero_service_verify_of_record():
+    """E158 acceptance: the independent verify instrument of record replays
+    the sealed Attempt 6 end to end, READ-ONLY — the typed terminal of record
+    is reproduced per cycle, and every sealed byte stays identical."""
+    root = Path(EVIDENCE_RUNTIME)
+    if not root.is_dir():
+        pytest.skip("sealed Attempt 6 run dir missing (clone without retained evidence)")
+    manifest_before = (root / "artifact-manifest.sha256").read_bytes()
+    result_before = (root / "result.json").read_bytes()
+    try:
+        receipt = verify_loop_receipt(root)
+    finally:
+        assert (root / "artifact-manifest.sha256").read_bytes() == manifest_before
+        assert (root / "result.json").read_bytes() == result_before
+    error = "NO_FEASIBLE_SERVICES: no supported full-load road engine and supply"
+    assert receipt == dict(
+        verified_loop_cycles={
+            1: dict(status="ZERO_SERVICE", error=error),
+            2: dict(status="ZERO_SERVICE", error=error),
+        },
+        loop_cycles_delivered=0,
+    )

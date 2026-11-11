@@ -55,6 +55,12 @@ from app.simulation.openttd.supplemental_planning_facts import (
 
 DIRECTIONS = (("north", 0, -1), ("east", 1, 0), ("south", 0, 1), ("west", -1, 0))
 
+# Native executor admission bound of record: the road corridor between two
+# station stops needs 2..47 interior road tiles (freight_native_network's
+# independent admission re-checks it verbatim).
+CORRIDOR_INTERIOR_MIN, CORRIDOR_INTERIOR_MAX = 2, 47
+CORRIDOR_INTERIOR = range(CORRIDOR_INTERIOR_MIN, CORRIDOR_INTERIOR_MAX + 1)
+
 
 @dataclass(frozen=True)
 class Benchmark:
@@ -309,7 +315,7 @@ def witness_order(witnesses: dict[int, tuple[int, ...]]) -> list[tuple[int, ...]
     routes = [witnesses[z] for z in sorted(witnesses) if len(witnesses[z]) >= 3]
     return sorted(
         routes,
-        key=lambda p: (len(p) - 2 not in range(2, 48), len(p), p[0], p[-1]),
+        key=lambda p: (len(p) - 2 not in CORRIDOR_INTERIOR, len(p), p[0], p[-1]),
     )
 
 
@@ -399,6 +405,14 @@ def generate_road_scenario(
         pairs += 1
         if a == z:
             continue
+        witness = witnesses.get(z)
+        if witness is not None and len(witness) - 2 > CORRIDOR_INTERIOR_MAX:
+            # The minimum route over every eligible pickup is already beyond
+            # the native bound (E159), so no pair left in this loop can yield
+            # a supported corridor for this delivery: skip without charging
+            # the aggregate expansion budget for an identical full component
+            # sweep the reachability pass already ran once.
+            continue
         path, work = shortest_path(a, z, tiles, value.manifest.width_tiles)
         expansions += work
         if expansions > MAX_PATH_EXPANSIONS:
@@ -408,6 +422,12 @@ def generate_road_scenario(
                 value,
             )
         if len(path) < 3:
+            continue
+        if not (CORRIDOR_INTERIOR_MIN <= len(path) - 2 <= CORRIDOR_INTERIOR_MAX):
+            # Native corridor admission bound: keep examining pairs instead of
+            # letting an over-long incumbent route mask a supported corridor;
+            # the witness fallback still assembles an over-bound route
+            # explicitly when no supported corridor exists anywhere.
             continue
         depot = find_depot(path, tiles, value.manifest.width_tiles)
         if depot is None:

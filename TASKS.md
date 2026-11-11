@@ -3733,4 +3733,349 @@ code change under the grant).
 
 Evidence index E154.
 
-Correction (2026-11-08, per research/02-attempt3-root-cause-doc-correction.md): the attempt-3 terminal `TimeoutError: ` was the 20-second per-exchange read timeout after the GameScript `planner_used` dedup silently dropped cycle-2's byte-identical `random-generation` request id (sha256 `519e626b…afd1`); the outer `total_seconds=2400` attempt budget never expired (~537 s consumed). Original prose preserved above; no status change.
+### 2026-11-09 — Post-attempt-3 doc correction applied append-only (E155); two live-cycle reader regressions fixed offline; receipt game-time cycle contract tested; Attempt-4 offline readiness gates pass at `d6342cc`
+
+Correction (2026-11-09, per
+`.scratch/ramrom-product/research/02-attempt3-root-cause-doc-correction.md`
+and evidence row E155): the attempt-3 terminal `TimeoutError: ` recorded
+in the 2026-11-08 entry above was **NOT the outer
+`asyncio.timeout(total_seconds=1800)` expiring mid-cycle-2 P08** — that
+sentence in this entry is superseded. The sealed evidence says: root
+`result.json` `status=FAILED`, `error="TimeoutError: "`, sealed
+`PRELAUNCH.json` `budgets.total_seconds=2400` (`loop_cycles=2`) — never
+reached, ~537 s elapsed — cycle 2 re-sent the byte-identical
+`random-generation` request (124-byte disc, sha256
+`519e626b5efed716beb2029d232a05766f42bbec611e516b28d9ff8def2bafd1`;
+cycle-1's response disc exists, cycle-2's does not), whose disc mtimes
+bound the abort window at `10:32:01.349311` → `10:32:21.399356` ≈
++20.05 s; the GameScript `planner_used` dedup silently dropped the
+duplicate (sealed staged guard `staged/network-parent.nut:34` =
+`planner_requests>=33345`), Python's 20-second per-exchange read
+timeout (`EXCHANGE_SECONDS=20`) expired, and cycle 2 reached planning
+but NOT capture or P08 (`capture_requests_attempted=0`; `pair_checks
+=146` is the frozen diagnostic counter, not P08 execution). E153's
+stderr-window fix held live natively (cycle-2 qualification
+`phase=COMPLETED`, `failure=None`, no duplicate trip); attempt 3 stays
+FAILED and SEALED; FD-C-2 stays `INCOMPLETE_EVIDENCE`; no status,
+
+no artifact, and no budget changed. Everything the entry above reports
+about the E153 fix's live validation, cycle-1's typed zero-service
+terminal and the retained manifests is unaffected.
+
+This round also closed the two reader regressions for record: the
+R5/R7-audited `receipt_game_time` and `execute_network` financial-tail
+readers still named legacy literal response discs at cycle 2 (both
+would end `FileNotFoundError` in a future attempt), and commit
+`d6342cc` fixes both via the producer's `cycle_request_id` maker, adds
+the two-cycle receipt contract test (`tests/test_game_time.py`, 14
+passed) and the real-wire contract test
+(`tests/test_freight_loops.py`, 35 passed);
+battery at `d6342cc` = 1,075 passed / 2 failed / 1 skipped with both
+failures proven pre-existing on clean `61b655d` (names in E155 row);
+ruff/format/py_compile/ty clean. Offline readiness gates for a future
+Attempt 4 all pass at `d6342cc` (pins, preflight `check`, no native
+process, clean tree) — E155 row of record; still no grant, no launch.
+
+### 2026-11-09 — Attempt 4 executed once under an explicit operator grant; FAILED typed at the month-pacing gate in cycle-1 capture; sealed and verified read-only (E156)
+
+The operator granted exactly one Attempt 4 (command of record
+byte-identical); it was executed once, spent 240.04 s against a sealed
+2400 s budget, and ended `exit=1` in run dir
+`artifacts/demos/playable-demo-da185e2c41dd45278e4152dcd7521af8` with
+`result.json` `status=FAILED`, error verbatim
+`PlanningFactError: supplemental capture outside final M2 month`
+(root error text; for the E154-attributed budget and dedup classes this
+is a DIFFERENT class). One launch, one connection, one funding; no
+cycle-2 stage. Cycle-1 staged: qualification COMPLETED (no failure, no
+reconnects, E153 window mechanism trivially exercised — 113 unique
+monotone clock reads), world observation written (qualified_month M2
+[712254,712282)), `random-generation` exchanged with the legacy
+unsuffixed disc byte-identical to attempt-3's (contract-consistent),
+16 compatible relationships disclosed (pair_checks=146 is the
+discovery counter, not P08), accepted 6; capture completed 4,032
+planner exchange pairs (8,064 discs, zero orphans, all responses
+present — no timeout class and no dedup drop) across sessions n0/n1/n2
+of the accepted set; sessions 0/1 validated and were persisted
+(`network-facts-0.json` [712286,712286], `network-facts-1.json`
+[712287,712306]); session 2's exchanges straddled the month-3 window
+[712282,712313) with dates crossing into month 4 at n2-501
+(before=after=712313) and a final sealed exchange n2-1793 at
+[712330,712330], so `SupplementalPlanningFacts.require_world`
+(`supplemental_planning_facts.py:253-262`) refused before
+`network-facts-2.json` could exist. That exact refusal string is
+pre-recognized by `phase_c_feasibility.py:529-538` as the typed
+month-pacing gate (no feasibility implication): pre-recognized class,
+first observed natively; NOT the attempt-3 classes, and nothing in it
+implicates the E155 reader fixes (the abort runs upstream of them).
+`verify_loop_receipt` refused typed verbatim (`ValueError: loop
+attempt did not reach a verified terminal status`); manifests root 18 /
+cycle-1 8,092 entries verify rc=0; cleanup certified; failure.sav
+retained. FD-C-2 unchanged `INCOMPLETE_EVIDENCE` (no fresh successful
+native evidence); Ticket-05/Phase C stay OPEN; the one authorization
+was consumed by the one attempt — no retry, no relaunch, no GUI probe,
+no push, sealed bytes untouched. Evidence index E156.
+
+12. **T-030 Phase B opener (2026-11-11, offline only, zero launches /
+    zero AdminPort / no `artifacts/` byte touched; code+tests commit
+    `c6ec803`, docs commit this one; no push).** Dependency map of
+    record closed: Phase A closed (E127); F06/F11 prerequisites DONE
+    (E2, both q3 manifests re-verified 0 mismatches); exercise
+    machinery offline verified at HEAD (dispatch wire, collectors,
+    byte-pinned staged bridge with the full handler vocabulary, the
+    q3-era VM validation record still matching `package_bytes()`
+    composition byte-for-byte); the MISSING runnable exercise stage
+    BUILT: `app/simulation/openttd/proof/canonical_fleet_exercise.py`
+    (identity `canonical-fleet-exercise-t030-1`, own contract,
+    prepare from the E2 created evidence under the q3 byte-pin,
+    fail-closed preflight, reload correspondence first then ONE
+    `dispatch_loaded_arm(arm="B")`, typed
+    `CANONICAL_FLEET_EXERCISE_VERIFIED`, frozen reload lane
+    byte-untouched and tripwire-stayed-green); 12 offline tests +
+    lane suites 126 passed / 0 failed; statics clean. Attempt package
+    prepared (`.scratch/phase-b-t030/issues/02-attempt-package.md`):
+    staging → preflight → ONE run under `--authorize-one-launch` →
+    independent verify. BLOCKED at the authorization gate: the native
+    attempt needs a fresh explicit operator grant (all prior grants
+    void); no feasibility/economics claim outside the receipts.
+    Evidence index E161.
+
+13. **T-031 matched A/B arms conductor (2026-11-11, offline only, zero
+    launches / zero AdminPort / no `artifacts/` byte touched; code+tests
+    commit `a9291c2`, docs commit this one; no push).** Stage core
+    generalized in `canonical_fleet_exercise.py`
+    (identity/contract/budgets/telemetry/authorization/conduct params;
+    T-030 substance unchanged); new `canonical_fleet_matched.py` with
+    identities `canonical-fleet-matched-a/b-t031-1`, matched contracts
+    (arm A adds nothing, arm B adds only its service-1 vehicle; five
+    native anniversaries; telemetry v2 vehicle_count 3/4,
+    max_tick_gap=100), same-byte bridge staging from the same E2
+    evidence, arm receipts with honest provenance (in-run construction
+    OBSERVED-zero; originals' construction UNKNOWN → E2), conduct =
+    reload correspondence → ONE arm dispatch → retained five-year
+    monitor → `arm-record.json`, typed
+    `CANONICAL_FLEET_MATCHED_VERIFIED`; `compare_arms`
+    descriptive-only. Latent retained-VM-helper pin blocker found and
+    fixed (record pins bind retained q3 frozen-source bytes;
+    `require_retained_vm_helpers`; frozen driver untouched). Tests 14+11;
+    lane suites green; statics clean. Arm packages prepared
+    (`.scratch/phase-b-t031/issues/02`, `03`) at the separate
+    fresh-authorization gate. Evidence index E162.
+
+14. **T-032 five-year continuous conductor (2026-11-11, offline only,
+    zero launches / zero AdminPort / no `artifacts/` byte touched;
+    code+tests commit `b63eb16`, docs commit this one; no push).** New
+    `canonical_fleet_continuous.py`: identity
+    `canonical-fleet-continuous-t032-1`, own finalization contract
+    (adds nothing; five native economy anniversaries; telemetry v2
+    vehicle_count 3), same-byte bridge staging from the same E2
+    evidence, conduct = reload correspondence → arm-A dispatch →
+    retained five-year monitor → `continuous-summary.json` +
+    `continuous-finalization.json` provenance labels (per-year
+    OPEX/ROI DERIVED only from observed accounting; originals'
+    construction UNKNOWN → E2), typed
+    `CANONICAL_FIVE_YEAR_CONTINUOUS_VERIFIED`. 7 offline tests;
+    exercise/matched/lane suites green; statics clean. Attempt package
+    prepared (`.scratch/phase-b-t032/issues/01`) at the separate
+    fresh-authorization gate. Evidence index E163.
+
+15. **T-033 consolidated OPEX/ROI record (2026-11-11, offline only,
+    zero launches / zero AdminPort / no retained `artifacts/` byte
+    touched; code+tests ONE commit, docs commit this one; no push).**
+    New `app/experiments/phase_b_consolidation.py`: fixed Phase B source
+    list + E2 funding context, provenance labels (financial_attribution
+    vocabulary), pending attempts UNKNOWN never zero, dispatch capex
+    OBSERVED from own receipts, OPEX stays UNKNOWN (quarterly aggregate
+    cannot be split), consolidated CAPEX OBSERVED only when all sources'
+    receipts exist, guards verbatim, CLI with retained-evidence output
+    guard. Generated record of record
+    `artifacts/experiments/phase-b-consolidation-2026-11-11/` (4
+    sources UNKNOWN-pending; E2 funding OBSERVED 400,000 GBP;
+    consolidated CAPEX UNKNOWN). 6 offline tests; statics clean.
+    Evidence index E164.
+
+16. **T-034 standing full 15.3 regression (2026-11-11, offline only at
+    `f0f0155`; docs commit this one; no push).** Full offline suite of
+    record `pytest -m 'not openttd'` (junitxml-counted): 6342 collected
+    / 6286 passed / 56 failed / 0 errors / 50 skipped; failure set
+    stable across two full runs. Legacy-red classified by ID — all 56
+    pre-existing (51 p08-e2e E159 scope; classification-execution +
+    terrain-preparation verified pre-existing at pre-round HEAD
+    `f0b5960` in a detached symlink-bound worktree; corridor-cargoflow2
+    + world-correspondence E155; structural-world E153); zero failures
+    in any round-touched file; round's own 38 tests all green inside
+    the run. Statics: round paths clean; repo-wide ruff 12 pre-existing
+    errors in three never-touched files (counted, not relabeled).
+    Manifest sweep: 197 manifests 0 mismatches; binary/OpenGFX/
+    protected-save pins hold; `pgrep -x openttd` empty. Evidence index
+    E165.
+
+17. **T-035 GUI native probe (2026-11-11, offline only; zero launches /
+    zero AdminPort / zero grants; code+tests ONE commit, docs commit
+    this one; no push).** Operator-directed: a real, visible, usable
+    OpenTTD 15.3 desktop window on the operator's own desktop, joining
+    the proven dedicated host live — new independent ticket, NOT a
+    roadmap §3 item (adding the row is an operator decision). CLI facts
+    of record (wiki CLI page retrieved 2026-11-11): `-D` is windowless
+    dedicated, NO CLI flag hosts a visible server, so the window is a
+    SECOND real client joining via `-n 127.0.0.1:<game-port>#255` with
+    the demo lane's proven argv byte-for-byte; host machinery unchanged.
+    New `app/simulation/openttd/proof/canonical_fleet_gui.py`: identity
+    `canonical-fleet-gui-probe-t035-1`, own CLAIM + fresh grant;
+    reload-only paused correspondence via the new `dispatch=False` seam
+    in `conduct_exercise` (T-030 default unchanged); `GuiClient` with
+    typed `-D`/`-f` refusal, fail-closed `require_desktop_session` at
+    prepare AND preflight (no virtual display, no headless fallback, no
+    background fork), server-side join verification
+    (`*** Canonical GUI Probe has joined the game` — client.log stays
+    empty in GUI mode; AdminPort allowlist NOT widened), 60 s join
+    deadline, 600 s observation ending typed
+    `OPERATOR_CLOSED_WINDOW`/`OBSERVATION_WINDOW_ELAPSED`, client
+    terminated before the standard cleanup seal, typed
+    `CANONICAL_FLEET_GUI_PROBE_VERIFIED`, honesty boundary
+    (machine-verified facts only; visual confirmation stays the
+    operator's optional note). 12 new offline tests; exercise 14 +
+    matched 11 + continuous 7 green; lane suites green incl. the q3
+    tripwire; statics clean. Independence verdict: satisfies NONE of
+    T-030/T-031/T-032's criteria and must not be smuggled into their
+    packages. Package `.scratch/phase-b-t035-gui-probe/issues/
+    01-gui-probe-attempt-package.md` at the fresh-authorization gate.
+    Evidence index E166.
+
+18. **T-035 gate round — preflight refused, fix + re-stage (2026-11-11,
+    offline only; zero launches / zero AdminPort / zero grants; code+
+    tests ONE commit `132e2ea`, docs commit this one; no push).** The
+    E166 package walked prepare → preflight at HEAD `a17a4cf`: prepare
+    staged OK, preflight REFUSED typed `ValueError: canonical save must
+    be an existing protected regular file`. Root cause: the generalized
+    exercise-core `prepare` (shared by T-030, T-031 arms, T-032, T-035)
+    never copied `canonical/canonical.sav` →
+    `workspace.root/source.sav` while `expected_argv` resolves
+    `-g <workspace>/source.sav` for every non-CREATE identity — every
+    exercise-core package would have refused identically at grant-time
+    preflight; none had staged yet. Fix (E130 stale-supersession): one-
+    line copy mirroring driver prepare `canonical_fleet.py:158`,
+    identity advanced `canonical-fleet-gui-probe-t035-1` →
+    `…t035-2`, refused t035-1 staging preserved untouched, and the test
+    gap closed with an unpatched real-staging preflight test over the
+    retained E2 evidence (prior staging tests had patched BOTH verify
+    functions). gui 13 + exercise 14 + matched 11 + continuous 7 = 45
+    green; lane suites rc=0 incl. the q3 tripwire; statics clean.
+    Re-stage at t035-2: prepare → preflight PASS → verify
+    `AUTHORIZATION_UNVERIFIED`; staged `source.sav` sha256 == protected
+    pin `51e45689…1297eb`. Spec + package updated to t035-2. The native
+    GUI attempt still needs the operator's fresh one-launch grant.
+    Evidence index E167.
+
+19. **T-035 attempt executed once under the operator's explicit
+    one-launch grant — typed FAILED (2026-11-11; docs commit this one;
+    no push; no code change).** The t035-2 attempt ran exactly once at
+    the sealed staging: the bridge started, `FREIGHT_DELIVERY_READY`
+    logged, the source save loaded clean, the game listener bound —
+    no admin listener on `49895`; the conductor's `connect_secure`
+    refused → typed `AuthDisconnected: Admin connection failed`
+    (`result.json` `status FAILED, launches 1, connections 0`). The
+    failure preceded all correspondence and the client stage: **no
+    window ever appeared** (GUI outcome not reached — not a GUI
+    defect). Failure path as designed: `failure.sav`, owned cleanup
+    (pid 22971 reaped rc 0, all-true), manifest 0 mismatches,
+    `verify` → `ATTEMPT_NOT_VERIFIED: FAILED`, dir sealed read-only.
+    Root cause (read-only): `stage_workspace` never calls
+    `RuntimeWorkspace.write_config(AdminSettings(...))` — the admin
+    auth trio (`private.cfg` `[admin_authorized_keys]` +
+    `secrets.cfg` `admin_password`) every working stage writes is
+    missing, and with `allow_insecure_admin_login = false` OpenTTD
+    15.3 never starts the admin network. Second latent exercise-core
+    blocker of the E167 class, unreachable offline. The t035-2
+    identity is consumed terminal history; the grant is consumed and
+    void. The fix (mirror `write_config` into `stage_workspace` +
+    auth-trio regression test) and any re-attempt
+    (`canonical-fleet-gui-probe-t035-3`) await the operator's separate
+    authorizations. Evidence index E168.
+
+20. **T-035 fix round — admin auth trio staged (2026-11-11; code+tests
+    ONE commit `0a95c75`, docs commit this one; no push).** Under the
+    operator's in-session "Fix + re-stage" answer: `stage_workspace`
+    now mirrors the driver's `write_config` — after the `.admin-secret`
+    write it stages `private.cfg` (`[admin_authorized_keys]
+    <public_hex>`) + `secrets.cfg` (`admin_password`), the exact shape
+    every working stage carries; with `allow_insecure_admin_login =
+    false` the server starts its admin network only with this material,
+    closing the E168 refusal class at the staging seam. Identity
+    advanced `canonical-fleet-gui-probe-t035-2` → `…t035-3`
+    (stale-supersession); the sealed t035-2 attempt and its void grant
+    untouched. New `test_stage_writes_admin_auth_trio` (private.cfg
+    carries the PRELAUNCH public key, secrets.cfg the password line,
+    `.admin-secret` 0600 matching `key.public_hex`); gui 14 + exercise
+    14 + matched 11 + continuous 7 = 46 green; reload-only +
+    reload-context rc=0; statics clean. Re-stage at t035-3: prepare →
+    preflight PASS → verify `AUTHORIZATION_UNVERIFIED`; staged
+    `source.sav` == protected pin `51e45689…1297eb`; auth trio present.
+    The t035-3 re-RUN awaits a FRESH explicit one-launch grant (zero
+    launches / zero AdminPort / zero grants this round). Evidence index
+    E169.
+
+21. **T-035 attempt executed once under a fresh explicit operator
+    grant — VERIFIED (2026-11-11; docs commit this one; no push; no
+    code change).** `result.json`
+    `{status: CANONICAL_FLEET_GUI_PROBE_VERIFIED, launches: 1,
+    connections: 1, gui_client: OBSERVATION_WINDOW_ELAPSED}` rc 0. A
+    real GUI client joined the live dedicated host as a spectator:
+    argv byte-for-byte demo-lane (`-n 127.0.0.1:49457#255`), display
+    env the real KDE Wayland desktop (`DISPLAY=:0`/
+    `WAYLAND_DISPLAY=wayland-1`/`XDG_SESSION_TYPE=wayland`), join
+    verified SERVER-side (marker line 8 `*** Canonical GUI Probe has
+    joined the game (Client #2)`), alive the full 600 s observation
+    window, ended by the probe's owned terminate (`code: -9`); the
+    server then saw `…has left the game (connection lost)` and saved
+    `reload-readback.sav`; the admin listener bound and
+    `Canonical-exercise` authenticated (E168 class closed natively).
+    Honest boundary: the agent records machine-verified facts only
+    and does not claim to have seen the window. Cleanup certified
+    all-true (pid 28460), manifest 0 mismatches, post-run `verify` →
+    `CANONICAL_FLEET_GUI_PROBE_VERIFIED` rc 0, `pgrep -x openttd`
+    empty; dir sealed read-only. Both T-035 grants (t035-2, t035-3)
+    consumed and void; genealogy t035-1 → t035-2 → t035-3; T-035
+    typed terminal VERIFIED. Independence verdict stands (satisfies
+    none of the Phase B done-ness criteria); roadmap §3 row is an
+    operator decision. Phase B native closure outstanding: T-030 ×1,
+    T-031 arm A ×1 + arm B ×1, T-032 ×1, each its own fresh grant,
+    each inheriting both exercise-core fixes. Evidence index E170.
+
+22. **T-036 fresh-world GUI probe family built offline (E171; 2026-11-11,
+    code commit `68dbd36` + docs ONE commit this; no launch, no grant
+    consumed).** Operator ask: a genuinely fresh OpenTTD 15.3 world
+    visible through the real GUI, never the Sunningbury demo lane;
+    sealed T-035 evidence untouched. Family of record
+    (`app/simulation/openttd/proof/fresh_world_gui.py`): TWO separately
+    authorized attempts, strictly sequential —
+    `fresh-world-create-t036-1` generates the world inside its one
+    launch (`-g heightmap.png -G 1181` + proven `[game_creation]`
+    config; native marker `Map generated, starting game`), console-saves
+    digest-pinned `fresh-world.sav` (pinned in `world.json`), NO admin
+    connection/bridge/canonical input; then `fresh-world-gui-probe-t036-1`
+    hosts the byte-pinned bridge from that save (`-g source.sav`, no
+    `-G`), demands welcome `15.3`/seed `1181`/64×64 (demo seed 42
+    refuses typed at `require_fresh_welcome`), and joins with the real
+    desktop GUI spectator `Fresh World GUI Probe`, server-side verified
+    via the unchanged T-035 join machinery. Constants of record are
+    module constants (NOT CLI flags): seed 1181, 64×64, temperate,
+    1950, flat heightmap, `pause_on_newgame = false`; GUI stage reuses
+    `exercise.stage_workspace` (E169 trio + E167 source.sav line, fresh
+    save as source) + `RoadFreightProof` marker; `GuiClient`
+    parameterized with byte-identical T-035 defaults. Anti-fallback
+    tripwires: no canonical keys accepted in either stage, GUI source
+    must pass `verify_fresh_creation` (typed refusal otherwise), staged
+    save digest re-verified, welcome seam refuses seed 42. Offline
+    regression `tests/test_fresh_world_gui.py` 15 tests green with the
+    four T-035 suites (62 total); statics green (ruff/format/compile/
+    scoped ty/diff-check). Preflight preparation:
+    `artifacts/runtime/fresh-world-create-t036-1/` staged → preflight
+    PASS → `AUTHORIZATION_UNVERIFIED` rc 1. **Creation RUN awaits a
+    FRESH explicit one-launch grant (grant A); GUI run its OWN grant
+    (grant B) after stage 1 verifies.** Grant texts + commands:
+    `.scratch/phase-b-t036-fresh-world-gui/issues/01-fresh-world-gui-attempt-package.md`,
+    `docs/specs/t036-fresh-world-gui-probe.md`. Not claimed: no native
+    run, fresh world not yet seen in GUI; satisfies none of the Phase B
+    done-ness criteria; Phase B native closure outstanding (T-030 ×1,
+    T-031 arm A ×1 + arm B ×1, T-032 ×1, each its own fresh grant,
+    each inheriting both exercise-core fixes). Evidence index E171.
