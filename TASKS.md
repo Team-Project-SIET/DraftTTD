@@ -4109,3 +4109,31 @@ no push, sealed bytes untouched. Evidence index E156.
     awaits a FRESH explicit one-launch grant (grant A2).** No VERIFIED
     creation yet; GUI stage blocked until one verifies; T-035 stays
     terminal VERIFIED at E170. Evidence index E172.
+
+24. **T-036 creation attempt executed once under the operator's explicit
+    grant A2 (E173; 2026-11-11; FRESH_WORLD_CREATE_VERIFIED rc 0,
+    terminal; grant A2 consumed and void).** Preconditions fresh (HEAD
+    `ff00d60`, tree clean, pgrep empty); preflight PASS re-validated
+    inside run(). The one launch: dedicated 15.3 server pid 43421;
+    stderr `Map generated, starting game` (a NEW seed-1181 64×64
+    temperate 1950 world generated natively); console save
+    `fresh-world.sav` (10536 bytes) digest-pinned in `world.json`
+    (`8e7d0109012863ec931a9d20f4c492e1297a84d3b953ba90e0e8c767bc2a645e`,
+    match true); connections 0 by design. Cleanup certified all-true
+    (pid 43421 quit → reaped rc 0, listener closed, reservation
+    released, workspace disposed, credential removed, sockets closed);
+    manifest 0 mismatches; post-run `verify` →
+    `FRESH_WORLD_CREATE_VERIFIED` rc 0; `pgrep -x openttd` empty; dir
+    sealed read-only. Second fix of record (`de42d10`, offline): the
+    first verify sweep crashed reopening the disposed workspace —
+    verify CLI is receipts-only now, pinned by
+    `test_verify_cli_never_reopens_workspace`; sealed bytes untouched.
+    Genealogy: t036-1 (grant A, typed FAILED at the seal seam after
+    native generation + save, bytes preserved, E172) → t036-2 (grant
+    A2, VERIFIED, terminal). **GUI stage next under its OWN fresh grant
+    B** (staging → preflight → run `--authorize-one-launch` → verify
+    `FRESH_WORLD_GUI_PROBE_VERIFIED` against
+    `--fresh-world artifacts/runtime/fresh-world-create-t036-2`). Not
+    claimed: fresh world not yet SEEN in the GUI; no Phase B criterion
+    satisfied; Phase B native closure outstanding (T-030 ×1, T-031 arm
+    A ×1 + arm B ×1, T-032 ×1). Evidence index E173.

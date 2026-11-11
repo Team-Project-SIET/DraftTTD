@@ -64,6 +64,41 @@ below is the attempt of record: prepare → **preflight PASS** → verify
 awaits a FRESH explicit one-launch operator grant (grant A2).** Nothing
 here re-launches.
 
+## Attempt record (2026-11-11, E173): t036-2 executed once under the operator's explicit grant A2 — FRESH_WORLD_CREATE_VERIFIED, terminal
+
+The t036-2 attempt ran exactly once under the operator's fresh explicit
+in-session grant. `result.json`
+`{status: FRESH_WORLD_CREATE_VERIFIED, launches: 1, connections: 0}`
+rc 0. Native proof of record: stderr `Map generated, starting game`;
+stdout `Map successfully saved to '…/fresh-world-create-t036-2/
+fresh-world.sav'`; `world.json` pins seed 1181 / 64×64 / temperate /
+1950 / heightmap digest and `fresh_save_sha256`
+`8e7d0109012863ec931a9d20f4c492e1297a84d3b953ba90e0e8c767bc2a645e`
+matching the save (10536 bytes). No admin connection ever made.
+Cleanup certified all-true (pid 43421 `quit` → reaped rc 0, listener
+closed, reservation released, workspace disposed, credential removed,
+sockets closed); manifest 0 mismatches; post-run `verify` →
+`FRESH_WORLD_CREATE_VERIFIED` rc 0 (after the `de42d10` CLI fix — the
+first sweep crashed reopening the disposed workspace, a defect fixed
+offline without touching the sealed bytes); `pgrep -x openttd` empty.
+Dir sealed read-only.
+
+**Grant A2 is consumed and void. The GUI stage is next, under its OWN
+fresh grant (grant B)** — staging, preflight, run, and join all
+operator-gated:
+
+```
+.venv/bin/python -m app.simulation.openttd.proof.fresh_world_gui gui \
+  artifacts/runtime/fresh-world-gui-probe-t036-1 \
+  --fresh-world artifacts/runtime/fresh-world-create-t036-2
+.venv/bin/python -m app.simulation.openttd.proof.fresh_world_gui preflight \
+  artifacts/runtime/fresh-world-gui-probe-t036-1
+.venv/bin/python -m app.simulation.openttd.proof.fresh_world_gui run \
+  artifacts/runtime/fresh-world-gui-probe-t036-1 --authorize-one-launch
+.venv/bin/python -m app.simulation.openttd.proof.fresh_world_gui verify \
+  artifacts/runtime/fresh-world-gui-probe-t036-1   # expect FRESH_WORLD_GUI_PROBE_VERIFIED
+```
+
 ## Attempt record (2026-11-11, E171): creation stage staged at the fresh-grant gate
 
 `artifacts/runtime/fresh-world-create-t036-1/` — prepare (offline, no

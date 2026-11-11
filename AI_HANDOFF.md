@@ -1691,3 +1691,37 @@ no headless-only execution.
    is consumed and void.** No VERIFIED creation exists yet; the GUI
    stage stays blocked until one verifies. T-035 stays terminal
    VERIFIED at E170. Evidence index E172.
+
+## 2026-11-11 T-036 creation attempt executed once under the operator's explicit grant A2 (E173): FRESH_WORLD_CREATE_VERIFIED — the seed-1181 64×64 world generated natively and console-saved digest-pinned; owned cleanup all-true; manifest 0 mismatches; grant A2 consumed and void; the GUI stage is next under its own fresh grant B
+
+1. **The run of record:** `artifacts/runtime/fresh-world-create-t036-2/`
+   sealed read-only; `result.json`
+   `{status: FRESH_WORLD_CREATE_VERIFIED, launches: 1, connections: 0}`
+   rc 0; stderr `Map generated, starting game`; `world.json` pins the
+   generation parameters (seed 1181, map 6/6, temperate, 1950,
+   heightmap digest) and `fresh_save_sha256`
+   `8e7d0109012863ec931a9d20f4c492e1297a84d3b953ba90e0e8c767bc2a645e`
+   matching `sha256(fresh-world.sav)` (10536 bytes). No admin
+   connection ever made (connections 0 by design).
+2. **Cleanup certified all-true:** server pid 43421 `quit` → reaped
+   rc 0; endpoint verification (listener closed, connection closed,
+   reservation released, kernel states empty, process reaped);
+   workspace disposed; credential removed; sockets closed; manifest 0
+   mismatches; `pgrep -x openttd` empty after.
+3. **Second fix of record (`de42d10`, offline):** the first post-run
+   verify sweep crashed reopening the disposed workspace — verify is
+   receipts-only, the CLI now reopens only for preflight/run; pinned by
+   `test_verify_cli_never_reopens_workspace`; sealed attempt bytes
+   untouched (manifest re-checked 0 mismatches after the fix).
+4. **Genealogy + grants:** t036-1 (grant A, E172: typed FAILED at the
+   seal seam after native generation + digest-pinned save; bytes
+   preserved) → t036-2 (grant A2, E173: VERIFIED, terminal). Grants A
+   and A2 both consumed and void. **GUI stage next under its OWN fresh
+   grant B**: `gui … --fresh-world artifacts/runtime/fresh-world-create-t036-2`
+   → preflight → run `--authorize-one-launch` → verify
+   `FRESH_WORLD_GUI_PROBE_VERIFIED`.
+5. **Not claimed:** the fresh world has not been SEEN in the GUI yet;
+   no Phase B criterion satisfied; Phase B native closure outstanding
+   (T-030 ×1, T-031 arm A ×1 + arm B ×1, T-032 ×1, each its own fresh
+   grant, each inheriting both exercise-core fixes). T-035 stays
+   terminal VERIFIED at E170. Evidence index E173.

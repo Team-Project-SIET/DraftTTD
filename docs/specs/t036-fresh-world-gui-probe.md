@@ -10,7 +10,7 @@ T-035 proved the desktop-GUI probe guarantees over the frozen demo-lane world (t
 
 Two **separately authorized** attempts (two identities, two grants, one launch each):
 
-1. `fresh-world-create-t036-2` — schema `fresh-world-prelaunch-v1`, terminal status `FRESH_WORLD_CREATE_VERIFIED`. (Supersession: `fresh-world-create-t036-1` executed once under grant A, E172 — generation + console save succeeded natively, typed FAILED at the seal seam, bytes preserved; grant A consumed and void.)
+1. `fresh-world-create-t036-2` — schema `fresh-world-prelaunch-v1`, terminal status `FRESH_WORLD_CREATE_VERIFIED` (E173: executed once under grant A2, world generated natively from seed 1181, save digest-pinned `8e7d0109012863ec…`, owned cleanup all-true, manifest 0 mismatches, terminal VERIFIED). Supersession: `fresh-world-create-t036-1` executed once under grant A, E172 — generation + console save succeeded natively, typed FAILED at the seal seam, bytes preserved; grant A consumed and void.
 2. `fresh-world-gui-probe-t036-1` — schema `fresh-world-prelaunch-v1`, client receipt schema `fresh-world-gui-client-v1`, terminal status `FRESH_WORLD_GUI_PROBE_VERIFIED`.
 
 Genealogy is strictly sequential: the GUI stage refuses any source that is not the verified fresh creation attempt. Neither stage ever consumes Phase B ticket receipts; both are their own tickets.
