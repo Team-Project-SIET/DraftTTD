@@ -4318,3 +4318,37 @@ no push, sealed bytes untouched. Evidence index E156.
     the fresh world still not SEEN in the GUI; no Phase B criterion
     satisfied; Phase B native closure outstanding (T-030 ×1, T-031 arm
     A ×1 + arm B ×1, T-032 ×1). Evidence index E178.
+
+30. **T-036 second gate-corrected GUI attempt executed once under the
+    operator's explicit grant B4 (E179; 2026-11-11; typed FAILED, never
+    relabeled; grant B4 consumed and void; fix landed `420574a`).**
+    Gate round: HEAD `c51e1a5`, tree clean; t036-4 staged → **preflight
+    PASS**; the operator answered "Grant B4 — launch now" in-session.
+    The one launch: the E178 bind wait held, the AdminPort connect +
+    authenticate SUCCEEDED (connections 1), the welcome tripwire PASSED
+    (`runtime-identity.json` sealed: revision `15.3`, seed `1181`,
+    width/height `64` — the E176-corrected gate proven, the world proof
+    of record), the documented contract played out
+    (`NETWORK_REQUIRES_EMPTY_WORLD` + death summary), the GUI client
+    spawned (its `gui-client/` home retained) — and the join-marker
+    wait's `health()` polls hit the shared fatal-log scan
+    (`NativeBackend._check_logs` treats `The script died unexpectedly`
+    as fatal) before any join marker could appear. `failure.sav`
+    console-saved (10936 bytes — the E178 failure-path race fix
+    proven). Seal of record: cleanup all-true; manifest 0 mismatches;
+    `verify` → `ATTEMPT_NOT_VERIFIED: FAILED` rc 1; `pgrep -x openttd`
+    empty. Fix of record (offline, zero native): `native.py`
+    `_check_logs` split into `_check_logs` + `_scan_fatal`
+    (behavior-preserving refactor); `FreshWorldBackend._check_logs`
+    strips the death-summary lines ONLY when
+    `NETWORK_REQUIRES_EMPTY_WORLD` is present in the same logs; any
+    other fatal marker or a death without the expected throw still
+    raises; new test pins all four branches; tests 19 + 46 green;
+    statics clean. Identity advanced (stale-supersession):
+    `fresh-world-gui-probe-t036-4` → `fresh-world-gui-probe-t036-5`;
+    re-staged: prepare → **preflight PASS** → `AUTHORIZATION_UNVERIFIED`
+    rc 1. **The one GUI launch awaits a FRESH explicit grant B5;
+    grants A, A2, B, A3, B2, B3, B4 all consumed and void.** Not
+    claimed: the fresh world still not SEEN in the GUI; no Phase B
+    criterion satisfied; Phase B native closure outstanding (T-030 ×1,
+    T-031 arm A ×1 + arm B ×1, T-032 ×1). Evidence index E179.

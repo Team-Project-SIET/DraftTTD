@@ -335,6 +335,50 @@ family by name). The re-staged `fresh-world-gui-probe-t036-4`: prepare →
 **Grant B3 is consumed and void; grants A, A2, B, A3, B2, B3 are all
 consumed and void.**
 
+## Attempt record (2026-11-11, E179): second gate-corrected GUI attempt executed once under grant B4 — the approved shape's proofs all landed (bind wait, connections 1, welcome tripwire PASSED) but the shared fatal-log scan fired on the documented death; fix landed `420574a`; identity advanced to `fresh-world-gui-probe-t036-5`
+
+Grant B4 (operator's explicit in-session "Grant B4 — launch now"
+answer) was consumed by exactly one launch of
+`fresh-world-gui-probe-t036-4` (HEAD `c51e1a5`, tree clean, preflight
+PASS). `result.json`
+`{status: FAILED, launches: 1, connections: 1, error: "RuntimeError:
+Native script/asset error"}` rc 1; `failure.sav` console-saved (10936
+bytes — the E178 failure-path race fix proven); CLAIM consumed.
+Timeline: the E178 bind wait held; the AdminPort connect +
+authenticate SUCCEEDED (connections 1); the welcome tripwire PASSED
+(`runtime-identity.json` sealed: revision `15.3`, seed `1181`,
+width/height `64` — the world proof of record); the documented
+contract played out (`NETWORK_REQUIRES_EMPTY_WORLD` + "The script died
+unexpectedly."); the GUI client spawned (its `gui-client/` home
+retained) — and the join-marker wait's `health()` polls hit the shared
+fatal-log scan (`NativeBackend._check_logs` treats the death summary
+as fatal) before any join marker could appear. Root cause: every prior
+lane's scripts run to completion, so the shared scan never met a
+documented expected death; the fresh lane's fleetless save dies BY
+CONTRACT. Seal of record: cleanup all-true; manifest 0 mismatches;
+post-run `verify` → `ATTEMPT_NOT_VERIFIED: FAILED` rc 1; `pgrep -x
+openttd` empty. The t036-4 bytes are sealed untouched, never
+relabeled.
+
+Fix of record (commit `420574a`, offline, zero native): `native.py`
+`_check_logs` split into `_check_logs` + `_scan_fatal`
+(behavior-preserving refactor); `FreshWorldBackend._check_logs` strips
+the death-summary lines ONLY when `NETWORK_REQUIRES_EMPTY_WORLD` is
+present in the same logs, then delegates — any other fatal marker, or
+any death without the expected throw, still raises; new test
+`test_health_tolerates_only_the_documented_reload_death` pins all four
+branches. Tests 19 + lane suites 46 green (65 total); statics clean.
+Identity advanced by stale-supersession:
+`fresh-world-gui-probe-t036-4` → `fresh-world-gui-probe-t036-5` (the
+t036-4 dir stays sealed terminal FAILED history, unreachable from the
+family by name). The re-staged `fresh-world-gui-probe-t036-5`: prepare
+→ **preflight PASS** → verify `AUTHORIZATION_UNVERIFIED` as of
+2026-11-11 (source t036-3, save digest `fddd6f5d…` == pin, bridge
+`0fa190a0…` == pin, argv `-g source.sav`).
+
+**Grant B4 is consumed and void; grants A, A2, B, A3, B2, B3, B4 are
+all consumed and void.**
+
 ## Fix record (2026-11-11, E176 follow-up): operator approved the gate-correction shape — GUI gate is now welcome-tripwire-first; identity advanced to `fresh-world-gui-probe-t036-3`
 
 The operator answered "Correct the GUI gate (Recommended)" in-session:
@@ -361,15 +405,16 @@ FAILED history, unreachable from the family by name). The re-staged
 `AUTHORIZATION_UNVERIFIED` as of 2026-11-11 (source t036-3, save digest
 `fddd6f5d…` == pin, bridge `0fa190a0…` == pin, argv `-g source.sav`).
 
-**Grant B4 (GUI probe, only attempt of record now):** "Authorize
+**Grant B5 (GUI probe, only attempt of record now):** "Authorize
 exactly one fresh-world GUI probe run: `fresh_world_gui run
-artifacts/runtime/fresh-world-gui-probe-t036-4 --authorize-one-launch`.
+artifacts/runtime/fresh-world-gui-probe-t036-5 --authorize-one-launch`.
 One dedicated-server launch from the digest-pinned fresh save; the run
-waits for the native AdminPort bind, then connects and requires the
-welcome frame to report revision 15.3, seed 1181 and 64×64 (the world
-proof), one real desktop GUI client join as spectator, observation
-window, owned stop; no retry, no reconnect; stop on unexpected
-failure."
+waits for the native AdminPort bind, connects and requires the welcome
+frame to report revision 15.3, seed 1181 and 64×64 (the world proof),
+and the fatal-log scan tolerates only the documented GameScript
+restart-and-death; one real desktop GUI client join as spectator,
+observation window, owned stop; no retry, no reconnect; stop on
+unexpected failure."
 
 ## Grant texts of record (paste per authorization, one per attempt)
 

@@ -1944,3 +1944,46 @@ no headless-only execution.
    B criterion satisfied; Phase B native closure outstanding (T-030 ×1,
    T-031 arm A ×1 + arm B ×1, T-032 ×1, each its own fresh grant). T-035
    stays terminal VERIFIED at E170. Evidence index E178.
+
+## 2026-11-11 T-036 second gate-corrected GUI attempt executed once under the operator's explicit grant B4 (E179): the bind wait held, the AdminPort connect succeeded (connections 1) and the welcome tripwire PASSED (15.3 / 1181 / 64×64 sealed in runtime-identity.json) — but the shared fatal-log scan fired on the documented reload-contract death during the join-wait polls; fix landed `420574a` (scoped tolerance); identity advanced to `fresh-world-gui-probe-t036-5`; grant B4 consumed and void; grant B5 awaited
+
+1. **The run of record:** `artifacts/runtime/fresh-world-gui-probe-t036-4/`
+   sealed read-only; `result.json`
+   `{status: FAILED, launches: 1, connections: 1, error: "RuntimeError:
+   Native script/asset error"}` rc 1; `failure.sav` console-saved
+   (10936 bytes — the E178 failure-path race fix proven); CLAIM
+   consumed. Timeline (all 20:20:58): listeners bound → the bind-line
+   wait returned → connect + authenticate SUCCEEDED → the welcome
+   frame read and the tripwire PASSED (`runtime-identity.json`
+   sealed: revision `15.3`, seed `1181`, width/height `64`) → the
+   documented contract played out (`NETWORK_REQUIRES_EMPTY_WORLD`,
+   "The script died unexpectedly.") → the GUI client spawned (its
+   `gui-client/` home retained) → the join-marker wait's `health()`
+   polls re-scanned the logs and the shared fatal scan raised on the
+   death summary before any join marker could appear.
+2. **Root cause of record:** every prior lane's scripts run to
+   completion, so `NativeBackend._check_logs`'s fatal tuple never met a
+   documented expected death; the fresh lane's fleetless save dies BY
+   CONTRACT and the join-wait polls health() every 0.05 s.
+3. **Fix of record (commit `420574a`, offline, zero native):**
+   `native.py` `_check_logs` split into `_check_logs` + `_scan_fatal`
+   (behavior-preserving); `FreshWorldBackend._check_logs` strips the
+   death-summary lines ONLY when `NETWORK_REQUIRES_EMPTY_WORLD` is
+   present in the same logs, then delegates — any other fatal marker,
+   or any death without the expected throw, still raises; new test
+   `test_health_tolerates_only_the_documented_reload_death` pins all
+   four branches. Tests 19 + lane suites 46 green (65 total); statics
+   clean.
+4. **Seal of record:** cleanup all-true; manifest 0 mismatches;
+   `verify` → `ATTEMPT_NOT_VERIFIED: FAILED` rc 1; `pgrep -x openttd`
+   empty.
+5. **State:** grant B4 consumed and void; grants A, A2, B, A3, B2, B3,
+   B4 all consumed and void; the E175 creation save stays the source
+   of record. Re-stage `fresh-world-gui-probe-t036-5`: prepare →
+   preflight PASS → `AUTHORIZATION_UNVERIFIED` rc 1; **grant B5
+   awaited.**
+6. **Not claimed:** the fresh world still not SEEN in the GUI (the
+   client spawned but no join marker was recorded); no Phase B
+   criterion satisfied; Phase B native closure outstanding (T-030 ×1,
+   T-031 arm A ×1 + arm B ×1, T-032 ×1, each its own fresh grant). T-035
+   stays terminal VERIFIED at E170. Evidence index E179.
