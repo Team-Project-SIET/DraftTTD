@@ -3965,3 +3965,29 @@ no push, sealed bytes untouched. Evidence index E156.
     pin `51e45689…1297eb`. Spec + package updated to t035-2. The native
     GUI attempt still needs the operator's fresh one-launch grant.
     Evidence index E167.
+
+19. **T-035 attempt executed once under the operator's explicit
+    one-launch grant — typed FAILED (2026-11-11; docs commit this one;
+    no push; no code change).** The t035-2 attempt ran exactly once at
+    the sealed staging: the bridge started, `FREIGHT_DELIVERY_READY`
+    logged, the source save loaded clean, the game listener bound —
+    no admin listener on `49895`; the conductor's `connect_secure`
+    refused → typed `AuthDisconnected: Admin connection failed`
+    (`result.json` `status FAILED, launches 1, connections 0`). The
+    failure preceded all correspondence and the client stage: **no
+    window ever appeared** (GUI outcome not reached — not a GUI
+    defect). Failure path as designed: `failure.sav`, owned cleanup
+    (pid 22971 reaped rc 0, all-true), manifest 0 mismatches,
+    `verify` → `ATTEMPT_NOT_VERIFIED: FAILED`, dir sealed read-only.
+    Root cause (read-only): `stage_workspace` never calls
+    `RuntimeWorkspace.write_config(AdminSettings(...))` — the admin
+    auth trio (`private.cfg` `[admin_authorized_keys]` +
+    `secrets.cfg` `admin_password`) every working stage writes is
+    missing, and with `allow_insecure_admin_login = false` OpenTTD
+    15.3 never starts the admin network. Second latent exercise-core
+    blocker of the E167 class, unreachable offline. The t035-2
+    identity is consumed terminal history; the grant is consumed and
+    void. The fix (mirror `write_config` into `stage_workspace` +
+    auth-trio regression test) and any re-attempt
+    (`canonical-fleet-gui-probe-t035-3`) await the operator's separate
+    authorizations. Evidence index E168.

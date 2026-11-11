@@ -17,6 +17,34 @@ pre-consumption, no CLAIM). The attempt of record is the t035-2
 staging below — prepare → **preflight PASS** → verify
 `AUTHORIZATION_UNVERIFIED` as of 2026-11-11.
 
+## Attempt record (2026-11-11, E168): t035-2 executed once under the operator's explicit one-launch grant — typed FAILED, sealed
+
+The t035-2 attempt ran exactly once. `result.json`
+`{status: FAILED, launches: 1, connections: 0, error: "AuthDisconnected:
+Admin connection failed"}`: the server's admin listener never started
+(see below), the conductor's `connect_secure` refused, and the failure
+preceded all correspondence and the client stage — **no window ever
+appeared** (the GUI outcome is NOT REACHED; this is not a GUI defect).
+The failure path ran as designed: `failure.sav`, owned cleanup (all-true),
+manifest 0 mismatches, `verify` → `ATTEMPT_NOT_VERIFIED: FAILED`; the
+dir is sealed read-only.
+
+Root cause (read-only diagnosis): the exercise-core `stage_workspace`
+writes only `openttd.cfg`; every working stage calls
+`RuntimeWorkspace.write_config(AdminSettings(...))` to also produce
+`private.cfg` (`[admin_authorized_keys] <public_hex>`) and
+`secrets.cfg` (`admin_password`) — with `allow_insecure_admin_login =
+false` and no auth material, OpenTTD 15.3 does not start the admin
+network. Second latent exercise-core blocker of the E167 class,
+unreachable offline.
+
+**Status: the t035-2 identity is consumed terminal history and the
+one-launch grant is consumed and void.** A re-attempt requires a NEW
+staging identity (`canonical-fleet-gui-probe-t035-3`) under the fix of
+record (mirror `write_config` into `stage_workspace`, regression test
+pinning the staged auth trio) AND a FRESH explicit one-launch operator
+grant. Nothing here re-launches.
+
 ## Preconditions (all offline-checkable, verified 2026-11-11)
 
 - Run from a desktop terminal on the operator's session (verified live:

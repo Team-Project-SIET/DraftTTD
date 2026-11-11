@@ -235,3 +235,35 @@ docs commit; never pushed.
 Ledger pairing: this file + `.scratch/phase-b-t035-gui-probe/issues/` +
 EVIDENCE_INDEX E167 + AI_HANDOFF/TASKS addenda of the same date. One
 docs commit; never pushed.
+
+## T-035 attempt executed once — typed FAILED at the admin-connect seam (2026-11-11)
+
+- **The grant:** the operator's explicit in-session one-launch grant
+  after the E167 gate round. The attempt ran exactly once; no retry.
+- **Outcome of record:** `result.json` `{status: FAILED, launches: 1,
+  connections: 0, error: "AuthDisconnected: Admin connection failed"}`.
+  Bridge started, `FREIGHT_DELIVERY_READY` logged, source save loaded
+  clean, game listener bound — no admin listener on `49895`. The
+  conductor's `connect_secure` refused → typed failure BEFORE all
+  correspondence and the client stage: **no window ever appeared**
+  (GUI outcome not reached — not a GUI defect). Failure path as
+  designed: `failure.sav`, owned cleanup (pid 22971 reaped rc 0,
+  all-true), manifest 0 mismatches, `verify` →
+  `ATTEMPT_NOT_VERIFIED: FAILED`, dir sealed read-only at
+  `artifacts/runtime/canonical-fleet-gui-probe-t035-2/`.
+- **Root cause (read-only):** `stage_workspace` never calls
+  `RuntimeWorkspace.write_config(AdminSettings(...))` — the admin auth
+  trio (`private.cfg` `[admin_authorized_keys]` + `secrets.cfg`
+  `admin_password`) every working stage writes is missing; with
+  `allow_insecure_admin_login = false` OpenTTD 15.3 never starts the
+  admin network. Second latent exercise-core blocker of the E167
+  class, unreachable offline.
+- **State of record:** the t035-2 identity is consumed terminal
+  history; the grant is consumed and void. The fix (mirror
+  `write_config` into `stage_workspace` + auth-trio regression test)
+  and any re-attempt (`canonical-fleet-gui-probe-t035-3`) need the
+  operator's separate authorizations.
+
+Ledger pairing: this file + `.scratch/phase-b-t035-gui-probe/issues/` +
+EVIDENCE_INDEX E168 + AI_HANDOFF/TASKS addenda of the same date. One
+docs commit; never pushed.

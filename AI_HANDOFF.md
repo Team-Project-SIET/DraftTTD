@@ -1496,3 +1496,40 @@ no headless-only execution.
    AdminPort, zero grants consumed this round); Phase B native closure
    unchanged — T-030 ×1, T-031 arm A ×1 + arm B ×1, T-032 ×1.
 
+## 2026-11-11 T-035 attempt executed once under the operator's explicit one-launch grant (E168): typed FAILED at the AdminPort connect seam before any correspondence or window — `AuthDisconnected: Admin connection failed`; receipts sealed, never relabeled; cleanup certified; manifest 0 mismatches; root cause diagnosed read-only: the exercise-core `stage_workspace` writes no admin auth material (`private.cfg` `[admin_authorized_keys]` + `secrets.cfg` `admin_password` missing), so the server never started the admin listener; grant consumed and void
+
+1. **The run of record:** `artifacts/runtime/canonical-fleet-gui-probe-t035-2/`
+   sealed read-only; `result.json`
+   `{status: FAILED, launches: 1, connections: 0, mutations: 0, error:
+   "AuthDisconnected: Admin connection failed"}`. The bridge started,
+   `FREIGHT_DELIVERY_READY` logged, the source save loaded clean, the
+   game listener bound — and NO admin listener on `49895` (grep
+   "admin" = 0 lines; working attempts show the `[admin] Client
+   connected … authenticated` family plus a third `Listening on` line).
+   The conductor's `connect_secure` hit `OSError` → typed
+   `AuthDisconnected` (`secure_admin.py:169-184`). The failure preceded
+   `conduct_exercise`: no reload correspondence, no GuiClient spawn,
+   **no window ever appeared** (GUI outcome: not reached — not a GUI
+   defect). The failure path ran as designed: `failure.sav`, owned
+   cleanup (pid 22971 reaped rc 0), receipts retained.
+2. **Root cause:** `stage_workspace` (`canonical_fleet_exercise.py:115-135`)
+   never calls `RuntimeWorkspace.write_config(AdminSettings(...))` —
+   the helper every working stage uses to produce the admin auth trio
+   (`openttd.cfg` + `private.cfg` `[admin_authorized_keys]` +
+   `secrets.cfg` `admin_password`; q3's frozen map carries all three).
+   With `allow_insecure_admin_login = false` and zero auth material,
+   OpenTTD 15.3 does not start the admin network. Second latent
+   exercise-core blocker of the E167 class, unreachable offline, caught
+   by the first native exercise-core attempt ever.
+3. **Seal:** `cleanup.json` all-true; manifest re-verified 0 mismatches;
+   independent `verify` → `ATTEMPT_NOT_VERIFIED: FAILED` rc 1; CLAIM
+   consumed. Honest typed state, nothing relabeled.
+4. **Blocked of record:** the t035-2 identity is consumed terminal
+   history; the fix (mirror `write_config` into `stage_workspace` +
+   regression test pinning the staged auth trio) is an offline reviewed
+   change awaiting the operator's separate authorization; a re-attempt
+   needs identity `canonical-fleet-gui-probe-t035-3` AND a FRESH
+   explicit one-launch grant (the t035-2 grant is consumed and void);
+   the four Phase B packages inherit BOTH exercise-core fixes at
+   attempt day.
+
