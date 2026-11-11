@@ -28,7 +28,7 @@ T-034 as the standing qualification gate (re-runnable any round)".
 | Task | Launches (fresh grants) | Staging state at `2e5fcc9` (2026-11-11) | Done-ness (roadmap :151-157) |
 | --- | --- | --- | --- |
 | T-030 fleet & capacity exercise | ×1 | **EXECUTED 2026-11-11 under the operator's fresh grant (E182): terminal `CANONICAL_FLEET_EXERCISE_VERIFIED` rc 0 — CLOSED.** `canonical-fleet-exercise-t030-1/` sealed; exercise-correspondence typed `EXACT_NATIVE_SEMANTIC_CORRESPONDENCE`; capacity-add £4,429; dispatch + re-pause receipts; cleanup all-true, manifest 0 mismatches, post-run verify rc 0 | Native exercise receipts + canonical correspondence record + E-row — **MET** |
-| T-031 matched arms | ×2, arm A strictly before arm B's authorization (03:19-22); separate grant per arm (02:37-41, 03:43-44) | `canonical-fleet-matched-a-t031-1/` and `-b-t031-1/`: prepare rc 0, preflight PASS, `AUTHORIZATION_UNVERIFIED`; tickets 02/03 updated | Per-arm receipts typed `CANONICAL_FLEET_MATCHED_VERIFIED` + `compare_arms` descriptive B-vs-A record (OBSERVED deltas, UNKNOWN preserved, no profit claim) + E-row |
+| T-031 matched arms | ×2, arm A strictly before arm B's authorization (03:19-22); separate grant per arm (02:37-41, 03:43-44) | **Arm A attempt 1 (`canonical-fleet-matched-a-t031-1/`) EXECUTED 2026-11-11 under the operator's fresh arm-A grant (E183): terminal FAILED rc 1 — the armed bridge seal killed the script on the post-dispatch `continuous-begin`; sealed read-only, grant consumed and void; fix round E184 (armed-seal allowance for the continuous-* observation family + failure-status typing + q4 VM record); re-staged `canonical-fleet-matched-a-t031-2/` (prepare rc 0, preflight PASS, `AUTHORIZATION_UNVERIFIED`, fixed guard staged).** Arm B `-b-t031-1/` staging is superseded unsealed state — re-prepare with the E184 fixed package before its grant | Per-arm receipts typed `CANONICAL_FLEET_MATCHED_VERIFIED` + `compare_arms` descriptive B-vs-A record (OBSERVED deltas, UNKNOWN preserved, no profit claim) + E-row |
 | T-032 five-year continuous | ×1 | `canonical-fleet-continuous-t032-1/`: prepare rc 0, preflight PASS, `AUTHORIZATION_UNVERIFIED`; ticket 01 updated | Per-year OPEX/ROI derived only from observed accounting + E-row (monitor budget 7200 s wall / five native economy years) |
 | T-033 consolidated OPEX/ROI | 0 (offline) | resolved E164; re-derives offline after each attempt — all four native sources `UNKNOWN_PENDING_NATIVE_AUTHORIZATION` | Aggregation record; OBSERVED/DERIVED/CONTROLLED segregation; UNKNOWN stays UNKNOWN |
 | T-034 standing regression | 0 (offline) | resolved E165 (6286 passed / 56 legacy-red by ID / 0 errors / 50 skipped at `f0f0155`); re-runnable gate | Regression suite result + E-row |
@@ -101,7 +101,9 @@ minimal conjunction from the acceptance statements on file
 1. Four separately authorized fresh-grant launches consumed exactly
    once — T-030 ×1, T-031 arm A ×1 then arm B ×1, T-032 ×1 — each
    producing its typed receipts and E-row (backlog-11:325-327;
-   T-031 03:19-22).
+   T-031 03:19-22). Consumed so far: T-030 (E182, verified);
+   T-031 arm A attempt 1 (E183, terminal FAILED — fresh grants
+   advance the identity, never a retry).
 2. T-031 `compare_arms` descriptive record lands; T-032 per-year
    OPEX/ROI derived only from observed accounting; T-033 re-derives
    with UNKNOWN preserved (roadmap :151-157).
@@ -136,9 +138,10 @@ of `artifacts/` (AI_HANDOFF :36); remote documentation availability
 1. **T-030** — DONE (E182): the one authorized launch verified
    (`CANONICAL_FLEET_EXERCISE_VERIFIED` rc 0, sealed
    `canonical-fleet-exercise-t030-1/`); grant consumed and void.
-2. **T-031 arm A** (staged `canonical-fleet-matched-a-t031-1`, preflight
-   PASS): grant next; arm B's grant only after arm A's attempt
-   completes (whatever its typed outcome).
+2. **T-031 arm A** (re-staged `canonical-fleet-matched-a-t031-2` after
+   the E184 fix round, preflight PASS, fixed guard staged): grant next;
+   arm B's grant only after arm A's attempt completes (whatever its
+   typed outcome; arm B also re-prepares with the fixed package first).
 3. **T-032** (staged `canonical-fleet-continuous-t032-1`, preflight
    PASS): grant after T-031 completes.
 4. FD-C-2 Attempt 7: fresh grant when the operator chooses to advance

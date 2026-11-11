@@ -4436,3 +4436,46 @@ WORLD`
     correspondence record + E-row) is MET. Remaining Phase B: T-031
     arm A ×1 (next grant), arm B ×1 (after arm A completes), T-032 ×1;
     T-033 re-derives offline after each.** Evidence index E182.
+
+34. **T-031 arm A attempt 1 executed exactly once under the operator's
+    fresh explicit arm-A grant (E183; 2026-11-11; terminal FAILED rc 1
+    — grant consumed and void, never retried, never relabeled; sealed
+    read-only at `artifacts/runtime/canonical-fleet-matched-a-t031-1/`)
+    plus the operator-approved offline fix round (E184; 2026-11-11; no
+    native run, no connection, no grant).** Attempt 1 at HEAD `baacc20`:
+    stage 1 completed (reload correspondence cash 471157 before/after,
+    originals `[0,4,2709] [1,5,1557] [2,6,404]`, restored, paused;
+    arm-A dispatch binding null, purchase_capex 0; mutations 2), then
+    the post-dispatch `continuous-begin` (five-anniversary monitoring,
+    observation-only) hit the pinned bridge's armed-state guard
+    `canonical.nut:129` (`if(canonical_armed)throw
+    "CANONICAL_MUTATIONS_SEALED"` — no unseal path) →
+    `GameScriptError` script death at `main.nut:129` via
+    `network-parent.nut:19` → single-unanswered-request →
+    `ExchangeReadTimeout` 20 s; `failure.sav` 11828 bytes retained;
+    cleanup all-true, manifest match True, `pgrep -x openttd` empty;
+    the stage-1 string the except path left in `result.json.status`
+    was correctly REFUSED by verify (`ATTEMPT_NOT_VERIFIED` rc 1) — a
+    labeling defect, never a relabel. Fix round E184: (1) guard now
+    lets the `continuous-*` observation family through the armed seal
+    (`q.type.find("continuous-")==0` falls to
+    `HandleContinuousRequest(q)`; everything else sealed); (2)
+    `exercise.run` except block types `result["status"] = "FAILED"`;
+    (3) VM record regenerated as NEW q4 path (25/25 cases rc 0 at
+    pinned exact 15.3 Squirrel source `14ec60f248547d4d062a1160f0fc26d742319888`,
+    q3 dir untouched; only `main.nut` changed q3→q4) and
+    `SUSPENSION_VALIDATION` re-pointed q3→q4; (4) retained-provenance
+    zip re-pointed to the t031-1 stage seal (4/4 helper pins == q4
+    record; q3 zip 3/4); (5) three regression tests added (two armed
+    seal guard tests + failure-status typing test); (6) suites rc 0 →
+    87 passed, 1 skip-typed, ruff/format/py_compile clean, scoped
+    `uvx ty` leaves only the 2 pre-existing tolerated diagnostics;
+    (7) identity advance `ARM_A = canonical-fleet-matched-a-t031-2`
+    (arm B stays `canonical-fleet-matched-b-t031-1`, superseded
+    unsealed staging to be re-prepared after arm A completes), re-staged
+    `artifacts/runtime/canonical-fleet-matched-a-t031-2/` — prepare rc
+    0, preflight PASS, verify `AUTHORIZATION_UNVERIFIED` rc 1, staged
+    main.nut carries the fixed guard, q4 pin held. **The next operator
+    action is the fresh explicit arm-A grant for t031-2** (grant text
+    in `.scratch/phase-b-t031/issues/02-arm-a-attempt-package.md`).
+    Evidence index E184.

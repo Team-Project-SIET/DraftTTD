@@ -126,7 +126,8 @@ class CanonicalFreightProof extends ContinuousFreightProof {
         }
         if(typeof q=="table"&&"type" in q&&q.type=="capacity-read")
             return HandleContinuousRequest(q);
-        if(canonical_armed)throw "CANONICAL_MUTATIONS_SEALED";
+        if(canonical_armed&&(typeof q!="table"||!("type" in q)||q.type.find("continuous-")!=0))
+            throw "CANONICAL_MUTATIONS_SEALED";
         if(typeof q=="table"&&"op" in q&&q.op=="select") {
             if(services==null)services=[];
             Store();if(services.len()>=3||!OthersStopped())throw "CANONICAL_SELECTION_ORDER";

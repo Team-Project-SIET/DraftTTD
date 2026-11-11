@@ -56,7 +56,10 @@ RELOAD_ONLY_CONTRACT = dict(
     correspondence="exact-native-semantic-state",
     heartbeat="paused-before-and-after",
 )
-SUSPENSION_VALIDATION = PROJECT / "artifacts/validation/canonical-fleet-reload-q3/suspension.json"
+# The q4 record (2026-11-11, E184) regenerated from the exact 15.3 source
+# after the armed-seal guard gained the continuous-* observation allowance;
+# the q3 record stays untouched retained history.
+SUSPENSION_VALIDATION = PROJECT / "artifacts/validation/canonical-fleet-reload-q4/suspension.json"
 
 
 def configuration_digest(path):

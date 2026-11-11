@@ -6,7 +6,18 @@ preflight `canonical matched arm B preflight PASS`, verify
 `AUTHORIZATION_UNVERIFIED` rc 1; authorizes nothing by itself; the
 launch requires the operator's separate fresh explicit authorization,
 requested only after arm A's attempt completes (ordering of record
-below)
+below). **Update 2026-11-11 (E183/E184):** arm-A attempt 1
+(`canonical-fleet-matched-a-t031-1`) completed terminal FAILED (armed
+seal killed the script on the post-dispatch `continuous-begin`); the
+E184 fix round changed the pinned bridge package and re-pointed the VM
+record to q4, so THIS stale arm-B staging is superseded — before arm
+B's grant is requested, remove the superseded unsealed staging dir
+(no CLAIM, no attempt bytes) and re-prepare with the fixed package:
+`rm -rf artifacts/runtime/canonical-fleet-matched-b-t031-1 &&`
+`canonical_fleet_matched prepare ... --arm B` (identity unchanged
+`canonical-fleet-matched-b-t031-1`), then preflight + verify
+`AUTHORIZATION_UNVERIFIED`. Arm B's grant only after arm A's
+t031-2 attempt completes
 **Spec:** `docs/specs/t031-matched-ab-experiments.md`
 
 ## Preconditions (all offline-checkable)

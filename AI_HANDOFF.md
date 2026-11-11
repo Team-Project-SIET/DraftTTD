@@ -2091,3 +2091,63 @@ no headless-only execution.
    `AUTHORIZATION_UNVERIFIED`); arm B's grant only after arm A's
    attempt completes (whatever its typed outcome); then T-032's own
    fresh grant. Evidence index E182.
+
+## 2026-11-11 T-031 arm A attempt 1 executed exactly once under the operator's fresh explicit arm-A grant (E183): TERMINAL FAILED rc 1 — the armed bridge seal killed the script on the post-dispatch `continuous-begin` observation; sealed, never retried, never relabeled; read-only diagnosis pinned the root cause; followed by the operator-approved offline fix round (E184) and the identity advance to `canonical-fleet-matched-a-t031-2`
+
+1. **The attempt of record (sealed read-only hereafter):**
+   `artifacts/runtime/canonical-fleet-matched-a-t031-1/`; executed once
+   at HEAD `baacc20` (tree clean, `pgrep -x openttd` empty pre-launch);
+   `result.json` `{launches: 1, connections: 1, mutations: 2, status:
+   CANONICAL_FLEET_EXERCISE_VERIFIED}` rc 1; grant consumed and void.
+2. **What completed before the death:** reload correspondence pair
+   (`reload-correspondence.json` + `reload-readback.sav`: cash 471157
+   before/after, originals `[0,4,2709] [1,5,1557] [2,6,404]`,
+   `restored: true`, paused), `canonical-dispatch.json` arm-A binding
+   null (arm A constructs nothing, purchase_capex 0),
+   `exercise-correspondence.json`, service-receipt-{0,1,2}.json.
+3. **Root cause (read-only diagnosis over retained bytes, no
+   relaunch):** the pinned bridge's armed-state guard `canonical.nut:129`
+   (`if(canonical_armed)throw "CANONICAL_MUTATIONS_SEALED"`) rejects
+   EVERY request type outside the canonical-*/capacity families while
+   armed (armed by `canonical-arm`, no unseal path); the arm flow's
+   post-dispatch `continuous-begin` (five-anniversary monitoring,
+   observation-only) hit the seal → `GameScriptError:
+   CANONICAL_MUTATIONS_SEALED` death at `main.nut:129` via
+   `network-parent.nut:19` → single-unanswered-request →
+   `ExchangeReadTimeout` 20 s (`request_id=continuous-begin`);
+   `failure.sav` 11828 bytes retained.
+4. **Secondary labeling defect (typed terminal stands FAILED):** the
+   except path left the stage-1 string `CANONICAL_FLEET_EXERCISE_VERIFIED`
+   in `result.json.status`; `verify` refused
+   `ATTEMPT_NOT_VERIFIED: CANONICAL_FLEET_EXERCISE_VERIFIED` rc 1 — the
+   stale string is a labeling defect, never a relabel.
+5. **Seal:** cleanup all-true (reaped rc 0, sockets closed, credential
+   removed, workspace disposed); manifest match True (0 mismatches);
+   `pgrep -x openttd` empty post-run.
+6. **The fix round (E184; offline, no grant):** (1) guard now
+   `if(canonical_armed&&(typeof q!="table"||!("type" in
+   q)||q.type.find("continuous-")!=0))throw "CANONICAL_MUTATIONS_SEALED";`
+   — the continuous-* observation family falls through to the final
+   `return HandleContinuousRequest(q)`; everything else keeps the seal;
+   (2) `exercise.run`'s except block types `result["status"] = "FAILED"`;
+   (3) VM record regenerated as NEW `artifacts/validation/canonical-fleet-reload-q4/suspension.json`
+   (25/25 cases rc 0 at the pinned exact 15.3 Squirrel source commit
+   `14ec60f248547d4d062a1160f0fc26d742319888`; q3 dir untouched; only
+   `main.nut` changed q3→q4); `SUSPENSION_VALIDATION` re-pointed q3→q4;
+   (4) retained-provenance zip re-pointed to the t031-1 stage seal
+   (4/4 helper pins == q4 record; q3 zip 3/4); (5) three regression
+   tests (two armed-seal guard tests + failure-status typing test);
+   (6) suites rc 0 → 87 passed, 1 skip-typed; ruff/format/py_compile
+   clean; scoped `uvx ty` leaves only the 2 pre-existing tolerated
+   diagnostics.
+7. **State:** identity advance `ARM_A =
+   canonical-fleet-matched-a-t031-2` (arm B stays
+   `canonical-fleet-matched-b-t031-1`; its pre-fix staging is
+   superseded unsealed state and must be re-prepared with the fixed
+   package before its grant). Re-staged
+   `artifacts/runtime/canonical-fleet-matched-a-t031-2/` — prepare rc
+   0, `canonical matched arm A preflight PASS`, verify
+   `AUTHORIZATION_UNVERIFIED` rc 1; the staged isolated main.nut
+   carries the fixed guard; q4 pin held. **The next operator action is
+   the fresh explicit arm-A grant for t031-2**; arm B's grant only
+   after arm A's attempt completes; then T-032. Evidence index E184.

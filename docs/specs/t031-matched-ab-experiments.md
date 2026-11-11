@@ -38,8 +38,14 @@ qualification lines 109–234, bounded telemetry lines 295–334).
   `canonical-parent.nut` already carries the full
   `continuous-begin/company/service/telemetry` producer set, so the arms
   run telemetry without changing package bytes.
-- **Identities, never shared:** arm A `canonical-fleet-matched-a-t031-1`,
-  arm B `canonical-fleet-matched-b-t031-1`; each its own CLAIM and its
+- **Identities, never shared:** arm A `canonical-fleet-matched-a-t031-2`
+  (attempt 1 `canonical-fleet-matched-a-t031-1` terminal FAILED sealed
+  E183 — the armed seal killed the script on the post-dispatch
+  `continuous-begin`; stale-supersession advanced the identity; fix
+  round E184),
+  arm B `canonical-fleet-matched-b-t031-1` (re-prepare with the E184
+  fixed package before its grant; the pre-fix staging is superseded
+  unsealed state); each its own CLAIM and its
   own fresh explicit authorization (not shared with the T-030 exercise,
   with each other, or with any earlier attempt; all prior grants void).
 - **Arms:** arm A adds nothing (three original vehicles); arm B adds only
@@ -98,10 +104,21 @@ E92 readback-fidelity fix — live digest `ad96fd42…` vs the record's
 `8353a172…`), so the old check would have refused EVERY fresh prepare at
 grant time. The record's package byte-pin still matches exactly.
 `require_retained_vm_helpers` now verifies the record's helper digests
-against the retained q3 `frozen-source.zip` (fail-closed evidence
+against the retained stage-sealed `frozen-source.zip` (fail-closed evidence
 integrity), while the live tree's newer helpers are sealed per-stage in
 the stage's own frozen-source seal. The frozen driver's identical check is
 left byte-untouched: consumed q3 identities are never re-prepared.
+
+**E184 update:** the fix round regenerated the VM record as
+`artifacts/validation/canonical-fleet-reload-q4/suspension.json` (25/25
+cases rc 0 at the pinned exact 15.3 Squirrel source commit
+`14ec60f248547d4d062a1160f0fc26d742319888`; q3 dir untouched) for the
+fixed package bytes (armed seal now lets the observation-only
+`continuous-*` family through), and re-pointed the retained-provenance
+zip to the t031-1 attempt's stage seal — its 4 VM_HELPER entries are
+byte-identical to the q4 record's pins (the q3 zip matched only 3/4,
+helpers having evolved since the q3 era). `SUSPENSION_VALIDATION` now
+points at q4; the q3 record stays retained history.
 
 ## Tickets
 
