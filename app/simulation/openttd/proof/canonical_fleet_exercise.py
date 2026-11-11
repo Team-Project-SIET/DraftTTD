@@ -336,9 +336,21 @@ def verify(
 
 
 async def conduct_exercise(
-    backend, prepared, session, result, *, identity=EXERCISE, contract=EXERCISE_CONTRACT, arm="B"
+    backend,
+    prepared,
+    session,
+    result,
+    *,
+    identity=EXERCISE,
+    contract=EXERCISE_CONTRACT,
+    arm="B",
+    dispatch=True,
 ):
-    """Reload correspondence first, then ONE purchase/dispatch/unpause arm."""
+    """Reload correspondence first, then ONE purchase/dispatch/unpause arm.
+
+    dispatch=False stops at the proven reload-only correspondence (the
+    q3 no-purchase contract); the caller owns anything after that.
+    """
     from app.simulation.openttd.freight_canonical_dispatch import (
         dispatch_loaded_arm,
         read_boundary,
@@ -391,6 +403,12 @@ async def conduct_exercise(
             after=after.model_dump(mode="json"),
         ),
     )
+    if not dispatch:
+        return dict(
+            loaded=loaded,
+            before=before.model_dump(mode="json"),
+            after=after.model_dump(mode="json"),
+        )
     dispatch = await dispatch_loaded_arm(
         backend, prepared, session, created=created, loaded=loaded, arm=arm
     )
