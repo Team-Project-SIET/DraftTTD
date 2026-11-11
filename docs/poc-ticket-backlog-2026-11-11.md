@@ -134,3 +134,20 @@ commit pair (code+tests `a9291c2`, docs this commit); never pushed.
 Ledger pairing: this file + `.scratch/phase-b-t032/issues/` +
 EVIDENCE_INDEX E163 + AI_HANDOFF/TASKS addenda of the same date. One
 commit pair (code+tests `b63eb16`, docs this commit); never pushed.
+
+## T-033 consolidated OPEX/ROI — record built and generated (2026-11-11)
+
+- **Ticket 01 resolved** — spec `docs/specs/t033-consolidated-opex-roi.md`,
+  module `app/experiments/phase_b_consolidation.py`, generated record
+  `artifacts/experiments/phase-b-consolidation-2026-11-11/` (all four
+  native sources `UNKNOWN_PENDING_NATIVE_AUTHORIZATION`; E2 funding
+  context OBSERVED 400,000 GBP; consolidated CAPEX UNKNOWN). 6 offline
+  tests; statics clean.
+- **Not claimed:** per-source OPEX/ROI stay UNKNOWN until the native
+  attempts run under their own fresh grants (T-030 ×1, T-031 ×2, T-032
+  ×1); the record re-derives offline after each attempt — no relabel,
+  no manufacture.
+
+Ledger pairing: this file + `.scratch/phase-b-t033/issues/` +
+EVIDENCE_INDEX E164 + AI_HANDOFF/TASKS addenda of the same date. One
+commit pair; never pushed.

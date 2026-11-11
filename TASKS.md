@@ -3877,3 +3877,18 @@ no push, sealed bytes untouched. Evidence index E156.
     exercise/matched/lane suites green; statics clean. Attempt package
     prepared (`.scratch/phase-b-t032/issues/01`) at the separate
     fresh-authorization gate. Evidence index E163.
+
+15. **T-033 consolidated OPEX/ROI record (2026-11-11, offline only,
+    zero launches / zero AdminPort / no retained `artifacts/` byte
+    touched; code+tests ONE commit, docs commit this one; no push).**
+    New `app/experiments/phase_b_consolidation.py`: fixed Phase B source
+    list + E2 funding context, provenance labels (financial_attribution
+    vocabulary), pending attempts UNKNOWN never zero, dispatch capex
+    OBSERVED from own receipts, OPEX stays UNKNOWN (quarterly aggregate
+    cannot be split), consolidated CAPEX OBSERVED only when all sources'
+    receipts exist, guards verbatim, CLI with retained-evidence output
+    guard. Generated record of record
+    `artifacts/experiments/phase-b-consolidation-2026-11-11/` (4
+    sources UNKNOWN-pending; E2 funding OBSERVED 400,000 GBP;
+    consolidated CAPEX UNKNOWN). 6 offline tests; statics clean.
+    Evidence index E164.

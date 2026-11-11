@@ -1347,3 +1347,25 @@ T-032 (`docs/roadmap-and-scope-2026-11-05.md` §3), spec of record
    operator-gated separately (never shared with T-030/T-031 grants;
    all prior grants void). Post-run analytics of record:
    `analyze-continuous-freight`.
+
+## 2026-11-11 T-033 consolidated OPEX/ROI record built offline (E164); generated over this date's retained receipts — all four native sources UNKNOWN-pending, E2 funding OBSERVED 400k GBP
+
+Spec of record `docs/specs/t033-consolidated-opex-roi.md`, ticket
+`.scratch/phase-b-t033/issues/01-consolidation-record.md` (resolved).
+
+1. **Stage of record** `app/experiments/phase_b_consolidation.py`:
+   fixed source list (T-030/T-031-A/T-031-B/T-032 identities) + E2
+   funding context; provenance labels reuse `financial_attribution`'s
+   vocabulary; absent attempts = `UNKNOWN_PENDING_NATIVE_AUTHORIZATION`
+   (never zero, never manufactured); present attempts read status and
+   capex from their OWN receipts (dispatch capex OBSERVED; construction
+   OBSERVED-zero; originals' construction UNKNOWN → E2); OPEX categories
+   stay UNKNOWN (quarterly aggregate cannot be split); consolidated
+   CAPEX OBSERVED only when every source's receipts exist; guards
+   verbatim.
+2. **Generated record of record:**
+   `artifacts/experiments/phase-b-consolidation-2026-11-11/` — 4
+   sources UNKNOWN-pending; E2 funding OBSERVED 400,000 GBP; consolidated
+   CAPEX UNKNOWN. Reproducible offline:
+   `python -m app.experiments.phase_b_consolidation --output <fresh dir>`.
+3. **Tests:** 6 offline tests; statics clean.
