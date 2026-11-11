@@ -237,17 +237,67 @@ preflight are offline; the run is operator-gated:
   artifacts/runtime/fresh-world-gui-probe-t036-2   # expect FRESH_WORLD_GUI_PROBE_VERIFIED
 ```
 
+## Attempt record (2026-11-11, E176): first post-fix GUI attempt executed once under grant B2 — typed FAILED; the bridge's reload contract refused the fleetless save; fix-design decision pending operator approval
+
+Grant B2 (operator's explicit in-session "Grant B2 — launch now" answer)
+was consumed by exactly one launch of `fresh-world-gui-probe-t036-2`
+from the E175-verified save (HEAD `6231f08`, tree clean, preflight
+PASS). `result.json`
+`{status: FAILED, launches: 1, connections: 0, error: "RuntimeError:
+Native script/asset error"}` rc 1; `failure.sav` console-saved (10888
+bytes); CLAIM consumed; zero admin connections (the marker gate
+precedes the connect). Retained stderr timeline (all 19:49:05): the
+save's GSDT **boot the GameScript** (`FREIGHT_GAME_TIME_START
+date=712223 tick=1` — the E174 fix proven at the load seam), then
+`CanonicalFreightProof` → … → `PlannerFreightProof::Start`
+(`network-parent.nut:8`) → `ContinuousFreightProof::PrepareDemo` →
+`restored_fleet` false → `NetworkFreightProof.PrepareDemo` →
+`throw "NETWORK_REQUIRES_EMPTY_WORLD"` (the world already carries the
+6 industries built at generation) → "The script died unexpectedly." →
+the server stayed alive the whole 45 s `wait_log` window → owned
+shutdown. Seal of record: cleanup all-true; manifest 0 mismatches;
+post-run `verify` → `ATTEMPT_NOT_VERIFIED: FAILED` rc 1; `pgrep -x
+openttd` empty. The t036-2 bytes are sealed untouched, never relabeled.
+
+Root cause of record (read-only over the sealed bytes + bridge sources
+`freight_delivery_package/{continuous,network,planner,demo}.nut`): on
+save load OpenTTD restarts the GameScript fresh and applies the save's
+script state via `Load(version,data)`;
+`ContinuousFreightProof::Save()` types a fleetless tick-1 save
+`fleet_status="preconstruction"` and its `Load()` returns BEFORE
+setting `restored_fleet` (the `constructed` branch — fleet restored,
+funding completed — is the only path that sets it); `PrepareDemo()`
+then runs the network build whose first check demands an empty world.
+T-035's E2 source save (`canonical-fleet-create-q3`, E170) carries
+`constructed` fleet + completed capital funding → restore path →
+`PrepareDemo` skipped → `BRIDGE_STARTED`/`FREIGHT_DELIVERY_READY`. The
+`restored_fleet` guard is the pinned bridge's ONLY reload-tolerance.
+The E174 fix is proven at BOTH seams (GSDT embedded at generation,
+script boots at load) — the remaining gap is the save's script-state
+SHAPE, not GameScript injection.
+
+**Grant B2 is consumed and void; grants A, A2, B, A3 are all consumed
+and void. The E175-verified creation save `fresh-world-create-t036-3`
+stays sealed terminal VERIFIED and untouched. Two honest fix shapes are
+identified offline, BOTH awaiting operator approval before any code
+moves — (a) reshape the creation stage to the proven `canonical_fleet.py`
+CREATE machinery at seed 1181 (the script builds network + capital +
+fleet via AdminPort; the save is taken at the `constructed` state the
+reload path accepts; ~1200 s creation budget), or (b) keep the minimal
+preconstruction creation (the E175 save stays the source of record) and
+correct the GUI gate: welcome-tripwire-first (seed 1181/64×64 native
+proof) + server-side join + GUI liveness, with the script-death lines
+retained as the documented reload-contract limit of a fleetless save.**
+Identities advance by stale-supersession when the operator picks.
+
 ## Grant texts of record (paste per authorization, one per attempt)
 
 Grant A3 (creation) — CONSUMED 2026-11-11, void.
 
-Grant B2 (GUI probe, only after A3 verified): "Authorize exactly one
-fresh-world GUI probe run: `fresh_world_gui run
-artifacts/runtime/fresh-world-gui-probe-t036-2 --authorize-one-launch`.
-One dedicated-server launch from the digest-pinned fresh save, one
-AdminPort connection, one real desktop GUI client join as spectator,
-observation window, owned stop; no retry, no reconnect; stop on
-unexpected failure."
+Grant B2 (GUI probe) — CONSUMED 2026-11-11, void.
+
+Fresh grants will be requested per attempt after the operator picks the
+fix shape; grant texts will be regenerated for the advancing identities.
 
 ## Acceptance target
 

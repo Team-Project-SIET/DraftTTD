@@ -4220,3 +4220,40 @@ no push, sealed bytes untouched. Evidence index E156.
     Phase B criterion satisfied; Phase B native closure outstanding
     (T-030 ×1, T-031 arm A ×1 + arm B ×1, T-032 ×1). Evidence index
     E175.
+
+27. **T-036 first post-fix GUI attempt executed once under the operator's
+    explicit grant B2 (E176; 2026-11-11; typed FAILED, never relabeled;
+    grant B2 consumed and void).** Gate round: HEAD `6231f08`, tree
+    clean, `pgrep -x openttd` empty; `fresh-world-gui-probe-t036-2`
+    staged offline from the E175-verified save → **preflight PASS**
+    (save digest + bridge pin + one inherited `[game_scripts]`, argv
+    `-g source.sav`); the operator answered "Grant B2 — launch now"
+    in-session. The one launch: the save's GSDT **boot the GameScript**
+    (`FREIGHT_GAME_TIME_START date=712223 tick=1` — the E174 fix proven
+    at the load seam), then the bridge's reload contract refused the
+    save: `ContinuousFreightProof::Load()` returns early for a
+    `preconstruction` save (no fleet at tick 1) without setting
+    `restored_fleet`, so the restarted script's `PrepareDemo()` hit
+    `throw "NETWORK_REQUIRES_EMPTY_WORLD"` (the world already carries
+    the 6 industries built at generation) and died ("The script died
+    unexpectedly."); the server stayed alive the whole 45 s
+    `wait_log` window, then owned shutdown; typed
+    `RuntimeError: Native script/asset error`; `failure.sav` retained
+    (10888 bytes); connections 0. Root cause depth: T-035's E2 source
+    save was `constructed` (fleet + funding completed → restore path →
+    marker); the `restored_fleet` guard is the pinned bridge's ONLY
+    reload-tolerance; every `PrepareDemo` variant demands an empty
+    world. Seal of record: cleanup all-true; manifest 0 mismatches;
+    `verify` → `ATTEMPT_NOT_VERIFIED: FAILED` rc 1; `pgrep -x openttd`
+    empty. Fix shapes pending operator approval: (a) full canonical-
+    shape fresh creation at seed 1181 (constructed-fleet save via the
+    proven `canonical_fleet.py` CREATE machinery, ~1200 s creation
+    budget, AdminPort in creation) or (b) minimal preconstruction
+    creation kept (the E175 save stays the source) with the GUI gate
+    corrected to welcome-tripwire-first + server-side join + GUI
+    liveness (script-death lines retained as the documented
+    reload-contract limit). Identities will advance under
+    stale-supersession when the operator picks. **Not claimed:** the
+    fresh world still not SEEN in the GUI; no Phase B criterion
+    satisfied; Phase B native closure outstanding (T-030 ×1, T-031 arm
+    A ×1 + arm B ×1, T-032 ×1). Evidence index E176.

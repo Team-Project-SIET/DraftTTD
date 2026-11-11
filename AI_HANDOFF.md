@@ -1806,3 +1806,64 @@ no headless-only execution.
    B criterion satisfied; Phase B native closure outstanding (T-030 ×1,
    T-031 arm A ×1 + arm B ×1, T-032 ×1, each its own fresh grant). T-035
    stays terminal VERIFIED at E170. Evidence index E175.
+
+## 2026-11-11 T-036 first post-fix GUI attempt executed once under the operator's explicit grant B2 (E176): typed FAILED — the E174 fix is proven at the load seam (the save's GSDT boots the script) but the bridge's reload contract only resumes a constructed-fleet save; the fresh creation save is preconstruction, so the restarted script's PrepareDemo refuses the already-prepared world (NETWORK_REQUIRES_EMPTY_WORLD); grant B2 consumed and void; fix-design decision pending operator approval
+
+1. **The run of record:** `artifacts/runtime/fresh-world-gui-probe-t036-2/`
+   sealed read-only; `result.json`
+   `{status: FAILED, launches: 1, connections: 0, error: "RuntimeError:
+   Native script/asset error"}` rc 1; `failure.sav` console-saved
+   (10888 bytes); CLAIM consumed; zero admin connections (the marker
+   gate precedes the connect). Staging: preflight PASS binding
+   `fresh-world-create-t036-3` (save digest `fddd6f5d…` == pin, bridge
+   `0fa190a0…` == pin, argv `-g source.sav` no `-G`, exactly one
+   inherited `[game_scripts]` section). Retained stderr timeline (all
+   19:49:05): dedicated up → the save's GSDT names the GameScript → the
+   pinned package's chain instantiates (`CanonicalFreightProof` → … →
+   `PlannerFreightProof::Start` at `network-parent.nut:8`) →
+   `ContinuousFreightProof::PrepareDemo` → `restored_fleet` false →
+   `NetworkFreightProof.PrepareDemo` → `throw
+   "NETWORK_REQUIRES_EMPTY_WORLD"` (the world carries the 6 industries
+   the same script built at generation, E175) → "The script died
+   unexpectedly." → the server stayed alive the whole 45 s `wait_log`
+   window (health() passed every poll) → owned shutdown (stderr line
+   63). 11 `[script:` lines retained.
+2. **Root cause of record** (read-only over the sealed bytes + bridge
+   sources): on save load OpenTTD restarts the GameScript fresh and
+   applies the save's script state via `Load(version,data)`;
+   `ContinuousFreightProof::Save()` types a fleetless tick-1 save
+   `fleet_status="preconstruction"` and its `Load()` returns BEFORE
+   setting `restored_fleet` (the `constructed` branch — fleet restored,
+   funding completed — is the only path that sets it); `PrepareDemo()`
+   then runs the network build whose first check demands an empty
+   world. The E2 canonical demo save (T-035's source,
+   `canonical-fleet-create-q3`, E170) carries `constructed` fleet +
+   completed capital funding → restore path → `PrepareDemo` skipped →
+   `BRIDGE_STARTED`/`FREIGHT_DELIVERY_READY` (its stderr lines 51-52).
+   Every `PrepareDemo` variant in the pinned bridge demands an empty
+   world; the `restored_fleet` guard is the bridge's ONLY
+   reload-tolerance. The E174 fix is proven at BOTH seams (GSDT
+   embedded at generation, script boots at load) — the remaining gap is
+   the save's script-state SHAPE, not GameScript injection.
+3. **Seal of record:** cleanup all-true (reaped rc 0, listener closed,
+   reservation released, workspace disposed, credential removed,
+   sockets closed); manifest 0 mismatches; post-run `verify` →
+   `ATTEMPT_NOT_VERIFIED: FAILED` rc 1. `pgrep -x openttd` empty.
+4. **State:** grant B2 consumed and void; grants A, A2, B, A3 all
+   consumed and void; the E175-verified creation save
+   `fresh-world-create-t036-3` stays sealed terminal VERIFIED and
+   untouched. Two honest fix shapes identified offline, BOTH awaiting
+   operator approval + fresh identities + fresh grants — (a) reshape
+   the creation stage to the proven `canonical_fleet.py` CREATE
+   machinery at seed 1181 (constructed-fleet save, ~1200 s creation
+   budget, AdminPort in creation; the GUI stage reloads through the
+   proven restore path), or (b) keep the minimal preconstruction
+   creation (the E175 save stays the source of record) and correct the
+   GUI gate: welcome-tripwire-first (seed 1181/64×64 native proof) +
+   server-side join + GUI liveness, with the script-death lines
+   retained as the documented reload-contract limit of a fleetless
+   save.
+5. **Not claimed:** the fresh world still not SEEN in the GUI; no Phase
+   B criterion satisfied; Phase B native closure outstanding (T-030 ×1,
+   T-031 arm A ×1 + arm B ×1, T-032 ×1, each its own fresh grant). T-035
+   stays terminal VERIFIED at E170. Evidence index E176.
