@@ -1369,3 +1369,32 @@ Spec of record `docs/specs/t033-consolidated-opex-roi.md`, ticket
    CAPEX UNKNOWN. Reproducible offline:
    `python -m app.experiments.phase_b_consolidation --output <fresh dir>`.
 3. **Tests:** 6 offline tests; statics clean.
+
+## 2026-11-11 T-034 standing full 15.3 regression run and recorded (E165); 6342/6286 passed/56 legacy-red by ID/0 errors/50 skipped; 197 manifests 0 mismatches; Phase B NOT natively closed — 4 separate fresh grants outstanding
+
+Spec of record `docs/specs/t034-standing-regression.md`, ticket
+`.scratch/phase-b-t034/issues/01-standing-regression-record.md`
+(resolved).
+
+1. **Full offline suite of record** at `f0f0155`:
+   `pytest -m 'not openttd'` with junitxml counting — 6342 collected /
+   6286 passed / 56 failed / 0 errors / 50 skipped; failure set stable
+   across two independent full runs.
+2. **Legacy-red by ID (all pre-existing):** 51 p08-e2e (E159) +
+   classification-execution + terrain-preparation (verified pre-existing
+   at pre-round HEAD `f0b5960` this round) + corridor-cargoflow2 + world-
+   correspondence (E155) + structural-world (E153). Zero failures in any
+   round-touched file; the round's 38 tests all pass inside the run.
+3. **Statics:** round paths clean per commit; repo-wide ruff 12 errors
+   in three never-touched pre-existing WIP files (counted, not
+   relabeled).
+4. **Manifest sweep:** 197 `artifact-manifest.sha256` under `artifacts/`
+   re-verified 0 mismatches; binary/OpenGFX/protected-save pins hold;
+   `pgrep -x openttd` empty.
+5. **Phase B status:** T-030/T-031/T-032/T-033/T-034 offline work ALL
+   DONE; native closure blocked ONLY on four separate fresh explicit
+   operator grants (T-030 ×1, T-031 arm A ×1, T-031 arm B ×1, T-032 ×1;
+   packages prepared in `.scratch/phase-b-t030/issues/02` and
+   `.scratch/phase-b-t031/issues/02/03` and
+   `.scratch/phase-b-t032/issues/01`; all prior grants void). T-033's
+   record stays partially UNKNOWN-pending until the receipts exist.

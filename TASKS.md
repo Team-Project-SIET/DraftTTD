@@ -3892,3 +3892,19 @@ no push, sealed bytes untouched. Evidence index E156.
     sources UNKNOWN-pending; E2 funding OBSERVED 400,000 GBP;
     consolidated CAPEX UNKNOWN). 6 offline tests; statics clean.
     Evidence index E164.
+
+16. **T-034 standing full 15.3 regression (2026-11-11, offline only at
+    `f0f0155`; docs commit this one; no push).** Full offline suite of
+    record `pytest -m 'not openttd'` (junitxml-counted): 6342 collected
+    / 6286 passed / 56 failed / 0 errors / 50 skipped; failure set
+    stable across two full runs. Legacy-red classified by ID — all 56
+    pre-existing (51 p08-e2e E159 scope; classification-execution +
+    terrain-preparation verified pre-existing at pre-round HEAD
+    `f0b5960` in a detached symlink-bound worktree; corridor-cargoflow2
+    + world-correspondence E155; structural-world E153); zero failures
+    in any round-touched file; round's own 38 tests all green inside
+    the run. Statics: round paths clean; repo-wide ruff 12 pre-existing
+    errors in three never-touched files (counted, not relabeled).
+    Manifest sweep: 197 manifests 0 mismatches; binary/OpenGFX/
+    protected-save pins hold; `pgrep -x openttd` empty. Evidence index
+    E165.

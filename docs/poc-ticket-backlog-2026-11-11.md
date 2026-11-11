@@ -151,3 +151,22 @@ commit pair (code+tests `b63eb16`, docs this commit); never pushed.
 Ledger pairing: this file + `.scratch/phase-b-t033/issues/` +
 EVIDENCE_INDEX E164 + AI_HANDOFF/TASKS addenda of the same date. One
 commit pair; never pushed.
+
+## T-034 standing full 15.3 regression — run and recorded (2026-11-11)
+
+- **Ticket 01 resolved** — spec `docs/specs/t034-standing-regression.md`:
+  6342 collected / 6286 passed / 56 failed / 0 errors / 50 skipped
+  (junitxml-counted, stable across two runs); legacy-red classified by
+  ID, all pre-existing (E159/E155/E153 records + two IDs verified
+  pre-existing at pre-round HEAD `f0b5960` this round); zero failures
+  in any round-touched file; 197 retained manifests 0 mismatches;
+  binary/OpenGFX/protected-save pins hold; no native process.
+- **Not claimed:** Phase B native closure — blocked ONLY on four
+  separate fresh explicit operator grants (T-030 ×1, T-031 arm A ×1,
+  T-031 arm B ×1, T-032 ×1); packages prepared at the gates; all prior
+  grants void; T-033's consolidated record re-derives offline after
+  each attempt.
+
+Ledger pairing: this file + `.scratch/phase-b-t034/issues/` +
+EVIDENCE_INDEX E165 + AI_HANDOFF/TASKS addenda of the same date. One
+commit; never pushed.
