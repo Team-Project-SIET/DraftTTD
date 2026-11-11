@@ -67,7 +67,7 @@ from .harness import (
 from .road_mutation import save, wait_log
 
 FRESH_CREATE = "fresh-world-create-t036-3"
-FRESH_GUI = "fresh-world-gui-probe-t036-3"
+FRESH_GUI = "fresh-world-gui-probe-t036-4"
 FRESH_CREATE_VERIFIED = "FRESH_WORLD_CREATE_VERIFIED"
 FRESH_GUI_VERIFIED = "FRESH_WORLD_GUI_PROBE_VERIFIED"
 SCHEMA = "fresh-world-prelaunch-v1"
@@ -667,12 +667,23 @@ async def run_gui(prepared, *, authorize_one_launch=False):
         async with asyncio.timeout(metadata["budgets"]["total_seconds"]):
             await backend.launch(prepared)
             result["launches"] = 1
+            # Native bind wait: the AdminPort listener binds ~1 s after the
+            # process spawns, and open_connection refuses instantly (no
+            # retry) — the first post-fix run raced the bind and lost
+            # (AuthDisconnected, fresh-world-gui-probe-t036-3). The bind
+            # line is emitted by the network core, independent of the
+            # GameScript (which dies by documented reload-contract below).
             # No GameScript marker gate: the pinned bridge's reload contract
             # only resumes a constructed-fleet save, and this save is
             # fleetless preconstruction — its GameScript restarts, refuses
             # the already-prepared world and dies before any marker could
             # appear. The welcome tripwire below is the world proof: it
             # reports the loaded save's seed and map size natively.
+            await wait_log(
+                backend,
+                prepared,
+                "Listening on 127.0.0.1:" + str(prepared.endpoints[1]) + " (IPv4)",
+            )
             session = await freight.PlannerDeliverySession.connect_secure(
                 "127.0.0.1",
                 prepared.endpoints[1],
