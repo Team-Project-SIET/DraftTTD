@@ -2022,3 +2022,35 @@ no headless-only execution.
    affected: Phase B native closure outstanding (T-030 ×1, T-031 arm A
    ×1 + arm B ×1, T-032 ×1, each its own fresh grant). T-035 stays
    terminal VERIFIED at E170. Evidence index E180.
+
+## 2026-11-11 T-036 closed-round follow-up offline (E181): master completion tracker compiled + committed; the Phase B front fully staged offline at HEAD `2e5fcc9` — T-030, T-031 arm A, arm B, T-032 all prepared, preflight PASS, `AUTHORIZATION_UNVERIFIED`; no launch, no connection, no grant consumed; next operator action is the fresh T-030 one-launch grant
+
+1. **Tracker of record:** `docs/master-completion-tracker-2026-11-11.md`
+   maps all remaining work across Phase B/C/Random World from the
+   sources; records verbatim that "Closed-Loop Optimization",
+   "Productization", "Final Release" and any "Definition of Done"
+   phrase exist nowhere in the sources, so the tracker reconstructs
+   the minimal acceptance conjunction from cited statements (labeled
+   RECONSTRUCTED); terminal-FAILED history and the UNKNOWN ledger are
+   carried without relabeling.
+2. **Staging of record (offline, zero native):** T-030
+   `canonical-fleet-exercise-t030-1`, T-031 arms
+   `canonical-fleet-matched-{a,b}-t031-1`, T-032
+   `canonical-fleet-continuous-t032-1` — each prepare rc 0, preflight
+   PASS, verify `AUTHORIZATION_UNVERIFIED`. Preconditions re-checked:
+   E2 canonical manifest match True with save
+   `51e45689ae40dfa53c2cc150a05076fcb6e5cc2f38ec4eff56908372ab1297eb`
+   == pin; binary pin `276d5b69…904c` at the harness default
+   `/home/fed/Downloads/openttd-15.3-linux-generic-amd64/openttd`;
+   OpenGFX pin `43a0c1da…03be`; `pgrep -x openttd` empty; stash
+   untouched. Ticket statuses updated (T-030 02, T-031 02+03, T-032
+   01). Ordering of record stands: T-030 → T-031 arm A → arm B →
+   T-032, each its own fresh grant.
+3. **Checks:** offline suites green at `2e5fcc9` —
+   `tests/test_fresh_world_gui.py` 19/19;
+   `test_canonical_fleet_exercise.py` + `test_canonical_fleet_matched.py`
+   + `test_canonical_fleet_continuous.py` 58/58.
+4. **Next operator action:** fresh explicit T-030 one-launch grant;
+   grant text of record in
+   `.scratch/phase-b-t030/issues/02-attempt-package.md`. Evidence
+   index E181.

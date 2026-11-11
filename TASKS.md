@@ -4385,3 +4385,27 @@ WORLD`
     satisfied by T-036 itself; Phase B native closure outstanding
     (T-030 ×1, T-031 arm A ×1 + arm B ×1, T-032 ×1, each its own fresh
     grant). Evidence index E180.
+
+32. **T-036 closed-round follow-up executed offline (E181; 2026-11-11;
+    zero native, no grant consumed).** Master completion tracker
+    compiled and committed: `docs/master-completion-tracker-2026-11-11.md`
+    — all remaining work mapped across Phase B/C/Random World;
+    verbatim finding that "Closed-Loop Optimization", "Productization",
+    "Final Release" and any "Definition of Done" phrase exist nowhere
+    in the sources, so the tracker's acceptance conjunction is labeled
+    RECONSTRUCTED; terminal-FAILED history and the UNKNOWN ledger
+    carried without relabeling. Phase B front fully staged at HEAD
+    `2e5fcc9`: T-030 `canonical-fleet-exercise-t030-1`, T-031 arms
+    `canonical-fleet-matched-{a,b}-t031-1`, T-032
+    `canonical-fleet-continuous-t032-1` — each prepare rc 0, preflight
+    PASS, verify `AUTHORIZATION_UNVERIFIED` rc 1. Preconditions
+    re-checked: E2 canonical manifest match True (save
+    `51e45689…1297eb` == pin), binary pin `276d5b69…904c` at the
+    harness default path, OpenGFX pin `43a0c1da…03be`, `pgrep -x
+    openttd` empty, stash untouched. Ticket statuses updated (T-030
+    02, T-031 02+03, T-032 01). Ordering of record: T-030 → T-031 arm
+    A → arm B → T-032, each its own fresh grant. Offline suites green:
+    19/19 fresh-GUI + 58/58 canonical trio. **The next operator action
+    is the fresh explicit T-030 one-launch grant** (grant text in
+    `.scratch/phase-b-t030/issues/02-attempt-package.md`). Evidence
+    index E181.

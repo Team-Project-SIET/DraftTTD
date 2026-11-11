@@ -1,7 +1,12 @@
 # 02: T-030 attempt package (ONE native exercise launch, operator-gated)
 
 **Type:** gate
-**Status:** claimed 2026-11-11 (package prepared; authorization NOT given)
+**Status:** staged 2026-11-11 at HEAD `2e5fcc9` — prepare rc 0,
+**preflight PASS**, verify `AUTHORIZATION_UNVERIFIED` rc 1; ONE launch
+awaits the operator's fresh explicit grant. No launch, no connection,
+no grant consumed. All prior grants (E141, E142, E145, attempts 1–6 of
+the FD-C-2 lane, and every grant before them) are void for reuse — this
+attempt needs its own fresh explicit grant in its own session.
 **Spec:** `docs/specs/t030-fleet-capacity-exercise.md`
 **Blocked by:** 01 (resolved, `c6ec803`) + fresh explicit operator
 authorization.
@@ -12,16 +17,29 @@ itself. All prior grants (E141, E142, E145, attempts 1–6 of the
 FD-C-2 lane, and every grant before them) are void for reuse — this
 attempt needs its own fresh explicit grant in its own session.
 
-## Preconditions (offline, checked at HEAD `c6ec803`)
+## Preconditions (re-checked 2026-11-11 at HEAD `2e5fcc9`)
 
-- Branch `miles/fright-delivery` clean, `stash@{0}` untouched.
+- Branch `miles/fright-delivery` clean, `stash@{0}` untouched
+  (`WIP on devmodule2: b352375`).
 - Binary pin `276d5b698a6b706154f3af588f6f885b3aebe518f4ecc8f869abf71383b1904c`
-  and OpenGFX pin `43a0c1dabf39cb865394f3a6cc36d4da5c10ecfaaf55652043104806810903be`
+  (`/home/fed/Downloads/openttd-15.3-linux-generic-amd64/openttd`, the
+  harness `BINARY` default; no env needed) and OpenGFX pin
+  `43a0c1dabf39cb865394f3a6cc36d4da5c10ecfaaf55652043104806810903be`
   (`artifacts/runtime/verified-assets/opengfx-8.0-all.zip`).
 - `pgrep -x openttd` empty immediately before the launch.
 - The E2 canonical evidence `artifacts/runtime/canonical-fleet-create-q3/`
-  manifest re-verified (0 mismatches) and its protected save still
+  manifest re-verified (match True, 0 mismatches) and its protected save still
   `51e45689ae40dfa53c2cc150a05076fcb6e5cc2f38ec4eff56908372ab1297eb`.
+
+## Staging of record (2026-11-11, HEAD `2e5fcc9`)
+
+`artifacts/runtime/canonical-fleet-exercise-t030-1/` prepared offline
+(prepare rc 0, "no launch"), preflight printed
+`canonical fleet exercise preflight PASS` (rc 0), post-staging verify
+returned `AUTHORIZATION_UNVERIFIED` (rc 1). `PRELAUNCH.json` binds the
+canonical save digest, binary
+`/home/fed/Downloads/openttd-15.3-linux-generic-amd64/openttd`, ports
+and budgets. Nothing launched, nothing connected, no grant consumed.
 
 ## Commands of record (in order; stop on any non-zero exit)
 

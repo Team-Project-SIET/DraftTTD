@@ -1,7 +1,9 @@
 # 01: Five-year continuous native attempt package (T-032)
 
 **Type:** gate package
-**Status:** prepared 2026-11-11 — authorizes nothing by itself; the
+**Status:** staged 2026-11-11 at HEAD `2e5fcc9` — prepare rc 0,
+preflight `canonical five-year continuous preflight PASS`, verify
+`AUTHORIZATION_UNVERIFIED` rc 1; authorizes nothing by itself; the
 launch requires the operator's separate fresh explicit authorization
 **Spec:** `docs/specs/t032-five-year-continuous.md`
 

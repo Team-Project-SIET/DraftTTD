@@ -1,8 +1,12 @@
 # 03: Arm B native attempt package (T-031)
 
 **Type:** gate package
-**Status:** prepared 2026-11-11 — authorizes nothing by itself; the
-launch requires the operator's separate fresh explicit authorization
+**Status:** staged 2026-11-11 at HEAD `2e5fcc9` — prepare rc 0,
+preflight `canonical matched arm B preflight PASS`, verify
+`AUTHORIZATION_UNVERIFIED` rc 1; authorizes nothing by itself; the
+launch requires the operator's separate fresh explicit authorization,
+requested only after arm A's attempt completes (ordering of record
+below)
 **Spec:** `docs/specs/t031-matched-ab-experiments.md`
 
 ## Preconditions (all offline-checkable)
