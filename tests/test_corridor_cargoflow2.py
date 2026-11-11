@@ -1973,6 +1973,16 @@ def test_funds_model_gate_pin_table():
     assert work.cargoflow2_funds_model_gate() == gate
 
 
+_candidate_1_path = (
+    REPO / "artifacts/experiments/d5-corridor-cargoflow-native-candidate-1/result.json"
+)
+_requires_candidate_1_evidence = pytest.mark.skipif(
+    not _candidate_1_path.is_file(),
+    reason="Retained native evidence candidate-1 absent on clone; not a defect",
+)
+
+
+@_requires_candidate_1_evidence
 def test_retained_probe_rebound_hypotheses():
     hyp = work.cargoflow2_hypotheses()
     assert hyp["state"] == "RETAINED_PROBE_REBOUND"
@@ -2454,6 +2464,22 @@ def test_delivered_plan_digests_lock_the_byte_equal_v1s():
     assert cf.cargoflow2_route_binding(2).digest.startswith("26408e77")
 
 
+_requires_candidate_6_7_evidence = pytest.mark.skipif(
+    not all(
+        (
+            REPO
+            / "artifacts"
+            / "experiments"
+            / f"d5-corridor-cargoflow2-native-{name}"
+            / "result.json"
+        ).is_file()
+        for name in ("candidate-6", "candidate-7")
+    ),
+    reason="Retained native evidence candidate-6/7 absent on clone; not a defect",
+)
+
+
+@_requires_candidate_6_7_evidence
 def test_delivered_verdict_never_fires_on_the_terminal_class():
     """The verdict lock accepts nothing the round-6/7 outcome class passes:
     replaying the two retained native COMPLETE phases' own evidence through
