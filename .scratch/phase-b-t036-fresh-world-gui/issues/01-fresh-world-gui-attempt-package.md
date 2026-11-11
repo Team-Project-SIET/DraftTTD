@@ -416,11 +416,50 @@ restart-and-death; one real desktop GUI client join as spectator,
 observation window, owned stop; no retry, no reconnect; stop on
 unexpected failure."
 
+## Attempt record (2026-11-11, E180): third gate-corrected GUI attempt executed once under grant B5 — TYPED `FRESH_WORLD_GUI_PROBE_VERIFIED` rc 0; all approved proofs landed; the fresh seed-1181 world is SEEN in the real KDE desktop GUI; T-036 CLOSED
+
+Grant B5 (operator's explicit in-session "Grant B5 — launch now"
+answer) was consumed by exactly one launch of
+`fresh-world-gui-probe-t036-5` (HEAD `73312ed`, tree clean, preflight
+PASS). `result.json`
+`{status: FRESH_WORLD_GUI_PROBE_VERIFIED, launches: 1, connections: 1,
+gui_client: "OBSERVATION_WINDOW_ELAPSED"}` rc 0; CLAIM consumed.
+Timeline (20:57:32): the E178 bind wait held (`Listening on
+127.0.0.1:36069`/`42105 (IPv4)` stderr lines 40-42); the AdminPort
+connect + authenticate SUCCEEDED (connections 1); the welcome tripwire
+PASSED (`runtime-identity.json` sealed: revision `15.3`, seed `1181`,
+width/height 64 — the world proof of record); the documented contract
+played out and was tolerated by the E179 scoped health scan
+(`NETWORK_REQUIRES_EMPTY_WORLD` stderr line 53, death summary line 62 —
+retained evidence, the join-wait polls survived); the real desktop GUI
+client joined as spectator and the SERVER-SIDE JOIN MARKER LANDED
+(`stdout.log` line 7: `*** Fresh World GUI Probe has joined the game
+(Client #2)`; `gui-client.json`: client name `Fresh World GUI Probe`,
+`join_verified: true`, spectator company 255, observation window
+elapsed, client terminated before server cleanup) → owned stop, one
+launch, one connection, one join. Seal of record: cleanup all-true
+(`cleanup.json`: reaped rc 0, quit_requested, listener closed,
+connection closed, reservation released, workspace disposed,
+credential removed, sockets closed, admin_frame_accounting
+total_post_auth_frames 0); manifest match True (0 mismatches);
+post-run `verify` → `FRESH_WORLD_GUI_PROBE_VERIFIED` rc 0; `pgrep -x
+openttd` empty. The t036-5 bytes are sealed untouched, never
+relabeled. **T-036 is CLOSED: the acceptance target is met — a newly
+generated 64×64 seed-1181 temperate world visibly running in the
+actual OpenTTD 15.3 GUI on the operator's desktop. The E175 creation
+save stays the source of record; no further T-036 grant is needed.**
+
+**Grant B5 is consumed and void; grants A, A2, B, A3, B2, B3, B4, B5
+are all consumed and void.**
+
 ## Grant texts of record (paste per authorization, one per attempt)
 
 Grant A3 (creation) — CONSUMED 2026-11-11, void.
 
 Grant B2 (GUI probe) — CONSUMED 2026-11-11, void.
+
+Grant B5 (GUI probe, t036-5) — CONSUMED 2026-11-11, void: the one
+authorized launch verified (`FRESH_WORLD_GUI_PROBE_VERIFIED`, E180).
 
 Fresh grants will be requested per attempt after the operator picks the
 fix shape; grant texts will be regenerated for the advancing identities.

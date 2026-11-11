@@ -1987,3 +1987,38 @@ no headless-only execution.
    criterion satisfied; Phase B native closure outstanding (T-030 ×1,
    T-031 arm A ×1 + arm B ×1, T-032 ×1, each its own fresh grant). T-035
    stays terminal VERIFIED at E170. Evidence index E179.
+
+## 2026-11-11 T-036 third gate-corrected GUI attempt executed once under the operator's explicit grant B5 (E180): TYPED `FRESH_WORLD_GUI_PROBE_VERIFIED` rc 0 — the fresh seed-1181 world is SEEN in the real KDE desktop GUI; all approved proofs landed; T-036 CLOSED
+
+1. **The run of record:** `artifacts/runtime/fresh-world-gui-probe-t036-5/`
+   sealed read-only; `result.json`
+   `{status: FRESH_WORLD_GUI_PROBE_VERIFIED, launches: 1, connections: 1,
+   gui_client: "OBSERVATION_WINDOW_ELAPSED"}` rc 0; CLAIM consumed. The
+   operator answered "Grant B5 — launch now" in-session (HEAD `73312ed`,
+   tree clean, preflight PASS). Timeline (20:57:32): the E178 bind wait
+   held (`Listening on 127.0.0.1:36069`/`42105 (IPv4)` stderr lines
+   40-42) → AdminPort connect + authenticate SUCCEEDED (connections 1)
+   → the welcome tripwire PASSED (`runtime-identity.json`: revision
+   `15.3`, seed `1181`, width/height 64) → the documented contract
+   played out (`NETWORK_REQUIRES_EMPTY_WORLD` stderr line 53, death
+   summary line 62 — the E179 scoped health scan tolerated it, the
+   join-wait polls survived) → the real desktop GUI client joined as
+   spectator and the SERVER-SIDE JOIN MARKER LANDED (`stdout.log`
+   line 7: `*** Fresh World GUI Probe has joined the game (Client #2)`,
+   `gui-client.json` `join_verified: true`, client name `Fresh World
+   GUI Probe`, spectator company 255, observation window elapsed,
+   client terminated before server cleanup) → owned stop.
+2. **Seal of record:** cleanup all-true (`cleanup.json`: reaped rc 0,
+   quit_requested, listener closed, connection closed, reservation
+   released, workspace disposed, credential removed, sockets closed,
+   admin_frame_accounting total_post_auth_frames 0); manifest match
+   True (0 mismatches); post-run `verify` →
+   `FRESH_WORLD_GUI_PROBE_VERIFIED` rc 0; `pgrep -x openttd` empty.
+3. **State:** T-036 CLOSED — the acceptance target is met: a newly
+   generated 64×64 seed-1181 temperate world visibly running in the
+   actual OpenTTD 15.3 GUI on the operator's desktop. The E175 creation
+   save stays the source of record; grants A, A2, B, A3, B2, B3, B4,
+   B5 all consumed and void; no further T-036 grant needed. Not
+   affected: Phase B native closure outstanding (T-030 ×1, T-031 arm A
+   ×1 + arm B ×1, T-032 ×1, each its own fresh grant). T-035 stays
+   terminal VERIFIED at E170. Evidence index E180.

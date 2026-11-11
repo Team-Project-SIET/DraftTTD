@@ -4352,3 +4352,36 @@ no push, sealed bytes untouched. Evidence index E156.
     claimed: the fresh world still not SEEN in the GUI; no Phase B
     criterion satisfied; Phase B native closure outstanding (T-030 ×1,
     T-031 arm A ×1 + arm B ×1, T-032 ×1). Evidence index E179.
+
+31. **T-036 third gate-corrected GUI attempt executed once under the
+    operator's explicit grant B5 (E180; 2026-11-11; typed
+    `FRESH_WORLD_GUI_PROBE_VERIFIED` rc 0 — T-036 CLOSED, the fresh
+    world SEEN in the real KDE GUI; grant B5 consumed and void).**
+    Gate round: HEAD `73312ed`, tree clean; t036-5 staged → **preflight
+    PASS**; the operator answered "Grant B5 — launch now" in-session.
+    The one launch landed every approved proof: the E178 bind wait
+    held (`Listening on 127.0.0.1:36069`/`42105 (IPv4)`), the AdminPort
+    connect + authenticate SUCCEEDED (connections 1), the welcome
+    tripwire PASSED (`runtime-identity.json` sealed: revision `15.3`,
+    seed `1181`, width/height 64 — the world proof of record), the
+    documented GameScript reload-contract death played out and was
+    tolerated by the E179 scoped health scan (`NETWORK_REQUIRES_EMPTY_
+WORLD`
+    stderr line 53, death summary line 62 — retained evidence, the
+    join-wait polls survived), the real desktop GUI client joined as
+    spectator and the SERVER-SIDE JOIN MARKER LANDED (`stdout.log`
+    line 7: `*** Fresh World GUI Probe has joined the game (Client #2)`;
+    `gui-client.json`: client name `Fresh World GUI Probe`,
+    `join_verified: true`, spectator company 255,
+    `OBSERVATION_WINDOW_ELAPSED`, client terminated before server
+    cleanup) → owned stop, one launch, one connection, one join. Seal
+    of record: cleanup all-true (reaped rc 0, quit_requested, listener
+    closed, connection closed, reservation released, workspace
+    disposed, credential removed, sockets closed,
+    admin_frame_accounting total_post_auth_frames 0); manifest match
+    True (0 mismatches); post-run `verify` →
+    `FRESH_WORLD_GUI_PROBE_VERIFIED` rc 0; `pgrep -x openttd` empty.
+    **Not claimed by T-036 anymore (closed):** no Phase B criterion
+    satisfied by T-036 itself; Phase B native closure outstanding
+    (T-030 ×1, T-031 arm A ×1 + arm B ×1, T-032 ×1, each its own fresh
+    grant). Evidence index E180.
