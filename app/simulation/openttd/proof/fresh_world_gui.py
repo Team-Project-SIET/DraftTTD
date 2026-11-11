@@ -6,15 +6,21 @@ at attempt time, in TWO separately authorized attempts:
 
 1. `fresh-world-create-*`: ONE dedicated-server launch generates a NEW world
    from the explicit seed and map parameters of record (`-g <flat
-   heightmap> -G <seed>` + the proven [game_creation] config; native marker
-   "Map generated, starting game"), then console-saves it into the attempt
-   directory where its digest is pinned (world.json). No admin connection,
-   no canonical input, no bridge staged.
+   heightmap> -G <seed>` + the proven [game_creation] config with
+   `[game_scripts] RoadFreightProof` and the byte-pinned bridge staged, so
+   the save embeds the GameScript in its GSDT; native marker "Map
+   generated, starting game"), then console-saves it into the attempt
+   directory where its digest is pinned (world.json). No admin
+   connection, no canonical input.
 2. `fresh-world-gui-probe-*`: the byte-pinned bridge host launches from the
    digest-pinned fresh save, the runtime welcome frame must report the fresh
-   seed and map size (the demo lane's seed 42 refuses typed), and a real
-   desktop GUI client joins the running fresh world as a spectator (the
-   T-035 join machinery, verified server-side).
+   seed and map size (the demo lane's seed 42 refuses typed) — the welcome
+   tripwire is the world proof and the connection gate, because the pinned
+   bridge's reload contract only resumes a constructed-fleet save while the
+   fresh save is fleetless preconstruction (its GameScript restarts, refuses
+   the already-prepared world and dies; the death lines are retained
+   evidence) — and a real desktop GUI client joins the running fresh world
+   as a spectator (the T-035 join machinery, verified server-side).
 
 No canonical/demo world input exists anywhere in this family: the creation
 stage accepts none structurally, the GUI stage refuses any directory that is
@@ -61,7 +67,7 @@ from .harness import (
 from .road_mutation import save, wait_log
 
 FRESH_CREATE = "fresh-world-create-t036-3"
-FRESH_GUI = "fresh-world-gui-probe-t036-2"
+FRESH_GUI = "fresh-world-gui-probe-t036-3"
 FRESH_CREATE_VERIFIED = "FRESH_WORLD_CREATE_VERIFIED"
 FRESH_GUI_VERIFIED = "FRESH_WORLD_GUI_PROBE_VERIFIED"
 SCHEMA = "fresh-world-prelaunch-v1"
@@ -399,8 +405,11 @@ def prepare_gui(directory, *, fresh_world):
         # The staged save carries the GameScript of record (GSDT chunk): the
         # byte-pinned bridge package is staged only so the scanner can resolve
         # the saved GameScript name; a runtime config append can never inject
-        # a GameScript into a loaded save. Its ready marker still gates the
-        # admin connection.
+        # a GameScript into a loaded save. The pinned bridge's reload contract
+        # only resumes a constructed-fleet save, so this fleetless save's
+        # GameScript restarts, refuses the already-prepared world and dies —
+        # its death lines are retained evidence; the welcome tripwire (seed,
+        # map size) is the world proof and gates the admin flow.
         target = workspace.game / "RoadFreightProof"
         target.mkdir()
         for name, data in package.items():
@@ -658,7 +667,12 @@ async def run_gui(prepared, *, authorize_one_launch=False):
         async with asyncio.timeout(metadata["budgets"]["total_seconds"]):
             await backend.launch(prepared)
             result["launches"] = 1
-            await wait_log(backend, prepared, "FREIGHT_DELIVERY_READY")
+            # No GameScript marker gate: the pinned bridge's reload contract
+            # only resumes a constructed-fleet save, and this save is
+            # fleetless preconstruction — its GameScript restarts, refuses
+            # the already-prepared world and dies before any marker could
+            # appear. The welcome tripwire below is the world proof: it
+            # reports the loaded save's seed and map size natively.
             session = await freight.PlannerDeliverySession.connect_secure(
                 "127.0.0.1",
                 prepared.endpoints[1],
