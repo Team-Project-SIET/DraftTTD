@@ -4285,3 +4285,36 @@ no push, sealed bytes untouched. Evidence index E156.
     SEEN in the GUI; no Phase B criterion satisfied; Phase B native
     closure outstanding (T-030 ×1, T-031 arm A ×1 + arm B ×1, T-032
     ×1). Evidence index E177.
+
+29. **T-036 first gate-corrected GUI attempt executed once under the
+    operator's explicit grant B3 (E178; 2026-11-11; typed FAILED, never
+    relabeled; grant B3 consumed and void; fix completed under the
+    approved shape, commit `7a5319b`).** Gate round: HEAD `cc1ae2a`,
+    tree clean, `pgrep -x openttd` empty; t036-3 staged → **preflight
+    PASS**; the operator answered "Grant B3 — launch now" in-session.
+    The one launch: the server came up (game+admin listeners bound
+    `127.0.0.1:58175`/`44797`), the E176 contract played out exactly as
+    documented (the save's GSDT booted the GameScript, the restarted
+    script refused the already-prepared world
+    `NETWORK_REQUIRES_EMPTY_WORLD` and died, 11 `[script:` lines, the
+    server alive until owned shutdown) — but the Python-side connect
+    fired before the bind landed: `open_connection` converts
+    ECONNREFUSED to an instant `AuthDisconnected` (no retry) and
+    `backend.launch` returns at process spawn; the failure-path console
+    save raced the startup console reader (`failure_save_error: owned
+    native save completion missing`; NO `failure.sav` — its absence is
+    part of the record, never substituted). Seal of record: cleanup
+    all-true; manifest 0 mismatches; `verify` →
+    `ATTEMPT_NOT_VERIFIED: FAILED` rc 1; `pgrep -x openttd` empty. Fix
+    of record (offline, zero native): `run_gui` awaits the native bind
+    marker `Listening on 127.0.0.1:<admin_port> (IPv4)` (network core,
+    GameScript-independent) between launch and connect; the welcome
+    tripwire stays the world proof and the connection gate; tests 18 +
+    46 green; statics clean. Identity advanced (stale-supersession):
+    `fresh-world-gui-probe-t036-3` → `fresh-world-gui-probe-t036-4`;
+    re-staged: prepare → **preflight PASS** → `AUTHORIZATION_UNVERIFIED`
+    rc 1. **The one GUI launch awaits a FRESH explicit grant B4;
+    grants A, A2, B, A3, B2, B3 all consumed and void.** Not claimed:
+    the fresh world still not SEEN in the GUI; no Phase B criterion
+    satisfied; Phase B native closure outstanding (T-030 ×1, T-031 arm
+    A ×1 + arm B ×1, T-032 ×1). Evidence index E178.

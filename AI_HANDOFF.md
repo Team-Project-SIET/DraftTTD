@@ -1900,3 +1900,47 @@ no headless-only execution.
    B criterion satisfied; Phase B native closure outstanding (T-030 ×1,
    T-031 arm A ×1 + arm B ×1, T-032 ×1, each its own fresh grant). T-035
    stays terminal VERIFIED at E170. Evidence index E177.
+
+## 2026-11-11 T-036 first gate-corrected GUI attempt executed once under the operator's explicit grant B3 (E178): typed FAILED — the connect raced the AdminPort listener bind (open_connection refuses instantly, no retry); fix completed under the approved shape (native bind-line wait before connecting, commit `7a5319b`); identity advanced to `fresh-world-gui-probe-t036-4`; grant B3 consumed and void; grant B4 awaited
+
+1. **The run of record:** `artifacts/runtime/fresh-world-gui-probe-t036-3/`
+   sealed read-only; `result.json`
+   `{status: FAILED, launches: 1, connections: 0, error:
+   "AuthDisconnected: Admin connection failed", failure_save_error:
+   "owned native save completion missing"}` rc 1; CLAIM consumed; NO
+   `failure.sav` (the failure-path console save raced the startup
+   console reader — its absence is part of the record, never
+   substituted). The server DID come up and the E176 contract played
+   out exactly as documented: listeners bound, the save's GSDT booted
+   the GameScript (`FREIGHT_GAME_TIME_START`), the restarted script
+   refused the already-prepared world (`NETWORK_REQUIRES_EMPTY_WORLD`,
+   `network-parent.nut:8` → `continuous-parent.nut:39`) and died; 11
+   `[script:` lines retained; the server stayed alive until the owned
+   shutdown. The Python-side connect fired before the bind landed →
+   ECONNREFUSED → instant typed failure.
+2. **Root cause of record:** `connect_secure`'s
+   `asyncio.open_connection` converts ECONNREFUSED to an instant
+   `AuthDisconnected` (no retry), and `backend.launch` returns at
+   process spawn while the AdminPort listener binds ~1 s later — every
+   prior lane waited for a pre-connect marker (the script marker) and
+   never raced; the gate correction removed the wait without
+   replacing it.
+3. **Fix of record (commit `7a5319b`, completing the approved shape):**
+   `run_gui` awaits the native bind marker
+   `Listening on 127.0.0.1:<admin_port> (IPv4)` between launch and
+   connect (emitted by the network core, independent of the
+   GameScript); the welcome tripwire stays the world proof and the
+   connection gate; the failure-path console save now always lands
+   after the console reader is up. Tests 18 + lane suites 46 green;
+   ruff/format/py_compile/scoped ty clean.
+4. **Seal of record:** cleanup all-true; manifest 0 mismatches;
+   `verify` → `ATTEMPT_NOT_VERIFIED: FAILED` rc 1; `pgrep -x openttd`
+   empty.
+5. **State:** grant B3 consumed and void; grants A, A2, B, A3, B2, B3
+   all consumed and void; the E175 creation save stays the source of
+   record. Re-stage `fresh-world-gui-probe-t036-4`: prepare → preflight
+   PASS → `AUTHORIZATION_UNVERIFIED` rc 1; **grant B4 awaited.**
+6. **Not claimed:** the fresh world still not SEEN in the GUI; no Phase
+   B criterion satisfied; Phase B native closure outstanding (T-030 ×1,
+   T-031 arm A ×1 + arm B ×1, T-032 ×1, each its own fresh grant). T-035
+   stays terminal VERIFIED at E170. Evidence index E178.

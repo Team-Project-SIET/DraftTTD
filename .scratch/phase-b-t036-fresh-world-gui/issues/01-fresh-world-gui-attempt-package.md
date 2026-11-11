@@ -290,6 +290,51 @@ proof) + server-side join + GUI liveness, with the script-death lines
 retained as the documented reload-contract limit of a fleetless save.**
 Identities advance by stale-supersession when the operator picks.
 
+## Attempt record (2026-11-11, E178): first gate-corrected GUI attempt executed once under grant B3 — typed FAILED; the connect raced the AdminPort listener bind; the approved shape completed with a native bind-line wait
+
+Grant B3 (operator's explicit in-session "Grant B3 — launch now"
+answer) was consumed by exactly one launch of
+`fresh-world-gui-probe-t036-3` (HEAD `cc1ae2a`, tree clean, preflight
+PASS). `result.json`
+`{status: FAILED, launches: 1, connections: 0, error: "AuthDisconnected:
+Admin connection failed", failure_save_error: "owned native save
+completion missing"}` rc 1; CLAIM consumed; NO `failure.sav` (the
+failure-path console save raced the startup console reader — its
+absence is part of the record, never substituted). The server DID come
+up and the E176 contract played out exactly as documented: game+admin
+listeners bound (`127.0.0.1:58175`/`44797`), the save's GSDT booted the
+GameScript (`FREIGHT_GAME_TIME_START`), the restarted script refused the
+already-prepared world (`NETWORK_REQUIRES_EMPTY_WORLD`,
+`network-parent.nut:8` → `continuous-parent.nut:39`) and died; 11
+`[script:` lines retained; the server stayed alive until the owned
+shutdown. Root cause of record: `connect_secure`'s
+`asyncio.open_connection` converts ECONNREFUSED to an instant
+`AuthDisconnected` (no retry) and `backend.launch` returns at process
+spawn while the AdminPort listener binds ~1 s later — every prior lane
+waited for a pre-connect marker and never raced; the gate correction
+removed the wait without replacing it. Seal of record: cleanup
+all-true; manifest 0 mismatches; post-run `verify` →
+`ATTEMPT_NOT_VERIFIED: FAILED` rc 1; `pgrep -x openttd` empty. The
+t036-3 bytes are sealed untouched, never relabeled.
+
+Fix of record completing the approved shape (commit `7a5319b`, offline,
+zero native): `run_gui` awaits the native bind marker
+`Listening on 127.0.0.1:<admin_port> (IPv4)` (emitted by OpenTTD's
+network core, independent of the GameScript) between launch and
+connect; the welcome tripwire stays the world proof and the connection
+gate; the failure-path console save now always lands after the console
+reader is up. Tests 18 + lane suites 46 green (64 total); statics
+clean. Identity advanced by stale-supersession:
+`fresh-world-gui-probe-t036-3` → `fresh-world-gui-probe-t036-4` (the
+t036-3 dir stays sealed terminal FAILED history, unreachable from the
+family by name). The re-staged `fresh-world-gui-probe-t036-4`: prepare →
+**preflight PASS** → verify `AUTHORIZATION_UNVERIFIED` as of
+2026-11-11 (source t036-3, save digest `fddd6f5d…` == pin, bridge
+`0fa190a0…` == pin, argv `-g source.sav`).
+
+**Grant B3 is consumed and void; grants A, A2, B, A3, B2, B3 are all
+consumed and void.**
+
 ## Fix record (2026-11-11, E176 follow-up): operator approved the gate-correction shape — GUI gate is now welcome-tripwire-first; identity advanced to `fresh-world-gui-probe-t036-3`
 
 The operator answered "Correct the GUI gate (Recommended)" in-session:
@@ -316,14 +361,15 @@ FAILED history, unreachable from the family by name). The re-staged
 `AUTHORIZATION_UNVERIFIED` as of 2026-11-11 (source t036-3, save digest
 `fddd6f5d…` == pin, bridge `0fa190a0…` == pin, argv `-g source.sav`).
 
-**Grant B3 (GUI probe, only attempt of record now):** "Authorize
+**Grant B4 (GUI probe, only attempt of record now):** "Authorize
 exactly one fresh-world GUI probe run: `fresh_world_gui run
-artifacts/runtime/fresh-world-gui-probe-t036-3 --authorize-one-launch`.
-One dedicated-server launch from the digest-pinned fresh save, one
-AdminPort connection (welcome tripwire seed 1181 / 64×64 / revision
-15.3 is the world proof), one real desktop GUI client join as
-spectator, observation window, owned stop; no retry, no reconnect;
-stop on unexpected failure."
+artifacts/runtime/fresh-world-gui-probe-t036-4 --authorize-one-launch`.
+One dedicated-server launch from the digest-pinned fresh save; the run
+waits for the native AdminPort bind, then connects and requires the
+welcome frame to report revision 15.3, seed 1181 and 64×64 (the world
+proof), one real desktop GUI client join as spectator, observation
+window, owned stop; no retry, no reconnect; stop on unexpected
+failure."
 
 ## Grant texts of record (paste per authorization, one per attempt)
 
