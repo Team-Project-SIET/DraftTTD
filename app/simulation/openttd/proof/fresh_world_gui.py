@@ -67,7 +67,7 @@ from .harness import (
 from .road_mutation import save, wait_log
 
 FRESH_CREATE = "fresh-world-create-t036-3"
-FRESH_GUI = "fresh-world-gui-probe-t036-4"
+FRESH_GUI = "fresh-world-gui-probe-t036-5"
 FRESH_CREATE_VERIFIED = "FRESH_WORLD_CREATE_VERIFIED"
 FRESH_GUI_VERIFIED = "FRESH_WORLD_GUI_PROBE_VERIFIED"
 SCHEMA = "fresh-world-prelaunch-v1"
@@ -189,6 +189,26 @@ def require_fresh_welcome(welcome, expected):
 class FreshWorldBackend(freight.PlannerBackend):
     """The proven backend minus the canonical planning-frame wiring; the
     launch identity check is the fresh attempt's own sealed argv."""
+
+    # The pinned bridge's reload contract kills this save's GameScript: a
+    # fleetless preconstruction save restarts the script, which refuses the
+    # already-prepared world (E176/E177). The death is documented expected
+    # evidence — tolerate the death summary ONLY while the expected throw is
+    # in the same logs; any other fatal marker (and any death without the
+    # expected throw) still raises.
+    DOCUMENTED_RELOAD_DEATH = "NETWORK_REQUIRES_EMPTY_WORLD"
+
+    def _check_logs(self) -> None:
+        assert self._prepared is not None
+        text = "\n".join(
+            p.read_text(errors="replace")
+            for p in (self._prepared.spec.stdout_path, self._prepared.spec.stderr_path)
+        )
+        if self.DOCUMENTED_RELOAD_DEATH in text:
+            text = "\n".join(
+                line for line in text.splitlines() if "The script died unexpectedly" not in line
+            )
+        self._scan_fatal(text)
 
     def validate_launch(self, prepared):
         metadata = json.loads((prepared.directory / "PRELAUNCH.json").read_bytes())

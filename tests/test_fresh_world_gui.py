@@ -252,6 +252,32 @@ def test_gui_preflight_passes_offline(tmp_path, monkeypatch):
     assert metadata["fresh_save_sha256"] == sha256(creation / "fresh-world.sav")
 
 
+def test_health_tolerates_only_the_documented_reload_death(tmp_path):
+    """The E176/E177 documented contract: the fleetless preconstruction
+    save's GameScript restarts and refuses the already-prepared world —
+    the death summary is expected evidence and must not trip the shared
+    fatal-log scan. Scoped: tolerated only while the expected throw is in
+    the same logs; a death without the throw, or any other fatal marker,
+    still raises."""
+    backend = object.__new__(fresh.FreshWorldBackend)
+    out = tmp_path / "stdout.log"
+    err = tmp_path / "stderr.log"
+    backend._prepared = SimpleNamespace(spec=SimpleNamespace(stdout_path=out, stderr_path=err))
+    out.write_text("")
+    err.write_text("dbg: [script:4] [18] [I] FREIGHT_GAME_TIME_START\n")
+    fresh.FreshWorldBackend._check_logs(backend)
+    err.write_text(
+        "Your script made an error: NETWORK_REQUIRES_EMPTY_WORLD\nThe script died unexpectedly.\n"
+    )
+    fresh.FreshWorldBackend._check_logs(backend)
+    err.write_text("The script died unexpectedly.\n")
+    with pytest.raises(RuntimeError):
+        fresh.FreshWorldBackend._check_logs(backend)
+    err.write_text("Your script made an error: NETWORK_REQUIRES_EMPTY_WORLD\nError compiling\n")
+    with pytest.raises(RuntimeError):
+        fresh.FreshWorldBackend._check_logs(backend)
+
+
 def test_require_fresh_welcome_rejects_demo_seed():
     """The runtime no-fallback tripwire: the hosted world must report the
     fresh seed and map size; the demo lane's seed 42 refuses typed."""

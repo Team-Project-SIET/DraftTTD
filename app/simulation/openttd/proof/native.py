@@ -307,6 +307,9 @@ class NativeBackend:
             p.read_text(errors="replace")
             for p in (self._prepared.spec.stdout_path, self._prepared.spec.stderr_path)
         )
+        self._scan_fatal(text)
+
+    def _scan_fatal(self, text: str) -> None:
         fatal = (
             "The script died unexpectedly",
             "Error compiling",
