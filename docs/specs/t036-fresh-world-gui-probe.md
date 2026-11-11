@@ -1,6 +1,6 @@
 # T-036 — Fresh-world GUI native probe (T-035 follow-up)
 
-Status: BUILT OFFLINE (E171). No native run has happened; both attempts await their own fresh explicit grant. T-035's sealed evidence (`canonical-fleet-gui-probe-t035-3`, E170) is terminal VERIFIED and untouched.
+Status: creation `fresh-world-create-t036-3` BUILT OFFLINE + STAGED, PREFLIGHT PASS at `AUTHORIZATION_UNVERIFIED` (commit `9731d2b`); the first GUI attempt `fresh-world-gui-probe-t036-1` executed once under grant B and is terminal typed FAILED (E174) — root cause: a loaded OpenTTD 15.3 save carries its GameScript in the save itself (GSDT chunk), so the runtime config append could never inject one into the GameScript-less fresh creation save; the family of record below now stages the GameScript at generation. T-035's sealed evidence (`canonical-fleet-gui-probe-t035-3`, E170) is terminal VERIFIED and untouched; the E173-verified `fresh-world-create-t036-2` save stays sealed history (its world carries no GameScript and is superseded as a GUI source, never relabeled).
 
 ## Purpose
 
@@ -8,10 +8,10 @@ T-035 proved the desktop-GUI probe guarantees over the frozen demo-lane world (t
 
 ## Family of record
 
-Two **separately authorized** attempts (two identities, two grants, one launch each):
+Separately authorized attempts (two identities, two grants, one launch each), strictly sequential:
 
-1. `fresh-world-create-t036-2` — schema `fresh-world-prelaunch-v1`, terminal status `FRESH_WORLD_CREATE_VERIFIED` (E173: executed once under grant A2, world generated natively from seed 1181, save digest-pinned `8e7d0109012863ec…`, owned cleanup all-true, manifest 0 mismatches, terminal VERIFIED). Supersession: `fresh-world-create-t036-1` executed once under grant A, E172 — generation + console save succeeded natively, typed FAILED at the seal seam, bytes preserved; grant A consumed and void.
-2. `fresh-world-gui-probe-t036-1` — schema `fresh-world-prelaunch-v1`, client receipt schema `fresh-world-gui-client-v1`, terminal status `FRESH_WORLD_GUI_PROBE_VERIFIED`.
+1. `fresh-world-create-t036-3` — schema `fresh-world-prelaunch-v1`, terminal status `FRESH_WORLD_CREATE_VERIFIED`. The creation launch now **stages the byte-pinned bridge and configures `[game_scripts] RoadFreightProof = ` at generation time** (the proven canonical-CREATE form), so the generated world embeds the GameScript in its save (GSDT); `bridge_sha256` is pinned in `PRELAUNCH.json`. Awaits fresh grant A3. Supersessions: `fresh-world-create-t036-2` executed once under grant A2, terminal VERIFIED (E173: seed-1181 save digest-pinned `8e7d0109012863ec…`) — **its world carries no GameScript** (the creation config of that identity deliberately omitted `[game_scripts]`), so it can never host the probe; `fresh-world-create-t036-1` executed once under grant A, E172 — typed FAILED at the seal seam after native generation + save; grant A consumed and void.
+2. `fresh-world-gui-probe-t036-2` — schema `fresh-world-prelaunch-v1`, client receipt schema `fresh-world-gui-client-v1`, terminal status `FRESH_WORLD_GUI_PROBE_VERIFIED`. Loads the t036-3 save; the save's GSDT names the GameScript, so the GUI stage stages the bridge package only (the scanner resolves the saved name from `game/RoadFreightProof/`) and appends **nothing** to the config (OpenTTD 15.3 `game_sl.cpp` wipes runtime GameScript config on save load — `GameConfig::GetConfig(SSS_FORCE_GAME)->Change(std::nullopt)`). Awaits its own fresh grant B2 after t036-3 verifies. Supersession: `fresh-world-gui-probe-t036-1` executed once under grant B (operator in-session, 2026-11-11), typed FAILED at the 45 s `wait_log` readiness gate — `TimeoutError: explicit native readiness marker missing: FREIGHT_DELIVERY_READY`; zero script lines in the retained stderr (31 grf + 21 net, identical to the VERIFIED T-035 sequence up to the last GRFInfo pairs); the GameScript could never start because the loaded save's GSDT was empty; failure save retained; bytes sealed, grant B consumed and void.
 
 Genealogy is strictly sequential: the GUI stage refuses any source that is not the verified fresh creation attempt. Neither stage ever consumes Phase B ticket receipts; both are their own tickets.
 
@@ -29,15 +29,14 @@ Module constants (NOT CLI flags — a change is a source change and therefore a 
 | Generation proof | native stderr marker `Map generated, starting game` (proven on q3 CREATE) |
 | Capture | owned console save `fresh-world.sav` into the attempt directory, digest pinned in `world.json` |
 
-`pause_on_newgame = false` in the creation config: the world runs live after generation, so the console save captures a running world that the GUI stage loads unpaused. Creation config omits `[game_scripts]` (no bridge staged); the GUI stage appends `RoadFreightProof = ` (the proven `FREIGHT_DELIVERY_READY` marker). Creation budget 300 s; GUI budget `freight.network_budgets(3)` with `total_seconds=1200`.
+`pause_on_newgame = false` in the creation config: the world runs live after generation, so the console save captures a running world. The creation config now carries `[game_scripts] RoadFreightProof = ` **before `[game_creation]`** (placement and case mirror the proven canonical-CREATE staging) and the creation workspace stages the byte-pinned bridge under `game/RoadFreightProof/` — this is what writes the GameScript selection into the save's GSDT chunk. The GUI stage configures nothing: a loaded save's GameScript comes only from the save (OpenTTD 15.3 `src/saveload/game_sl.cpp` GSDT chunk); the GUI workspace still stages the bridge package so the scanner can resolve the saved name by its pinned bytes. Creation budget 300 s; GUI budget `freight.network_budgets(3)` with `total_seconds=1200`.
 
 ## Anti-fallback defense (no silent demo world)
 
-- The creation stage has no canonical input structurally: no `canonical_directory`, no `canonical_save_sha256`, no `source.sav`; preflight refuses both canonical keys and re-checks the heightmap digest.
+- The creation stage has no canonical input structurally: no `canonical_directory`, no `canonical_save_sha256`, no `source.sav`; preflight refuses both canonical keys and re-checks the heightmap digest. The creation argv ends `-G 1181` and stages no `source.sav`; the GUI argv uses `-g source.sav` and carries no `-G`.
 - The GUI stage's only permitted source is `verify_fresh_creation(...)` output: an immutable, manifest-sealed, `FRESH_WORLD_CREATE_VERIFIED` attempt whose `fresh-world.sav` digest still matches its `world.json` pin. Any other directory — including the canonical demo evidence — refuses typed: `fresh-world creation evidence required (never the canonical demo world)`.
 - Preflight re-verifies the staged `source.sav` digest against the pin and re-checks that the staged save is a real file, not a symlink.
 - Runtime no-fallback tripwire: `require_fresh_welcome` demands the AdminPort welcome frame report revision `15.3`, seed `1181`, width 64, height 64. The demo lane's seed 42 refuses typed (`fresh-world secure runtime identity mismatch`).
-- Test assertions pin argv shape: creation argv ends `-G 1181` and stages no `source.sav`; GUI argv uses `-g source.sav` and carries no `-G`.
 
 ## Guarantees carried over from T-035 unchanged
 
@@ -47,28 +46,28 @@ One-shot authorization (`CLAIM.json` consumed before preflight, no retries, stop
 
 ```
 # stage 1 — creation (offline staging; NO launch in this round)
-.venv/bin/python -m app.simulation.openttd.proof.fresh_world_gui create artifacts/runtime/fresh-world-create-t036-2
+.venv/bin/python -m app.simulation.openttd.proof.fresh_world_gui create artifacts/runtime/fresh-world-create-t036-3
 # preflight
-.venv/bin/python -m app.simulation.openttd.proof.fresh_world_gui preflight artifacts/runtime/fresh-world-create-t036-2
+.venv/bin/python -m app.simulation.openttd.proof.fresh_world_gui preflight artifacts/runtime/fresh-world-create-t036-3
 # run — REQUIRES a fresh explicit operator grant, one launch, no retry
-.venv/bin/python -m app.simulation.openttd.proof.fresh_world_gui run artifacts/runtime/fresh-world-create-t036-2 --authorize-one-launch
+.venv/bin/python -m app.simulation.openttd.proof.fresh_world_gui run artifacts/runtime/fresh-world-create-t036-3 --authorize-one-launch
 # verify
-.venv/bin/python -m app.simulation.openttd.proof.fresh_world_gui verify artifacts/runtime/fresh-world-create-t036-2
+.venv/bin/python -m app.simulation.openttd.proof.fresh_world_gui verify artifacts/runtime/fresh-world-create-t036-3
 
 # stage 2 — GUI probe (only after stage 1 verifies VERIFIED)
-.venv/bin/python -m app.simulation.openttd.proof.fresh_world_gui gui artifacts/runtime/fresh-world-gui-probe-t036-1 --fresh-world artifacts/runtime/fresh-world-create-t036-2
-.venv/bin/python -m app.simulation.openttd.proof.fresh_world_gui preflight artifacts/runtime/fresh-world-gui-probe-t036-1
-.venv/bin/python -m app.simulation.openttd.proof.fresh_world_gui run artifacts/runtime/fresh-world-gui-probe-t036-1 --authorize-one-launch
-.venv/bin/python -m app.simulation.openttd.proof.fresh_world_gui verify artifacts/runtime/fresh-world-gui-probe-t036-1
+.venv/bin/python -m app.simulation.openttd.proof.fresh_world_gui gui artifacts/runtime/fresh-world-gui-probe-t036-2 --fresh-world artifacts/runtime/fresh-world-create-t036-3
+.venv/bin/python -m app.simulation.openttd.proof.fresh_world_gui preflight artifacts/runtime/fresh-world-gui-probe-t036-2
+.venv/bin/python -m app.simulation.openttd.proof.fresh_world_gui run artifacts/runtime/fresh-world-gui-probe-t036-2 --authorize-one-launch
+.venv/bin/python -m app.simulation.openttd.proof.fresh_world_gui verify artifacts/runtime/fresh-world-gui-probe-t036-2
 ```
 
 ## Evidence expectations
 
-Creation attempt: `world.json` (generation parameters, argv, save name + SHA-256), native generation marker in retained `stderr.log`, one launch, **zero** admin connections, all-true cleanup, sealed manifest.
+Creation attempt: `world.json` (generation parameters, argv, save name + SHA-256), native generation marker in retained `stderr.log`, **the GameScript ready marker family in retained `stderr.log`** (`dbg: [script:4] [N] [I] BRIDGE_STARTED` / `FREIGHT_DELIVERY_READY` — the GSDT of the console save embeds the GameScript), one launch, **zero** admin connections, all-true cleanup, sealed manifest.
 
 GUI attempt: `runtime-identity.json` (welcome frame = seed 1181 world), `gui-client.json` (client receipt: argv, client name `Fresh World GUI Probe`, join marker `*** Fresh World GUI Probe has joined the game`, server-side `join_verified`, observation end, owned stop), one launch, one connection, one join, all-true cleanup, sealed manifest.
 
-Offline regression: `tests/test_fresh_world_gui.py` (15 tests, zero native processes) — identity independence, canonical refusals, drift/failed-creation refusals, offline staging of both attempts, preflight passes, authorization gates, welcome tripwire, verify states, fresh client spawn/receipt identity, conduct wiring.
+Offline regression: `tests/test_fresh_world_gui.py` (18 tests, zero native processes) — identity independence, canonical refusals, drift/failed-creation refusals, offline staging of both attempts (creation now stages the bridge + `[game_scripts]`; the GUI config inherits exactly one section from the creation source and never re-appends), preflight passes, authorization gates, welcome tripwire, verify states, fresh client spawn/receipt identity, conduct wiring.
 
 ## Grant discipline
 

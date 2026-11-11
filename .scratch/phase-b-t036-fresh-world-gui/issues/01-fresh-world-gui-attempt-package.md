@@ -1,28 +1,34 @@
 # 01: Fresh-world GUI probe attempt package (T-036)
 
 **Type:** gate package
-**Status:** prepared 2026-11-11 — authorizes nothing by itself; each
-stage requires the operator's separate fresh explicit authorization
+**Status:** re-staged 2026-11-11 (E174) — authorizes nothing by itself;
+each stage requires the operator's separate fresh explicit authorization
 **Spec:** `docs/specs/t036-fresh-world-gui-probe.md`
 **Module of record:** `app/simulation/openttd/proof/fresh_world_gui.py`
-(commit `68dbd36`); offline regression `tests/test_fresh_world_gui.py`
-(15 tests, zero native processes, all green with the T-035 suites).
+(commit `9731d2b`); offline regression `tests/test_fresh_world_gui.py`
+(18 tests, zero native processes, all green with the lane suites).
 
 ## Family shape
 
 Two separately authorized attempts, strictly sequential:
 
-1. `fresh-world-create-t036-2` — ONE dedicated-server launch generates a
+1. `fresh-world-create-t036-3` — ONE dedicated-server launch generates a
    new OpenTTD 15.3 world from the seed and map parameters of record
    (`FRESH_SEED = 1181`, `map_x = map_y = 6` → 64×64, temperate, 1950,
    flat 64×64 heightmap; `-g heightmap.png -G 1181` over the proven
    `[game_creation]` config; native marker `Map generated, starting
    game`), then console-saves `fresh-world.sav` into the attempt
-   directory where its SHA-256 is pinned in `world.json`. NO admin
-   connection, no bridge staged, no canonical input (preflight refuses
-   canonical keys typed).
-2. `fresh-world-gui-probe-t036-1` — the byte-pinned bridge host launches
+   directory where its SHA-256 is pinned in `world.json`. The generation
+   workspace stages the byte-pinned bridge under `game/RoadFreightProof/`
+   and carries `[game_scripts] RoadFreightProof = ` before
+   `[game_creation]` (`bridge_sha256` pinned in `PRELAUNCH.json`), so
+   the save embeds the GameScript in its GSDT. NO admin connection, no
+   canonical input (preflight refuses canonical keys typed).
+2. `fresh-world-gui-probe-t036-2` — the byte-pinned bridge host launches
    from the digest-pinned fresh save (`-g source.sav`, no `-G`); the
+   save's GSDT names the GameScript, so the GUI stage stages the bridge
+   package only and appends **nothing** to the config (OpenTTD 15.3
+   `game_sl.cpp` wipes runtime GameScript config on save load); the
    AdminPort welcome frame MUST report revision `15.3`, seed `1181`,
    64×64 (the demo lane's seed 42 refuses typed at
    `require_fresh_welcome`); then the real desktop GUI client
@@ -137,20 +143,79 @@ grant (grant B), one launch + one AdminPort connection + one GUI join:
   artifacts/runtime/fresh-world-gui-probe-t036-1   # expect FRESH_WORLD_GUI_PROBE_VERIFIED
 ```
 
+## Attempt record (2026-11-11, E174): first GUI attempt executed once under grant B — typed FAILED at the readiness gate; fix landed `9731d2b`; identities advanced
+
+Grant B (operator's explicit in-session "Grant B — launch now" answer)
+was consumed by exactly one launch of `fresh-world-gui-probe-t036-1`
+from the E173-verified save. `result.json`
+`{status: FAILED, launches: 1, connections: 0, error: "TimeoutError:
+explicit native readiness marker missing: FREIGHT_DELIVERY_READY"}` rc 1;
+`failure.sav` console-saved by the server; CLAIM consumed; zero admin
+connections (the 45 s `wait_log` gate at `road_mutation.py:290` precedes
+the connect). Retained stderr: zero `[script:` lines (31 grf + 21 net —
+identical to the VERIFIED T-035 sequence up to the final GRFInfo pairs,
+then nothing for the whole window). Seal of record: cleanup all-true
+(reaped rc 0, listener closed, reservation released, workspace
+disposed, credential removed, sockets closed); manifest 0 mismatches;
+post-run `verify` → `ATTEMPT_NOT_VERIFIED: FAILED` rc 1. The t036-1
+bytes are sealed untouched, never relabeled.
+
+Root cause of record (read-only over the sealed bytes + OpenTTD 15.3
+`src/saveload/game_sl.cpp`): the GSDT chunk stores the GameScript
+selection inside the save; on load OpenTTD wipes runtime GameScript
+config (`GameConfig::GetConfig(SSS_FORCE_GAME)->Change(std::nullopt)`)
+and starts only what the save names — an empty name means the game runs
+without a GameScript, silently. The E173 creation save was generated
+WITHOUT `[game_scripts]`/bridge, so its GSDT is empty and the GUI
+stage's config append was inert on a loaded save (a config section can
+only seed a GameScript for a newly generated world). T-035 (E170) was
+unaffected: the canonical demo save's GSDT names the GameScript staged
+by the driver's proven CREATE staging (`canonical_fleet.py:129-146`).
+
+Fix of record (commit `9731d2b`, offline, zero native): the creation
+stage stages the byte-pinned bridge and carries
+`[game_scripts] RoadFreightProof = ` before `[game_creation]`
+(mirroring the proven canonical-CREATE staging), so the generated world
+embeds the GameScript in its GSDT; `bridge_sha256` pinned in the
+creation `PRELAUNCH.json`; the GUI stage drops the refuted append and
+keeps only the package the saved GameScript name resolves against.
+Tests updated: `tests/test_fresh_world_gui.py` 18 green (creation
+staging asserts section + staged bridge + pin; GUI staging asserts
+exactly one `[game_scripts]` section inherited from the creation
+source, never re-appended); lane suites 46 green; ruff/format/
+py_compile/scoped `uvx ty` clean. Identities advanced by
+stale-supersession (E130/E167/E172 precedent):
+`fresh-world-create-t036-2` → `fresh-world-create-t036-3` (the VERIFIED
+save stays sealed history but can never host the probe — its world
+carries no GameScript) and `fresh-world-gui-probe-t036-1` →
+`fresh-world-gui-probe-t036-2`. Both superseded dirs stay sealed
+terminal history, unreachable from the family by name.
+
+**Grant B is consumed and void. The re-run is strictly sequential:
+creation t036-3 under a FRESH grant A3 first; only after it verifies
+VERIFIED does the GUI stage re-stage (`gui --fresh-world …/t036-3`),
+preflight, and run under its OWN fresh grant B2.** The t036-3 staging
+of record: prepare → **preflight PASS** → verify
+`AUTHORIZATION_UNVERIFIED` as of 2026-11-11; staged config carries
+`[game_scripts] RoadFreightProof = ` (lines 21-22), bridge staged,
+`bridge_sha256` pinned, argv tail `-G 1181` unchanged, budget 300 s.
+
 ## Grant texts of record (paste per authorization, one per attempt)
 
-Grant A (creation): "Authorize exactly one fresh-world creation launch:
-`fresh_world_gui run artifacts/runtime/fresh-world-create-t036-2
+Grant A3 (creation): "Authorize exactly one fresh-world creation launch:
+`fresh_world_gui run artifacts/runtime/fresh-world-create-t036-3
 --authorize-one-launch`. One dedicated-server launch that generates the
-seed-1181 64×64 world and console-saves fresh-world.sav; no admin
-connection; no retry; stop on unexpected failure."
+seed-1181 64×64 world with the GameScript of record staged and
+console-saves fresh-world.sav; no admin connection; no retry; stop on
+unexpected failure."
 
-Grant B (GUI probe): "Authorize exactly one fresh-world GUI probe run:
-`fresh_world_gui run artifacts/runtime/fresh-world-gui-probe-t036-1
---authorize-one-launch`. One dedicated-server launch from the
-digest-pinned fresh save, one AdminPort connection, one real desktop GUI
-client join as spectator, observation window, owned stop; no retry, no
-reconnect; stop on unexpected failure."
+Grant B2 (GUI probe, only after A3 verifies): "Authorize exactly one
+fresh-world GUI probe run: `fresh_world_gui run
+artifacts/runtime/fresh-world-gui-probe-t036-2 --authorize-one-launch`.
+One dedicated-server launch from the digest-pinned fresh save, one
+AdminPort connection, one real desktop GUI client join as spectator,
+observation window, owned stop; no retry, no reconnect; stop on
+unexpected failure."
 
 ## Acceptance target
 

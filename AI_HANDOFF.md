@@ -1725,3 +1725,50 @@ no headless-only execution.
    (T-030 ×1, T-031 arm A ×1 + arm B ×1, T-032 ×1, each its own fresh
    grant, each inheriting both exercise-core fixes). T-035 stays
    terminal VERIFIED at E170. Evidence index E173.
+
+## 2026-11-11 T-036 first GUI attempt executed once under the operator's explicit grant B (E174): typed FAILED at the 45 s readiness gate — a loaded OpenTTD 15.3 save carries its GameScript in the save itself (GSDT chunk); the fresh creation save had none, so the runtime config append could never inject it; fix landed `9731d2b`; identities advanced to `fresh-world-create-t036-3` / `fresh-world-gui-probe-t036-2`; grant B consumed and void; re-runs await fresh grants A3 then B2
+
+1. **The run of record:** `artifacts/runtime/fresh-world-gui-probe-t036-1/`
+   sealed read-only; `result.json`
+   `{status: FAILED, launches: 1, connections: 0, error: "TimeoutError:
+   explicit native readiness marker missing: FREIGHT_DELIVERY_READY"}`
+   rc 1; `failure.sav` retained; CLAIM consumed. Retained stderr: zero
+   `[script:` lines (31 grf + 21 net — identical to VERIFIED T-035 up to
+   the final GRFInfo pairs, then nothing for the whole 45 s `wait_log`
+   window). No admin connection ever made (the gate precedes the
+   connect).
+2. **Root cause of record** (read-only over the sealed bytes + OpenTTD
+   15.3 `src/saveload/game_sl.cpp`): the GSDT chunk stores the
+   GameScript selection inside the save; on load OpenTTD wipes runtime
+   GameScript config
+   (`GameConfig::GetConfig(SSS_FORCE_GAME)->Change(std::nullopt)`) and
+   starts only what the save names (empty name → runs without
+   GameScript, silently). The E173-verified `fresh-world-create-t036-2`
+   was generated WITHOUT `[game_scripts]`/bridge, so its save carries no
+   GameScript and the GUI stage's config append was inert on a loaded
+   save (a config section can only seed a GameScript for a newly
+   generated world). T-035 (E170) was unaffected: the canonical demo
+   save's GSDT names the GameScript staged by the driver's proven CREATE
+   staging.
+3. **Fix of record (commit `9731d2b`, offline, zero native):** the
+   creation stage stages the byte-pinned bridge and carries
+   `[game_scripts] RoadFreightProof = ` before `[game_creation]`
+   (mirroring the proven canonical-CREATE staging), so the generated
+   world embeds the GameScript in its GSDT; `bridge_sha256` pinned in
+   the creation `PRELAUNCH.json`; the GUI stage drops the refuted append
+   and keeps only the package the saved GameScript name resolves
+   against. `tests/test_fresh_world_gui.py` 18 green (creation staging
+   asserts section + bridge + pin; GUI staging asserts exactly one
+   `[game_scripts]` section inherited from the creation source, never
+   re-appended); lane suites 46 green; ruff/format/py_compile/scoped ty
+   clean.
+4. **Genealogy + grants:** create-t036-1 (grant A, FAILED at seal seam,
+   E172) → create-t036-2 (grant A2, VERIFIED but GameScript-less save,
+   superseded as a GUI source) → create-t036-3 (staged, preflight PASS,
+   awaits grant A3). gui-probe-t036-1 (grant B, FAILED at the readiness
+   gate, sealed) → gui-probe-t036-2 (awaits A3's VERIFIED result, then
+   grant B2). Grants A, A2, B all consumed and void.
+5. **Not claimed:** the fresh world still not SEEN in the GUI; no Phase
+   B criterion satisfied; Phase B native closure outstanding (T-030 ×1,
+   T-031 arm A ×1 + arm B ×1, T-032 ×1, each its own fresh grant). T-035
+   stays terminal VERIFIED at E170. Evidence index E174.
