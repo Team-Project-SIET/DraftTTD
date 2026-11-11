@@ -1661,3 +1661,33 @@ no headless-only execution.
    T-032 ×1, each its OWN fresh grant, each inheriting both
    exercise-core fixes (E167 + E169). T-035 stays terminal VERIFIED at
    E170. Evidence index E171.
+
+## 2026-11-11 T-036 creation attempt executed once under the operator's explicit grant A (E172): typed FAILED at the owned-cleanup seal seam AFTER world generation and the console save succeeded natively — seed-1181 64×64 world generated natively (`Map generated, starting game`), `fresh-world.sav` saved and digest-pinned (`77b5431650e9c31d…`, 10536 bytes); defect fixed smallest (commit `6a2e893`); identity advanced `fresh-world-create-t036-1` → `fresh-world-create-t036-2`; grant A consumed and void; the re-run awaits a FRESH grant
+
+1. **What the one launch DID:** pid 40019 up with the exact staged argv
+   (`… -g …/heightmap.png -dscript=4,grf=1,net=3 -G 1181`); stderr
+   `Map generated, starting game`; stdout `Map successfully saved to
+   '…/fresh-world-create-t036-1/fresh-world.sav'`; `world.json` pin
+   matches the save. No admin connection (connections 0 by design).
+2. **The defect of record:** `_seal_attempt` called the async
+   `DemoBackend.cleanup` without await → owned reap never ran, the
+   finally block crashed, `cleanup.json`/`result.json`/manifest never
+   written, server stayed alive after the probe exited. t036-1 bytes
+   preserved untouched as terminal failed history (no synthetic
+   receipts, no relabel).
+3. **Owned containment:** stray pid 40019 SIGTERM'd operator-side,
+   reaped rc 0, `pgrep -x openttd` empty; no retry, no reconnect.
+4. **Fix of record (commit `6a2e893`, offline):** `_seal_attempt` is
+   async and awaits `backend.cleanup(prepared)`; both run functions
+   await it; regression test
+   `test_seal_attempt_awaits_cleanup_and_writes_receipts` pins the full
+   failure-path receipt write; suites green (63 with the four T-035
+   files); ruff/ty/format clean.
+5. **State of record:** `artifacts/runtime/fresh-world-create-t036-2/`
+   staged — prepare → **preflight PASS** → verify
+   `AUTHORIZATION_UNVERIFIED` rc 1; pins re-verified (seed 1181, argv
+   tail `-G 1181`, heightmap pin, PRELAUNCH seal). **The creation
+   re-RUN awaits a FRESH explicit one-launch grant (grant A2); grant A
+   is consumed and void.** No VERIFIED creation exists yet; the GUI
+   stage stays blocked until one verifies. T-035 stays terminal
+   VERIFIED at E170. Evidence index E172.

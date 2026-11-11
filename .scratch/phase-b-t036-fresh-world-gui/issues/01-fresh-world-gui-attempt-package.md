@@ -12,7 +12,7 @@ stage requires the operator's separate fresh explicit authorization
 
 Two separately authorized attempts, strictly sequential:
 
-1. `fresh-world-create-t036-1` — ONE dedicated-server launch generates a
+1. `fresh-world-create-t036-2` — ONE dedicated-server launch generates a
    new OpenTTD 15.3 world from the seed and map parameters of record
    (`FRESH_SEED = 1181`, `map_x = map_y = 6` → 64×64, temperate, 1950,
    flat 64×64 heightmap; `-g heightmap.png -G 1181` over the proven
@@ -37,6 +37,33 @@ owned cleanup, typed verify. T-035's sealed evidence
 (`canonical-fleet-gui-probe-t035-3`, E170, terminal VERIFIED) is
 untouched and unreachable from this family.
 
+## Supersession record (2026-11-11, E172): t036-1 executed once under grant A — typed FAILED at the owned-cleanup seal seam after generation + save succeeded natively; fix landed (commit `6a2e893`); identity advanced to `fresh-world-create-t036-2`
+
+Grant A (operator's explicit in-session "Grant A: authorize the one
+launch" answer) was consumed by exactly one launch of
+`fresh-world-create-t036-1`. Native outcome inside that launch: stderr
+`Map generated, starting game`, stdout `Map successfully saved to
+'…/fresh-world.sav'`, `world.json` `fresh_save_sha256`
+`77b5431650e9c31d…` matching the save (10536 bytes) — the seed-1181
+64×64 world WAS generated and saved. The attempt is nevertheless typed
+terminal FAILED: the shared seal called the async `DemoBackend.cleanup`
+without await, the owned reap never ran (the server pid 40019 stayed
+alive until the operator-side owned SIGTERM, reaped rc 0), and
+`cleanup.json`/`result.json`/manifest were never written. The t036-1
+bytes are preserved untouched — no synthetic receipts were ever
+substituted, nothing relabeled.
+
+Fix of record (offline, zero native): `_seal_attempt` now awaits
+`backend.cleanup(prepared)`; regression test
+`test_seal_attempt_awaits_cleanup_and_writes_receipts` pins the full
+failure-path receipt write; identity advanced to
+`fresh-world-create-t036-2` (the t036-1 directory is unreachable from
+the family by name). Grant A is consumed and void. The t036-2 staging
+below is the attempt of record: prepare → **preflight PASS** → verify
+`AUTHORIZATION_UNVERIFIED` as of 2026-11-11. **The creation re-RUN
+awaits a FRESH explicit one-launch operator grant (grant A2).** Nothing
+here re-launches.
+
 ## Attempt record (2026-11-11, E171): creation stage staged at the fresh-grant gate
 
 `artifacts/runtime/fresh-world-create-t036-1/` — prepare (offline, no
@@ -55,9 +82,9 @@ retry; stop on unexpected failure. Commands of record:
 
 ```
 .venv/bin/python -m app.simulation.openttd.proof.fresh_world_gui run \
-  artifacts/runtime/fresh-world-create-t036-1 --authorize-one-launch
+  artifacts/runtime/fresh-world-create-t036-2 --authorize-one-launch
 .venv/bin/python -m app.simulation.openttd.proof.fresh_world_gui verify \
-  artifacts/runtime/fresh-world-create-t036-1   # expect FRESH_WORLD_CREATE_VERIFIED
+  artifacts/runtime/fresh-world-create-t036-2   # expect FRESH_WORLD_CREATE_VERIFIED
 ```
 
 After stage 1 verifies VERIFIED, stage 2 stages under a FRESH explicit
@@ -66,7 +93,7 @@ grant (grant B), one launch + one AdminPort connection + one GUI join:
 ```
 .venv/bin/python -m app.simulation.openttd.proof.fresh_world_gui gui \
   artifacts/runtime/fresh-world-gui-probe-t036-1 \
-  --fresh-world artifacts/runtime/fresh-world-create-t036-1
+  --fresh-world artifacts/runtime/fresh-world-create-t036-2
 .venv/bin/python -m app.simulation.openttd.proof.fresh_world_gui preflight \
   artifacts/runtime/fresh-world-gui-probe-t036-1
 .venv/bin/python -m app.simulation.openttd.proof.fresh_world_gui run \
@@ -78,7 +105,7 @@ grant (grant B), one launch + one AdminPort connection + one GUI join:
 ## Grant texts of record (paste per authorization, one per attempt)
 
 Grant A (creation): "Authorize exactly one fresh-world creation launch:
-`fresh_world_gui run artifacts/runtime/fresh-world-create-t036-1
+`fresh_world_gui run artifacts/runtime/fresh-world-create-t036-2
 --authorize-one-launch`. One dedicated-server launch that generates the
 seed-1181 64×64 world and console-saves fresh-world.sav; no admin
 connection; no retry; stop on unexpected failure."

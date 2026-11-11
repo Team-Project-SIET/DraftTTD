@@ -4079,3 +4079,33 @@ no push, sealed bytes untouched. Evidence index E156.
     done-ness criteria; Phase B native closure outstanding (T-030 ×1,
     T-031 arm A ×1 + arm B ×1, T-032 ×1, each its own fresh grant,
     each inheriting both exercise-core fixes). Evidence index E171.
+
+23. **T-036 creation attempt executed once under the operator's explicit
+    grant A (E172; 2026-11-11; fix commit `6a2e893`; typed FAILED, never
+    relabeled; grant A consumed and void).** Gate round: HEAD `91a7c6a`,
+    tree clean, `pgrep -x openttd` empty, fresh preflight PASS, all
+    package pins re-verified (seed 1181, map 6/6, heightmap pin, argv
+    tail `-G 1181`, PRELAUNCH seal, CLAIM absent, budget 300 s); the
+    operator answered "Grant A: authorize the one launch" in-session.
+    The one launch DID: pid 40019 with the exact staged argv; stderr
+    `Map generated, starting game` (native proof a NEW seed-1181 64×64
+    temperate world was generated); stdout `Map successfully saved to
+    '…/fresh-world-create-t036-1/fresh-world.sav'`; `world.json`
+    `fresh_save_sha256` `77b5431650e9c31d…` matching the save (10536
+    bytes); CLAIM consumed; connections 0 by design. Typed FAILED of
+    record: the shared seal called async `DemoBackend.cleanup` without
+    await — owned reap never ran, finally crashed,
+    cleanup/result/manifest never written, server stayed alive; owned
+    containment: pid 40019 SIGTERM'd operator-side, reaped rc 0; no
+    retry. t036-1 bytes preserved untouched as terminal failed history;
+    no synthetic receipts substituted. Fix of record (offline, zero
+    native): `_seal_attempt` async + awaits `backend.cleanup(prepared)`;
+    both run functions await it; regression test
+    `test_seal_attempt_awaits_cleanup_and_writes_receipts` pins the
+    failure-path receipt write; suites green (63); statics clean.
+    Identity advanced to `fresh-world-create-t036-2` (stale-supersession;
+    t036-1 unreachable from the family by name); t036-2 staged →
+    preflight PASS → `AUTHORIZATION_UNVERIFIED` rc 1. **The re-RUN
+    awaits a FRESH explicit one-launch grant (grant A2).** No VERIFIED
+    creation yet; GUI stage blocked until one verifies; T-035 stays
+    terminal VERIFIED at E170. Evidence index E172.
