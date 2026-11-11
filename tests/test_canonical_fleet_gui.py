@@ -124,6 +124,37 @@ def staged_prepared(tmp_path, *, server_log=""):
     )
 
 
+def test_stage_writes_admin_auth_trio(tmp_path, monkeypatch):
+    """The t035-2 refusal class of record: the staged workspace must carry
+    the admin auth material the server needs to start its admin network
+    under allow_insecure_admin_login = false (E168) — private.cfg with the
+    generated key's public hex, secrets.cfg with the password line, and
+    the .admin-secret matching the PRELAUNCH public key."""
+    created = SimpleNamespace(source_save_sha256="a" * 64)
+    canonical = tmp_path / "canonical-source"
+    canonical.mkdir()
+    for service in range(3):
+        (canonical / f"native-plan-{service}.json").write_text("{}")
+    (canonical / "effective-openttd.cfg").write_text("[network]\n")
+    (canonical / "canonical.sav").write_bytes(b"staged")
+    monkeypatch.setattr(driver, "verify_created_source", lambda _: created)
+    monkeypatch.setattr(freight_canonical_runtime, "verify_save", lambda *a, **k: None)
+    prepared = gui.prepare(tmp_path / gui.GUI_PROBE, canonical=canonical)
+    metadata = json.loads((prepared.directory / "PRELAUNCH.json").read_bytes())
+    root = prepared.spec.workspace.root
+    private = (root / "private.cfg").read_text()
+    assert f"[admin_authorized_keys]\n{metadata['public_key']}\n" in private
+    secrets = (root / "secrets.cfg").read_text()
+    assert "admin_password = " in secrets
+    assert metadata["public_key"] != "0" * 64
+    from app.simulation.openttd.admin_crypto import AuthorizedKey
+
+    key = AuthorizedKey.from_bytes(prepared.key_path.read_bytes())
+    assert key.public_hex == metadata["public_key"]
+    mode = (root / ".admin-secret").stat().st_mode & 0o777
+    assert mode == 0o600
+
+
 def test_client_spawn_argv_has_no_fork_or_dedicated(tmp_path, monkeypatch):
     prepared = staged_prepared(tmp_path)
     recorded = {}

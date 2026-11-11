@@ -28,7 +28,7 @@ from app.simulation.openttd.freight_canonical import compare_canonical
 from app.simulation.openttd.gamescript_transport import GameScriptTransport
 from app.simulation.openttd.proof.canonical_fleet import expected_argv
 from app.simulation.openttd.runtime.base import LaunchSpecification
-from app.simulation.openttd.runtime.config import RuntimeWorkspace
+from app.simulation.openttd.runtime.config import AdminSettings, RuntimeWorkspace
 from app.simulation.openttd.runtime.identity import RuntimeIdentity
 from app.simulation.openttd.secure_admin import AuthState
 
@@ -122,6 +122,19 @@ def stage_workspace(directory, *, canonical, reservation):
             os.open(private, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600), "wb"
         ) as stream:
             stream.write(key._secret)
+        # mirror of the driver's staging: the server starts its admin
+        # network only with auth material present (private.cfg carries the
+        # authorized key, secrets.cfg the password) under
+        # allow_insecure_admin_login = false; without it the t035-2
+        # attempt refused the AdminPort connect typed (E168).
+        workspace.write_config(
+            AdminSettings(
+                password="",
+                port=reservation.admin_port,
+                game_port=reservation.game_port,
+                authorized_public_key_hex=key.public_hex,
+            )
+        )
         config = configparser.ConfigParser(interpolation=None)
         config.read_string((canonical / "effective-openttd.cfg").read_text())
         config.set("network", "server_port", str(reservation.game_port))
