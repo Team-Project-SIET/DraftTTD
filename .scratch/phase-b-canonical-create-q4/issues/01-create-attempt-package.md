@@ -1,21 +1,24 @@
 # 01: Canonical create-q4 native attempt package (Phase B anchor regeneration)
 
 **Type:** gate package
-**Status:** staged 2026-11-12 at HEAD `28e7570` — prepare rc 0
-(`CANONICAL PREFLIGHT PASS; ZERO LAUNCHES`), preflight PASS re-run
-offline, and the authorization gate holds (`create` without
-`--authorize-one-launch` refuses, rc 2); authorizes nothing by itself;
-the launch requires the operator's separate fresh explicit
-authorization
+**Status:** EXECUTED ONCE under the operator's fresh explicit create
+grant at HEAD `402a0e4` — terminal FAILED rc 1 (E187: `KeyError:
+'world'`; the run got deep — planning-n0 queries, network-facts-{0,1,2},
+`qualified.sav` — and died at the `PreparedWorldManifest` construction
+because ce28899 made `freight_native_network` read `metadata["world"]`
+while the canonical prepare never staged those facts; sealed read-only,
+never retried, never relabeled; grant consumed and void; stale
+supersession advances the identity to `canonical-fleet-create-q5`, see
+`.scratch/phase-b-canonical-create-q5/issues/01-create-attempt-package.md`)
 **Why this stage exists (E185/E186):** the E184 armed-seal fix changed
 the staged bridge digest (`6c6a703c…`); the arm attempt `t031-2` proved
 the create-q3 anchor (sealed under the pre-fix bridge `0fa190a0…`)
 loads and answers under the fixed bridge, but the exact-correspondence
 contract (including `bridge_sha256`) correctly refused it. Each bridge
 generation needs its own q-record (q4 VM record, done) AND its own
-native create anchor — this stage is that anchor for the fixed bridge.
+native create anchor.
 **Spec context:** `docs/specs/t031-matched-ab-experiments.md` (E186
-update); evidence rows E183–E186.
+update); evidence rows E183–E187.
 
 ## Preconditions (all offline-checkable)
 

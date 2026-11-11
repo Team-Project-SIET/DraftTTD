@@ -45,7 +45,7 @@ from .harness import (
 )
 from .road_mutation import console, save, wait_log
 
-CREATE = "canonical-fleet-create-q4"
+CREATE = "canonical-fleet-create-q5"
 RELOAD = "canonical-fleet-reload-q3"
 SCHEMA = "canonical-fleet-qualification-v1"
 RELOAD_ONLY_CONTRACT = dict(
@@ -249,6 +249,13 @@ def prepare(directory, *, stage, canonical=None):
             schema=SCHEMA,
             qualification_id=stage,
             execution_contract=RELOAD_ONLY_CONTRACT if stage == RELOAD else {"mode": "create"},
+            # The world facts the native network consumers read
+            # (freight_native_network PreparedWorldManifest / receipt
+            # verification): this stage generates its own world with the
+            # fixed config (map_x=6/map_y=6 -> 64x64) and the `-G 42`
+            # argv seed. Staged here since ce28899 made the consumers
+            # read them; the q4 create attempt exposed the gap.
+            world=dict(source="NATIVE_GENERATED_CANONICAL", seed=42, width=64, height=64),
             workspace=str(workspace.root),
             argv=list(argv),
             binary=str(freight.BINARY),

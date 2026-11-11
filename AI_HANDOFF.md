@@ -2200,3 +2200,51 @@ no headless-only execution.
    `AUTHORIZATION_UNVERIFIED`) and asks for its own fresh grant; arm
    B's grant only after arm A's attempt completes; then T-032.
    Evidence index E186.
+
+## 2026-11-12 canonical create-q4 executed exactly once under the operator's fresh explicit create grant (E187): TERMINAL FAILED rc 1 `KeyError: 'world'` — the run got deep (qualified.sav saved) and died at the PreparedWorldManifest construction because ce28899 made the native network read `metadata["world"]` while the canonical create prepare never staged those facts; diagnosis-only fix round (E188) staged the world facts, advanced `CREATE` to `canonical-fleet-create-q5`, and re-staged with preflight PASS
+
+1. **The attempt of record (sealed read-only hereafter):**
+   `artifacts/runtime/canonical-fleet-create-q4/`; executed once at
+   HEAD `402a0e4` (tree clean, `pgrep -x openttd` empty pre-launch);
+   `result.json` `{launches: 1, connections: 1, mutations: 0, status:
+   FAILED, error: "KeyError: 'world'"}` rc 1; grant consumed and void.
+2. **What the run proved:** the fixed-bridge create pipeline is
+   natively sound up to the manifest seam — capital-initialize/read
+   receipts, 758 planning-n0 request/response pairs,
+   `network-facts-{0,1,2}.json`, `network-candidates.json`, and the
+   `qualified.sav` protected save all landed; NO GameScript death; the
+   native world generated and answered everything.
+3. **Root cause (read-only diagnosis over retained bytes, no
+   relaunch):** `PreparedWorldManifest` construction
+   (`freight_native_network.py:419`, `seed=metadata["world"]["seed"]`)
+   raised `KeyError: 'world'` — commit `ce28899` (2026-10-22, after
+   the create-q3 attempt ran) made `freight_native_network` read
+   `metadata["world"]` (seed/width) in four sites
+   (PreparedWorldManifest, `execute_network` observation/receipt
+   verification, replay, receipt helper), while the canonical create
+   prepare (never re-exercised end to end since) never staged those
+   facts — a latent create-path integration gap.
+4. **The fix round (E188; offline, no grant):** (1)
+   `canonical_fleet.prepare` metadata stages
+   `world = {source: NATIVE_GENERATED_CANONICAL, seed: 42, width: 64,
+   height: 64}` — the actual create-world facts (config
+   `map_x=6/map_y=6` → 64×64; argv `-G 42`); (2) `CREATE` advanced
+   `canonical-fleet-create-q4` → `canonical-fleet-create-q5` (q4 stays
+   sealed terminal-FAILED retained history; consumed identities never
+   re-prepared); (3) the q5 stage re-staged fresh — prepare rc 0,
+   `CANONICAL PREFLIGHT PASS; ZERO LAUNCHES` re-run offline, `world`
+   facts verified in the staged PRELAUNCH, bridge `6c6a703c…` == the
+   fixed bridge, authorization gate refuses without
+   `--authorize-one-launch` rc 2; (4) regression test
+   `test_prepare_stages_the_world_facts_the_native_network_consumers_read`
+   added (captures the PRELAUNCH payload at the write seam, asserts
+   the exact world dict); (5) suites rc 0, ruff/format/py_compile
+   clean.
+5. **State / next operator action:** the fresh explicit
+   `canonical-fleet-create-q5` ONE-LAUNCH grant (ticket
+   `.scratch/phase-b-canonical-create-q5/issues/01-create-attempt-package.md`);
+   then arm A `t031-3` re-stages against the new anchor (prepare with
+   `--canonical artifacts/runtime/canonical-fleet-create-q5`, preflight
+   PASS, `AUTHORIZATION_UNVERIFIED`) and asks for its own fresh grant;
+   arm B's grant only after arm A's attempt completes; then T-032.
+   Evidence index E188.
