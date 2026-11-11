@@ -1398,3 +1398,60 @@ Spec of record `docs/specs/t034-standing-regression.md`, ticket
    `.scratch/phase-b-t031/issues/02/03` and
    `.scratch/phase-b-t032/issues/01`; all prior grants void). T-033's
    record stays partially UNKNOWN-pending until the receipts exist.
+
+## 2026-11-11 T-035 GUI native probe built offline (E166); a real, visible, usable OpenTTD 15.3 desktop window joining the proven dedicated host live — no headless fallback, no virtual display, no fork; package at the fresh-authorization gate; INDEPENDENT of Phase B (satisfies no T-030/T-031/T-032 criterion)
+
+Spec of record `docs/specs/t035-gui-native-probe.md`, attempt package
+`.scratch/phase-b-t035-gui-probe/issues/01-gui-probe-attempt-package.md`
+(prepared; authorizes nothing by itself). Operator-directed round: run
+OpenTTD 15.3 through its actual desktop GUI with a visible game window,
+no headless-only execution.
+
+1. **Design of record:** OpenTTD 15.3's CLI has NO flag hosting a
+   visible server (`-D` = dedicated windowless; GUI hosting = Multiplayer
+   dialog clicks; wiki CLI page retrieved 2026-11-11), so the probe is
+   TWO processes: the proven dedicated host (byte-unchanged `-D` launch,
+   sealed machinery) + a SECOND real GUI client joining as spectator
+   with the demo lane's argv byte-for-byte
+   (`[BINARY, -c cfg, -x, -X, -n 127.0.0.1:<game-port>#255]`,
+   `client_name = "Canonical GUI Probe"`). The desktop of record is the
+   operator's KDE Wayland + XWayland `:0` (verified live: `DISPLAY=:0`,
+   `WAYLAND_DISPLAY=wayland-1`, `/tmp/.X11-unix/X0` present,
+   `kwin_wayland_wrapper --xwayland`).
+2. **Built stage:** `app/simulation/openttd/proof/canonical_fleet_gui.py`
+   — identity `canonical-fleet-gui-probe-t035-1`, own CLAIM + own fresh
+   explicit one-launch grant; `GUI_PROBE_CONTRACT` (purchase/dispatch/
+   unpause FALSE — reload-only paused correspondence; `fork_forbidden`,
+   join 60 s, observation 600 s); fail-closed `require_desktop_session()`
+   at prepare AND preflight (typed refusal before any write; never a
+   virtual display, never headless, never background-only); reload-only
+   correspondence via the new `dispatch=False` seam in
+   `exercise.conduct_exercise` (T-030 default unchanged, its tests green);
+   join verified SERVER-side from `prepared.spec.stdout_path`
+   (`*** Canonical GUI Probe has joined the game`; client.log stays
+   empty in GUI mode — every retained demo client.log is 0 bytes;
+   AdminPort allowlist NOT widened); typed observation ends
+   `OPERATOR_CLOSED_WINDOW` (client exit 0) /
+   `OBSERVATION_WINDOW_ELAPSED` (owned terminate); client terminated
+   before the standard cleanup seal; typed
+   `CANONICAL_FLEET_GUI_PROBE_VERIFIED`; CLI
+   `prepare|preflight|verify|run` with `--authorize-one-launch`.
+3. **Honesty boundary:** the probe records machine-verified facts only
+   (argv, display env, join marker, liveness, owned exit) in
+   `gui-client.json`; the agent never claims it saw the window — visual
+   confirmation is the operator's optional post-run note.
+4. **Tests/statics:** `tests/test_canonical_fleet_gui.py` 12 passed;
+   exercise 14 + matched 11 + continuous 7 green; lane suites rc=0 incl.
+   the q3 tripwire; ruff/format/py_compile/ty/`git diff --check` clean.
+5. **Independence verdict:** satisfies NONE of T-030/T-031/T-032's
+   done-ness criteria and must not be smuggled into their packages
+   (their receipts are the exercise correspondence, the two arms'
+   records, and the five-anniversary summary respectively; a GUI
+   spectator contributes observation, not receipts; their packages stay
+   one sealed launch with their own bytes). Adding a T-035 row to
+   roadmap §3 is an operator decision.
+6. **Blocked of record:** the native GUI probe attempt needs a FRESH
+   explicit operator authorization (all prior grants void); Phase B
+   native closure unchanged — T-030 ×1, T-031 arm A ×1 + arm B ×1,
+   T-032 ×1, each its OWN fresh grant. This round: zero launches, zero
+   AdminPort, zero grants, no `artifacts/` byte touched.

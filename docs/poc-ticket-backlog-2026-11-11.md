@@ -170,3 +170,40 @@ commit pair; never pushed.
 Ledger pairing: this file + `.scratch/phase-b-t034/issues/` +
 EVIDENCE_INDEX E165 + AI_HANDOFF/TASKS addenda of the same date. One
 commit; never pushed.
+
+## T-035 GUI native probe — built offline, package at the gate (2026-11-11)
+
+- **Operator ask:** a real, visible, usable OpenTTD 15.3 desktop window;
+  no headless-only execution, no virtual display, no background-only
+  process.
+- **Design of record:** `-D` is windowless dedicated and no CLI flag
+  hosts a visible server, so the probe = the proven dedicated host
+  (byte-unchanged) + a SECOND real GUI client joining as spectator
+  (`-n 127.0.0.1:<game-port>#255`, demo-lane argv byte-for-byte,
+  `client_name = "Canonical GUI Probe"`). Join verified SERVER-side
+  (`*** Canonical GUI Probe has joined the game` in the host's stdout;
+  client.log stays empty in GUI mode; AdminPort allowlist NOT widened).
+- **Guarantees preserved:** one-shot authorization (own identity
+  `canonical-fleet-gui-probe-t035-1`, own CLAIM, own fresh grant),
+  fail-closed desktop requirement at prepare AND preflight, reload-only
+  paused correspondence via the new `dispatch=False` seam (T-030 default
+  unchanged), 60 s join deadline, 600 s observation with typed ends
+  (`OPERATOR_CLOSED_WINDOW` / `OBSERVATION_WINDOW_ELAPSED`), client
+  terminated before the standard cleanup seal, full evidence capture +
+  manifest verify. Honesty boundary: machine-verified facts only — the
+  agent never claims it saw the window.
+- **Tests/statics:** `tests/test_canonical_fleet_gui.py` 12 passed;
+  exercise 14 + matched 11 + continuous 7 green; lane suites green incl.
+  the q3 tripwire; ruff/format/py_compile/ty/`git diff --check` clean.
+- **Independence verdict:** satisfies NONE of T-030/T-031/T-032's
+  done-ness criteria; must not be assumed to replace any native attempt
+  nor be smuggled into their sealed packages. Adding a roadmap §3 row is
+  an operator decision.
+- **Spec:** `docs/specs/t035-gui-native-probe.md`. Package:
+  `.scratch/phase-b-t035-gui-probe/issues/01-gui-probe-attempt-package.md`
+  (staging → preflight → ONE run under `--authorize-one-launch`, from a
+  desktop terminal).
+
+Ledger pairing: this file + `.scratch/phase-b-t035-gui-probe/issues/` +
+EVIDENCE_INDEX E166 + AI_HANDOFF/TASKS addenda of the same date. One
+docs commit; never pushed.

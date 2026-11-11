@@ -3908,3 +3908,35 @@ no push, sealed bytes untouched. Evidence index E156.
     Manifest sweep: 197 manifests 0 mismatches; binary/OpenGFX/
     protected-save pins hold; `pgrep -x openttd` empty. Evidence index
     E165.
+
+17. **T-035 GUI native probe (2026-11-11, offline only; zero launches /
+    zero AdminPort / zero grants; code+tests ONE commit, docs commit
+    this one; no push).** Operator-directed: a real, visible, usable
+    OpenTTD 15.3 desktop window on the operator's own desktop, joining
+    the proven dedicated host live — new independent ticket, NOT a
+    roadmap §3 item (adding the row is an operator decision). CLI facts
+    of record (wiki CLI page retrieved 2026-11-11): `-D` is windowless
+    dedicated, NO CLI flag hosts a visible server, so the window is a
+    SECOND real client joining via `-n 127.0.0.1:<game-port>#255` with
+    the demo lane's proven argv byte-for-byte; host machinery unchanged.
+    New `app/simulation/openttd/proof/canonical_fleet_gui.py`: identity
+    `canonical-fleet-gui-probe-t035-1`, own CLAIM + fresh grant;
+    reload-only paused correspondence via the new `dispatch=False` seam
+    in `conduct_exercise` (T-030 default unchanged); `GuiClient` with
+    typed `-D`/`-f` refusal, fail-closed `require_desktop_session` at
+    prepare AND preflight (no virtual display, no headless fallback, no
+    background fork), server-side join verification
+    (`*** Canonical GUI Probe has joined the game` — client.log stays
+    empty in GUI mode; AdminPort allowlist NOT widened), 60 s join
+    deadline, 600 s observation ending typed
+    `OPERATOR_CLOSED_WINDOW`/`OBSERVATION_WINDOW_ELAPSED`, client
+    terminated before the standard cleanup seal, typed
+    `CANONICAL_FLEET_GUI_PROBE_VERIFIED`, honesty boundary
+    (machine-verified facts only; visual confirmation stays the
+    operator's optional note). 12 new offline tests; exercise 14 +
+    matched 11 + continuous 7 green; lane suites green incl. the q3
+    tripwire; statics clean. Independence verdict: satisfies NONE of
+    T-030/T-031/T-032's criteria and must not be smuggled into their
+    packages. Package `.scratch/phase-b-t035-gui-probe/issues/
+    01-gui-probe-attempt-package.md` at the fresh-authorization gate.
+    Evidence index E166.
