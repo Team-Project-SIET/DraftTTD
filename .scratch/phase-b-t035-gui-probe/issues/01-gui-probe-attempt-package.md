@@ -60,6 +60,42 @@ staging is at
 awaits a FRESH explicit one-launch operator grant** — the commands of
 record above now point at the t035-3 directory.
 
+## Attempt record (2026-11-11, E170): t035-3 executed once under a fresh explicit operator grant — CANONICAL_FLEET_GUI_PROBE_VERIFIED, terminal
+
+The t035-3 attempt ran exactly once under the operator's fresh explicit
+one-launch grant. `result.json`
+`{status: CANONICAL_FLEET_GUI_PROBE_VERIFIED, launches: 1,
+connections: 1, mutations: 0, gui_client: OBSERVATION_WINDOW_ELAPSED}`,
+rc 0: the server (window 15:18:57 → 15:29:38) bound the game listener
+`:49457` AND the admin listener `:33873`, authenticated the admin
+client `Canonical-exercise` (the E168 blocker closed natively), ran
+the establishment/reload correspondence, and loaded the source save
+(protected pin). The GUI client joined as a spectator with the
+byte-for-byte argv (`-n 127.0.0.1:49457#255`, `client_name "Canonical
+GUI Probe"`) under the real desktop display env (`DISPLAY=:0`/
+`WAYLAND_DISPLAY=wayland-1`/`XDG_SESSION_TYPE=wayland`); join verified
+SERVER-side (marker line 8 `*** Canonical GUI Probe has joined the
+game (Client #2)`); alive the full 600 s observation window, ended by
+the probe's owned terminate (`code: -9, owned_terminate: true`); the
+server then saw `…has left the game (connection lost)` and saved
+`reload-readback.sav`. `client.log` stayed 0 bytes (GUI mode; join
+verification is SERVER-side by design).
+
+**Honesty boundary:** machine-verified facts only; the agent does not
+claim to have seen the window.
+
+**Seal:** `cleanup.json` all-true (pid 28460 quit → reaped rc 0);
+manifest 0 mismatches; post-run `verify` →
+`CANONICAL_FLEET_GUI_PROBE_VERIFIED` rc 0; `pgrep -x openttd` empty;
+dir sealed read-only.
+
+**Status: T-035 is typed terminal VERIFIED at
+`canonical-fleet-gui-probe-t035-3`; both one-launch grants (t035-2,
+t035-3) are consumed and void.** Any further T-035 run needs a NEW
+staging identity AND a FRESH explicit one-launch grant. The probe
+satisfies none of the Phase B done-ness criteria (verdict section
+below); a roadmap §3 T-035 row is an operator decision.
+
 ## Preconditions (all offline-checkable, verified 2026-11-11)
 
 - Run from a desktop terminal on the operator's session (verified live:

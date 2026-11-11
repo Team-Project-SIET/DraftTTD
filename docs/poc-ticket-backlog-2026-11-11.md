@@ -293,3 +293,39 @@ docs commit; never pushed.
 Ledger pairing: this file + `.scratch/phase-b-t035-gui-probe/issues/` +
 EVIDENCE_INDEX E169 + AI_HANDOFF/TASKS addenda of the same date. One
 docs commit; never pushed.
+
+## T-035 attempt executed once under a fresh explicit grant — VERIFIED (2026-11-11)
+
+- **The grant:** the operator's fresh explicit one-launch grant after
+  E169. The t035-3 attempt ran exactly once; no retry/reconnect.
+- **Outcome of record:** `result.json`
+  `{status: CANONICAL_FLEET_GUI_PROBE_VERIFIED, launches: 1,
+  connections: 1, gui_client: OBSERVATION_WINDOW_ELAPSED}` rc 0. A
+  real GUI client joined the live dedicated host as a spectator
+  (`-n 127.0.0.1:49457#255`, `client_name "Canonical GUI Probe"`) on
+  the real desktop (`DISPLAY=:0`/`WAYLAND_DISPLAY=wayland-1`/
+  `XDG_SESSION_TYPE=wayland`); join verified SERVER-side (marker line
+  8 `*** Canonical GUI Probe has joined the game (Client #2)`); alive
+  the full 600 s observation window; ended by the probe's owned
+  terminate (`code: -9, owned_terminate: true`); the server then saw
+  `…has left the game (connection lost)` and saved
+  `reload-readback.sav`. Honest boundary: machine-verified facts
+  only; the agent does not claim to have seen the window.
+- **Seal:** cleanup certified all-true (pid 28460 quit → reaped
+  rc 0); manifest 0 mismatches; post-run `verify` →
+  `CANONICAL_FLEET_GUI_PROBE_VERIFIED` rc 0; `pgrep -x openttd`
+  empty; dir sealed read-only at
+  `artifacts/runtime/canonical-fleet-gui-probe-t035-3/`.
+- **Grants + identity:** t035-2 and t035-3 grants consumed and void;
+  genealogy t035-1 (refused, preserved) → t035-2 (FAILED, sealed) →
+  t035-3 (VERIFIED, terminal); any further T-035 run needs a NEW
+  identity + FRESH grant.
+- **Not claimed:** independence verdict stands (satisfies none of
+  the Phase B done-ness criteria); roadmap §3 T-035 row = operator
+  decision; Phase B native closure outstanding — T-030 ×1, T-031 arm
+  A ×1 + arm B ×1, T-032 ×1, each its own fresh grant, each
+  inheriting both exercise-core fixes (E167 + E169).
+
+Ledger pairing: this file + `.scratch/phase-b-t035-gui-probe/issues/` +
+EVIDENCE_INDEX E170 + AI_HANDOFF/TASKS addenda of the same date. One
+docs commit; never pushed.

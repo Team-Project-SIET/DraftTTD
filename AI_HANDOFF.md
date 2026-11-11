@@ -1563,3 +1563,46 @@ no headless-only execution.
    closure unchanged — T-030 ×1, T-031 arm A ×1 + arm B ×1, T-032 ×1,
    each also inheriting both exercise-core fixes at attempt day.
 
+## 2026-11-11 T-035 attempt executed once under a fresh explicit operator grant (E170): CANONICAL_FLEET_GUI_PROBE_VERIFIED — a real GUI client joined the live dedicated host as a spectator and stayed alive the full 600 s observation window, ended by the probe's owned terminate; join verified server-side; cleanup certified; manifest 0 mismatches; both T-035 grants consumed and void; T-035 typed terminal VERIFIED
+
+1. **The run of record:** `artifacts/runtime/canonical-fleet-gui-probe-t035-3/`
+   sealed read-only; `result.json`
+   `{status: CANONICAL_FLEET_GUI_PROBE_VERIFIED, launches: 1,
+   connections: 1, mutations: 0, gui_client:
+   OBSERVATION_WINDOW_ELAPSED}`, rc 0. Server window 15:18:57 →
+   15:29:38: listeners game `:49457` ×2 + admin `:33873`; admin
+   `Canonical-exercise` connected frame 5 + authenticated (the E168
+   blocker closed natively); establishment/reload correspondence ran;
+   the source save (protected pin `51e45689…1297eb`) loaded.
+2. **GUI client receipts:** argv byte-for-byte (`-c
+   …/gui-client/openttd.cfg, -x, -X, -n 127.0.0.1:49457#255`; no
+   `-D`/`-f`, spectator `#255`); display env `DISPLAY=:0`/
+   `WAYLAND_DISPLAY=wayland-1`/`XDG_SESSION_TYPE=wayland` (the real
+   KDE Wayland desktop); `join_verified: true` via the server stdout
+   marker line 8 `*** Canonical GUI Probe has joined the game
+   (Client #2)`; alive the full 600 s observation window, ended
+   `OBSERVATION_WINDOW_ELAPSED` by the probe's owned terminate
+   (`code: -9, owned_terminate: true`,
+   `client_terminated_before_server_cleanup: true`); `client.log` 0
+   bytes (GUI mode; join verified SERVER-side by design); the server
+   then logged `*** Canonical GUI Probe has left the game (connection
+   lost)` and saved `reload-readback.sav`.
+3. **Honesty boundary:** machine-verified facts only (argv, display
+   env, join marker, liveness, owned exit); the agent does not claim
+   to have seen the window; the operator's own visual observation, if
+   any, is theirs to give and was not recorded.
+4. **Cleanup + seal:** `cleanup.json` all-true (pid 28460 `quit` →
+   reaped rc 0); manifest 0 mismatches from inside the dir; post-run
+   `verify` → `CANONICAL_FLEET_GUI_PROBE_VERIFIED` rc 0;
+   `pgrep -x openttd` empty.
+5. **Grants + identity:** the t035-2 and t035-3 one-launch grants both
+   consumed and void; genealogy t035-1 (refused, preserved) → t035-2
+   (FAILED, sealed) → t035-3 (VERIFIED, terminal); any further T-035
+   run needs a NEW identity AND a FRESH grant.
+6. **Not claimed / blocked:** independence verdict stands (the probe
+   satisfies none of the Phase B done-ness criteria); a roadmap §3
+   T-035 row is an operator decision; Phase B native closure
+   outstanding — T-030 ×1, T-031 arm A ×1 + arm B ×1, T-032 ×1, each
+   its own fresh grant, each inheriting both exercise-core fixes
+   (E167 + E169) at attempt day.
+

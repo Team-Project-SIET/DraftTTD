@@ -251,6 +251,50 @@ staging: prepare → **preflight PASS** → verify
 pin and the auth trio present. The t035-3 re-RUN awaits a FRESH
 explicit one-launch operator grant.
 
+## Attempt record of record (2026-11-11, E170): t035-3 executed once under a fresh explicit operator grant — CANONICAL_FLEET_GUI_PROBE_VERIFIED, terminal
+
+The t035-3 attempt ran exactly once under the operator's fresh explicit
+one-launch grant. `result.json`
+`{status: CANONICAL_FLEET_GUI_PROBE_VERIFIED, launches: 1,
+connections: 1, mutations: 0, gui_client: OBSERVATION_WINDOW_ELAPSED}`,
+rc 0.
+
+- **Server:** window 15:18:57 → 15:29:38; listeners game
+  `127.0.0.1:49457` (×2) + admin `127.0.0.1:33873`;
+  `[admin] Client connected … frame 5` + `'Canonical-exercise' (1) has
+  connected` + `authenticated` — the E168 blocker closed natively;
+  establishment/reload correspondence ran; the source save (protected
+  pin `51e45689…1297eb`) loaded.
+- **GUI client:** argv byte-for-byte (`-c …/gui-client/openttd.cfg,
+  -x, -X, -n 127.0.0.1:49457#255`; no `-D`/`-f`, spectator `#255`),
+  `client_name "Canonical GUI Probe"`; display env `DISPLAY=:0` /
+  `WAYLAND_DISPLAY=wayland-1` / `XDG_SESSION_TYPE=wayland` (the real
+  KDE Wayland desktop); `join_verified: true` via the SERVER stdout
+  marker line 8 `*** Canonical GUI Probe has joined the game
+  (Client #2)`; observation `alive_seconds: 600`,
+  `end: OBSERVATION_WINDOW_ELAPSED`;
+  `owned_exit {code: -9, owned_terminate: true}`;
+  `client_terminated_before_server_cleanup: true`; `client.log` 0
+  bytes (sha `e3b0c442…` — GUI mode keeps the client console log
+  empty; join verification is SERVER-side by design). After the owned
+  terminate the server logged `*** Canonical GUI Probe has left the
+  game (connection lost)` and saved `reload-readback.sav`.
+- **Honesty boundary:** machine-verified facts only (argv, display
+  env, join marker, liveness, owned exit); the agent does NOT claim
+  to have seen the window; the operator's own visual observation, if
+  any, is theirs to give and was not recorded.
+- **Cleanup + seal:** `cleanup.json` all-true (pid 28460 `quit` →
+  `reaped`, rc 0); manifest 0 mismatches from inside the dir; post-run
+  `verify` → `CANONICAL_FLEET_GUI_PROBE_VERIFIED` rc 0;
+  `pgrep -x openttd` empty; the dir is sealed read-only history.
+
+**Status: T-035 is typed terminal VERIFIED at
+`canonical-fleet-gui-probe-t035-3`.** Both one-launch grants (t035-2,
+t035-3) are consumed and void. Any further T-035 run would need a NEW
+staging identity AND a FRESH explicit one-launch operator grant. The
+probe satisfies NONE of the Phase B done-ness criteria (independence
+verdict above); a roadmap §3 T-035 row is an operator decision.
+
 ## Offline regression of record
 
 `tests/test_canonical_fleet_gui.py` 14 passed: identity/contract

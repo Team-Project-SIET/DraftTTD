@@ -4013,3 +4013,30 @@ no push, sealed bytes untouched. Evidence index E156.
     The t035-3 re-RUN awaits a FRESH explicit one-launch grant (zero
     launches / zero AdminPort / zero grants this round). Evidence index
     E169.
+
+21. **T-035 attempt executed once under a fresh explicit operator
+    grant — VERIFIED (2026-11-11; docs commit this one; no push; no
+    code change).** `result.json`
+    `{status: CANONICAL_FLEET_GUI_PROBE_VERIFIED, launches: 1,
+    connections: 1, gui_client: OBSERVATION_WINDOW_ELAPSED}` rc 0. A
+    real GUI client joined the live dedicated host as a spectator:
+    argv byte-for-byte demo-lane (`-n 127.0.0.1:49457#255`), display
+    env the real KDE Wayland desktop (`DISPLAY=:0`/
+    `WAYLAND_DISPLAY=wayland-1`/`XDG_SESSION_TYPE=wayland`), join
+    verified SERVER-side (marker line 8 `*** Canonical GUI Probe has
+    joined the game (Client #2)`), alive the full 600 s observation
+    window, ended by the probe's owned terminate (`code: -9`); the
+    server then saw `…has left the game (connection lost)` and saved
+    `reload-readback.sav`; the admin listener bound and
+    `Canonical-exercise` authenticated (E168 class closed natively).
+    Honest boundary: the agent records machine-verified facts only
+    and does not claim to have seen the window. Cleanup certified
+    all-true (pid 28460), manifest 0 mismatches, post-run `verify` →
+    `CANONICAL_FLEET_GUI_PROBE_VERIFIED` rc 0, `pgrep -x openttd`
+    empty; dir sealed read-only. Both T-035 grants (t035-2, t035-3)
+    consumed and void; genealogy t035-1 → t035-2 → t035-3; T-035
+    typed terminal VERIFIED. Independence verdict stands (satisfies
+    none of the Phase B done-ness criteria); roadmap §3 row is an
+    operator decision. Phase B native closure outstanding: T-030 ×1,
+    T-031 arm A ×1 + arm B ×1, T-032 ×1, each its own fresh grant,
+    each inheriting both exercise-core fixes. Evidence index E170.
