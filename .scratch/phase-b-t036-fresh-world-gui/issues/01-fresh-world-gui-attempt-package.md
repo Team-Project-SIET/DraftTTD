@@ -200,16 +200,48 @@ of record: prepare → **preflight PASS** → verify
 `[game_scripts] RoadFreightProof = ` (lines 21-22), bridge staged,
 `bridge_sha256` pinned, argv tail `-G 1181` unchanged, budget 300 s.
 
+## Attempt record (2026-11-11, E175): t036-3 executed once under grant A3 — FRESH_WORLD_CREATE_VERIFIED, terminal; the fix is proven at the creation seam
+
+The t036-3 attempt ran exactly once under the operator's fresh explicit
+in-session grant A3 (HEAD `5726bc0`, tree clean, `pgrep -x openttd`
+empty). `result.json`
+`{status: FRESH_WORLD_CREATE_VERIFIED, launches: 1, connections: 0}`
+rc 0. Native proof of record: stderr `Map generated, starting game` AND
+the full GameScript boot the E174 run never had —
+`FREIGHT_GAME_TIME_START`, six `FREIGHT_NETWORK_INDUSTRY_BUILT`
+(industries 0-5), `FREIGHT_NETWORK_WORLD_READY cleared_bound=78`,
+`BRIDGE_STARTED protocol=1 api=15`, `FREIGHT_DELIVERY_READY` (stderr
+lines 61-70) — direct evidence the generated world's GSDT embeds the
+GameScript. `world.json` pins seed 1181 / 64×64 / temperate / 1950 /
+heightmap digest and `fresh_save_sha256`
+`fddd6f5d28a578cc784aa25c330fd1141a5c5f73f5e2258aeebae9c3ea7c2b35`
+matching the save; `PRELAUNCH.json` pins `bridge_sha256`
+`0fa190a0b3770a28aff92b10c89c5c83d2ef267095f285d3f05e2921de6fc12e`. No
+admin connection ever made. Cleanup certified all-true; manifest 0
+mismatches; post-run `verify` → `FRESH_WORLD_CREATE_VERIFIED` rc 0;
+`pgrep -x openttd` empty. Dir sealed read-only.
+
+**Grant A3 is consumed and void. The GUI stage `fresh-world-gui-probe-
+t036-2` is next, under its OWN fresh grant (grant B2)** — staging and
+preflight are offline; the run is operator-gated:
+
+```
+.venv/bin/python -m app.simulation.openttd.proof.fresh_world_gui gui \
+  artifacts/runtime/fresh-world-gui-probe-t036-2 \
+  --fresh-world artifacts/runtime/fresh-world-create-t036-3
+.venv/bin/python -m app.simulation.openttd.proof.fresh_world_gui preflight \
+  artifacts/runtime/fresh-world-gui-probe-t036-2
+.venv/bin/python -m app.simulation.openttd.proof.fresh_world_gui run \
+  artifacts/runtime/fresh-world-gui-probe-t036-2 --authorize-one-launch
+.venv/bin/python -m app.simulation.openttd.proof.fresh_world_gui verify \
+  artifacts/runtime/fresh-world-gui-probe-t036-2   # expect FRESH_WORLD_GUI_PROBE_VERIFIED
+```
+
 ## Grant texts of record (paste per authorization, one per attempt)
 
-Grant A3 (creation): "Authorize exactly one fresh-world creation launch:
-`fresh_world_gui run artifacts/runtime/fresh-world-create-t036-3
---authorize-one-launch`. One dedicated-server launch that generates the
-seed-1181 64×64 world with the GameScript of record staged and
-console-saves fresh-world.sav; no admin connection; no retry; stop on
-unexpected failure."
+Grant A3 (creation) — CONSUMED 2026-11-11, void.
 
-Grant B2 (GUI probe, only after A3 verifies): "Authorize exactly one
+Grant B2 (GUI probe, only after A3 verified): "Authorize exactly one
 fresh-world GUI probe run: `fresh_world_gui run
 artifacts/runtime/fresh-world-gui-probe-t036-2 --authorize-one-launch`.
 One dedicated-server launch from the digest-pinned fresh save, one

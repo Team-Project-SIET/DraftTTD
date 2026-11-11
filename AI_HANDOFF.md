@@ -1772,3 +1772,37 @@ no headless-only execution.
    B criterion satisfied; Phase B native closure outstanding (T-030 ×1,
    T-031 arm A ×1 + arm B ×1, T-032 ×1, each its own fresh grant). T-035
    stays terminal VERIFIED at E170. Evidence index E174.
+
+## 2026-11-11 T-036 creation re-run executed once under the operator's explicit grant A3 (E175): FRESH_WORLD_CREATE_VERIFIED at the first post-fix attempt — the GameScript of record started natively during generation (BRIDGE_STARTED + FREIGHT_DELIVERY_READY in the retained stderr); save digest-pinned; owned cleanup all-true; grant A3 consumed and void; the GUI re-stage + re-run await grant B2
+
+1. **The run of record:** `artifacts/runtime/fresh-world-create-t036-3/`
+   sealed read-only; `result.json`
+   `{status: FRESH_WORLD_CREATE_VERIFIED, launches: 1, connections: 0}`
+   rc 0; post-run `verify` → `FRESH_WORLD_CREATE_VERIFIED` rc 0. Native
+   proof: stderr `Map generated, starting game` AND the full GameScript
+   boot the E174 run never had — `FREIGHT_GAME_TIME_START`, six
+   `FREIGHT_NETWORK_INDUSTRY_BUILT` (industries 0-5),
+   `FREIGHT_NETWORK_WORLD_READY cleared_bound=78`, `BRIDGE_STARTED
+   protocol=1 api=15`, `FREIGHT_DELIVERY_READY` (stderr lines 61-70) —
+   direct evidence the generated world's GSDT embeds the
+   RoadFreightProof GameScript. `world.json` pins seed 1181 / 64×64 /
+   temperate / 1950 / heightmap digest and `fresh_save_sha256`
+   `fddd6f5d28a578cc784aa25c330fd1141a5c5f73f5e2258aeebae9c3ea7c2b35`
+   matching `sha256(fresh-world.sav)`; `PRELAUNCH.json` pins
+   `bridge_sha256`
+   `0fa190a0b3770a28aff92b10c89c5c83d2ef267095f285d3f05e2921de6fc12e`;
+   argv tail `-G 1181`; no admin connection (connections 0 by design).
+2. **Seal of record:** cleanup all-true (reaped rc 0, listener closed,
+   reservation released, workspace disposed, credential removed,
+   sockets closed); manifest 0 mismatches; CLAIM consumed;
+   `pgrep -x openttd` empty.
+3. **State:** grant A3 consumed and void; the E174 fix (`9731d2b`) is
+   proven at the creation seam — the GameScript boots at generation.
+   The GUI stage `fresh-world-gui-probe-t036-2` is next: re-stage from
+   t036-3 (`gui --fresh-world`), preflight, then its OWN fresh grant B2
+   → one run (seed-1181 welcome tripwire, server-side join marker, GUI
+   liveness, `FREIGHT_DELIVERY_READY` gate).
+4. **Not claimed:** the fresh world still not SEEN in the GUI; no Phase
+   B criterion satisfied; Phase B native closure outstanding (T-030 ×1,
+   T-031 arm A ×1 + arm B ×1, T-032 ×1, each its own fresh grant). T-035
+   stays terminal VERIFIED at E170. Evidence index E175.

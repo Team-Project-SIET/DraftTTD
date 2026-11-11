@@ -4187,3 +4187,36 @@ no push, sealed bytes untouched. Evidence index E156.
     Phase B criterion satisfied; Phase B native closure outstanding
     (T-030 ×1, T-031 arm A ×1 + arm B ×1, T-032 ×1). Evidence index
     E174.
+
+26. **T-036 creation re-run executed once under the operator's explicit
+    grant A3 (E175; 2026-11-11; fix commit `9731d2b` proven at the
+    creation seam; grant A3 consumed and void).** Gate round: HEAD
+    `5726bc0`, tree clean, `pgrep -x openttd` empty, t036-3 verify
+    `AUTHORIZATION_UNVERIFIED` (staged config `[game_scripts]
+    RoadFreightProof = ` lines 21-22, bridge staged, `bridge_sha256`
+    pinned, argv tail `-G 1181`); the operator answered "Grant A3 —
+    launch now" in-session. The one launch DID: `result.json`
+    `{status: FRESH_WORLD_CREATE_VERIFIED, launches: 1, connections: 0}`
+    rc 0; stderr `Map generated, starting game` AND the full GameScript
+    boot the E174 run never had — `FREIGHT_GAME_TIME_START`, six
+    `FREIGHT_NETWORK_INDUSTRY_BUILT`, `FREIGHT_NETWORK_WORLD_READY
+    cleared_bound=78`, `BRIDGE_STARTED protocol=1 api=15`,
+    `FREIGHT_DELIVERY_READY` (stderr lines 61-70) — direct evidence the
+    generated world's GSDT embeds the GameScript; `world.json` pins
+    seed 1181 / 64×64 / temperate / 1950 / heightmap digest and
+    `fresh_save_sha256`
+    `fddd6f5d28a578cc784aa25c330fd1141a5c5f73f5e2258aeebae9c3ea7c2b35`
+    matching the save; `PRELAUNCH.json` pins `bridge_sha256`
+    `0fa190a0b3770a28aff92b10c89c5c83d2ef267095f285d3f05e2921de6fc12e`.
+    Seal of record: cleanup all-true (reaped rc 0, listener closed,
+    reservation released, workspace disposed, credential removed,
+    sockets closed); manifest 0 mismatches; post-run `verify` →
+    `FRESH_WORLD_CREATE_VERIFIED` rc 0; `pgrep -x openttd` empty; dir
+    sealed read-only. **The GUI stage `fresh-world-gui-probe-t036-2` is
+    next: `gui --fresh-world artifacts/runtime/fresh-world-create-t036-3`
+    → preflight → its OWN fresh grant B2 → one run (seed-1181 welcome
+    tripwire, server-side join, GUI liveness, `FREIGHT_DELIVERY_READY`
+    gate).** Not claimed: the fresh world still not SEEN in the GUI; no
+    Phase B criterion satisfied; Phase B native closure outstanding
+    (T-030 ×1, T-031 arm A ×1 + arm B ×1, T-032 ×1). Evidence index
+    E175.
