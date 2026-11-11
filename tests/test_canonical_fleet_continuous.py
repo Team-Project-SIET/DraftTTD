@@ -59,6 +59,7 @@ def test_prepare_stages_seal_offline(tmp_path, monkeypatch):
     for service in range(3):
         (canonical / f"native-plan-{service}.json").write_text("{}")
     (canonical / "effective-openttd.cfg").write_text("[network]\n")
+    (canonical / "canonical.sav").write_bytes(b"staged")
     monkeypatch.setattr(driver, "verify_created_source", lambda _: created)
     monkeypatch.setattr(freight_canonical_runtime, "verify_save", lambda *a, **k: None)
     prepared = continuous.prepare(tmp_path / continuous.CONTINUOUS, canonical=canonical)

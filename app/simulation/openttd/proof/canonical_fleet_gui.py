@@ -27,7 +27,7 @@ from . import canonical_fleet as driver
 from . import canonical_fleet_exercise as exercise
 from .harness import BINARY, sha256, write_json
 
-GUI_PROBE = "canonical-fleet-gui-probe-t035-1"
+GUI_PROBE = "canonical-fleet-gui-probe-t035-2"
 GUI_PROBE_VERIFIED = "CANONICAL_FLEET_GUI_PROBE_VERIFIED"
 CLIENT_NAME = "Canonical GUI Probe"
 JOIN_MARKER = f"*** {CLIENT_NAME} has joined the game"

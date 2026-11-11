@@ -9,6 +9,7 @@ states. The GUI client is only ever a stub here.
 
 import asyncio
 import json
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
@@ -18,6 +19,7 @@ from app.simulation.openttd.proof import canonical_fleet as driver
 from app.simulation.openttd.proof import canonical_fleet_exercise as exercise
 from app.simulation.openttd.proof import canonical_fleet_gui as gui
 from app.simulation.openttd.proof import canonical_fleet_matched as matched
+from app.simulation.openttd.proof import freight_delivery
 
 
 def test_gui_probe_identity_and_contract_are_independent():
@@ -68,6 +70,7 @@ def test_prepare_stages_seal_offline(tmp_path, monkeypatch):
     for service in range(3):
         (canonical / f"native-plan-{service}.json").write_text("{}")
     (canonical / "effective-openttd.cfg").write_text("[network]\n")
+    (canonical / "canonical.sav").write_bytes(b"staged")
     monkeypatch.setattr(driver, "verify_created_source", lambda _: created)
     monkeypatch.setattr(freight_canonical_runtime, "verify_save", lambda *a, **k: None)
     prepared = gui.prepare(tmp_path / gui.GUI_PROBE, canonical=canonical)
@@ -294,3 +297,25 @@ def test_run_requires_authorization_but_writes_nothing(tmp_path, monkeypatch):
     with pytest.raises(ValueError, match="authorization"):
         asyncio.run(gui.run(SimpleNamespace(directory=tmp_path)))
     assert list(tmp_path.iterdir()) == []
+
+
+def test_preflight_passes_on_real_staging_unpatched(tmp_path):
+    """The t035-1 refusal class of record: preflight must pass over a REAL
+    staging from the retained E2 evidence with verify_created_source and
+    verify_save UNPATCHED (E167). Skip-typed as missing evidence on clones
+    without the retained bytes (E151 precedent)."""
+    canonical = Path(__file__).resolve().parents[1] / "artifacts/runtime/canonical-fleet-create-q3"
+    binary = freight_delivery.BINARY
+    graphics = freight_delivery.GRAPHICS_ARCHIVE
+    if (
+        not (canonical / "canonical.sav").is_file()
+        or not binary.is_file()
+        or not graphics.is_file()
+    ):
+        pytest.skip("retained native evidence not present on this clone")
+    prepared = gui.prepare(tmp_path / gui.GUI_PROBE, canonical=canonical)
+    created = driver.load_created(canonical)
+    freight_canonical_runtime.verify_save(prepared.spec.workspace.root / "source.sav", created)
+    metadata = exercise.preflight(prepared, identity=gui.GUI_PROBE, contract=gui.GUI_PROBE_CONTRACT)
+    assert metadata["qualification_id"] == gui.GUI_PROBE
+    assert metadata["canonical_save_sha256"] == created.source_save_sha256

@@ -163,6 +163,10 @@ def prepare(
         workspace, key, secret = stage_workspace(
             directory, canonical=Path(canonical), reservation=reservation
         )
+        # mirror of driver.prepare: preflight and the -g launch argv both
+        # resolve this exact path; without it every exercise-core staging
+        # refuses at preflight (t035-1 refused state, E167).
+        shutil.copyfile(Path(canonical) / "canonical.sav", workspace.root / "source.sav")
         graphics = stage_opengfx(freight.GRAPHICS_ARCHIVE, workspace.root / "baseset/OpenGFX")
         write_json(
             directory / "graphics-identity.json",
