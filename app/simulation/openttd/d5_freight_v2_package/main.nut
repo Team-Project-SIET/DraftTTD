@@ -3,7 +3,7 @@
  * package (d5_freight_package) keeps its bytes and its own schedule. The only
  * native mutation commands are GSVehicle.BuildVehicle (once), GSOrder
  * .AppendOrder (twice: pickup stop tile with OF_NONE, delivery stop tile with
- * OF_NO_LOAD — N1/N2/N3 of the v2 resolution: the 15.x append takes the stop
+ * OF_DELIVERY — N1/N2/N3 of the v2 resolution: the 15.x append takes the stop
  * TILE, OF_FULL_LOAD is never issued, and AreOrderFlagsValid is the
  * two-argument destination form) and GSVehicle.StartStopVehicle (start once,
  * stop once at finish) in company mode, each executed at most once against
@@ -181,8 +181,12 @@ class D5FreightV2Proof extends GSController {
      * forbidden: v2 orders never carry it, and neither flag constant here
      * feeds an append. */
     OF_NONE = 0
+    OF_UNLOAD = 4
+    OF_TRANSFER = 8
+    OF_NO_UNLOAD = 16
     OF_FULL_LOAD_FORBIDDEN = 64
     OF_NO_LOAD = 128
+    OF_DELIVERY = 132
     /* Per-watch window caps: the tick cap is the module bound; the day cap
      * is the 60-economy-day attempt budget the request echo is bounded by
      * (caps, never promises). */
@@ -906,10 +910,11 @@ class D5FreightV2Proof extends GSController {
          * (truck_stops->xy), never the StationID. */
         local dest = q.order_index == 0 ? this.pickup : this.delivery
         /* N2: the real 15.x flag values. The pickup stop order carries
-         * OF_NONE (no load policy), the delivery bay's OF_NO_LOAD (never
-         * unload here). OF_FULL_LOAD is documented forbidden and is never
-         * issued in any branch of this machinery. */
-        local flags = q.order_index == 0 ? this.OF_NONE : this.OF_NO_LOAD
+         * OF_NONE (no load policy), the delivery bay carries OF_DELIVERY
+         * (OF_UNLOAD | OF_NO_LOAD: unload directive without loading).
+         * OF_FULL_LOAD is documented forbidden and is never issued in any
+         * branch of this machinery. */
+        local flags = q.order_index == 0 ? this.OF_NONE : this.OF_DELIVERY
         if (dest < 0) {
             r.status = "STALE_ADMISSION"
             return
@@ -980,13 +985,13 @@ class D5FreightV2Proof extends GSController {
              * destinations must equal the pinned stop tiles, deepened with
              * the station identity (each tile resolves to its site-latched
              * station); the flags are the real appended values (OF_NONE
-             * then OF_NO_LOAD), both goto-station. */
+             * then OF_DELIVERY), both goto-station. */
             if (d0 != this.pickup ||
                 GSStation.GetStationID(d0) != this.site_sid0 ||
                 f0 != this.OF_NONE || g0 != true ||
                 d1 != this.delivery ||
                 GSStation.GetStationID(d1) != this.site_sid1 ||
-                f1 != this.OF_NO_LOAD || g1 != true) {
+                f1 != this.OF_DELIVERY || g1 != true) {
                 r.status = "READBACK_MISMATCH"
                 return
             }
