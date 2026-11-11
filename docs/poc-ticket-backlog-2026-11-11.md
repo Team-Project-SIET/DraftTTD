@@ -207,3 +207,31 @@ commit; never pushed.
 Ledger pairing: this file + `.scratch/phase-b-t035-gui-probe/issues/` +
 EVIDENCE_INDEX E166 + AI_HANDOFF/TASKS addenda of the same date. One
 docs commit; never pushed.
+
+## T-035 gate round — preflight refusal, fix + re-stage (2026-11-11)
+
+- **Gate walk:** prepare staged offline OK at
+  `canonical-fleet-gui-probe-t035-1`; preflight REFUSED typed
+  (`canonical save must be an existing protected regular file`).
+  Stopped at the gate per the operator's standing instruction.
+- **Root cause:** the shared exercise-core `prepare` never staged
+  `source.sav` (driver prepare `canonical_fleet.py:158` does); every
+  exercise-core package (T-030/T-031×2/T-032) would have refused
+  identically at grant-time preflight — none had staged yet, so the
+  fix lands before their attempt day.
+- **Fix + re-stage (operator's in-session "Fix + re-stage" answer; fix
+  commit `132e2ea`):** one-line copy in `exercise.prepare`; identity
+  advanced `…t035-1` → `…t035-2` (stale-supersession, E130); refused
+  staging preserved untouched; unpatched real-staging preflight test
+  added (the gap: earlier tests patched both verify functions). 45
+  family tests green; lane suites rc=0; statics clean. t035-2
+  re-staged: prepare → **preflight PASS** → verify
+  `AUTHORIZATION_UNVERIFIED`; staged `source.sav` == protected pin.
+- **Spec + package** updated to t035-2 with the supersession record.
+- **Blocked:** the native GUI attempt needs the operator's FRESH
+  explicit one-launch grant (zero launches / zero AdminPort / zero
+  grants this round).
+
+Ledger pairing: this file + `.scratch/phase-b-t035-gui-probe/issues/` +
+EVIDENCE_INDEX E167 + AI_HANDOFF/TASKS addenda of the same date. One
+docs commit; never pushed.

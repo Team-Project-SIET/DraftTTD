@@ -41,7 +41,7 @@ operator's desktop (KDE Wayland + XWayland `:0` verified live
 
 ## Design of record
 
-- **Identity of record:** `canonical-fleet-gui-probe-t035-1`; own CLAIM;
+- **Identity of record:** `canonical-fleet-gui-probe-t035-2`; own CLAIM;
   own fresh explicit one-launch grant (never shared with the T-030
   exercise, the T-031 arms, the T-032 five-year stage, the FD-C-2 line,
   or any earlier attempt; all prior grants void).
@@ -96,16 +96,16 @@ operator's desktop (KDE Wayland + XWayland `:0` verified live
 export OPENTTD_BINARY=/home/fed/Downloads/openttd-15.3-linux-generic-amd64/openttd
 export OPENTTD_OPENGFX_ARCHIVE=artifacts/runtime/verified-assets/opengfx-8.0-all.zip
 .venv/bin/python -m app.simulation.openttd.proof.canonical_fleet_gui prepare \
-  artifacts/runtime/canonical-fleet-gui-probe-t035-1 \
+  artifacts/runtime/canonical-fleet-gui-probe-t035-2 \
   --canonical artifacts/runtime/canonical-fleet-create-q3
 .venv/bin/python -m app.simulation.openttd.proof.canonical_fleet_gui preflight \
-  artifacts/runtime/canonical-fleet-gui-probe-t035-1
+  artifacts/runtime/canonical-fleet-gui-probe-t035-2
 .venv/bin/python -m app.simulation.openttd.proof.canonical_fleet_gui verify \
-  artifacts/runtime/canonical-fleet-gui-probe-t035-1   # AUTHORIZATION_UNVERIFIED
+  artifacts/runtime/canonical-fleet-gui-probe-t035-2   # AUTHORIZATION_UNVERIFIED
 .venv/bin/python -m app.simulation.openttd.proof.canonical_fleet_gui run \
-  artifacts/runtime/canonical-fleet-gui-probe-t035-1 --authorize-one-launch
+  artifacts/runtime/canonical-fleet-gui-probe-t035-2 --authorize-one-launch
 .venv/bin/python -m app.simulation.openttd.proof.canonical_fleet_gui verify \
-  artifacts/runtime/canonical-fleet-gui-probe-t035-1   # typed post-run status
+  artifacts/runtime/canonical-fleet-gui-probe-t035-2   # typed post-run status
 ```
 
 Run from a desktop terminal (DISPLAY or WAYLAND_DISPLAY must be set —
@@ -190,9 +190,37 @@ criteria and must not be assumed to replace any native attempt:
   window on a Phase B attempt, that is a NEW reviewed package decision
   per attempt — not this probe.
 
+## Supersession of record (2026-11-11, E167)
+
+The first staging under identity `canonical-fleet-gui-probe-t035-1`
+refused typed at preflight BEFORE any grant: `ValueError: canonical save
+must be an existing protected regular file`
+(`app/simulation/openttd/freight_canonical_runtime.py:111`, from
+`canonical_fleet_exercise.py:305`). Root cause of record: the generalized
+exercise-core `prepare` never staged the E2 created save into the
+workspace, while `expected_argv` resolves `-g <workspace>/source.sav`
+for every non-CREATE identity and preflight verifies it — a latent
+stage-core blocker shared by ALL exercise-core packages (T-030, T-031
+arms, T-032; none had staged yet, so the fix lands before their attempt
+day). Fix of record (commit `132e2ea`): one line mirroring the driver's
+own prepare (`shutil.copyfile(canonical/"canonical.sav",
+workspace.root/"source.sav")`, before the frozen-source seal) plus the
+regression test that runs preflight over a REAL staging from the
+retained E2 evidence with `verify_created_source`/`verify_save`
+UNPATCHED (the gap that let the defect through: every earlier offline
+staging test patched both). By the stale-supersession rule (E130
+precedent) the identity advanced `canonical-fleet-gui-probe-t035-1` →
+`canonical-fleet-gui-probe-t035-2`; the refused t035-1 staging bytes
+stay preserved untouched at `artifacts/runtime/canonical-fleet-gui-probe-t035-1/`
+(sealed, pre-consumption, no CLAIM — never deleted, never relabeled,
+never regenerated). The t035-2 staging: prepare → **preflight PASS** →
+verify `AUTHORIZATION_UNVERIFIED`; the staged
+`isolated/openttd-15.3-*/source.sav` sha256 re-derived equal to the
+protected canonical save pin `51e45689…1297eb`.
+
 ## Offline regression of record
 
-`tests/test_canonical_fleet_gui.py` 12 passed: identity/contract
+`tests/test_canonical_fleet_gui.py` 13 passed: identity/contract
 independence; fail-closed desktop requirement (refusal before any
 write); real offline staging with seal assertions; client argv asserts
 (no `-D`/`-f`, spectator `#255`, isolated config + baseset); join
@@ -200,7 +228,9 @@ verification from server stdout (marker hit, deadline typed, client
 death typed); observation ends typed (operator close / window elapsed +
 owned stop); client-crash typed failure; conductor wiring
 (`dispatch=False`, client lifecycle order, receipt shape); verify
-states; authorization gate. Family suites green (exercise 14, matched
-11, continuous 7); lane suites green including the q3 no-purchase
+states; authorization gate; and the E167 unpatched real-staging
+preflight pass over the retained E2 evidence (skip-typed as missing
+evidence on clones). Family suites green (exercise 14, matched 11,
+continuous 7); lane suites green including the q3 no-purchase
 tripwire `test_canonical_reload_only.py`. Statics clean (ruff, format,
 py_compile, scoped `uvx ty`, `git diff --check`).

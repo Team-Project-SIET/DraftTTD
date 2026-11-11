@@ -5,6 +5,18 @@
 launch requires the operator's separate fresh explicit authorization
 **Spec:** `docs/specs/t035-gui-native-probe.md`
 
+## Supersession record (2026-11-11, E167)
+
+The first staging under identity `canonical-fleet-gui-probe-t035-1`
+refused typed at preflight before any grant (`ValueError: canonical
+save must be an existing protected regular file`); root cause and fix
+of record in the spec's Supersession section (commit `132e2ea`). The
+refused staging bytes stay preserved untouched at
+`artifacts/runtime/canonical-fleet-gui-probe-t035-1/` (sealed,
+pre-consumption, no CLAIM). The attempt of record is the t035-2
+staging below — prepare → **preflight PASS** → verify
+`AUTHORIZATION_UNVERIFIED` as of 2026-11-11.
+
 ## Preconditions (all offline-checkable, verified 2026-11-11)
 
 - Run from a desktop terminal on the operator's session (verified live:
@@ -20,7 +32,8 @@ launch requires the operator's separate fresh explicit authorization
 - E2 manifest re-verified inside
   `artifacts/runtime/canonical-fleet-create-q3/` (0 mismatches, part of
   the E165 197-manifest sweep); no byte modified by the check.
-- Clean tree at the commit of record (≥ the T-035 code commit), branch
+- Clean tree at the commit of record (≥ the fix commit `132e2ea`),
+  branch
   `miles/fright-delivery`; `stash@{0}` untouched.
 - `OPENTTD_BINARY` and `OPENTTD_OPENGFX_ARCHIVE` set before Python
   starts (exact values above).
@@ -29,14 +42,14 @@ launch requires the operator's separate fresh explicit authorization
 
 ```bash
 .venv/bin/python -m app.simulation.openttd.proof.canonical_fleet_gui prepare \
-  artifacts/runtime/canonical-fleet-gui-probe-t035-1 \
+  artifacts/runtime/canonical-fleet-gui-probe-t035-2 \
   --canonical artifacts/runtime/canonical-fleet-create-q3
 .venv/bin/python -m app.simulation.openttd.proof.canonical_fleet_gui preflight \
-  artifacts/runtime/canonical-fleet-gui-probe-t035-1
+  artifacts/runtime/canonical-fleet-gui-probe-t035-2
 .venv/bin/python -m app.simulation.openttd.proof.canonical_fleet_gui verify \
-  artifacts/runtime/canonical-fleet-gui-probe-t035-1   # AUTHORIZATION_UNVERIFIED
+  artifacts/runtime/canonical-fleet-gui-probe-t035-2   # AUTHORIZATION_UNVERIFIED
 .venv/bin/python -m app.simulation.openttd.proof.canonical_fleet_gui run \
-  artifacts/runtime/canonical-fleet-gui-probe-t035-1 --authorize-one-launch
+  artifacts/runtime/canonical-fleet-gui-probe-t035-2 --authorize-one-launch
 ```
 
 Then the window appears. The operator may watch it and close it at any

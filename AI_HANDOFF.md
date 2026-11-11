@@ -1455,3 +1455,44 @@ no headless-only execution.
    native closure unchanged — T-030 ×1, T-031 arm A ×1 + arm B ×1,
    T-032 ×1, each its OWN fresh grant. This round: zero launches, zero
    AdminPort, zero grants, no `artifacts/` byte touched.
+
+## 2026-11-11 T-035 gate round (E167): preflight refused typed on a latent exercise-core blocker — source.sav staging missing; fixed smallest offline under the operator's "Fix + re-stage" direction; identity advanced t035-1 → t035-2 (stale-supersession); refused staging preserved; t035-2 preflight PASS at `AUTHORIZATION_UNVERIFIED`
+
+1. **The refusal of record:** prepare staged offline OK at
+   `artifacts/runtime/canonical-fleet-gui-probe-t035-1` (HEAD `a17a4cf`,
+   all preconditions held); preflight refused typed
+   `ValueError: canonical save must be an existing protected regular
+   file` (`freight_canonical_runtime.py:111`, from
+   `canonical_fleet_exercise.py:305`). Stopped at the gate; diagnosis
+   read-only.
+2. **Root cause:** the generalized exercise-core `prepare` (shared by
+   T-030, T-031 arms, T-032, T-035) never copied
+   `canonical/canonical.sav` → `workspace.root/source.sav` while
+   `expected_argv` resolves `-g <workspace>/source.sav` for every
+   non-CREATE identity and preflight verifies it; the driver's own
+   prepare (`canonical_fleet.py:158`) makes exactly that copy. Every
+   exercise-core package would have refused identically at its own
+   grant-time preflight; none had staged yet, so the fix lands before
+   their attempt day. Offline tests missed it because every earlier
+   real-staging test monkeypatched BOTH `verify_created_source` and
+   `verify_save`.
+3. **Fix (commit `132e2ea`):** one-line copy in `exercise.prepare`
+   (before the frozen-source seal), identity advanced
+   `canonical-fleet-gui-probe-t035-1` →
+   `canonical-fleet-gui-probe-t035-2` (stale-supersession, E130), and
+   the gap closed with an unpatched real-staging preflight test over
+   the retained E2 evidence (skip-typed on clones); the three
+   fake-canonical staging fixtures gained a dummy `canonical.sav`.
+4. **Tests/statics:** gui 13 + exercise 14 + matched 11 + continuous 7
+   = 45 green; lane suites rc=0 incl. the q3 tripwire; ruff/format/
+   py_compile/ty/`git diff --check` clean.
+5. **Re-stage:** `artifacts/runtime/canonical-fleet-gui-probe-t035-2`
+   prepare → **preflight PASS** → verify `AUTHORIZATION_UNVERIFIED`;
+   staged `source.sav` sha256 == protected pin `51e45689…1297eb`. The
+   refused t035-1 staging stays preserved untouched (sealed,
+   pre-consumption, no CLAIM). Spec + package updated to t035-2.
+6. **Blocked of record:** the native GUI probe attempt still needs the
+   operator's FRESH explicit one-launch grant (zero launches, zero
+   AdminPort, zero grants consumed this round); Phase B native closure
+   unchanged — T-030 ×1, T-031 arm A ×1 + arm B ×1, T-032 ×1.
+

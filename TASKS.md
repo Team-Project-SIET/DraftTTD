@@ -3940,3 +3940,28 @@ no push, sealed bytes untouched. Evidence index E156.
     packages. Package `.scratch/phase-b-t035-gui-probe/issues/
     01-gui-probe-attempt-package.md` at the fresh-authorization gate.
     Evidence index E166.
+
+18. **T-035 gate round — preflight refused, fix + re-stage (2026-11-11,
+    offline only; zero launches / zero AdminPort / zero grants; code+
+    tests ONE commit `132e2ea`, docs commit this one; no push).** The
+    E166 package walked prepare → preflight at HEAD `a17a4cf`: prepare
+    staged OK, preflight REFUSED typed `ValueError: canonical save must
+    be an existing protected regular file`. Root cause: the generalized
+    exercise-core `prepare` (shared by T-030, T-031 arms, T-032, T-035)
+    never copied `canonical/canonical.sav` →
+    `workspace.root/source.sav` while `expected_argv` resolves
+    `-g <workspace>/source.sav` for every non-CREATE identity — every
+    exercise-core package would have refused identically at grant-time
+    preflight; none had staged yet. Fix (E130 stale-supersession): one-
+    line copy mirroring driver prepare `canonical_fleet.py:158`,
+    identity advanced `canonical-fleet-gui-probe-t035-1` →
+    `…t035-2`, refused t035-1 staging preserved untouched, and the test
+    gap closed with an unpatched real-staging preflight test over the
+    retained E2 evidence (prior staging tests had patched BOTH verify
+    functions). gui 13 + exercise 14 + matched 11 + continuous 7 = 45
+    green; lane suites rc=0 incl. the q3 tripwire; statics clean.
+    Re-stage at t035-2: prepare → preflight PASS → verify
+    `AUTHORIZATION_UNVERIFIED`; staged `source.sav` sha256 == protected
+    pin `51e45689…1297eb`. Spec + package updated to t035-2. The native
+    GUI attempt still needs the operator's fresh one-launch grant.
+    Evidence index E167.
