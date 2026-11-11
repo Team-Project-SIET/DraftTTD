@@ -71,3 +71,46 @@ decisions of the operator; all prior grants are void for reuse.
 Ledger pairing: this file + `.scratch/phase-b-t030/issues/` +
 EVIDENCE_INDEX E161 + AI_HANDOFF/TASKS addenda of the same date. One
 commit pair (code+tests `c6ec803`, docs this commit); never pushed.
+
+## T-031 matched A/B — conductor resolved, arm packages at the gate (2026-11-11)
+
+- **Ticket 01 (arms conductor) resolved, commit `a9291c2`** —
+  `.scratch/phase-b-t031/issues/01-arms-conductor.md`: stage core
+  generalized default-behavior preserving in
+  `canonical_fleet_exercise.py`; new
+  `canonical_fleet_matched.py` (identities
+  `canonical-fleet-matched-a/b-t031-1`, matched contracts, same-E2
+  same-byte bridge staging, telemetry v2 vehicle_count 3/4
+  max_tick_gap=100, five-anniversary horizon via the retained
+  `monitor_network`, receipts with honest provenance, typed
+  `CANONICAL_FLEET_MATCHED_VERIFIED`, descriptive-only `compare_arms`,
+  CLI). 11 matched + 14 exercise offline tests; lane suites green;
+  statics clean.
+- **Latent blocker found and fixed the same commit:** the q3-era
+  suspension.json helper pins bind the RETAINED q3 frozen-source bytes
+  (`canonical_protocol_vm.nut` drifted post-q3 via E92 readback
+  fidelity) — the old check would have refused every fresh T-030/T-031
+  prepare at grant time; the record's package byte-pin holds.
+  `require_retained_vm_helpers` verifies record helper digests against
+  the retained q3 `frozen-source.zip` (fail-closed); live helpers
+  sealed per-stage; frozen driver's identical check byte-untouched
+  (consumed q3 identities never re-prepared).
+- **Tickets 02/03 (arm A / arm B attempt packages) claimed, at the
+  gate** — `.scratch/phase-b-t031/issues/02-arm-a-attempt-package.md`
+  and `03-arm-b-attempt-package.md`: staging → preflight → verify
+  (AUTHORIZATION_UNVERIFIED) → ONE run under `--authorize-one-launch`
+  each; separate fresh authorizations (arm A first, arm B after arm A's
+  attempt completes; never shared with the T-030 exercise or any
+  earlier attempt); expected receipts per arm + fail-closed rules +
+  post-arms offline `compare` command.
+- **Not claimed:** the two native T-031 arm attempts — each needs its
+  OWN fresh explicit operator authorization after independent review
+  and Gate C signing; all prior grants void; comparison record + E-row
+  only after both arms' receipts; OPEX/ROI stay UNKNOWN outside
+  receipts. The T-030 package (ticket-02, E161) and FD-C-2 Attempt-7
+  package (E160) remain prepared, not executed, under the same
+  void-grant rule.
+
+Ledger pairing: this file + `.scratch/phase-b-t031/issues/` +
+EVIDENCE_INDEX E162 + AI_HANDOFF/TASKS addenda of the same date. One
+commit pair (code+tests `a9291c2`, docs this commit); never pushed.

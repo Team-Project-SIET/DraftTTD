@@ -1269,3 +1269,54 @@ Spec of record: `docs/specs/t030-fleet-capacity-exercise.md`; tickets:
 `02-attempt-package.md` (claimed, at the gate). No launch, no
 AdminPort, no staging executed, no `artifacts/` byte touched this
 round. Evidence index E161.
+
+## 2026-11-11 T-031 matched A/B arms conductor built offline (E162); stage core generalized; latent retained-VM-helper pin blocker found and fixed; both arm packages at the authorization gate
+
+T-031 (matched A/B; `docs/roadmap-and-scope-2026-11-05.md` §3; design of
+record `docs/capacity-experiment.md`), spec of record
+`docs/specs/t031-matched-ab-experiments.md`, tickets
+`.scratch/phase-b-t031/issues/`.
+
+1. **Stage core generalized (commit `a9291c2`), default-behavior
+   preserving:** `canonical_fleet_exercise.py`'s
+   prepare/preflight/verify/run/conduct_exercise take
+   identity/contract/budgets/capacity_telemetry/authorization/conduct
+   params; T-030's own contract, identity and receipts unchanged in
+   substance (only refusal wording shared).
+2. **Matched arms stage of record** `canonical_fleet_matched.py`:
+   identities `canonical-fleet-matched-a/b-t031-1` (own claims and
+   fresh authorizations, never shared), matched contract (arm A adds
+   nothing; arm B adds only its service-1 vehicle; five native economy
+   anniversaries; telemetry version 2 vehicle_count 3/4,
+   max_tick_gap=100), both arms stage from the same E2 canonical
+   evidence under the same byte-pinned bridge package (its pinned
+   `canonical-parent.nut` already carries the full
+   begin/company/service/telemetry producer set), arm receipts in the
+   retained continuous evidence shape (in-run construction spending
+   OBSERVED-zero; originals' historical construction cost UNKNOWN,
+   belonging to the E2 create attempt), conduct = reload
+   correspondence → ONE `dispatch_loaded_arm(arm)` → the retained
+   `monitor_network` five-year loop → `arm-record.json` provenance
+   labels, typed `CANONICAL_FLEET_MATCHED_VERIFIED`; `compare_arms`
+   descriptive-only (OBSERVED deltas, UNKNOWN preserved, no profit
+   claim, no per-service revenue implication, no forecast); CLI
+   prepare/preflight/verify/run/compare `--arm A|B`.
+3. **Latent blocker fixed:** the q3-era suspension.json helper pins
+   bind the RETAINED q3 frozen-source bytes (`canonical_protocol_vm.nut`
+   drifted post-q3 via E92 readback fidelity — would have refused every
+   fresh prepare at grant time). `require_retained_vm_helpers` now
+   verifies the record's helper digests against the retained q3
+   `frozen-source.zip` (fail-closed); live helpers sealed per-stage.
+   Package byte-pin unaffected and still holding; frozen driver's
+   identical check byte-untouched (consumed identities never
+   re-prepared).
+4. **Tests:** 14 exercise + 11 matched offline tests; lane suites
+   green (driver/dispatch/integration/transport,
+   reload-only/context/failure/runtime, continuous/matched-state/
+   telemetry); statics clean (ruff, format, py_compile, scoped ty,
+   `git diff --check`).
+5. **Gate ladder:** arm packages prepared at
+   `.scratch/phase-b-t031/issues/02-arm-a-attempt-package.md` and
+   `03-arm-b-attempt-package.md`; the two native launches are
+   operator-gated separately (arm A first; arm B after arm A's attempt
+   completes); consumed grants all void.

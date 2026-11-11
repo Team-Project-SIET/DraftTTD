@@ -3838,3 +3838,25 @@ no push, sealed bytes untouched. Evidence index E156.
     attempt needs a fresh explicit operator grant (all prior grants
     void); no feasibility/economics claim outside the receipts.
     Evidence index E161.
+
+13. **T-031 matched A/B arms conductor (2026-11-11, offline only, zero
+    launches / zero AdminPort / no `artifacts/` byte touched; code+tests
+    commit `a9291c2`, docs commit this one; no push).** Stage core
+    generalized in `canonical_fleet_exercise.py`
+    (identity/contract/budgets/telemetry/authorization/conduct params;
+    T-030 substance unchanged); new `canonical_fleet_matched.py` with
+    identities `canonical-fleet-matched-a/b-t031-1`, matched contracts
+    (arm A adds nothing, arm B adds only its service-1 vehicle; five
+    native anniversaries; telemetry v2 vehicle_count 3/4,
+    max_tick_gap=100), same-byte bridge staging from the same E2
+    evidence, arm receipts with honest provenance (in-run construction
+    OBSERVED-zero; originals' construction UNKNOWN → E2), conduct =
+    reload correspondence → ONE arm dispatch → retained five-year
+    monitor → `arm-record.json`, typed
+    `CANONICAL_FLEET_MATCHED_VERIFIED`; `compare_arms`
+    descriptive-only. Latent retained-VM-helper pin blocker found and
+    fixed (record pins bind retained q3 frozen-source bytes;
+    `require_retained_vm_helpers`; frozen driver untouched). Tests 14+11;
+    lane suites green; statics clean. Arm packages prepared
+    (`.scratch/phase-b-t031/issues/02`, `03`) at the separate
+    fresh-authorization gate. Evidence index E162.
