@@ -1,15 +1,16 @@
 # 01: Canonical create-q5 native attempt package (Phase B anchor regeneration)
 
 **Type:** gate package
-**Status:** staged 2026-11-12 at HEAD `402a0e4` + the E188 world-facts
-fix — prepare rc 0 (`CANONICAL PREFLIGHT PASS; ZERO LAUNCHES`), preflight
-PASS re-run offline, and the authorization gate holds (`create` without
-`--authorize-one-launch` refuses, rc 2); the PRELAUNCH now stages the
-world facts the native network consumers read (`world = {source:
-NATIVE_GENERATED_CANONICAL, seed: 42, width: 64, height: 64}` — the
-q4 attempt died `KeyError: 'world'` exactly because these were missing);
-authorizes nothing by itself; the launch requires the operator's
-separate fresh explicit authorization
+**Status:** executed 2026-11-12 — VERIFIED once under the operator's
+fresh explicit create grant at HEAD `74b6a21`: typed
+`CANONICAL_CREATED_PENDING_FRESH_PROCESS_RELOAD` rc 0
+(`{launches: 1, connections: 1, mutations: 27}`), seal complete
+(cleanup all-true, manifest match True, `canonical.sav` 14444 bytes,
+`canonical-provenance.json` observation bridge `6c6a703c…` == the
+fixed bridge, `pgrep -x openttd` empty) — E189; the attempt dir is
+sealed read-only hereafter; downstream: arm A `t031-3` staged against
+this anchor (prepare rc 0, preflight PASS, `AUTHORIZATION_UNVERIFIED`),
+arm B and T-032 re-prepare against it after arm A's attempt completes
 **Why this stage exists (E185–E188):** the E184 armed-seal fix changed
 the staged bridge digest (`6c6a703c…`); the arm attempt `t031-2` proved
 the create-q3 anchor (sealed under the pre-fix bridge `0fa190a0…`)
@@ -20,7 +21,7 @@ native create anchor — this stage is that anchor for the fixed bridge.
 The q4 create attempt (E187) failed on the unstaged world facts; the
 E188 round staged them and advanced the identity to create-q5.
 **Spec context:** `docs/specs/t031-matched-ab-experiments.md` (E186/E188
-updates); evidence rows E183–E188.
+updates); evidence rows E183–E189.
 
 ## Preconditions (all offline-checkable)
 

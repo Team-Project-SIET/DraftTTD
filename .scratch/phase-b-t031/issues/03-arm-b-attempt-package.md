@@ -12,13 +12,13 @@ script on the post-dispatch `continuous-begin`; attempt 2 `t031-2`: the
 correspondence gate correctly refused the bridge change — the create-q3
 anchor is bound to the pre-fix bridge). The E184 fix round changed the
 bridge package AND the E186 round advanced `CREATE` to
-`canonical-fleet-create-q4`, so THIS stale arm-B staging is doubly
+`canonical-fleet-create-q5`, so THIS stale arm-B staging is doubly
 superseded — before arm B's grant is requested, remove the superseded
 unsealed staging dir (no CLAIM, no attempt bytes) and re-prepare with
-the fixed package AND the create-q4 anchor:
+the fixed package AND the create-q5 anchor:
 `rm -rf artifacts/runtime/canonical-fleet-matched-b-t031-1 &&`
 `canonical_fleet_matched prepare ... --canonical
-artifacts/runtime/canonical-fleet-create-q4 --arm B` (identity
+artifacts/runtime/canonical-fleet-create-q5 --arm B` (identity
 unchanged `canonical-fleet-matched-b-t031-1`), then preflight + verify
 `AUTHORIZATION_UNVERIFIED`. Arm B's grant only after arm A's
 attempt completes
@@ -33,7 +33,7 @@ attempt completes
   `43a0c1dabf39cb865394f3a6cc36d4da5c10ecfaaf55652043104806810903be`.
 - `pgrep -x openttd` empty before the run.
 - E2 manifest re-verified inside
-  `artifacts/runtime/canonical-fleet-create-q4/` (0 mismatches); no
+  `artifacts/runtime/canonical-fleet-create-q5/` (0 mismatches); no
   byte modified by the check.
 - Ordering of record: arm A's attempt completes (whatever its typed
   outcome) before arm B's authorization is requested; each arm is a
@@ -45,7 +45,7 @@ attempt completes
 ```bash
 .venv/bin/python -m app.simulation.openttd.proof.canonical_fleet_matched prepare \
   artifacts/runtime/canonical-fleet-matched-b-t031-1 \
-  --canonical artifacts/runtime/canonical-fleet-create-q4 --arm B
+  --canonical artifacts/runtime/canonical-fleet-create-q5 --arm B
 .venv/bin/python -m app.simulation.openttd.proof.canonical_fleet_matched preflight \
   artifacts/runtime/canonical-fleet-matched-b-t031-1 --arm B
 .venv/bin/python -m app.simulation.openttd.proof.canonical_fleet_matched verify \

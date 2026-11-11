@@ -2248,3 +2248,36 @@ no headless-only execution.
    PASS, `AUTHORIZATION_UNVERIFIED`) and asks for its own fresh grant;
    arm B's grant only after arm A's attempt completes; then T-032.
    Evidence index E188.
+
+## 2026-11-12 canonical create-q5 executed exactly once under the operator's fresh explicit create grant (E189): TYPED `CANONICAL_CREATED_PENDING_FRESH_PROCESS_RELOAD` rc 0 — the fixed-bridge native anchor EXISTS; the bridge-generation chain is complete (q4 VM record + q5 native anchor both bind `6c6a703c…`); arm A t031-3 re-staged against the new anchor (preflight PASS, `AUTHORIZATION_UNVERIFIED`) — the fresh arm-A grant is next
+
+1. **The attempt of record (sealed read-only hereafter):**
+   `artifacts/runtime/canonical-fleet-create-q5/`; executed once at
+   HEAD `74b6a21` (tree clean, `pgrep -x openttd` empty pre-launch);
+   `result.json` `{launches: 1, connections: 1, mutations: 27,
+   status: CANONICAL_CREATED_PENDING_FRESH_PROCESS_RELOAD}` rc 0;
+   grant consumed.
+2. **Seal of record:** cleanup all-true (reaped rc 0, sockets closed,
+   credential removed, workspace disposed, remaining_processes []);
+   manifest match True (0 mismatches); `canonical.sav` 14444 bytes;
+   `canonical-provenance.json` observation sealed under the FIXED
+   bridge `6c6a703c…`; `pgrep -x openttd` empty.
+3. **Bridge-generation chain complete:** the E184 armed-seal fix
+   changed the bridge (`6c6a703c…`); the q4 VM record (E184, 25/25
+   cases rc 0 at the pinned exact 15.3 Squirrel source commit)
+   qualifies the staged bytes in the VM, and the q5 native anchor
+   (E189) re-creates the canonical world under those bytes —
+   create-q3 (pre-fix anchor, `0fa190a0…`) and create-q4 (terminal
+   FAILED, unstaged world facts) stay sealed retained history.
+4. **Downstream staged:** arm A `canonical-fleet-matched-a-t031-3`
+   prepared against the new anchor (`--canonical
+   artifacts/runtime/canonical-fleet-create-q5 --arm A`) — prepare rc
+   0, `canonical matched arm A preflight PASS`, verify
+   `AUTHORIZATION_UNVERIFIED` rc 1. Arm B
+   (`canonical-fleet-matched-b-t031-1`) and T-032 re-prepare against
+   the q5 anchor when their order arrives.
+5. **State / next operator action:** the fresh explicit arm-A
+   ONE-LAUNCH grant for t031-3 (ticket
+   `.scratch/phase-b-t031/issues/02-arm-a-attempt-package.md`);
+   arm B's grant only after arm A's attempt completes; then T-032.
+   Evidence index E189.

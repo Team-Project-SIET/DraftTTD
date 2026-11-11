@@ -4553,3 +4553,26 @@ WORLD`
     then arm A t031-3 re-stages against the new anchor and asks for
     its own fresh grant; arm B's grant only after arm A completes.
     Evidence index E188.
+
+38. **Canonical create-q5 executed exactly once under the operator's
+    fresh explicit create grant (E189; 2026-11-12; typed
+    `CANONICAL_CREATED_PENDING_FRESH_PROCESS_RELOAD` rc 0 — the
+    fixed-bridge native anchor EXISTS; grant consumed).** At HEAD
+    `74b6a21` (tree clean, `pgrep -x openttd` empty pre-launch):
+    `result.json` `{launches: 1, connections: 1, mutations: 27}`;
+    seal complete — cleanup all-true (reaped rc 0, sockets closed,
+    credential removed, workspace disposed, remaining_processes []),
+    manifest match True (0 mismatches), `canonical.sav` 14444 bytes,
+    `canonical-provenance.json` observation sealed under the FIXED
+    bridge `6c6a703c…`, `pgrep -x openttd` empty; attempt dir sealed
+    read-only hereafter. Downstream staged immediately: arm A
+    `canonical-fleet-matched-a-t031-3` prepared against the new
+    anchor — prepare rc 0, `canonical matched arm A preflight PASS`,
+    verify `AUTHORIZATION_UNVERIFIED` rc 1. The bridge-generation
+    chain of record is complete: q4 VM record (E184) + q5 native
+    anchor (E189) both bind the fixed bridge `6c6a703c…`. **The next
+    operator action is the fresh explicit arm-A grant for t031-3**
+    (grant text in
+    `.scratch/phase-b-t031/issues/02-arm-a-attempt-package.md`);
+    arm B's grant only after arm A's attempt completes; then T-032.
+    Evidence index E189.

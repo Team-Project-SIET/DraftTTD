@@ -1,23 +1,20 @@
 # 02: Arm A native attempt package (T-031)
 
 **Type:** gate package
-**Status:** arm-A attempt 2 (`canonical-fleet-matched-a-t031-2`) EXECUTED
-ONCE under the operator's fresh explicit arm-A grant at HEAD `28e7570` —
-terminal FAILED rc 1 (E185: no script death this time; the native world
-loaded and answered everything, and the correspondence gate
-`compare_canonical` correctly refused `bridge_sha256` — the staged
-post-fix bridge `6c6a703c…` cannot correspond to the create-q3 anchor
-sealed under the pre-fix bridge `0fa190a0…`; sealed read-only, never
-retried, never relabeled; grant consumed and void; stale supersession
-advances identities). Diagnosis-only round E186: the create anchor is
-bridge-generation-bound, so the contract-preserving path is a fresh
-canonical create under the fixed bridge. `CREATE` advanced to
-`canonical-fleet-create-q4`; `ARM_A` advanced to
-`canonical-fleet-matched-a-t031-3` — re-stage THIS arm only after the
-create-q4 anchor exists:
-`prepare ... --canonical artifacts/runtime/canonical-fleet-create-q4
---arm A`; authorizes nothing by itself; the launch requires the
-operator's separate fresh explicit authorization
+**Status:** arm A t031-3 staged 2026-11-12 against the VERIFIED
+create-q5 anchor — prepare rc 0, preflight
+`canonical matched arm A preflight PASS`, verify
+`AUTHORIZATION_UNVERIFIED` rc 1; authorizes nothing by itself; the
+launch requires the operator's separate fresh explicit authorization.
+Anchor history of record: attempt 1 `t031-1` terminal FAILED E183
+(armed seal killed the script on the post-dispatch `continuous-begin`);
+attempt 2 `t031-2` terminal FAILED E185 (the correspondence gate
+correctly refused the bridge change — create-q3 anchor bound to the
+pre-fix bridge `0fa190a0…`); the E186–E188 rounds fixed the bridge and
+regenerated the anchor (create-q5: typed
+`CANONICAL_CREATED_PENDING_FRESH_PROCESS_RELOAD` rc 0, provenance
+bridge `6c6a703c…` == the fixed bridge — E189); grants for both
+consumed attempts void; identities advance, never a retry
 **Spec:** `docs/specs/t031-matched-ab-experiments.md`
 
 ## Preconditions (all offline-checkable)
@@ -30,7 +27,7 @@ operator's separate fresh explicit authorization
   (`artifacts/runtime/verified-assets/opengfx-8.0-all.zip`).
 - `pgrep -x openttd` empty before the run.
 - E2 manifest re-verified inside
-  `artifacts/runtime/canonical-fleet-create-q4/` (0 mismatches); no
+  `artifacts/runtime/canonical-fleet-create-q5/` (0 mismatches); no
   byte modified by the check.
 
 ## Commands of record (one launch, one connection, no retry/reconnect)
@@ -38,7 +35,7 @@ operator's separate fresh explicit authorization
 ```bash
 .venv/bin/python -m app.simulation.openttd.proof.canonical_fleet_matched prepare \
   artifacts/runtime/canonical-fleet-matched-a-t031-3 \
-  --canonical artifacts/runtime/canonical-fleet-create-q4 --arm A
+  --canonical artifacts/runtime/canonical-fleet-create-q5 --arm A
 .venv/bin/python -m app.simulation.openttd.proof.canonical_fleet_matched preflight \
   artifacts/runtime/canonical-fleet-matched-a-t031-3 --arm A
 .venv/bin/python -m app.simulation.openttd.proof.canonical_fleet_matched verify \
