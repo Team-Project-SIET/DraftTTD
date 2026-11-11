@@ -2151,3 +2151,52 @@ no headless-only execution.
    carries the fixed guard; q4 pin held. **The next operator action is
    the fresh explicit arm-A grant for t031-2**; arm B's grant only
    after arm A's attempt completes; then T-032. Evidence index E184.
+
+## 2026-11-12 T-031 arm A attempt 2 executed exactly once under the operator's fresh explicit arm-A grant (E185): TERMINAL FAILED rc 1 — the E184 fixed bridge loaded and answered natively, and the correspondence gate CORRECTLY refused the bridge change (`compare_canonical`: created `0fa190a0…` pre-fix anchor vs loaded `6c6a703c…` staged bridge); sealed, never retried, never relabeled; diagnosis-only round (E186) advanced `CREATE` to `canonical-fleet-create-q4` and `ARM_A` to `t031-3` — the fresh canonical create is the next operator action
+
+1. **The attempt of record (sealed read-only hereafter):**
+   `artifacts/runtime/canonical-fleet-matched-a-t031-2/`; executed once
+   at HEAD `28e7570` (tree clean, `pgrep -x openttd` empty pre-launch);
+   `result.json` `{launches: 1, connections: 1, mutations: 0, status:
+   FAILED, error: "ValueError: canonical correspondence mismatch:
+   bridge_sha256"}` rc 1; grant consumed and void.
+2. **What the run proved:** the E184 fixed bridge is natively sound —
+   the create-q3 save loaded, the GameScript answered 1043 request/
+   receipt pairs with no script death, `failure.sav` 14480 bytes
+   sealed, cleanup all-true (reaped rc 0, sockets closed, credential
+   removed, workspace disposed, remaining_processes []), manifest
+   match True, verify `ATTEMPT_NOT_VERIFIED: FAILED` rc 1 (correct
+   typed refusal of the FAILED terminal).
+3. **Root cause (read-only diagnosis over retained bytes, no
+   relaunch):** `verify_reloaded` collects the loaded observation with
+   `metadata["bridge_sha256"]` (the staged post-fix composed bridge
+   `6c6a703c…`), while the `created` anchor is the E2
+   `canonical-fleet-create-q3` evidence sealed under the pre-fix
+   bridge `0fa190a0…` (`canonical-provenance.json` observation); the
+   E184 guard fix changed the bridge digest, so the create-q3 anchor
+   is bridge-generation-bound and `compare_canonical` (which requires
+   exact correspondence INCLUDING `bridge_sha256`) refused it at
+   `freight_canonical.py:102` — died before any arm request.
+4. **The decision of record (E186; diagnosis-only; no contract
+   change):** the q-numbering scheme working as designed — each bridge
+   generation needs its own q-record (q4 VM record, done E184) AND its
+   own native create anchor. `CREATE` advanced
+   `canonical-fleet-create-q3` → `canonical-fleet-create-q4` (q3 stays
+   sealed retained history; consumed identities never re-prepared; the
+   fresh create stages the fixed bridge pinned to the q4 VM record).
+   `ARM_A` advanced `canonical-fleet-matched-a-t031-2` →
+   `canonical-fleet-matched-a-t031-3` (staging only after the create-q4
+   anchor exists). Arm B `canonical-fleet-matched-b-t031-1` unchanged
+   (staging doubly superseded — re-prepare with the fixed package AND
+   the create-q4 anchor after arm A completes). T-032 staging likewise
+   superseded (re-prepare after create-q4). Suites re-run rc 0 after
+   the identity advances; ruff/format/py_compile clean.
+5. **State / next operator action:** the fresh explicit
+   `canonical-fleet-create-q4` ONE-LAUNCH grant (commands of record in
+   the create flow: `canonical_fleet prepare <dir> --stage
+   canonical-fleet-create-q4`, preflight, then `create <dir> --stage
+   canonical-fleet-create-q4 --authorize-one-launch`); then arm A
+   `t031-3` re-stages against the new anchor (prepare/preflight/
+   `AUTHORIZATION_UNVERIFIED`) and asks for its own fresh grant; arm
+   B's grant only after arm A's attempt completes; then T-032.
+   Evidence index E186.

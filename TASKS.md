@@ -4479,3 +4479,39 @@ WORLD`
     action is the fresh explicit arm-A grant for t031-2** (grant text
     in `.scratch/phase-b-t031/issues/02-arm-a-attempt-package.md`).
     Evidence index E184.
+
+35. **T-031 arm A attempt 2 executed exactly once under the operator's
+    fresh explicit arm-A grant (E185; 2026-11-12; terminal FAILED rc 1
+    — grant consumed and void, never retried, never relabeled; sealed
+    read-only at `artifacts/runtime/canonical-fleet-matched-a-t031-2/`)
+    plus the diagnosis-only round (E186; 2026-11-12; no code defect —
+    the gate behaved exactly as designed; no contract change; identity
+    advances; no native run, no grant).** Attempt 2 at HEAD `28e7570`
+    under the E184 fixed bridge: the native world loaded and answered
+    everything (1043 request/receipt pairs, NO GameScript death), and
+    the Python-side correspondence gate refused the attempt:
+    `compare_canonical(created, loaded)` → `ValueError: canonical
+    correspondence mismatch: bridge_sha256` — the arm flow collects the
+    loaded observation with the STAGED post-fix bridge `6c6a703c…`
+    (`metadata["bridge_sha256"]`), while the `created` anchor
+    (`canonical-fleet-create-q3/canonical-provenance.json`) is sealed
+    under the pre-fix bridge `0fa190a0…`; the E184 guard fix changed
+    the bridge digest, so the create-q3 anchor is bridge-generation-
+    bound. `result.json` `{launches: 1, connections: 1, mutations: 0,
+    status: FAILED}`; cleanup all-true, manifest match True,
+    `failure.sav` 14480 bytes, verify `ATTEMPT_NOT_VERIFIED: FAILED`
+    rc 1 (correct typed refusal), `pgrep -x openttd` empty. E186 round:
+    `CREATE` advanced `canonical-fleet-create-q3` →
+    `canonical-fleet-create-q4` (create-q3 stays sealed retained
+    history; the fresh create stages the fixed bridge pinned to the q4
+    VM record); `ARM_A` advanced to `canonical-fleet-matched-a-t031-3`
+    (staging only after the create-q4 anchor exists, with `--canonical
+    artifacts/runtime/canonical-fleet-create-q4`); arm B
+    `canonical-fleet-matched-b-t031-1` unchanged (staging doubly
+    superseded — re-prepare with the fixed package AND the create-q4
+    anchor after arm A completes); T-032 staging likewise superseded
+    (re-prepare after create-q4). Suites re-run rc 0 after the
+    identity advances; ruff/format/py_compile clean. **The next
+    operator action is the fresh explicit canonical-fleet-create-q4
+    one-launch grant; then arm A t031-3 re-stages against the new
+    anchor and asks for its own fresh grant.** Evidence index E186.

@@ -38,14 +38,17 @@ qualification lines 109–234, bounded telemetry lines 295–334).
   `canonical-parent.nut` already carries the full
   `continuous-begin/company/service/telemetry` producer set, so the arms
   run telemetry without changing package bytes.
-- **Identities, never shared:** arm A `canonical-fleet-matched-a-t031-2`
-  (attempt 1 `canonical-fleet-matched-a-t031-1` terminal FAILED sealed
-  E183 — the armed seal killed the script on the post-dispatch
-  `continuous-begin`; stale-supersession advanced the identity; fix
-  round E184),
+- **Identities, never shared:** arm A `canonical-fleet-matched-a-t031-3`
+  (attempt 1 `t031-1` terminal FAILED E183 — armed seal killed the
+  script on the post-dispatch `continuous-begin`; attempt 2 `t031-2`
+  terminal FAILED E185 — the correspondence gate correctly refused the
+  bridge change, the create-q3 anchor being bound to the pre-fix
+  bridge `0fa190a0…`; both grants consumed and void; fix/diagnosis
+  rounds E184 + E186; arm A re-stages as `t031-3` only after the
+  `canonical-fleet-create-q4` anchor exists),
   arm B `canonical-fleet-matched-b-t031-1` (re-prepare with the E184
-  fixed package before its grant; the pre-fix staging is superseded
-  unsealed state); each its own CLAIM and its
+  fixed package AND the create-q4 anchor before its grant; the pre-fix
+  staging is superseded unsealed state); each its own CLAIM and its
   own fresh explicit authorization (not shared with the T-030 exercise,
   with each other, or with any earlier attempt; all prior grants void).
 - **Arms:** arm A adds nothing (three original vehicles); arm B adds only
@@ -119,6 +122,16 @@ zip to the t031-1 attempt's stage seal — its 4 VM_HELPER entries are
 byte-identical to the q4 record's pins (the q3 zip matched only 3/4,
 helpers having evolved since the q3 era). `SUSPENSION_VALIDATION` now
 points at q4; the q3 record stays retained history.
+
+**E186 update:** the bridge change also invalidates the NATIVE anchor —
+the arm attempt `t031-2` proved the create-q3 save loads and answers
+under the fixed bridge, but `compare_canonical` correctly refused
+`bridge_sha256` (created `0fa190a0…` vs loaded `6c6a703c…`). The
+contract-preserving path is a fresh canonical create under the fixed
+bridge: `CREATE` advanced to `canonical-fleet-create-q4` (staged bytes
+pin to the q4 VM record), and the arms + T-032 re-stage against the new
+anchor. The exact-correspondence contract (including bridge identity)
+is unchanged — no weakening, no relabeling.
 
 ## Tickets
 
