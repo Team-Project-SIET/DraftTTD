@@ -273,6 +273,63 @@ def test_require_fresh_welcome_rejects_demo_seed():
             fresh.require_fresh_welcome(wrong, expected)
 
 
+def test_seal_attempt_awaits_cleanup_and_writes_receipts(tmp_path, monkeypatch):
+    """The t036-1 failure class of record: DemoBackend.cleanup is async; the
+    shared seal never awaited it, so the crashed first attempt left the
+    server alive and no cleanup/result/manifest bytes. The seal must await
+    the backend cleanup and still write the receipts on the failure path."""
+    recorded = {}
+
+    def fake_verify_endpoints(prepared, cleanup):
+        recorded["verified"] = True
+        return dict(endpoint_closure_verified=True)
+
+    monkeypatch.setattr(fresh, "verify_cleanup_endpoints", fake_verify_endpoints)
+    directory = tmp_path / fresh.FRESH_CREATE
+    directory.mkdir()
+    write_json(
+        directory / "PRELAUNCH.json",
+        dict(
+            schema=fresh.SCHEMA,
+            qualification_id=fresh.FRESH_CREATE,
+            execution_contract=fresh.CREATE_CONTRACT,
+        ),
+    )
+    (directory / "PRELAUNCH.sha256").write_text(sha256(directory / "PRELAUNCH.json") + "\n")
+    logs = tmp_path / "logs"
+    logs.mkdir()
+    (logs / "stdout.log").write_bytes(b"stdout-bytes")
+    root = tmp_path / "ws"
+    root.mkdir()
+    workspace = SimpleNamespace(logs=logs, root=root, close=lambda: None)
+    prepared = SimpleNamespace(
+        directory=directory,
+        endpoints=(13971, 23971),
+        spec=SimpleNamespace(workspace=workspace),
+        key_path=tmp_path / "absent-key",
+    )
+
+    class FakeBackend:
+        async def cleanup(self, prepared):
+            recorded["cleaned"] = True
+            return dict(reaped=True, remaining_processes=[], cleanup_error=None)
+
+    result = dict(status="FAILED", launches=1)
+    asyncio.run(fresh._seal_attempt(prepared, result, FakeBackend()))
+    assert recorded == {"cleaned": True, "verified": True}
+    cleanup = json.loads((directory / "cleanup.json").read_bytes())
+    assert cleanup["reaped"] is True and cleanup["endpoint_closure_verified"] is True
+    assert (directory / "stdout.log").read_bytes() == b"stdout-bytes"
+    sealed = json.loads((directory / "result.json").read_bytes())
+    assert sealed["status"] == "FAILED"
+    write_json(
+        directory / "CLAIM.json",
+        dict(consumed=True, prelaunch_digest=sha256(directory / "PRELAUNCH.json")),
+    )
+    assert (directory / "artifact-manifest.sha256").is_file()
+    assert fresh.verify_create(directory) == "ATTEMPT_NOT_VERIFIED: FAILED"
+
+
 def test_verify_states_offline(tmp_path):
     directory = fresh_creation_fixture(tmp_path)
     assert fresh.verify_create(directory) == fresh.FRESH_CREATE_VERIFIED

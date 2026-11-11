@@ -60,7 +60,7 @@ from .harness import (
 )
 from .road_mutation import save, wait_log
 
-FRESH_CREATE = "fresh-world-create-t036-1"
+FRESH_CREATE = "fresh-world-create-t036-2"
 FRESH_GUI = "fresh-world-gui-probe-t036-1"
 FRESH_CREATE_VERIFIED = "FRESH_WORLD_CREATE_VERIFIED"
 FRESH_GUI_VERIFIED = "FRESH_WORLD_GUI_PROBE_VERIFIED"
@@ -520,9 +520,9 @@ def preflight_gui(prepared):
     return metadata
 
 
-def _seal_attempt(prepared, result, backend):
+async def _seal_attempt(prepared, result, backend):
     """The shared owned-cleanup finally block (exercise.run semantics)."""
-    cleanup = backend.cleanup(prepared)
+    cleanup = await backend.cleanup(prepared)
     for name in ("stdout.log", "stderr.log"):
         source = prepared.spec.workspace.logs / name
         if source.is_file():
@@ -591,7 +591,7 @@ async def run_create(prepared, *, authorize_one_launch=False):
             except Exception as failure:
                 result["failure_save_error"] = str(failure)
     finally:
-        _seal_attempt(prepared, result, backend)
+        await _seal_attempt(prepared, result, backend)
     return result
 
 
@@ -675,7 +675,7 @@ async def run_gui(prepared, *, authorize_one_launch=False):
             except Exception as failure:
                 result["failure_save_error"] = str(failure)
     finally:
-        _seal_attempt(prepared, result, backend)
+        await _seal_attempt(prepared, result, backend)
     return result
 
 
