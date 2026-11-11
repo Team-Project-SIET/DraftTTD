@@ -329,3 +329,51 @@ docs commit; never pushed.
 Ledger pairing: this file + `.scratch/phase-b-t035-gui-probe/issues/` +
 EVIDENCE_INDEX E170 + AI_HANDOFF/TASKS addenda of the same date. One
 docs commit; never pushed.
+
+## 2026-11-11 — T-036 fresh-world GUI probe family (T-035 follow-up, E171): BUILT OFFLINE, creation stage at the fresh-grant gate
+
+- **Ask of record:** a genuinely fresh OpenTTD 15.3 world visible through
+  the real GUI — a newly generated world visibly running in the actual
+  OpenTTD GUI, not the existing Sunningbury demo; sealed T-035 evidence
+  untouched; no launch, no authorization consumed this round.
+- **Family of record:** two separately authorized attempts, strictly
+  sequential (`app/simulation/openttd/proof/fresh_world_gui.py`, commit
+  `68dbd36`): `fresh-world-create-t036-1` → `FRESH_WORLD_CREATE_VERIFIED`
+  (world generated inside the one launch: `-g heightmap.png -G 1181` +
+  proven `[game_creation]` config, native marker `Map generated,
+  starting game`; console save `fresh-world.sav` digest-pinned in
+  `world.json`; no admin connection, no bridge, no canonical input) →
+  `fresh-world-gui-probe-t036-1` → `FRESH_WORLD_GUI_PROBE_VERIFIED`
+  (bridge host loads the fresh save `-g source.sav`, welcome frame must
+  report `15.3`/seed `1181`/64×64 — demo seed 42 refuses typed — and the
+  real desktop GUI client `Fresh World GUI Probe` joins as spectator,
+  server-side verified, T-035 join machinery unchanged).
+- **World constants of record** (module constants, NOT CLI flags — a
+  change is a new staging identity): seed 1181 (≠ demo 42), 64×64
+  (`map_x = map_y = 6`), temperate, 1950, flat 64×64 heightmap;
+  `pause_on_newgame = false`; creation config without `[game_scripts]`,
+  GUI config with `RoadFreightProof`.
+- **Anti-fallback tripwires:** neither stage accepts canonical keys; the
+  GUI stage's only permitted source is `verify_fresh_creation(...)` — an
+  immutable sealed `FRESH_WORLD_CREATE_VERIFIED` attempt with the save
+  digest still matching its pin — any other directory refuses typed
+  `fresh-world creation evidence required (never the canonical demo
+  world)`; staged save digest re-verified at preflight; runtime welcome
+  seam refuses seed 42. Offline regression `tests/test_fresh_world_gui.py`
+  (15 tests, zero native processes) pins argv shapes both ways.
+- **State:** creation attempt staged offline at
+  `artifacts/runtime/fresh-world-create-t036-1/` — prepare → preflight
+  PASS → `AUTHORIZATION_UNVERIFIED` rc 1. **Creation RUN awaits a FRESH
+  explicit one-launch grant (grant A); the GUI run needs its OWN fresh
+  grant (grant B) after stage 1 verifies.** Grant texts + commands of
+  record: `.scratch/phase-b-t036-fresh-world-gui/issues/01-fresh-world-gui-attempt-package.md`,
+  `docs/specs/t036-fresh-world-gui-probe.md`.
+- **Not claimed:** no native run; the fresh world has not been seen in
+  the GUI yet; satisfies none of the Phase B done-ness criteria; Phase B
+  native closure outstanding — T-030 ×1, T-031 arm A ×1 + arm B ×1,
+  T-032 ×1, each its own fresh grant, each inheriting both exercise-core
+  fixes (E167 + E169). T-035 stays terminal VERIFIED at E170.
+
+Ledger pairing: this file + `.scratch/phase-b-t036-fresh-world-gui/issues/`
++ EVIDENCE_INDEX E171 + AI_HANDOFF/TASKS addenda of the same date. One
+docs commit; never pushed.

@@ -4040,3 +4040,42 @@ no push, sealed bytes untouched. Evidence index E156.
     operator decision. Phase B native closure outstanding: T-030 ×1,
     T-031 arm A ×1 + arm B ×1, T-032 ×1, each its own fresh grant,
     each inheriting both exercise-core fixes. Evidence index E170.
+
+22. **T-036 fresh-world GUI probe family built offline (E171; 2026-11-11,
+    code commit `68dbd36` + docs ONE commit this; no launch, no grant
+    consumed).** Operator ask: a genuinely fresh OpenTTD 15.3 world
+    visible through the real GUI, never the Sunningbury demo lane;
+    sealed T-035 evidence untouched. Family of record
+    (`app/simulation/openttd/proof/fresh_world_gui.py`): TWO separately
+    authorized attempts, strictly sequential —
+    `fresh-world-create-t036-1` generates the world inside its one
+    launch (`-g heightmap.png -G 1181` + proven `[game_creation]`
+    config; native marker `Map generated, starting game`), console-saves
+    digest-pinned `fresh-world.sav` (pinned in `world.json`), NO admin
+    connection/bridge/canonical input; then `fresh-world-gui-probe-t036-1`
+    hosts the byte-pinned bridge from that save (`-g source.sav`, no
+    `-G`), demands welcome `15.3`/seed `1181`/64×64 (demo seed 42
+    refuses typed at `require_fresh_welcome`), and joins with the real
+    desktop GUI spectator `Fresh World GUI Probe`, server-side verified
+    via the unchanged T-035 join machinery. Constants of record are
+    module constants (NOT CLI flags): seed 1181, 64×64, temperate,
+    1950, flat heightmap, `pause_on_newgame = false`; GUI stage reuses
+    `exercise.stage_workspace` (E169 trio + E167 source.sav line, fresh
+    save as source) + `RoadFreightProof` marker; `GuiClient`
+    parameterized with byte-identical T-035 defaults. Anti-fallback
+    tripwires: no canonical keys accepted in either stage, GUI source
+    must pass `verify_fresh_creation` (typed refusal otherwise), staged
+    save digest re-verified, welcome seam refuses seed 42. Offline
+    regression `tests/test_fresh_world_gui.py` 15 tests green with the
+    four T-035 suites (62 total); statics green (ruff/format/compile/
+    scoped ty/diff-check). Preflight preparation:
+    `artifacts/runtime/fresh-world-create-t036-1/` staged → preflight
+    PASS → `AUTHORIZATION_UNVERIFIED` rc 1. **Creation RUN awaits a
+    FRESH explicit one-launch grant (grant A); GUI run its OWN grant
+    (grant B) after stage 1 verifies.** Grant texts + commands:
+    `.scratch/phase-b-t036-fresh-world-gui/issues/01-fresh-world-gui-attempt-package.md`,
+    `docs/specs/t036-fresh-world-gui-probe.md`. Not claimed: no native
+    run, fresh world not yet seen in GUI; satisfies none of the Phase B
+    done-ness criteria; Phase B native closure outstanding (T-030 ×1,
+    T-031 arm A ×1 + arm B ×1, T-032 ×1, each its own fresh grant,
+    each inheriting both exercise-core fixes). Evidence index E171.
