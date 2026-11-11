@@ -6,22 +6,20 @@ preflight `canonical matched arm B preflight PASS`, verify
 `AUTHORIZATION_UNVERIFIED` rc 1; authorizes nothing by itself; the
 launch requires the operator's separate fresh explicit authorization,
 requested only after arm A's attempt completes (ordering of record
-below). **Update 2026-11-12 (E185/E186):** arm-A attempts 1 AND 2 are
-terminal FAILED sealed (attempt 1 `t031-1`: the armed seal killed the
-script on the post-dispatch `continuous-begin`; attempt 2 `t031-2`: the
-correspondence gate correctly refused the bridge change — the create-q3
-anchor is bound to the pre-fix bridge). The E184 fix round changed the
-bridge package AND the E186 round advanced `CREATE` to
-`canonical-fleet-create-q5`, so THIS stale arm-B staging is doubly
-superseded — before arm B's grant is requested, remove the superseded
-unsealed staging dir (no CLAIM, no attempt bytes) and re-prepare with
-the fixed package AND the create-q5 anchor:
+below). **Update 2026-11-12 (E190):** arm A completed — attempt 3
+`t031-3` EXECUTED once under the operator's fresh arm-A grant and typed
+`CANONICAL_FLEET_MATCHED_VERIFIED` rc 0 (E190: reload correspondence
+`EXACT_NATIVE_SEMANTIC_CORRESPONDENCE`, binding null, five annual
+receipts 1951–1955, cleanup all-true, manifest match True). The
+ordering-of-record condition is now satisfied: **arm B's grant is
+next.** Before it is requested, remove the superseded pre-fix staging
+dir (no CLAIM, no attempt bytes) and re-prepare with the fixed package
+AND the create-q5 anchor:
 `rm -rf artifacts/runtime/canonical-fleet-matched-b-t031-1 &&`
 `canonical_fleet_matched prepare ... --canonical
 artifacts/runtime/canonical-fleet-create-q5 --arm B` (identity
 unchanged `canonical-fleet-matched-b-t031-1`), then preflight + verify
-`AUTHORIZATION_UNVERIFIED`. Arm B's grant only after arm A's
-attempt completes
+`AUTHORIZATION_UNVERIFIED`
 **Spec:** `docs/specs/t031-matched-ab-experiments.md`
 
 ## Preconditions (all offline-checkable)

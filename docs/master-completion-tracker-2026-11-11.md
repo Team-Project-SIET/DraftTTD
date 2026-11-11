@@ -28,7 +28,7 @@ T-034 as the standing qualification gate (re-runnable any round)".
 | Task | Launches (fresh grants) | Staging state at `2e5fcc9` (2026-11-11) | Done-ness (roadmap :151-157) |
 | --- | --- | --- | --- |
 | T-030 fleet & capacity exercise | ×1 | **EXECUTED 2026-11-11 under the operator's fresh grant (E182): terminal `CANONICAL_FLEET_EXERCISE_VERIFIED` rc 0 — CLOSED.** `canonical-fleet-exercise-t030-1/` sealed; exercise-correspondence typed `EXACT_NATIVE_SEMANTIC_CORRESPONDENCE`; capacity-add £4,429; dispatch + re-pause receipts; cleanup all-true, manifest 0 mismatches, post-run verify rc 0 | Native exercise receipts + canonical correspondence record + E-row — **MET** |
-| T-031 matched arms | ×2, arm A strictly before arm B's authorization (03:19-22); separate grant per arm (02:37-41, 03:43-44) | **Arm A attempts 1 AND 2 terminal FAILED sealed (E183 armed-seal script death; E185 correspondence refusal of the bridge change). Rounds E184/E186/E187/E188 fixed the bridge (q4 VM record) and the create path (world facts); create-q5 EXECUTED and VERIFIED under the operator's fresh grant (E189: `CANONICAL_CREATED_PENDING_FRESH_PROCESS_RELOAD` rc 0, provenance bridge `6c6a703c…` == the fixed bridge — the bridge-generation chain is complete). Arm A `t031-3` re-staged against the q5 anchor: prepare rc 0, preflight PASS, `AUTHORIZATION_UNVERIFIED`. Arm B `-b-t031-1/` staging doubly superseded — re-prepare with the fixed package AND the create-q5 anchor after arm A's attempt completes. T-032 staging likewise superseded. NEXT GRANT: the fresh arm-A t031-3 one-launch** | Per-arm receipts typed `CANONICAL_FLEET_MATCHED_VERIFIED` + `compare_arms` descriptive B-vs-A record (OBSERVED deltas, UNKNOWN preserved, no profit claim) + E-row |
+| T-031 matched arms | ×2, arm A strictly before arm B's authorization (03:19-22); separate grant per arm (02:37-41, 03:43-44) | **ARM A DONE — attempt 3 `canonical-fleet-matched-a-t031-3` EXECUTED once under the operator's fresh arm-A grant (E190: `CANONICAL_FLEET_MATCHED_VERIFIED` rc 0, launches 1 / connections 1 / mutations 2 / requests 10889, reload correspondence `EXACT_NATIVE_SEMANTIC_CORRESPONDENCE`, binding null, five annual receipts economy years 1951–1955 + 60 monthly + telemetry 4/5/6, cleanup all-true, manifest match True, sealed read-only). Attempt history: t031-1 FAILED E183 (armed-seal script death), t031-2 FAILED E185 (correspondence refusal of the bridge change); rounds E184/E186/E187/E188 fixed the bridge + create path; create-q5 anchor verified E189.** Arm B `-b-t031-1/` next: re-prepare with the fixed package + create-q5 anchor (rm the superseded pre-fix staging dir first), then its own fresh grant; T-031 done-ness completes with the `compare_arms` B-vs-A record after arm B. T-032 staging likewise superseded (re-prepare with the q5 anchor before its grant) | Per-arm receipts typed `CANONICAL_FLEET_MATCHED_VERIFIED` + `compare_arms` descriptive B-vs-A record (OBSERVED deltas, UNKNOWN preserved, no profit claim) + E-row — **arm A's part MET (E190); arm B + `compare_arms` outstanding** |
 | T-032 five-year continuous | ×1 | `canonical-fleet-continuous-t032-1/`: prepare rc 0, preflight PASS, `AUTHORIZATION_UNVERIFIED`; ticket 01 updated | Per-year OPEX/ROI derived only from observed accounting + E-row (monitor budget 7200 s wall / five native economy years) |
 | T-033 consolidated OPEX/ROI | 0 (offline) | resolved E164; re-derives offline after each attempt — all four native sources `UNKNOWN_PENDING_NATIVE_AUTHORIZATION` | Aggregation record; OBSERVED/DERIVED/CONTROLLED segregation; UNKNOWN stays UNKNOWN |
 | T-034 standing regression | 0 (offline) | resolved E165 (6286 passed / 56 legacy-red by ID / 0 errors / 50 skipped at `f0f0155`); re-runnable gate | Regression suite result + E-row |
@@ -108,8 +108,8 @@ minimal conjunction from the acceptance statements on file
    canonical-fleet-create-q4 anchor attempt (E187 `KeyError: 'world'`
    — unstaged world facts, fixed E188); the canonical-fleet-create-q5
    anchor (E189, VERIFIED rc 0 — the fixed-bridge anchor exists).
-   Arm A t031-3 is staged against the q5 anchor; its one-launch grant
-   is next.
+   Arm A t031-3 is EXECUTED and VERIFIED (E190, `CANONICAL_FLEET_MATCHED_VERIFIED`
+   rc 0 — arm A's done-ness part met).
 2. T-031 `compare_arms` descriptive record lands; T-032 per-year
    OPEX/ROI derived only from observed accounting; T-033 re-derives
    with UNKNOWN preserved (roadmap :151-157).
@@ -144,10 +144,10 @@ of `artifacts/` (AI_HANDOFF :36); remote documentation availability
 1. **T-030** — DONE (E182): the one authorized launch verified
    (`CANONICAL_FLEET_EXERCISE_VERIFIED` rc 0, sealed
    `canonical-fleet-exercise-t030-1/`); grant consumed and void.
-2. **T-031 arm A** (`t031-3` staged against the VERIFIED create-q5
-   anchor, preflight PASS, `AUTHORIZATION_UNVERIFIED`): grant next;
-   arm B's grant only after arm A's attempt completes (arm B also
-   re-prepares with the fixed package + q5 anchor).
+2. **T-031 arm B** (identity `canonical-fleet-matched-b-t031-1`;
+   re-prepare with the fixed package + create-q5 anchor first — rm the
+   superseded pre-fix staging dir — then its own fresh grant;
+   `compare_arms` B-vs-A record after arm B completes T-031).
 3. **T-032** (staging superseded by the bridge change — re-prepare
    with the fixed package + create-q5 anchor before its grant): grant
    after T-031 completes.

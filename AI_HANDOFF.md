@@ -2281,3 +2281,45 @@ no headless-only execution.
    `.scratch/phase-b-t031/issues/02-arm-a-attempt-package.md`);
    arm B's grant only after arm A's attempt completes; then T-032.
    Evidence index E189.
+
+## 2026-11-12 T-031 arm A attempt 3 executed exactly once under the operator's fresh explicit arm-A grant (E190): TYPED `CANONICAL_FLEET_MATCHED_VERIFIED` RC 0 — arm A's done-ness part is MET under the fixed bridge (reload correspondence → binding-null dispatch → FIVE annual receipts 1951–1955); arm B's grant is next
+
+1. **The attempt of record (sealed read-only hereafter):**
+   `artifacts/runtime/canonical-fleet-matched-a-t031-3/`; executed once
+   at HEAD `da11430` (tree clean, `pgrep -x openttd` empty pre-launch);
+   `result.json` `{launches: 1, connections: 1, mutations: 2,
+   requests: 10889, status: CANONICAL_FLEET_MATCHED_VERIFIED}` rc 0;
+   grant consumed.
+2. **The full arm flow completed natively:** reload correspondence
+   FIRST (`EXACT_NATIVE_SEMANTIC_CORRESPONDENCE`: cash 471157
+   before/after, originals `[0,4,2709] [1,5,1557] [2,6,404]`,
+   restored, paused — the same frozen canonical world facts as every
+   prior attempt); arm-A dispatch binding null / purchase_capex 0
+   (arm A constructs nothing); `exercise-correspondence.json` typed
+   `EXACT_NATIVE_SEMANTIC_CORRESPONDENCE`; service-receipt-{0,1,2}
+   vehicles 4/5/6 spending 0.
+3. **The E183 death point now passes:** the post-dispatch
+   `continuous-begin` observation family went through the E184 fixed
+   armed seal and the FIVE-ANNIVERSARY monitoring horizon completed —
+   FIVE annual receipts `continuous-annual-{326,643,953,1257,1555}.json`
+   (economy years 1951–1955, elapsed economy days 366→1826 from the
+   1950 start) + 60 monthly receipts + per-vehicle telemetry 4/5/6
+   (vehicle_count 3 for arm A as spec'd), all within the 7200 s
+   monitoring budget.
+4. **Seal of record:** cleanup all-true (reaped rc 0, sockets closed,
+   credential removed, workspace disposed, remaining_processes []);
+   manifest match True (0 mismatches); post-run verify
+   `CANONICAL_FLEET_MATCHED_VERIFIED`; `pgrep -x openttd` empty.
+5. **Bridge-generation chain proven end to end:** q4 VM record (E184)
+   + q5 native anchor (E189) + arm A verified under the fixed bridge
+   `6c6a703c…`.
+6. **State / next operator action:** arm B's fresh grant — arm B first
+   re-prepares with the fixed package + create-q5 anchor (`rm -rf
+   artifacts/runtime/canonical-fleet-matched-b-t031-1` then prepare
+   `--canonical artifacts/runtime/canonical-fleet-create-q5 --arm B`,
+   identity unchanged `canonical-fleet-matched-b-t031-1`), then
+   preflight + `AUTHORIZATION_UNVERIFIED`, then its own fresh explicit
+   authorization; T-031 done-ness completes only with the
+   `compare_arms` descriptive B-vs-A record after arm B; then T-032
+   (re-prepare with the fixed package + q5 anchor). Evidence index
+   E190.

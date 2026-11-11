@@ -44,10 +44,11 @@ qualification lines 109–234, bounded telemetry lines 295–334).
   terminal FAILED E185 — the correspondence gate correctly refused the
   bridge change, the create-q3 anchor being bound to the pre-fix
   bridge `0fa190a0…`; both grants consumed and void; fix/diagnosis
-  rounds E184 + E186; arm A re-stages as `t031-3` only after the
-  `canonical-fleet-create-q4` anchor exists),
+  rounds E184 + E186; attempt 3 `t031-3` EXECUTED once against the
+  create-q5 anchor and typed `CANONICAL_FLEET_MATCHED_VERIFIED` rc 0 —
+  E190; arm A's done-ness part met),
   arm B `canonical-fleet-matched-b-t031-1` (re-prepare with the E184
-  fixed package AND the create-q4 anchor before its grant; the pre-fix
+  fixed package AND the create-q5 anchor before its grant; the pre-fix
   staging is superseded unsealed state); each its own CLAIM and its
   own fresh explicit authorization (not shared with the T-030 exercise,
   with each other, or with any earlier attempt; all prior grants void).

@@ -4576,3 +4576,35 @@ WORLD`
     `.scratch/phase-b-t031/issues/02-arm-a-attempt-package.md`);
     arm B's grant only after arm A's attempt completes; then T-032.
     Evidence index E189.
+
+39. **T-031 arm A attempt 3 executed exactly once under the operator's
+    fresh explicit arm-A grant (E190; 2026-11-12; typed
+    `CANONICAL_FLEET_MATCHED_VERIFIED` rc 0 — arm A's done-ness part
+    is MET under the fixed bridge; grant consumed; attempt dir
+    `artifacts/runtime/canonical-fleet-matched-a-t031-3/` sealed
+    read-only).** At HEAD `da11430` (tree clean, `pgrep -x openttd`
+    empty pre-launch): `{launches: 1, connections: 1, mutations: 2,
+    requests: 10889}`; reload correspondence FIRST typed
+    `EXACT_NATIVE_SEMANTIC_CORRESPONDENCE` (cash 471157 before/after,
+    originals `[0,4,2709] [1,5,1557] [2,6,404]`, restored, paused);
+    arm-A dispatch binding null / purchase_capex 0 (arm A constructs
+    nothing); exercise correspondence
+    `EXACT_NATIVE_SEMANTIC_CORRESPONDENCE`; service-receipt-{0,1,2}
+    vehicles 4/5/6 spending 0; the post-dispatch `continuous-begin`
+    observation — the exact request the E183 attempt died on — passed
+    the E184 fixed armed seal and the FIVE-ANNIVERSARY horizon
+    completed (annual receipts economy years 1951–1955, elapsed
+    economy days 366→1826, + 60 monthly + per-vehicle telemetry 4/5/6);
+    cleanup all-true, manifest match True, post-run verify typed,
+    `pgrep -x openttd` empty. The bridge-generation chain is proven
+    end to end: q4 VM record (E184) + q5 native anchor (E189) + arm A
+    verified under `6c6a703c…`. **The next operator action is arm B's
+    fresh grant: arm B first re-prepares with the fixed package +
+    create-q5 anchor (`rm -rf
+    artifacts/runtime/canonical-fleet-matched-b-t031-1` then prepare
+    `--canonical artifacts/runtime/canonical-fleet-create-q5 --arm B`,
+    identity unchanged), then preflight + verify
+    `AUTHORIZATION_UNVERIFIED`, then its own fresh explicit
+    authorization; T-031 done-ness completes only with the
+    `compare_arms` descriptive B-vs-A record after arm B; then
+    T-032.** Evidence index E190.
