@@ -51,6 +51,15 @@ from .road_mutation import wait_log
 
 EXERCISE = "canonical-fleet-exercise-t030-1"
 SCHEMA = "canonical-fleet-exercise-prelaunch-v1"
+VM_HELPERS = (
+    "tests/validate_canonical_squirrel.py",
+    "tests/support/openttd_squirrel_suspend.cpp",
+    "tests/support/canonical_startup_vm.nut",
+    "tests/support/canonical_protocol_vm.nut",
+)
+RETAINED_VM_FROZEN_SOURCE = (
+    PROJECT / "artifacts/runtime/canonical-fleet-reload-q3/frozen-source.zip"
+)
 EXERCISE_CONTRACT = dict(
     mode="canonical-fleet-exercise",
     purchase=True,
@@ -79,10 +88,28 @@ def require_bridge_validation(package):
     return validation
 
 
-def require_exercise_contract(metadata):
-    if metadata.get("execution_contract") != EXERCISE_CONTRACT:
-        raise ValueError("sealed canonical fleet exercise contract required")
+def require_retained_vm_helpers(validation):
+    """The q3 record's helper pins bind the RETAINED q3-era tooling bytes.
+
+    The retained frozen-source.zip proves the record's validator provenance;
+    the live tree's helpers may legitimately be newer (E92 readback fidelity)
+    and are sealed per-stage in the stage's own frozen-source seal.
+    """
+    with zipfile.ZipFile(RETAINED_VM_FROZEN_SOURCE) as z:
+        for name in VM_HELPERS:
+            digest = hashlib.sha256(z.read(name)).hexdigest()
+            if validation["helper_sha256"].get(str(PROJECT / name)) != digest:
+                raise ValueError("retained VM validation helper evidence drifted")
+
+
+def require_contract(metadata, contract):
+    if metadata.get("execution_contract") != contract:
+        raise ValueError("sealed canonical stage contract required")
     return metadata
+
+
+def require_exercise_contract(metadata):
+    return require_contract(metadata, EXERCISE_CONTRACT)
 
 
 def stage_workspace(directory, *, canonical, reservation):
@@ -108,11 +135,20 @@ def stage_workspace(directory, *, canonical, reservation):
     return workspace, key, private
 
 
-def prepare(directory, *, canonical):
-    if directory.name != EXERCISE:
-        raise ValueError("exact independent canonical exercise identity required")
+def prepare(
+    directory,
+    *,
+    canonical,
+    identity=EXERCISE,
+    contract=EXERCISE_CONTRACT,
+    budgets=None,
+    capacity_telemetry=None,
+    authorization=None,
+):
+    if directory.name != identity:
+        raise ValueError("exact independent canonical stage identity required")
     if canonical is None:
-        raise ValueError("exercise requires canonical creation evidence")
+        raise ValueError("stage requires canonical creation evidence")
     from app.simulation.openttd.freight_canonical_runtime import verify_save
 
     created = driver.verify_created_source(Path(canonical))
@@ -146,7 +182,7 @@ def prepare(directory, *, canonical):
         provisional = SimpleNamespace(
             spec=SimpleNamespace(workspace=workspace), endpoints=endpoints
         )
-        argv = expected_argv(provisional, EXERCISE)
+        argv = expected_argv(provisional, identity)
         spec = LaunchSpecification(
             workspace,
             RuntimeIdentity(freight.BINARY.resolve(), "15.3", BINARY_SHA256),
@@ -158,15 +194,9 @@ def prepare(directory, *, canonical):
         )
         frozen = source_freeze()
         validation = require_bridge_validation(package)
-        for name in (
-            "tests/validate_canonical_squirrel.py",
-            "tests/support/openttd_squirrel_suspend.cpp",
-            "tests/support/canonical_startup_vm.nut",
-            "tests/support/canonical_protocol_vm.nut",
-        ):
+        require_retained_vm_helpers(validation)
+        for name in VM_HELPERS:
             helper = PROJECT / name
-            if validation["helper_sha256"].get(str(helper)) != sha256(helper):
-                raise ValueError("Squirrel validation helper changed")
             frozen[str(helper)] = sha256(helper)
         import openttdlab
 
@@ -199,8 +229,8 @@ def prepare(directory, *, canonical):
                 frozen[str(path.resolve())] = sha256(path)
         metadata = dict(
             schema=SCHEMA,
-            qualification_id=EXERCISE,
-            execution_contract=EXERCISE_CONTRACT,
+            qualification_id=identity,
+            execution_contract=contract,
             workspace=str(workspace.root),
             argv=list(argv),
             binary=str(freight.BINARY),
@@ -218,10 +248,20 @@ def prepare(directory, *, canonical):
             planning_budget_gbp="500000",
             financial_reconciliation_version=1,
             game_time_metrics_version=1,
-            budgets=freight.network_budgets(3) | dict(total_seconds=1200),
+            budgets=(
+                budgets
+                if budgets is not None
+                else freight.network_budgets(3) | dict(total_seconds=1200)
+            ),
+            **({"capacity_telemetry": capacity_telemetry} if capacity_telemetry else {}),
             authorization=(
-                "separate explicit authorization; one launch; one connection; no retry/reconnect; "
-                "paused purchase/dispatch/unpause exercise; stop on unexpected failure"
+                authorization
+                if authorization is not None
+                else (
+                    "separate explicit authorization; one launch; one connection; "
+                    "no retry/reconnect; "
+                    "paused purchase/dispatch/unpause exercise; stop on unexpected failure"
+                )
             ),
         )
         write_json(directory / "PRELAUNCH.json", metadata)
@@ -237,19 +277,19 @@ def prepare(directory, *, canonical):
         reservation.close()
 
 
-def preflight(prepared):
+def preflight(prepared, *, identity=EXERCISE, contract=EXERCISE_CONTRACT):
     directory = prepared.directory
     metadata = json.loads((directory / "PRELAUNCH.json").read_bytes())
     if (
-        metadata["qualification_id"] != EXERCISE
-        or directory.name != EXERCISE
+        metadata["qualification_id"] != identity
+        or directory.name != identity
         or metadata["schema"] != SCHEMA
         or (directory / "CLAIM.json").exists()
         or sha256(directory / "PRELAUNCH.json")
         != (directory / "PRELAUNCH.sha256").read_text().strip()
     ):
-        raise ValueError("canonical exercise sealed identity/claim mismatch")
-    require_exercise_contract(metadata)
+        raise ValueError("canonical stage sealed identity/claim mismatch")
+    require_contract(metadata, contract)
     verify_freeze(metadata["frozen"])
     if (
         driver.bridge_digest(driver.package_bytes()) != metadata["bridge_sha256"]
@@ -273,25 +313,32 @@ def preflight(prepared):
     return metadata
 
 
-def verify(directory):
+def verify(
+    directory,
+    *,
+    contract=EXERCISE_CONTRACT,
+    status="CANONICAL_FLEET_EXERCISE_VERIFIED",
+):
     """Offline receipts check: contract, typed status, digests. Never launches."""
     directory = Path(directory)
     metadata = json.loads((directory / "PRELAUNCH.json").read_bytes())
     if not (directory / "CLAIM.json").exists():
         return "AUTHORIZATION_UNVERIFIED"
-    require_exercise_contract(metadata)
+    require_contract(metadata, contract)
     result = json.loads((directory / "result.json").read_bytes())
-    if result["status"] != "CANONICAL_FLEET_EXERCISE_VERIFIED":
+    if result["status"] != status:
         return "ATTEMPT_NOT_VERIFIED: " + result["status"]
     for line in (directory / "artifact-manifest.sha256").read_text().splitlines():
         digest, path = line.split("  ", 1)
         if sha256(directory / path) != digest:
             return "MANIFEST_MISMATCH: " + path
-    return "CANONICAL_FLEET_EXERCISE_VERIFIED"
+    return status
 
 
-async def conduct_exercise(backend, prepared, session, result):
-    """Reload correspondence first, then ONE purchase/dispatch/unpause arm B."""
+async def conduct_exercise(
+    backend, prepared, session, result, *, identity=EXERCISE, contract=EXERCISE_CONTRACT, arm="B"
+):
+    """Reload correspondence first, then ONE purchase/dispatch/unpause arm."""
     from app.simulation.openttd.freight_canonical_dispatch import (
         dispatch_loaded_arm,
         read_boundary,
@@ -300,7 +347,7 @@ async def conduct_exercise(backend, prepared, session, result):
     from app.simulation.openttd.freight_canonical_runtime import verify_reloaded
 
     metadata = json.loads((prepared.directory / "PRELAUNCH.json").read_bytes())
-    require_exercise_contract(metadata)
+    require_contract(metadata, contract)
     canonical = Path(metadata["canonical_directory"])
     created = driver.load_created(canonical)
     await driver.establish_reload_context(session, prepared.directory, canonical)
@@ -311,7 +358,7 @@ async def conduct_exercise(backend, prepared, session, result):
         prepared.directory,
         created=created,
         save=canonical / "canonical.sav",
-        identity=EXERCISE + "-reload",
+        identity=identity + "-reload",
         runtime_sha256=BINARY_SHA256,
         bridge_sha256=metadata["bridge_sha256"],
         configuration_sha256=metadata["configuration_sha256"],
@@ -337,7 +384,7 @@ async def conduct_exercise(backend, prepared, session, result):
         prepared.directory / "reload-correspondence.json",
         dict(
             status="EXACT_NATIVE_SEMANTIC_CORRESPONDENCE",
-            execution_contract=EXERCISE_CONTRACT,
+            execution_contract=contract,
             source_save_sha256=loaded.source_save_sha256,
             observation_sha256=sha256(prepared.directory / "reload-observation.json"),
             before=before.model_dump(mode="json"),
@@ -345,13 +392,13 @@ async def conduct_exercise(backend, prepared, session, result):
         ),
     )
     dispatch = await dispatch_loaded_arm(
-        backend, prepared, session, created=created, loaded=loaded, arm="B"
+        backend, prepared, session, created=created, loaded=loaded, arm=arm
     )
     write_json(
         prepared.directory / "exercise-correspondence.json",
         dict(
             status="EXACT_NATIVE_SEMANTIC_CORRESPONDENCE",
-            execution_contract=EXERCISE_CONTRACT,
+            execution_contract=contract,
             reload_correspondence_sha256=sha256(prepared.directory / "reload-correspondence.json"),
             observation_sha256=sha256(prepared.directory / "reload-observation.json"),
             dispatch_correspondence_sha256=sha256(prepared.directory / "canonical-dispatch.json"),
@@ -371,10 +418,17 @@ def mutation_receipts(prepared):
     return sum(1 for name in names if (prepared.directory / name).is_file())
 
 
-async def run(prepared, *, authorize_one_launch=False):
+async def run(
+    prepared,
+    *,
+    authorize_one_launch=False,
+    identity=EXERCISE,
+    contract=EXERCISE_CONTRACT,
+    conduct=None,
+):
     if authorize_one_launch is not True:
         raise ValueError("separate explicit one-launch authorization required")
-    metadata = preflight(prepared)
+    metadata = preflight(prepared, identity=identity, contract=contract)
     seal = sha256(prepared.directory / "PRELAUNCH.json")
     write_json(
         prepared.directory / "CLAIM.json",
@@ -419,7 +473,7 @@ async def run(prepared, *, authorize_one_launch=False):
             accounting.enter("setup")
             await GameScriptTransport(session, session.protocol).subscribe()
             session._frame_observer = backend.planning_frame_observer
-            await conduct_exercise(backend, prepared, session, result)
+            await (conduct or conduct_exercise)(backend, prepared, session, result)
     except BaseException as error:
         result["error"] = type(error).__name__ + ": " + str(error)
         try:

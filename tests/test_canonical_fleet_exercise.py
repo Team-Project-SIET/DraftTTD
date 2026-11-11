@@ -6,6 +6,7 @@ the conductor wiring are all controlled; nothing launches or connects.
 
 import asyncio
 import json
+import zipfile
 from types import SimpleNamespace
 
 import pytest
@@ -40,14 +41,14 @@ def test_identity_family_is_independent(tmp_path, monkeypatch):
 
     monkeypatch.setattr(driver.RuntimeWorkspace, "create", forbidden)
     directory = tmp_path / driver.RELOAD
-    with pytest.raises(ValueError, match="exact independent canonical exercise identity"):
+    with pytest.raises(ValueError, match="exact independent canonical stage identity"):
         exercise.prepare(directory, canonical=tmp_path)
     assert not directory.exists()
 
 
 def test_prepare_requires_canonical_evidence_before_any_write(tmp_path):
     directory = tmp_path / exercise.EXERCISE
-    with pytest.raises(ValueError, match="exercise requires canonical"):
+    with pytest.raises(ValueError, match="stage requires canonical"):
         exercise.prepare(directory, canonical=None)
     assert not directory.exists()
 
@@ -73,6 +74,29 @@ def test_bridge_validation_missing_record_refuses(tmp_path, monkeypatch):
         exercise.require_bridge_validation(driver.package_bytes())
 
 
+def test_retained_vm_helper_pin_binds_retained_bytes(tmp_path, monkeypatch):
+    validation = json.loads(driver.SUSPENSION_VALIDATION.read_bytes())
+    exercise.require_retained_vm_helpers(validation)
+    drifted = tmp_path / "drifted.zip"
+    with zipfile.ZipFile(drifted, "w") as z:
+        for name in exercise.VM_HELPERS:
+            z.writestr(name, b"drifted-helper-bytes")
+    monkeypatch.setattr(exercise, "RETAINED_VM_FROZEN_SOURCE", drifted)
+    with pytest.raises(ValueError, match="retained VM validation helper evidence drifted"):
+        exercise.require_retained_vm_helpers(validation)
+
+
+def test_prepare_seals_current_helpers_despite_record_pin_drift():
+    validation = json.loads(driver.SUSPENSION_VALIDATION.read_bytes())
+    from app.simulation.openttd.proof.harness import sha256
+
+    current = driver.PROJECT / "tests/support/canonical_protocol_vm.nut"
+    if validation["helper_sha256"].get(str(current)) == sha256(current):
+        pytest.skip("q3-era helper pin still matches the live tree")
+    exercise.require_retained_vm_helpers(validation)
+    assert sha256(current) != validation["helper_sha256"].get(str(current))
+
+
 def test_bridge_validation_pin_holds_at_head():
     # Retained-record dependent: skip-typed on clones without artifacts/.
     record = driver.SUSPENSION_VALIDATION
@@ -91,7 +115,7 @@ def test_contract_refusal(tmp_path):
     exercise.require_exercise_contract(metadata)
     drifted = dict(metadata)
     drifted["execution_contract"] = dict(exercise.EXERCISE_CONTRACT, unpause=False)
-    with pytest.raises(ValueError, match="exercise contract"):
+    with pytest.raises(ValueError, match="stage contract"):
         exercise.require_exercise_contract(drifted)
 
 
