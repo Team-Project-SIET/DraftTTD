@@ -4409,3 +4409,30 @@ WORLD`
     is the fresh explicit T-030 one-launch grant** (grant text in
     `.scratch/phase-b-t030/issues/02-attempt-package.md`). Evidence
     index E181.
+
+33. **T-030 canonical fleet exercise executed exactly once under the
+    operator's fresh explicit grant (E182; 2026-11-11; typed
+    `CANONICAL_FLEET_EXERCISE_VERIFIED` rc 0 — T-030 CLOSED; grant
+    consumed and void).** The operator gave the exact package grant
+    text in-session (HEAD `5845d8b`, tree clean). The one launch
+    proved the sealed contract end to end: reload correspondence
+    FIRST (`reload-correspondence.json` + `reload-readback.sav`: cash
+    471157 before/after, originals `[0,4,2709] [1,5,1557] [2,6,404]`,
+    `restored: true`, paused), then the paused arm-B exercise —
+    `capacity-add` £4,429 (cash 471157 → 466728, capacity 20, cargo
+    1), `canonical-arm` (state 2, paused), `canonical-dispatch-read`
+    (state 0, paused), `canonical-dispatched` (`paused: false`),
+    `canonical-after-intervention` (re-paused, state 2);
+    `exercise-correspondence.json` typed
+    `EXACT_NATIVE_SEMANTIC_CORRESPONDENCE` binding dispatch digest
+    `d79909b8…`, reload digest `54e5d8b6…` and observation digest
+    `b5232d66…` to the E2 source save `51e45689…1297eb` == pin;
+    `purchase_capex: 4429`; `result.json` `{launches: 1, connections:
+    1, mutations: 3}`; 1052 map-page pairs + 6 station + 3 vehicle
+    receipts retained. Seal: cleanup all-true; manifest match True; 0
+    mismatches; post-run verify rc 0; `pgrep -x openttd` empty.
+    Honesty: OPEX/ROI stay UNKNOWN; no profit claim. **Not claimed
+    anymore: T-030's done-ness (native exercise receipts + canonical
+    correspondence record + E-row) is MET. Remaining Phase B: T-031
+    arm A ×1 (next grant), arm B ×1 (after arm A completes), T-032 ×1;
+    T-033 re-derives offline after each.** Evidence index E182.

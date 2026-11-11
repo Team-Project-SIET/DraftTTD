@@ -1,12 +1,10 @@
 # 02: T-030 attempt package (ONE native exercise launch, operator-gated)
 
 **Type:** gate
-**Status:** staged 2026-11-11 at HEAD `2e5fcc9` — prepare rc 0,
-**preflight PASS**, verify `AUTHORIZATION_UNVERIFIED` rc 1; ONE launch
-awaits the operator's fresh explicit grant. No launch, no connection,
-no grant consumed. All prior grants (E141, E142, E145, attempts 1–6 of
-the FD-C-2 lane, and every grant before them) are void for reuse — this
-attempt needs its own fresh explicit grant in its own session.
+**Status:** EXECUTED 2026-11-11 under the operator's fresh explicit
+grant at HEAD `5845d8b` — terminal `CANONICAL_FLEET_EXERCISE_VERIFIED`
+rc 0 (E182); post-run verify rc 0; grant consumed and void; the
+attempt dir is sealed read-only. The T-031 arm A grant is next.
 **Spec:** `docs/specs/t030-fleet-capacity-exercise.md`
 **Blocked by:** 01 (resolved, `c6ec803`) + fresh explicit operator
 authorization.

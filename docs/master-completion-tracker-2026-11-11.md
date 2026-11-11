@@ -27,7 +27,7 @@ T-034 as the standing qualification gate (re-runnable any round)".
 
 | Task | Launches (fresh grants) | Staging state at `2e5fcc9` (2026-11-11) | Done-ness (roadmap :151-157) |
 | --- | --- | --- | --- |
-| T-030 fleet & capacity exercise | ×1 | `artifacts/runtime/canonical-fleet-exercise-t030-1/`: prepare rc 0, preflight PASS, `AUTHORIZATION_UNVERIFIED`; ticket 02 updated | Native exercise receipts + canonical correspondence record + E-row |
+| T-030 fleet & capacity exercise | ×1 | **EXECUTED 2026-11-11 under the operator's fresh grant (E182): terminal `CANONICAL_FLEET_EXERCISE_VERIFIED` rc 0 — CLOSED.** `canonical-fleet-exercise-t030-1/` sealed; exercise-correspondence typed `EXACT_NATIVE_SEMANTIC_CORRESPONDENCE`; capacity-add £4,429; dispatch + re-pause receipts; cleanup all-true, manifest 0 mismatches, post-run verify rc 0 | Native exercise receipts + canonical correspondence record + E-row — **MET** |
 | T-031 matched arms | ×2, arm A strictly before arm B's authorization (03:19-22); separate grant per arm (02:37-41, 03:43-44) | `canonical-fleet-matched-a-t031-1/` and `-b-t031-1/`: prepare rc 0, preflight PASS, `AUTHORIZATION_UNVERIFIED`; tickets 02/03 updated | Per-arm receipts typed `CANONICAL_FLEET_MATCHED_VERIFIED` + `compare_arms` descriptive B-vs-A record (OBSERVED deltas, UNKNOWN preserved, no profit claim) + E-row |
 | T-032 five-year continuous | ×1 | `canonical-fleet-continuous-t032-1/`: prepare rc 0, preflight PASS, `AUTHORIZATION_UNVERIFIED`; ticket 01 updated | Per-year OPEX/ROI derived only from observed accounting + E-row (monitor budget 7200 s wall / five native economy years) |
 | T-033 consolidated OPEX/ROI | 0 (offline) | resolved E164; re-derives offline after each attempt — all four native sources `UNKNOWN_PENDING_NATIVE_AUTHORIZATION` | Aggregation record; OBSERVED/DERIVED/CONTROLLED segregation; UNKNOWN stays UNKNOWN |
@@ -133,16 +133,14 @@ of `artifacts/` (AI_HANDOFF :36); remote documentation availability
 
 ## 5. Next operator actions (each its own session, own fresh grant)
 
-1. **T-030** (staged, preflight PASS): grant the one launch of
-   `canonical_fleet_exercise run
-   artifacts/runtime/canonical-fleet-exercise-t030-1
-   --authorize-one-launch` — grant text of record is
-   .scratch/phase-b-t030/issues/02-attempt-package.md ("Confirm — run
-   the T-030 canonical fleet exercise attempt of record …").
-2. **T-031 arm A** (staged, preflight PASS): grant after T-030
-   completes; arm B's grant only after arm A's attempt completes
-   (whatever its typed outcome).
-3. **T-032** (staged, preflight PASS): grant after T-031 completes.
+1. **T-030** — DONE (E182): the one authorized launch verified
+   (`CANONICAL_FLEET_EXERCISE_VERIFIED` rc 0, sealed
+   `canonical-fleet-exercise-t030-1/`); grant consumed and void.
+2. **T-031 arm A** (staged `canonical-fleet-matched-a-t031-1`, preflight
+   PASS): grant next; arm B's grant only after arm A's attempt
+   completes (whatever its typed outcome).
+3. **T-032** (staged `canonical-fleet-continuous-t032-1`, preflight
+   PASS): grant after T-031 completes.
 4. FD-C-2 Attempt 7: fresh grant when the operator chooses to advance
    Phase C (E160 readiness audit stands at its recorded HEAD).
 5. ramrom battery: offline bar first, then per-seed grants (spec §bar).

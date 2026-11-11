@@ -2054,3 +2054,40 @@ no headless-only execution.
    grant text of record in
    `.scratch/phase-b-t030/issues/02-attempt-package.md`. Evidence
    index E181.
+
+## 2026-11-11 T-030 canonical fleet exercise executed exactly once under the operator's fresh explicit grant (E182): TYPED `CANONICAL_FLEET_EXERCISE_VERIFIED` rc 0 — the sealed contract proven end to end (reload correspondence first, then the paused purchase → dispatch → re-pause exercise); T-030 CLOSED; the T-031 arm A grant is next
+
+1. **The run of record:** `artifacts/runtime/canonical-fleet-exercise-t030-1/`
+   sealed read-only; `result.json`
+   `{launches: 1, connections: 1, mutations: 3,
+   status: CANONICAL_FLEET_EXERCISE_VERIFIED}` rc 0; CLAIM consumed;
+   the operator gave the exact package grant text in-session (HEAD
+   `5845d8b`, tree clean, `pgrep -x openttd` empty pre-launch).
+2. **The contract of record, proven:** reload correspondence FIRST
+   (`reload-correspondence.json` + `reload-readback.sav`: cash 471157
+   before/after, originals `[0,4,2709] [1,5,1557] [2,6,404]`,
+   `restored: true`, paused), then the paused arm-B exercise:
+   `capacity-add` £4,429 (cash 471157 → 466728, capacity 20, cargo 1)
+   → `canonical-arm` (originals state 2, paused) →
+   `canonical-dispatch-read` (state 0, paused) → `canonical-dispatched`
+   (`paused: false`) → `canonical-after-intervention` (re-paused,
+   state 2). `exercise-correspondence.json` typed
+   `EXACT_NATIVE_SEMANTIC_CORRESPONDENCE` binding dispatch digest
+   `d79909b8…`, reload digest `54e5d8b6…`, observation digest
+   `b5232d66…` to the E2 source save `51e45689…1297eb` == pin;
+   `purchase_capex: 4429`. 1052 map-page pairs + 6 station + 3 vehicle
+   receipts retained.
+3. **Seal of record:** cleanup all-true (reaped rc 0, sockets closed,
+   credential removed, workspace disposed, remaining_processes []);
+   manifest match True (0 mismatches); post-run `verify` →
+   `CANONICAL_FLEET_EXERCISE_VERIFIED` rc 0; `pgrep -x openttd`
+   empty.
+4. **Honesty of record:** the exercise observes the capacity purchase
+   and dispatch mechanics; OPEX/ROI remain UNKNOWN; no profit claim.
+5. **State:** T-030 CLOSED (done-ness met: native exercise receipts +
+   canonical correspondence record + E-row). Ordering of record:
+   **T-031 arm A's fresh grant is next** (staged
+   `canonical-fleet-matched-a-t031-1`, preflight PASS,
+   `AUTHORIZATION_UNVERIFIED`); arm B's grant only after arm A's
+   attempt completes (whatever its typed outcome); then T-032's own
+   fresh grant. Evidence index E182.
