@@ -4257,3 +4257,31 @@ no push, sealed bytes untouched. Evidence index E156.
     fresh world still not SEEN in the GUI; no Phase B criterion
     satisfied; Phase B native closure outstanding (T-030 ×1, T-031 arm
     A ×1 + arm B ×1, T-032 ×1). Evidence index E176.
+
+28. **T-036 gate-correction fix of record (E177; 2026-11-11; fix commit
+    `3eb8f5e`; operator approved the "correct the GUI gate" shape
+    in-session; offline, zero native).** The GUI run now connects the
+    AdminPort directly after launch — the pre-connect
+    `wait_log("FREIGHT_DELIVERY_READY")` gate is gone — and the native
+    welcome tripwire `require_fresh_welcome` (revision `15.3`, seed
+    `1181`, 64×64 reported by the loaded save) is the world proof and
+    the connection gate. WHY: the pinned bridge's reload contract only
+    resumes a `constructed`-fleet save (`ContinuousFreightProof::Load()`
+    sets `restored_fleet` only on the `constructed` branch) while the
+    fresh save is fleetless `preconstruction` — its GameScript
+    restarts, refuses the already-prepared world
+    (`NETWORK_REQUIRES_EMPTY_WORLD`) and dies before any marker could
+    appear; the death lines are retained as documented evidence. The
+    E175-verified `fresh-world-create-t036-3` save stays the source of
+    record (no creation re-run, no grant A4). Tests: 18 + 46 green
+    (count unchanged — a gate deletion documented at the why-level);
+    ruff/format/py_compile/scoped ty clean. Identity advanced
+    (stale-supersession): `fresh-world-gui-probe-t036-2` →
+    `fresh-world-gui-probe-t036-3`; re-staged: prepare → **preflight
+    PASS** → `AUTHORIZATION_UNVERIFIED` rc 1 (source t036-3, save
+    digest + bridge pin verified, argv `-g source.sav`). **The one GUI
+    launch awaits a FRESH explicit grant B3; grants A, A2, B, A3, B2
+    all consumed and void.** Not claimed: the fresh world still not
+    SEEN in the GUI; no Phase B criterion satisfied; Phase B native
+    closure outstanding (T-030 ×1, T-031 arm A ×1 + arm B ×1, T-032
+    ×1). Evidence index E177.

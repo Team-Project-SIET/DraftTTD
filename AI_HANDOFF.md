@@ -1867,3 +1867,36 @@ no headless-only execution.
    B criterion satisfied; Phase B native closure outstanding (T-030 ×1,
    T-031 arm A ×1 + arm B ×1, T-032 ×1, each its own fresh grant). T-035
    stays terminal VERIFIED at E170. Evidence index E176.
+
+## 2026-11-11 T-036 gate-correction fix of record (E177): the operator approved the "correct the GUI gate" shape — the GUI run connects the AdminPort directly after launch and the native welcome tripwire (15.3 / 1181 / 64×64 of the loaded save) is the world proof and the connection gate; no GameScript marker gate; fix commit `3eb8f5e`; identity advanced to `fresh-world-gui-probe-t036-3`; the E175 creation save stays the source of record; grant B3 awaited
+
+1. **Fix of record (commit `3eb8f5e`, offline, zero native):** `run_gui`
+   drops the pre-connect `wait_log("FREIGHT_DELIVERY_READY")` and
+   connects the AdminPort immediately after launch;
+   `require_fresh_welcome` then reports the loaded save's seed and map
+   size natively and refuses any mismatch typed. WHY documented at
+   three levels (module docstring, staging comment, gate comment): the
+   pinned bridge's reload contract only resumes a `constructed`-fleet
+   save (`ContinuousFreightProof::Load()` sets `restored_fleet` only on
+   the `constructed` branch), while the fresh save is fleetless
+   `preconstruction` — its GameScript restarts, refuses the
+   already-prepared world and dies; the death lines are retained as
+   documented evidence, never a failure to hide.
+2. **Tests of record:** `tests/test_fresh_world_gui.py` 18 passed
+   (unchanged count — the change is a gate deletion; the
+   welcome-tripwire rejection tests already pin the world proof), lane
+   suites 46 passed (64 total); ruff/format/py_compile/scoped ty clean.
+3. **Re-stage of record:** `artifacts/runtime/fresh-world-gui-probe-
+   t036-3/` — prepare → preflight PASS → `AUTHORIZATION_UNVERIFIED`
+   rc 1; binds the E175-verified save (digest `fddd6f5d…` == pin,
+   bridge `0fa190a0…` == pin, argv `-g source.sav` no `-G`, exactly one
+   inherited `[game_scripts]` section).
+4. **State:** the operator's approval landed in-session
+   ("Correct the GUI gate (Recommended)"); grant B3 is the only live
+   request; grants A, A2, B, A3, B2 all consumed and void; the
+   `fresh-world-create-t036-3` save stays sealed terminal VERIFIED and
+   is the source of record (no creation re-run, no grant A4).
+5. **Not claimed:** the fresh world still not SEEN in the GUI; no Phase
+   B criterion satisfied; Phase B native closure outstanding (T-030 ×1,
+   T-031 arm A ×1 + arm B ×1, T-032 ×1, each its own fresh grant). T-035
+   stays terminal VERIFIED at E170. Evidence index E177.

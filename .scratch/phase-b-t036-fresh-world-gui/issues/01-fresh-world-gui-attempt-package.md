@@ -290,6 +290,41 @@ proof) + server-side join + GUI liveness, with the script-death lines
 retained as the documented reload-contract limit of a fleetless save.**
 Identities advance by stale-supersession when the operator picks.
 
+## Fix record (2026-11-11, E176 follow-up): operator approved the gate-correction shape — GUI gate is now welcome-tripwire-first; identity advanced to `fresh-world-gui-probe-t036-3`
+
+The operator answered "Correct the GUI gate (Recommended)" in-session:
+keep the minimal preconstruction creation (the E175-verified
+`fresh-world-create-t036-3` save stays the source of record — no
+creation re-run), and correct the GUI stage's gate. Fix of record
+(commit `3eb8f5e`, offline, zero native): the run connects the
+AdminPort **directly after launch** — the `wait_log` marker gate is
+gone, because the pinned bridge's reload contract only resumes a
+`constructed`-fleet save while this save is fleetless
+`preconstruction` and its GameScript restarts, refuses the
+already-prepared world (`NETWORK_REQUIRES_EMPTY_WORLD`) and dies before
+any marker could appear; the native welcome tripwire
+`require_fresh_welcome` (revision `15.3`, seed `1181`, 64×64 reported
+by the loaded save itself) is the world proof and the connection gate;
+the GameScript death lines are retained evidence of that documented
+limit, never a failure to hide. Tests unchanged in count (18 green +
+lane suites 46; the deletion is documented in the module docstring,
+staging comment and inline gate comment). Identity advanced by
+stale-supersession: `fresh-world-gui-probe-t036-2` →
+`fresh-world-gui-probe-t036-3` (the t036-2 dir stays sealed terminal
+FAILED history, unreachable from the family by name). The re-staged
+`fresh-world-gui-probe-t036-3`: prepare → **preflight PASS** → verify
+`AUTHORIZATION_UNVERIFIED` as of 2026-11-11 (source t036-3, save digest
+`fddd6f5d…` == pin, bridge `0fa190a0…` == pin, argv `-g source.sav`).
+
+**Grant B3 (GUI probe, only attempt of record now):** "Authorize
+exactly one fresh-world GUI probe run: `fresh_world_gui run
+artifacts/runtime/fresh-world-gui-probe-t036-3 --authorize-one-launch`.
+One dedicated-server launch from the digest-pinned fresh save, one
+AdminPort connection (welcome tripwire seed 1181 / 64×64 / revision
+15.3 is the world proof), one real desktop GUI client join as
+spectator, observation window, owned stop; no retry, no reconnect;
+stop on unexpected failure."
+
 ## Grant texts of record (paste per authorization, one per attempt)
 
 Grant A3 (creation) — CONSUMED 2026-11-11, void.
