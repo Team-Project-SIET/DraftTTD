@@ -330,6 +330,20 @@ def test_seal_attempt_awaits_cleanup_and_writes_receipts(tmp_path, monkeypatch):
     assert fresh.verify_create(directory) == "ATTEMPT_NOT_VERIFIED: FAILED"
 
 
+def test_verify_cli_never_reopens_workspace(tmp_path, monkeypatch):
+    """The t036-2 verify sweep defect class: after a VERIFIED run the owned
+    cleanup disposed the workspace, so reopening it crashes; the verify
+    command must read sealed receipts only."""
+    directory = fresh_creation_fixture(tmp_path)
+    monkeypatch.setattr(
+        fresh.driver,
+        "reopen",
+        lambda *a, **k: pytest.fail("verify must not reopen the disposed workspace"),
+    )
+    monkeypatch.setattr("sys.argv", ["fresh_world_gui", "verify", str(directory)])
+    assert fresh.main() == 0
+
+
 def test_verify_states_offline(tmp_path):
     directory = fresh_creation_fixture(tmp_path)
     assert fresh.verify_create(directory) == fresh.FRESH_CREATE_VERIFIED

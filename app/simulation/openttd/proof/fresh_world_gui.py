@@ -712,16 +712,16 @@ def main():
         return 0
     if args.directory.name not in (FRESH_CREATE, FRESH_GUI):
         raise ValueError("unknown fresh-world attempt directory")
-    prepared = driver.reopen(args.directory)
-    if args.command == "preflight":
-        if prepared.directory.name == FRESH_CREATE:
-            preflight_create(prepared)
-            print("fresh-world create preflight PASS")
-        else:
-            preflight_gui(prepared)
-            print("fresh-world GUI probe preflight PASS")
-        return 0
-    if args.command == "run":
+    if args.command in ("preflight", "run"):
+        prepared = driver.reopen(args.directory)
+        if args.command == "preflight":
+            if prepared.directory.name == FRESH_CREATE:
+                preflight_create(prepared)
+                print("fresh-world create preflight PASS")
+            else:
+                preflight_gui(prepared)
+                print("fresh-world GUI probe preflight PASS")
+            return 0
         run = run_create if prepared.directory.name == FRESH_CREATE else run_gui
         result = asyncio.run(run(prepared, authorize_one_launch=args.authorize_one_launch))
         print(json.dumps(result, sort_keys=True))
@@ -729,6 +729,8 @@ def main():
             FRESH_CREATE_VERIFIED if prepared.directory.name == FRESH_CREATE else FRESH_GUI_VERIFIED
         )
         return 0 if result["status"] == expected else 1
+    # verify reads sealed receipts only: the run-time workspace is disposed
+    # by owned cleanup, so reopening it here would crash a VERIFIED attempt.
     status = (
         verify_create(args.directory)
         if args.directory.name == FRESH_CREATE
