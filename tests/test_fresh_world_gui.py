@@ -37,7 +37,9 @@ def fresh_creation_fixture(tmp_path):
     """A receipt-complete FRESH_WORLD_CREATE_VERIFIED attempt (offline)."""
     directory = tmp_path / fresh.FRESH_CREATE
     directory.mkdir(parents=True)
-    (directory / "effective-openttd.cfg").write_text("[network]\n")
+    (directory / "effective-openttd.cfg").write_text(
+        "[network]\n[game_scripts]\nRoadFreightProof = \n"
+    )
     save_path = directory / "fresh-world.sav"
     save_path.write_bytes(b"fresh-world-save-bytes")
     world_generation = dict(
@@ -178,8 +180,10 @@ def test_create_prepare_stages_fresh_world_offline(tmp_path):
     config = (root / "openttd.cfg").read_text()
     assert "pause_on_newgame = false" in config
     assert f"map_x = {fresh.FRESH_MAP_X}" in config
-    assert "[game_scripts]" not in config
-    assert not (root / "game" / "RoadFreightProof").exists()
+    assert "[game_scripts]" in config
+    assert "RoadFreightProof = " in config
+    assert (root / "game" / "RoadFreightProof").is_dir()
+    assert "bridge_sha256" in metadata
     assert (prepared.directory / "PRELAUNCH.sha256").is_file()
 
 
@@ -228,6 +232,9 @@ def test_gui_prepare_stages_fresh_save_offline(tmp_path, monkeypatch):
     assert "admin_password = " in (root / "secrets.cfg").read_text()
     config = (root / "openttd.cfg").read_text()
     assert "[game_scripts]" in config
+    # inherited from the creation source's own config; never re-appended
+    # (OpenTTD wipes runtime GameScript config on save load — GSDT rules).
+    assert config.count("[game_scripts]") == 1
     assert (root / "game" / "RoadFreightProof").is_dir()
     argv = metadata["argv"]
     assert argv[argv.index("-g") + 1].endswith("source.sav")

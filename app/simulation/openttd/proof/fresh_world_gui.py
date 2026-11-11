@@ -60,8 +60,8 @@ from .harness import (
 )
 from .road_mutation import save, wait_log
 
-FRESH_CREATE = "fresh-world-create-t036-2"
-FRESH_GUI = "fresh-world-gui-probe-t036-1"
+FRESH_CREATE = "fresh-world-create-t036-3"
+FRESH_GUI = "fresh-world-gui-probe-t036-2"
 FRESH_CREATE_VERIFIED = "FRESH_WORLD_CREATE_VERIFIED"
 FRESH_GUI_VERIFIED = "FRESH_WORLD_GUI_PROBE_VERIFIED"
 SCHEMA = "fresh-world-prelaunch-v1"
@@ -84,8 +84,14 @@ JOIN_MARKER = f"*** {CLIENT_NAME} has joined the game"
 JOIN_SECONDS = gui_probe.JOIN_SECONDS
 OBSERVATION_SECONDS = gui_probe.OBSERVATION_SECONDS
 
+# The GameScript of record is configured at GENERATION time: OpenTTD 15.3
+# stores the GameScript selection inside the save itself (GSDT chunk), so a
+# world generated without it never runs one and no runtime config append can
+# inject it into a loaded save (the fresh-world-gui-probe-t036-1 FAILED
+# round). Placement and case mirror the proven canonical-CREATE staging.
 WORLD_SECTIONS = (
     "\n[misc]\ngraphicsset = OpenGFX\n[ai]\nai_in_multiplayer = true\n"
+    "[game_scripts]\nRoadFreightProof = \n"
     "[game_creation]\n"
     f"map_x = {FRESH_MAP_X}\nmap_y = {FRESH_MAP_Y}\n"
     f"landscape = {FRESH_LANDSCAPE}\nstarting_year = {FRESH_STARTING_YEAR}\n"
@@ -231,6 +237,14 @@ def prepare_create(directory):
         workspace, key, secret = _stage_fresh_workspace(directory, reservation)
         (workspace.root / "heightmap.png").write_bytes(freight.flat_heightmap())
         shutil.copyfile(workspace.root / "heightmap.png", directory / "heightmap.png")
+        # the byte-pinned bridge must exist at generation time: the scanner
+        # resolves the [game_scripts] entry only from the runtime's game/ tree.
+        package = driver.package_bytes()
+        require_bridge_validation(package)
+        target = workspace.game / "RoadFreightProof"
+        target.mkdir()
+        for name, data in package.items():
+            (target / name).write_bytes(data)
         graphics = stage_opengfx(freight.GRAPHICS_ARCHIVE, workspace.root / "baseset/OpenGFX")
         write_json(
             directory / "graphics-identity.json",
@@ -271,6 +285,7 @@ def prepare_create(directory):
             public_key=key.public_hex,
             game_port=reservation.game_port,
             admin_port=reservation.admin_port,
+            bridge_sha256=driver.bridge_digest(package),
             frozen=frozen,
             world_generation=WORLD_GENERATION
             | dict(heightmap_sha256=sha256(directory / "heightmap.png")),
@@ -381,10 +396,11 @@ def prepare_gui(directory, *, fresh_world):
         # mirror of the E167 fix line with the FRESH save as the source:
         # preflight and the -g launch argv both resolve this exact path.
         shutil.copyfile(Path(fresh_world) / "fresh-world.sav", workspace.root / "source.sav")
-        # the dedicated host of record runs the byte-pinned bridge; its ready
-        # marker gates the admin connection.
-        config = workspace.config.read_text() + "\n[game_scripts]\nRoadFreightProof = \n"
-        workspace.config.write_text(config)
+        # The staged save carries the GameScript of record (GSDT chunk): the
+        # byte-pinned bridge package is staged only so the scanner can resolve
+        # the saved GameScript name; a runtime config append can never inject
+        # a GameScript into a loaded save. Its ready marker still gates the
+        # admin connection.
         target = workspace.game / "RoadFreightProof"
         target.mkdir()
         for name, data in package.items():
