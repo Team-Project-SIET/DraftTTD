@@ -1320,3 +1320,30 @@ record `docs/capacity-experiment.md`), spec of record
    `03-arm-b-attempt-package.md`; the two native launches are
    operator-gated separately (arm A first; arm B after arm A's attempt
    completes); consumed grants all void.
+
+## 2026-11-11 T-032 five-year continuous conductor built offline (E163); thin reuse; attempt package at the authorization gate
+
+T-032 (`docs/roadmap-and-scope-2026-11-05.md` §3), spec of record
+`docs/specs/t032-five-year-continuous.md`, ticket package
+`.scratch/phase-b-t032/issues/01-continuous-attempt-package.md`.
+
+1. **Stage of record (commit `b63eb16`):**
+   `canonical_fleet_continuous.py` — identity
+   `canonical-fleet-continuous-t032-1`, own finalization contract
+   (adds nothing, arm-A-shaped dispatch; five native economy
+   anniversaries; telemetry v2 vehicle_count 3, max_tick_gap 100),
+   same-E2 same-byte bridge staging, conduct = reload correspondence →
+   ONE arm-A dispatch → retained `monitor_network` five-year loop →
+   `continuous-summary.json` + `continuous-finalization.json`
+   provenance labels (per-year OPEX/ROI DERIVED only from observed
+   native accounting; originals' construction UNKNOWN → E2; fourth
+   vehicle NOT-APPLICABLE), typed
+   `CANONICAL_FIVE_YEAR_CONTINUOUS_VERIFIED`; CLI prepare/preflight/
+   verify/run `--authorize-one-launch`.
+2. **Tests:** 7 offline tests; exercise 14 + matched 11 stay green;
+   lane suites green; statics clean (ruff, format, py_compile, scoped
+   ty, `git diff --check`).
+3. **Gate ladder:** package prepared; the ONE native launch is
+   operator-gated separately (never shared with T-030/T-031 grants;
+   all prior grants void). Post-run analytics of record:
+   `analyze-continuous-freight`.

@@ -114,3 +114,23 @@ commit pair (code+tests `c6ec803`, docs this commit); never pushed.
 Ledger pairing: this file + `.scratch/phase-b-t031/issues/` +
 EVIDENCE_INDEX E162 + AI_HANDOFF/TASKS addenda of the same date. One
 commit pair (code+tests `a9291c2`, docs this commit); never pushed.
+
+## T-032 five-year continuous — conductor resolved, package at the gate (2026-11-11)
+
+- **Ticket 01 (continuous attempt package) claimed, at the gate** —
+  spec `docs/specs/t032-five-year-continuous.md`, package
+  `.scratch/phase-b-t032/issues/01-continuous-attempt-package.md`;
+  conductor resolved by commit `b63eb16` (identity
+  `canonical-fleet-continuous-t032-1`, own finalization contract, adds
+  nothing, five native economy anniversaries, telemetry v2 3 vehicles,
+  retained monitor loop, `continuous-finalization.json` provenance
+  labels, typed `CANONICAL_FIVE_YEAR_CONTINUOUS_VERIFIED`); 7 offline
+  tests + all sibling suites green; statics clean.
+- **Not claimed:** the native T-032 five-year attempt — needs a FRESH
+  explicit operator authorization after independent review and Gate C
+  signing; all prior grants void; per-year OPEX/ROI DERIVED record +
+  E-row only after the attempt's receipts.
+
+Ledger pairing: this file + `.scratch/phase-b-t032/issues/` +
+EVIDENCE_INDEX E163 + AI_HANDOFF/TASKS addenda of the same date. One
+commit pair (code+tests `b63eb16`, docs this commit); never pushed.

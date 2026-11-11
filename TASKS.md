@@ -3860,3 +3860,20 @@ no push, sealed bytes untouched. Evidence index E156.
     lane suites green; statics clean. Arm packages prepared
     (`.scratch/phase-b-t031/issues/02`, `03`) at the separate
     fresh-authorization gate. Evidence index E162.
+
+14. **T-032 five-year continuous conductor (2026-11-11, offline only,
+    zero launches / zero AdminPort / no `artifacts/` byte touched;
+    code+tests commit `b63eb16`, docs commit this one; no push).** New
+    `canonical_fleet_continuous.py`: identity
+    `canonical-fleet-continuous-t032-1`, own finalization contract
+    (adds nothing; five native economy anniversaries; telemetry v2
+    vehicle_count 3), same-byte bridge staging from the same E2
+    evidence, conduct = reload correspondence → arm-A dispatch →
+    retained five-year monitor → `continuous-summary.json` +
+    `continuous-finalization.json` provenance labels (per-year
+    OPEX/ROI DERIVED only from observed accounting; originals'
+    construction UNKNOWN → E2), typed
+    `CANONICAL_FIVE_YEAR_CONTINUOUS_VERIFIED`. 7 offline tests;
+    exercise/matched/lane suites green; statics clean. Attempt package
+    prepared (`.scratch/phase-b-t032/issues/01`) at the separate
+    fresh-authorization gate. Evidence index E163.
