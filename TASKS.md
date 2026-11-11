@@ -3991,3 +3991,25 @@ no push, sealed bytes untouched. Evidence index E156.
     auth-trio regression test) and any re-attempt
     (`canonical-fleet-gui-probe-t035-3`) await the operator's separate
     authorizations. Evidence index E168.
+
+20. **T-035 fix round — admin auth trio staged (2026-11-11; code+tests
+    ONE commit `0a95c75`, docs commit this one; no push).** Under the
+    operator's in-session "Fix + re-stage" answer: `stage_workspace`
+    now mirrors the driver's `write_config` — after the `.admin-secret`
+    write it stages `private.cfg` (`[admin_authorized_keys]
+    <public_hex>`) + `secrets.cfg` (`admin_password`), the exact shape
+    every working stage carries; with `allow_insecure_admin_login =
+    false` the server starts its admin network only with this material,
+    closing the E168 refusal class at the staging seam. Identity
+    advanced `canonical-fleet-gui-probe-t035-2` → `…t035-3`
+    (stale-supersession); the sealed t035-2 attempt and its void grant
+    untouched. New `test_stage_writes_admin_auth_trio` (private.cfg
+    carries the PRELAUNCH public key, secrets.cfg the password line,
+    `.admin-secret` 0600 matching `key.public_hex`); gui 14 + exercise
+    14 + matched 11 + continuous 7 = 46 green; reload-only +
+    reload-context rc=0; statics clean. Re-stage at t035-3: prepare →
+    preflight PASS → verify `AUTHORIZATION_UNVERIFIED`; staged
+    `source.sav` == protected pin `51e45689…1297eb`; auth trio present.
+    The t035-3 re-RUN awaits a FRESH explicit one-launch grant (zero
+    launches / zero AdminPort / zero grants this round). Evidence index
+    E169.

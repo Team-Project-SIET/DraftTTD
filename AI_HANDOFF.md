@@ -1533,3 +1533,33 @@ no headless-only execution.
    the four Phase B packages inherit BOTH exercise-core fixes at
    attempt day.
 
+## 2026-11-11 T-035 fix round (E169): the E168 root cause fixed smallest — admin auth trio staged in `stage_workspace`; identity advanced t035-2 → t035-3; t035-3 staged at preflight PASS / `AUTHORIZATION_UNVERIFIED` with the auth trio present; the re-RUN awaits a fresh one-launch grant
+
+1. **Fix (commit `0a95c75`):** `stage_workspace` mirrors the driver —
+   `write_config(AdminSettings(password="", port=…, game_port=…,
+   authorized_public_key_hex=key.public_hex))` right after the
+   `.admin-secret` write, before the canonical-derived config
+   overwrite. Produces `private.cfg`
+   (`[admin_authorized_keys] <public_hex>`) + `secrets.cfg`
+   (`admin_password`) — the exact staging shape every working stage
+   carries; with `allow_insecure_admin_login = false` the server
+   starts its admin network only with this material present, closing
+   the E168 refusal class at the staging seam.
+2. **Regression:** `test_stage_writes_admin_auth_trio` — real offline
+   staging asserting private.cfg carries the PRELAUNCH public key,
+   secrets.cfg the password line, `.admin-secret` 0600 matching
+   `key.public_hex`.
+3. **Tests/statics:** gui 14 + exercise 14 + matched 11 + continuous 7
+   = 46 green; reload-only + reload-context rc=0; ruff/format/
+   py_compile/ty/`git diff --check` clean.
+4. **Re-stage:** `artifacts/runtime/canonical-fleet-gui-probe-t035-3/`
+   prepare → **preflight PASS** → verify `AUTHORIZATION_UNVERIFIED`;
+   staged `source.sav` == protected pin `51e45689…1297eb`; auth trio
+   present in the staged workspace. Spec + package updated to t035-3.
+5. **Blocked of record:** the t035-3 re-RUN needs a FRESH explicit
+   one-launch grant (zero launches / zero AdminPort / zero grants this
+   round; the t035-2 grant is consumed and void; a fresh attempt under
+   a fresh grant is the designed path, not a retry); Phase B native
+   closure unchanged — T-030 ×1, T-031 arm A ×1 + arm B ×1, T-032 ×1,
+   each also inheriting both exercise-core fixes at attempt day.
+

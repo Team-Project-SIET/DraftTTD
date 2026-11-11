@@ -45,6 +45,21 @@ record (mirror `write_config` into `stage_workspace`, regression test
 pinning the staged auth trio) AND a FRESH explicit one-launch operator
 grant. Nothing here re-launches.
 
+## Second supersession (2026-11-11, E169): fix landed (commit `0a95c75`), t035-3 staged at the fresh-grant gate
+
+Under the operator's in-session "Fix + re-stage" answer: `stage_workspace`
+now mirrors the driver's `write_config` (private.cfg
+`[admin_authorized_keys]` + secrets.cfg `admin_password`, exactly the
+proven staging shape); identity advanced to
+`canonical-fleet-gui-probe-t035-3` (stale-supersession); the t035-3
+staging is at
+`artifacts/runtime/canonical-fleet-gui-probe-t035-3/` — prepare →
+**preflight PASS** → verify `AUTHORIZATION_UNVERIFIED`, staged
+`source.sav` == protected pin `51e45689…1297eb`, auth trio present
+(pinned by `test_stage_writes_admin_auth_trio`). **The t035-3 re-RUN
+awaits a FRESH explicit one-launch operator grant** — the commands of
+record above now point at the t035-3 directory.
+
 ## Preconditions (all offline-checkable, verified 2026-11-11)
 
 - Run from a desktop terminal on the operator's session (verified live:
@@ -60,7 +75,7 @@ grant. Nothing here re-launches.
 - E2 manifest re-verified inside
   `artifacts/runtime/canonical-fleet-create-q3/` (0 mismatches, part of
   the E165 197-manifest sweep); no byte modified by the check.
-- Clean tree at the commit of record (≥ the fix commit `132e2ea`),
+- Clean tree at the commit of record (≥ the fix commit `0a95c75`),
   branch
   `miles/fright-delivery`; `stash@{0}` untouched.
 - `OPENTTD_BINARY` and `OPENTTD_OPENGFX_ARCHIVE` set before Python
@@ -70,14 +85,14 @@ grant. Nothing here re-launches.
 
 ```bash
 .venv/bin/python -m app.simulation.openttd.proof.canonical_fleet_gui prepare \
-  artifacts/runtime/canonical-fleet-gui-probe-t035-2 \
+  artifacts/runtime/canonical-fleet-gui-probe-t035-3 \
   --canonical artifacts/runtime/canonical-fleet-create-q3
 .venv/bin/python -m app.simulation.openttd.proof.canonical_fleet_gui preflight \
-  artifacts/runtime/canonical-fleet-gui-probe-t035-2
+  artifacts/runtime/canonical-fleet-gui-probe-t035-3
 .venv/bin/python -m app.simulation.openttd.proof.canonical_fleet_gui verify \
-  artifacts/runtime/canonical-fleet-gui-probe-t035-2   # AUTHORIZATION_UNVERIFIED
+  artifacts/runtime/canonical-fleet-gui-probe-t035-3   # AUTHORIZATION_UNVERIFIED
 .venv/bin/python -m app.simulation.openttd.proof.canonical_fleet_gui run \
-  artifacts/runtime/canonical-fleet-gui-probe-t035-2 --authorize-one-launch
+  artifacts/runtime/canonical-fleet-gui-probe-t035-3 --authorize-one-launch
 ```
 
 Then the window appears. The operator may watch it and close it at any

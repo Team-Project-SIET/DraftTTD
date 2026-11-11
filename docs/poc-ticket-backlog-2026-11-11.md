@@ -267,3 +267,29 @@ docs commit; never pushed.
 Ledger pairing: this file + `.scratch/phase-b-t035-gui-probe/issues/` +
 EVIDENCE_INDEX E168 + AI_HANDOFF/TASKS addenda of the same date. One
 docs commit; never pushed.
+
+## T-035 fix round — admin auth trio staged, t035-3 at the fresh-grant gate (2026-11-11)
+
+- **Fix (commit `0a95c75`, operator's in-session "Fix + re-stage"
+  answer):** `stage_workspace` mirrors the driver's `write_config` —
+  stages `private.cfg` (`[admin_authorized_keys] <public_hex>`) +
+  `secrets.cfg` (`admin_password`) beside the canonical-derived
+  `openttd.cfg`, the exact shape every working stage carries. Closes
+  the E168 refusal class at the staging seam.
+- **Identity:** advanced `canonical-fleet-gui-probe-t035-2` →
+  `canonical-fleet-gui-probe-t035-3` (stale-supersession); the sealed
+  t035-2 attempt and its consumed/void grant untouched.
+- **Tests/statics:** gui 14 + exercise 14 + matched 11 + continuous 7
+  = 46 green; reload-only + reload-context rc=0; ruff/format/
+  py_compile/ty/`git diff --check` clean.
+- **Re-stage:** `artifacts/runtime/canonical-fleet-gui-probe-t035-3/` —
+  prepare → **preflight PASS** → verify `AUTHORIZATION_UNVERIFIED`;
+  staged `source.sav` == protected pin; auth trio present. Spec +
+  package updated to t035-3.
+- **Blocked:** the t035-3 re-RUN needs the operator's FRESH explicit
+  one-launch grant (zero launches / zero AdminPort / zero grants this
+  round).
+
+Ledger pairing: this file + `.scratch/phase-b-t035-gui-probe/issues/` +
+EVIDENCE_INDEX E169 + AI_HANDOFF/TASKS addenda of the same date. One
+docs commit; never pushed.

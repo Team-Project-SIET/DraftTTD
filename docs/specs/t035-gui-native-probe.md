@@ -41,7 +41,7 @@ operator's desktop (KDE Wayland + XWayland `:0` verified live
 
 ## Design of record
 
-- **Identity of record:** `canonical-fleet-gui-probe-t035-2`; own CLAIM;
+- **Identity of record:** `canonical-fleet-gui-probe-t035-3`; own CLAIM;
   own fresh explicit one-launch grant (never shared with the T-030
   exercise, the T-031 arms, the T-032 five-year stage, the FD-C-2 line,
   or any earlier attempt; all prior grants void).
@@ -96,16 +96,16 @@ operator's desktop (KDE Wayland + XWayland `:0` verified live
 export OPENTTD_BINARY=/home/fed/Downloads/openttd-15.3-linux-generic-amd64/openttd
 export OPENTTD_OPENGFX_ARCHIVE=artifacts/runtime/verified-assets/opengfx-8.0-all.zip
 .venv/bin/python -m app.simulation.openttd.proof.canonical_fleet_gui prepare \
-  artifacts/runtime/canonical-fleet-gui-probe-t035-2 \
+  artifacts/runtime/canonical-fleet-gui-probe-t035-3 \
   --canonical artifacts/runtime/canonical-fleet-create-q3
 .venv/bin/python -m app.simulation.openttd.proof.canonical_fleet_gui preflight \
-  artifacts/runtime/canonical-fleet-gui-probe-t035-2
+  artifacts/runtime/canonical-fleet-gui-probe-t035-3
 .venv/bin/python -m app.simulation.openttd.proof.canonical_fleet_gui verify \
-  artifacts/runtime/canonical-fleet-gui-probe-t035-2   # AUTHORIZATION_UNVERIFIED
+  artifacts/runtime/canonical-fleet-gui-probe-t035-3   # AUTHORIZATION_UNVERIFIED
 .venv/bin/python -m app.simulation.openttd.proof.canonical_fleet_gui run \
-  artifacts/runtime/canonical-fleet-gui-probe-t035-2 --authorize-one-launch
+  artifacts/runtime/canonical-fleet-gui-probe-t035-3 --authorize-one-launch
 .venv/bin/python -m app.simulation.openttd.proof.canonical_fleet_gui verify \
-  artifacts/runtime/canonical-fleet-gui-probe-t035-2   # typed post-run status
+  artifacts/runtime/canonical-fleet-gui-probe-t035-3   # typed post-run status
 ```
 
 Run from a desktop terminal (DISPLAY or WAYLAND_DISPLAY must be set —
@@ -210,7 +210,7 @@ retained E2 evidence with `verify_created_source`/`verify_save`
 UNPATCHED (the gap that let the defect through: every earlier offline
 staging test patched both). By the stale-supersession rule (E130
 precedent) the identity advanced `canonical-fleet-gui-probe-t035-1` →
-`canonical-fleet-gui-probe-t035-2`; the refused t035-1 staging bytes
+`canonical-fleet-gui-probe-t035-3`; the refused t035-1 staging bytes
 stay preserved untouched at `artifacts/runtime/canonical-fleet-gui-probe-t035-1/`
 (sealed, pre-consumption, no CLAIM — never deleted, never relabeled,
 never regenerated). The t035-2 staging: prepare → **preflight PASS** →
@@ -218,9 +218,42 @@ verify `AUTHORIZATION_UNVERIFIED`; the staged
 `isolated/openttd-15.3-*/source.sav` sha256 re-derived equal to the
 protected canonical save pin `51e45689…1297eb`.
 
+## Second supersession of record (2026-11-11, E169)
+
+The t035-2 attempt then executed EXACTLY ONCE under the operator's
+explicit one-launch grant and failed typed at the AdminPort connect
+seam BEFORE any correspondence or window stage:
+`result.json` `{status: FAILED, launches: 1, connections: 0, error:
+"AuthDisconnected: Admin connection failed"}` — the server never
+started its admin listener (no `[admin]` lines in stderr; working
+attempts show the `[admin] Client connected … authenticated` family
+plus a third `Listening on` line). Root cause of record: the
+exercise-core `stage_workspace` writes only `openttd.cfg`; every
+working stage calls `RuntimeWorkspace.write_config(AdminSettings(...))`
+to also produce `private.cfg` (`[admin_authorized_keys] <public_hex>`)
+and `secrets.cfg` (`admin_password`), and with
+`allow_insecure_admin_login = false` plus zero auth material OpenTTD
+15.3 does not start the admin network. The t035-2 dir is sealed
+read-only (`cleanup.json` all-true, manifest 0 mismatches, verify
+`ATTEMPT_NOT_VERIFIED: FAILED`), its one-launch grant consumed and
+void, and the identity is consumed terminal history. Fix of record
+(commit `0a95c75`): `stage_workspace` now mirrors the driver —
+`write_config(AdminSettings(password="", port=…, game_port=…,
+authorized_public_key_hex=key.public_hex))` right after the
+`.admin-secret` write, before the canonical-derived config overwrite —
+plus `test_stage_writes_admin_auth_trio` pinning the staged trio
+(private.cfg carries the PRELAUNCH public key, secrets.cfg the
+password line, `.admin-secret` 0600 matching `key.public_hex`).
+Identity advanced `canonical-fleet-gui-probe-t035-2` →
+`canonical-fleet-gui-probe-t035-3` (stale-supersession); the t035-3
+staging: prepare → **preflight PASS** → verify
+`AUTHORIZATION_UNVERIFIED` with the staged `source.sav` == protected
+pin and the auth trio present. The t035-3 re-RUN awaits a FRESH
+explicit one-launch operator grant.
+
 ## Offline regression of record
 
-`tests/test_canonical_fleet_gui.py` 13 passed: identity/contract
+`tests/test_canonical_fleet_gui.py` 14 passed: identity/contract
 independence; fail-closed desktop requirement (refusal before any
 write); real offline staging with seal assertions; client argv asserts
 (no `-D`/`-f`, spectator `#255`, isolated config + baseset); join
