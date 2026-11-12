@@ -2665,3 +2665,32 @@ no headless-only execution.
    seed 8 next, then seed 9; the whole battery stops immediately on
    any unexpected failure, manifest mismatch, or uncertified
    cleanup.** Evidence index E199.
+
+## 2026-11-12 Ramrom seed-8 one-shot executed exactly once under the operator's fresh battery grant (E200): typed terminal `CAPTURE_SCHEDULE_EMPTY` — the capture scheduler's capacity policy deferred both relationships (spans 26d/28d overshoot the exclusive window ending 712312); battery bar still unmet; seed 9 next
+
+1. **The attempt of record (sealed read-only hereafter):**
+   `artifacts/demos/playable-demo-49d9e9f8348743a7831819a860aca5be/`;
+   executed once at HEAD `90ca45a` (tree clean, `pgrep -x openttd`
+   empty pre-launch); the command of record `run --random-world
+   --seed 8 --towns 3 --industries 3` under the widened product
+   defaults; `result.json` `{launches: 1, connections: 1,
+   funding_mutations: 1, mutations: 0, requests: 0, preflight: PASS,
+   status: FAILED, error: "CaptureCapacityError:
+   CAPTURE_SCHEDULE_EMPTY: …"}` verbatim above; grant consumed.
+2. **Funnel facts of record:** captured 0; capture reads 0/0;
+   candidates None; `search_truncated: true` — the capture
+   SCHEDULER (not the tile budget, not the corridor) typed the
+   refusal: both relationships' estimated live-rate spans (26d and
+   28d from planned start 712290) overshoot the exclusive capture
+   window ending 712312; the scheduler opened with an empty
+   schedule. Third distinct honestly-typed battery terminal class
+   (seed 2026 `NO_FEASIBLE_SERVICES`; seed 7 bounded-observation
+   inconclusive; seed 8 `CAPTURE_SCHEDULE_EMPTY`).
+3. **Seal of record:** manifest match True; cleanup all-true (reaped
+   rc 0, sockets closed, credential removed, workspace disposed,
+   remaining_processes []); `pgrep -x openttd` empty.
+4. **State / next:** the battery bar is NOT met by this run; every
+   terminal honestly typed. **The battery continues per its grant:
+   seed 9 next — the last battery seed; after its terminal is
+   sealed, the battery record is completed (bar met or not, every
+   terminal listed).** Evidence index E200.

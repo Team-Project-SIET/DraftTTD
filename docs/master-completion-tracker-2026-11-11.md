@@ -101,6 +101,14 @@ E174 → B2 FAILED E176 → B3 FAILED E178 → B4 FAILED E179 → B5 VERIFIED).
   manifest match True, cleanup all-true, sealed read-only. Battery
   bar NOT met by this run (delivery cycle's bounded verification
   incomplete); seed 8 next.**
+  **Seed-8 one-shot EXECUTED once under the battery grant (E200,
+  2026-11-12, at `90ca45a`): typed terminal `CAPTURE_SCHEDULE_EMPTY`
+  — the capture scheduler's capacity policy deferred both
+  relationships (estimated live-rate spans 26d/28d from planned
+  start 712290 overshoot the exclusive window ending 712312);
+  captured 0, reads 0/0, candidates None; manifest match True,
+  cleanup all-true, sealed read-only. Battery bar NOT met by this
+  run; seed 9 next.**
 
 ### Phases with no definitions on file
 "Closed-Loop Optimization", "Productization", "Final Release" appear 0

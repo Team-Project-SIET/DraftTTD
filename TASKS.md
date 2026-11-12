@@ -4866,3 +4866,26 @@ WORLD`
     delivery cycle's bounded verification did not complete); every
     terminal honestly typed. The battery continues per its grant:
     seed 8 next.** Evidence index E199.
+
+48. **Ramrom seed-8 one-shot executed exactly once under the
+    operator's fresh explicit battery grant (E200; 2026-11-12; typed
+    terminal `CAPTURE_SCHEDULE_EMPTY` at HEAD `90ca45a`; grant
+    consumed; run dir
+    `artifacts/demos/playable-demo-49d9e9f8348743a7831819a860aca5be/`
+    sealed read-only).** `result.json` `{launches: 1, connections: 1,
+    funding_mutations: 1, mutations: 0, requests: 0, preflight:
+    PASS, status: FAILED, error: "CaptureCapacityError:
+    CAPTURE_SCHEDULE_EMPTY: 2 relationship(s) deferred by capacity
+    policy (capture open); [9, 6, 8]: INSUFFICIENT_CAPACITY:
+    estimated live-rate span 26d from planned start 712290 reaches
+    712315; exclusive window ends 712312 | [8, 13, 3]:
+    INSUFFICIENT_CAPACITY: estimated live-rate span 28d from planned
+    start 712290 reaches 712317; exclusive window ends 712312"}`.
+    Funnel: captured 0, reads 0/0, candidates None,
+    `search_truncated: true` — the capture SCHEDULER's capacity
+    policy typed the refusal (both spans overshoot the exclusive
+    window ending 712312). Third distinct honestly-typed battery
+    terminal class. Seal: manifest match True, cleanup all-true,
+    `pgrep -x openttd` empty. **Battery bar NOT met by this run;
+    every terminal honestly typed. The battery continues per its
+    grant: seed 9 next.** Evidence index E200.
