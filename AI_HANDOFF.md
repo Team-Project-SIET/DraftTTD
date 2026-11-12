@@ -2803,3 +2803,49 @@ no headless-only execution.
    grants (the roadmap gate table's "⏳ not opened" is its
    historical text; the tracker is the living authority). Evidence
    index E202.
+
+## 2026-11-12 Phase D discovery recorded offline at HEAD `09edf35` (E203): no Phase D exists on file (grep-verified); the decision-gates ledger is fully discharged (DG-7 resolved by ADR-0001 + T-032/T-033); the ten open follow-ups mapped; next actionable offline task = the offline Phase C decision re-derivation; nothing invented
+
+1. **Scope finding of record:** no Phase D exists on file — the only
+   "Phase D" strings in the repository are E202's absence
+   statements; roadmap §4 (Phase C) is the last phase; the three
+   undefined headings appear 0 times across the four source docs and
+   stay untracked by operator choice. A Phase D can only come into
+   existence by an operator decision. Successor anchors on file
+   (pointers, not scope): README :174 boundary row, README :853-855
+   honesty boundaries, roadmap §7 risk register + §8 invariants, the
+   tracker's RECONSTRUCTED Definition of Done (items 1–4 DONE,
+   item 5 = E36's rule, item 6 recorded E202).
+2. **Decision-gates ledger fully discharged:** DG-7 RESOLVED —
+   ADR-0001 landed CONFIRMED DECISION OF RECORD 2026-11-06 (E125,
+   operator-adopted) and T-032/T-033 consumed it (E193/E194); the
+   roadmap's "⏳ outstanding since E50" and the tracker's immutable-
+   history line are stale historical text, honored by the erratum
+   discipline (the surviving UNKNOWN is the product-scope OPEX/ROI of
+   README :855, not the taxonomy). DG-8 consumed (Phase B closed
+   E195); DG-9 consumed (E197–E201); DG-1/DG-6 in place; DG-2..5 and
+   DG-10 per-round with no round pending.
+3. **Open follow-up map (ten entries, nothing invented):** (1) E36 +
+   E114 rule-bound, not actionable offline; (2) FD-C-2
+   `INCOMPLETE_EVIDENCE`; (3) offline Phase C decision re-derivation
+   READY (E142 engine + the five sealed battery run dirs; seed 7's
+   diagnostic carries the selected plan and binding digests);
+   (4) seed-7 observation-window forensics READY (`verify_observation`
+   gate, 3-of-4 observe receipts); (5) ramrom ticket-05 disposition —
+   operator decision; (6) GUI-bearing native probe owed (E148/E149);
+   (7) map EXIT regression (53 legacy reds) blocked only on item 5;
+   (8) the three undefined headings — operator decision only;
+   (9) UNKNOWN ledger items — never filled by derivation;
+   (10) backlog capture-pace note SUPERSEDED (pause pacing built and
+   natively proven four times; the E141 month-pace gate never fired
+   again).
+4. **Prioritized plan (on-file items only):** P1 = offline Phase C
+   decision re-derivation — **the next actionable offline task** (the
+   only open item continuing a decision chain of record; consumes the
+   fresh E197–E201 bytes; no grant; a successor decision report under
+   a NEW identity, never relabeling E142's); P2 = seed-7 forensics;
+   P3 = ticket-05 disposition (operator); P4 = map EXIT regression
+   (one offline full-suite round once P3 closes the map); P5 =
+   operator decisions (E36 rule-bound; ticket-05; GUI probe grant if
+   ever wanted; the three headings). This round executed nothing
+   beyond the record. Evidence index E203.

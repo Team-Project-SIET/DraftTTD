@@ -4968,3 +4968,35 @@ WORLD`
     were opened and consumed as E197–E201 (tracker is the living
     authority over the roadmap's historical gate table). Evidence
     index E202.
+
+51. **Phase D discovery recorded offline at HEAD `09edf35` (E203;
+    2026-11-12; zero launches, zero AdminPort, no grant, no evidence
+    byte written, no relabeling; record of record
+    `docs/phase-d-discovery-2026-11-12.md`).** Scope finding: **no
+    Phase D exists on file** (grep-verified — the only "Phase D"
+    strings in the repo are E202's absence statements); roadmap §4 is
+    the last phase; the three undefined headings appear 0 times
+    across the four source docs and stay untracked by operator
+    choice; a Phase D can only be created by an operator decision.
+    Successor anchors on file (pointers, not scope): README :174
+    boundary row, README :853-855, roadmap §7/§8, the RECONSTRUCTED
+    DoD (items 1–4 DONE, 5 = E36 rule, 6 recorded E202). **Decision
+    gates fully discharged:** DG-7 RESOLVED (ADR-0001 CONFIRMED
+    E125 + T-032/T-033 E193/E194; the "outstanding since E50" notes
+    are stale historical text, erratum discipline honored — the
+    surviving UNKNOWN is product-scope OPEX/ROI, not the taxonomy);
+    DG-8 consumed (E195); DG-9 consumed (E197–E201); DG-1/6 in place;
+    DG-2..5/10 per-round, none pending. **Open follow-up map (ten
+    entries):** E36+E114 rule-bound; FD-C-2 INCOMPLETE_EVIDENCE;
+    re-derivation READY; seed-7 forensics READY; ticket-05
+    disposition (operator); GUI probe owed (E148/E149); map EXIT
+    regression (53 legacy reds) blocked only on ticket-05; the three
+    headings (operator); UNKNOWN ledger items (never filled by
+    derivation); backlog capture-pace note SUPERSEDED (pause pacing
+    built + natively proven four times). **Prioritized plan:** P1 =
+    offline Phase C decision re-derivation (THE NEXT ACTIONABLE
+    OFFLINE TASK — no grant, successor report under a new identity,
+    never relabeling E142's); P2 = seed-7 forensics; P3 = ticket-05
+    disposition; P4 = map EXIT regression once P3 closes the map;
+    P5 = operator decisions. Nothing invented: no ticket, no phase,
+    no definition of done. Evidence index E203.

@@ -191,6 +191,14 @@ remain open operator decisions — nothing invented for them; DG-9's
 native authorizations were opened and consumed as E197–E201 under
 fresh grants (the roadmap gate table's "⏳ not opened" text is its
 historical record; this tracker is the living authority).
+**Discovery round 2026-11-12 (E203):** the Phase D discovery record of
+record is [docs/phase-d-discovery-2026-11-12.md](phase-d-discovery-2026-11-12.md)
+— no Phase D exists on file; the decision-gates ledger is fully
+discharged (DG-7 resolved by ADR-0001 E125 + T-032/T-033 E193/E194;
+DG-8/DG-9 consumed); the ten open follow-ups are mapped there with the
+prioritized plan (P1 = offline Phase C decision re-derivation, the
+next actionable offline task; P5 = operator decisions incl. the three
+headings).
 
 ### Phases with no definitions on file
 "Closed-Loop Optimization", "Productization", "Final Release" appear 0
