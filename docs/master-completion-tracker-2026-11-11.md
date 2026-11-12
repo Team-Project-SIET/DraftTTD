@@ -45,20 +45,27 @@ E174 → B2 FAILED E176 → B3 FAILED E178 → B4 FAILED E179 → B5 VERIFIED).
   execution on random worlds never native-verified (roadmap :175).
 - FD-C-2 loop attempts 1–6 consumed terminal (E150–E158, E159);
   FD-C-2 stays `INCOMPLETE_EVIDENCE`. **Attempt 7 package is
-  READY_FOR_OPERATOR_AUTHORIZATION (E160), not executed** — waits on a
-  fresh explicit operator grant.
+  READY_FOR_OPERATOR_AUTHORIZATION (E160), not executed** — and
+  re-confirmed fresh at the Phase B closure HEAD `ccdab65` (E196:
+  `p08_road.py`/`freight_delivery.py` untouched since the audit; fix
+  body in place; seven-file set 172/0/0/0; statics clean; prereqs
+  re-proven; `pgrep -x openttd` empty) — waits on a fresh explicit
+  operator grant.
 - Tile V2 capture native-VERIFIED but SOURCE_SAVE_FUSION sealed
   REJECTED (83 disagreements, E16): P08 stands at
   `INCOMPLETE_TILE_CLASSIFICATION`; the fusion gate is CLOSED.
-- **ramrom seed battery of record**
-  (docs/specs/ramrom-product.md:71-84): offline bar first (widened-shape
-  allocation unit tests + seed-2026 strip re-derivation from retained
-  facts), then native one-shots each under its own fresh grant: seed
-  2026 re-run as a NEW identity (E139 never relabeled), then seeds 7,
-  8, 9. The bar: ≥1 verified native plan + delivery cycle without a
-  `NO_FEASIBLE_SERVICES` terminal; every terminal honestly typed.
-  Command of record: `python -m app.openttd_demo run --random-world
-  --seed N` (profile `random-rectangle-2048-v1`, 2048-tile seal).
+- **Ramrom seed battery of record**
+  (docs/specs/ramrom-product.md:71-84): offline bar **MET 2026-11-12
+  (E196)** — widened-shape allocation tests + the retained strip
+  re-derivation re-run fresh 80 collected / 0 failed / 0 skipped (no
+  skip-typed; `TestRetainedDecision` derived the real decision from
+  the E139/E141 retained bytes); native one-shots each under its own
+  fresh grant: seed 2026 re-run as a NEW identity (E139 never
+  relabeled), then seeds 7, 8, 9. The bar: ≥1 verified native plan +
+  delivery cycle without a `NO_FEASIBLE_SERVICES` terminal; every
+  terminal honestly typed. Command of record:
+  `python -m app.openttd_demo run --random-world --seed N` (profile
+  `random-rectangle-2048-v1`, 2048-tile seal).
 
 ### Phases with no definitions on file
 "Closed-Loop Optimization", "Productization", "Final Release" appear 0

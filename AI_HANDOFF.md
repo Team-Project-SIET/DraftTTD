@@ -2494,3 +2494,40 @@ no headless-only execution.
    (T-030 E182 → T-031 E190/E191/E192 → T-032 E193 → T-033 E194 →
    T-034 E195). Remaining operator-gated items per the tracker:
    FD-C-2 attempt 7 (Phase C), ramrom battery. Evidence index E195.
+
+## 2026-11-12 Phase C opened offline (E196): FD-C-2 attempt-7 package re-confirmed READY at the Phase B closure HEAD; ramrom seed battery's offline bar MET — two operator-gated native families stand ready, each its own fresh grant
+
+1. **FD-C-2 attempt-7 readiness re-verified fresh at HEAD `ccdab65`**
+   (the E160 audit of record stands): `app/planning/p08_road.py` +
+   `app/simulation/openttd/proof/freight_delivery.py` untouched since
+   `9194184`; fix body in place (`CORRIDOR_INTERIOR_MIN/MAX = 2, 47`
+   lines 61–62; bound skip line 426; witness pruning without budget
+   charge line 409); the seven-file targeted set re-run fresh
+   **172 collected / 0 failed / 0 errors / 0 skipped** (junitxml —
+   exactly the audit's 154 + routing 18, sealed pins included);
+   scoped statics clean; `app.openttd_demo check` rc 0 ("no game
+   launched"); binary/OpenGFX pins re-hashed today; `pgrep -x
+   openttd` empty; sealed integrity under the T-034 sweep (214/0).
+   **READY_FOR_OPERATOR_AUTHORIZATION stands; nothing executed.**
+2. **Ramrom offline bar MET (spec :71-84):** widened-shape
+   allocation tests (`test_demo_random.py`, `test_tile_classification_
+   receipt.py`) + the retained strip re-derivation
+   (`test_phase_c_feasibility.py::TestRetainedDecision` over the
+   E139/E141 `planning-diagnostic.json` fixtures) re-run fresh
+   **80 collected / 0 failed / 0 skipped** — no skip-typed; the
+   re-derivation ran against the real retained bytes. The native
+   clause stays per-seed operator-gated.
+3. **Zero launches; zero AdminPort; no grant consumed; no retained
+   `artifacts/` byte touched** (pytest XML in fresh `/tmp/opencode`
+   files); tree clean at `ccdab65`; `stash@{0}` untouched; no push.
+4. **State / next:** two operator-gated families, each its own fresh
+   explicit grant, one attempt each, no retry, stop on unexpected
+   failure: (a) FD-C-2 attempt 7 — one launch, byte-unchanged command
+   of record (`--headless --random-world --seed 2026 --towns 3
+   --industries 3 --stop-on-delivery --cycles 2`), evaluator
+   `freight_delivery verify <run-dir>` rc 0 with both cycles
+   independently verified; (b) ramrom seed battery — seed 2026 re-run
+   as a NEW identity first, then seeds 7/8/9; the battery bar is ≥1
+   verified native plan + delivery cycle without a
+   `NO_FEASIBLE_SERVICES` terminal, every terminal honestly typed.
+   Evidence index E196.

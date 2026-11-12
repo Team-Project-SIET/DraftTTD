@@ -4741,3 +4741,35 @@ WORLD`
     PHASE B FULLY CLOSED (T-030 → T-031 → T-032 → T-033 → T-034);
     remaining operator-gated items: FD-C-2 attempt 7 (Phase C),
     ramrom battery.** Evidence index E195.
+
+44. **Phase C opened offline — FD-C-2 attempt-7 package re-confirmed
+    READY at the Phase B closure HEAD and the ramrom seed battery's
+    offline bar is MET (E196; 2026-11-12; zero launches, zero
+    AdminPort, no grant consumed, no evidence byte written).**
+    FD-C-2: `p08_road.py` + `freight_delivery.py` untouched since the
+    E160 audit (`9194184`); the fix body of record in place
+    (`CORRIDOR_INTERIOR 2..47`, bound-skip line 426, witness pruning
+    without budget charge line 409); the seven-file targeted set of
+    record re-run fresh **172 collected / 0 failed / 0 errors /
+    0 skipped** (the audit's 154 + routing 18, including the three
+    sealed FD-C-2 pins + the attempt-6 e2e pin); scoped statics
+    clean; prereqs re-proven (`app.openttd_demo check` rc 0 "no game
+    launched", binary/OpenGFX pins re-hashed today, `pgrep -x
+    openttd` empty); sealed integrity covered by the T-034 sweep
+    (214/0). **READY_FOR_OPERATOR_AUTHORIZATION stands** — attempt 7
+    needs its own fresh explicit grant: ONE launch, byte-unchanged
+    command of record `--headless --random-world --seed 2026 --towns
+    3 --industries 3 --stop-on-delivery --cycles 2`, no retries, stop
+    on unexpected failure, evaluator `freight_delivery verify <run-
+    dir>` rc 0 with both cycles independently verified; FD-C-2 stays
+    `INCOMPLETE_EVIDENCE` until fresh digest-pinned bytes exist;
+    attempts 1–6 terminal, all prior grants void. Ramrom offline bar
+    (spec :71-84): the widened-shape allocation tests + the retained
+    strip re-derivation (`TestRetainedDecision` over the E139/E141
+    `planning-diagnostic.json` fixtures) re-run fresh **80 collected
+    / 0 failed / 0 skipped** — no skip-typed, the re-derivation ran
+    for real. The bar's native clause stays operator-gated per seed:
+    seed 2026 re-run as a NEW identity (E139 never relabeled), then
+    seeds 7/8/9. **Next operator actions: the FD-C-2 attempt-7 grant
+    (first, per the operator's ordering), then the ramrom seed
+    battery's per-seed grants.** Evidence index E196.
