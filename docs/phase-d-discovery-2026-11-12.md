@@ -161,3 +161,18 @@ infeasibility row exists; no feasibility is proven. The next open
 items are unchanged: P2 (seed-7 forensics, offline, READY), P3
 (ticket-05 disposition, operator), P4 (map EXIT regression, blocked on
 P3), P5 (operator decisions). Evidence index E204.
+
+## 9. Scope-definition session status (2026-11-12, E205)
+
+The operator's round-1 decisions: (a) **Phase D existence — deferred**
+("I will do it later"): the three headings stay undefined and
+untracked; no acceptance criterion, ticket, or definition of done was
+authored, and the dependent round-2 questions were not asked;
+(b) **`phase-c-feasibility/2` NOT commissioned** — the companion
+mapping of §8 stands as the offline consumption of record;
+(c) **ticket-05 CLOSED** (`Status: resolved`, honestly-unmet
+native-proof record, GUI-bearing probe still owed behind a fresh
+grant) — with this closure the ramrom map's tasks are all closed and
+the EXIT regression gate (the 53 legacy offline reds) is **unblocked**;
+(d) **P2 ordered** as the next round (the seed-7 observation-window
+forensics, read-only, no grant, no code change). Evidence index E205.

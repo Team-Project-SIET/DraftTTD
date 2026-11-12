@@ -2906,3 +2906,39 @@ no headless-only execution.
    question; no claim made); traversal/transit/backlog behavior beyond
    seed 7's RUNNING samples. FD-C-2 stays `INCOMPLETE_EVIDENCE`; E36's
    rule untouched. Evidence index E204.
+
+## 2026-11-12 Phase D scope-definition session recorded offline at HEAD `568ee9c` (E205): the operator DEFERRED the Phase D decision ("I will do it later" — the three headings stay undefined and untracked, nothing authored), DECLINED `phase-c-feasibility/2` (the companion mapping stands), CLOSED ramrom ticket-05 with the honestly-unmet native-proof record (EXIT regression unblocked), and ORDERED P2 (seed-7 forensics) as the next round
+
+1. **Phase D existence — deferred:** on the round-1 frontier the
+   operator answered "I will do it later"; no Phase D comes into
+   existence this session, the three headings stay undefined and
+   untracked by operator choice (consistent with E202/E203), and no
+   acceptance criterion, ticket, or definition of done was authored.
+   The round-2 questions that depended on a heading choice are not
+   asked.
+2. **Policy version:** `phase-c-feasibility/2` NOT commissioned — the
+   E204 companion battery-evidence mapping stands as the offline
+   consumption of record, flipping no engine level; no engine change,
+   no new test obligations, decision of record unchanged.
+3. **Ticket-05 disposition — CLOSED:** `Status: resolved (closed
+   2026-11-12 by operator disposition …)` in
+   `.scratch/ramrom-product/issues/05-build-loop-product.md` — native
+   proof consumed as honest typed terminals (E197 attempt 7
+   `NATIVE_LOOP_ZERO_SERVICES`; E198–E201 battery), the ≥1 verified
+   plan+delivery bar honestly NOT met at its own identities, never
+   relabeled; the §1/§3.3 GUI-bearing product-scope probe remains owed
+   behind a fresh operator grant (E148/E149), never silently dropped.
+   Map decision entry added (`.scratch/ramrom-product/map.md`): with
+   this closure the ramrom map's tasks are ALL CLOSED and the EXIT
+   regression gate (the 53 legacy offline reds) is UNBLOCKED — a fresh
+   /tmp regression capture is required at that round (the prior
+   capture expired).
+4. **Next round ordered:** P2, the seed-7 observation-window
+   forensics — read-only analysis of the sealed E199 bytes to
+   establish which `verify_observation` check failed
+   (`app/simulation/openttd/freight_delivery.py:199`), what
+   `observation_budget` computed, and why the fourth observe receipt
+   never landed (`KeyError: 's0-observe-3'`, 3 of 4); research note at
+   a new identity, no grant, no code change (any change = a separate
+   operator decision). UNKNOWNs preserved (E203/E204 lists stand).
+   Evidence index E205.

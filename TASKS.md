@@ -5036,3 +5036,34 @@ WORLD`
     preserved (seed cycle truth; OPEX/ROI; the observe-receipt-4 cause
     = P2's question). FD-C-2 stays `INCOMPLETE_EVIDENCE`; E36's rule
     untouched. Evidence index E204.
+
+53. **Phase D scope-definition session recorded; operator deferred the
+    Phase D decision ("I will do it later"), declined
+    `phase-c-feasibility/2`, closed ramrom ticket-05, and ordered P2
+    (E205; 2026-11-12; fully offline, no launch, no grant, no evidence
+    byte mutated beyond the ticket/map status edits, no relabeling).**
+    Round-1 frontier (grilling skill, four questions): (a) Phase D
+    existence — **deferred**: the three headings stay undefined and
+    untracked by operator choice (consistent with E202/E203); no
+    acceptance criterion, ticket, or definition of done authored; the
+    dependent round-2 questions are not asked. (b) Feasibility policy
+    version — **`phase-c-feasibility/2` NOT commissioned**: the E204
+    companion mapping stands as the offline consumption of record,
+    flipping no engine level. (c) Ticket-05 disposition — **CLOSED**:
+    `Status: resolved (closed 2026-11-12 by operator disposition …)`
+    in `.scratch/ramrom-product/issues/05-build-loop-product.md` with
+    the honestly-unmet native-proof record (E197 + E198–E201 typed
+    terminals; ≥1 verified plan+delivery bar NOT met, never relabeled;
+    the §1/§3.3 GUI-bearing probe remains owed behind a fresh operator
+    grant, E148/E149, never silently dropped); map decision entry
+    added — with this closure the ramrom map's tasks are ALL CLOSED
+    and the EXIT regression gate (the 53 legacy offline reds) is
+    UNBLOCKED (fresh /tmp regression capture required at that round;
+    the prior capture expired). (d) Next round ordered — **P2, the
+    seed-7 observation-window forensics** (read-only analysis of the
+    sealed E199 bytes: which `verify_observation` check failed at
+    `app/simulation/openttd/freight_delivery.py:199`, what
+    `observation_budget` computed, why the fourth observe receipt
+    never landed — `KeyError: 's0-observe-3'`, 3 of 4; research note
+    at a new identity, no grant, no code change). UNKNOWNs preserved
+    (E203/E204 lists stand). Evidence index E205.
