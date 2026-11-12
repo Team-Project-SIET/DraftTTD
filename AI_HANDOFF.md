@@ -2323,3 +2323,59 @@ no headless-only execution.
    `compare_arms` descriptive B-vs-A record after arm B; then T-032
    (re-prepare with the fixed package + q5 anchor). Evidence index
    E190.
+
+## 2026-11-12 T-031 arm B executed exactly once under the operator's fresh explicit arm-B grant (E191): TYPED `CANONICAL_FLEET_MATCHED_VERIFIED` RC 0 — same frozen world as arm A, the one capacity-add intervention (fourth vehicle, £4,429), five anniversaries; then the offline `compare_arms` descriptive B-vs-A record (E192): T-031 DONE-NESS MET, T-031 CLOSED — T-032's grant is next
+
+1. **Ordering of record held:** arm A's attempt completed VERIFIED
+   (E190) before arm B's authorization was requested; each arm its own
+   separate fresh grant. Pre-launch: the superseded pre-fix arm-B
+   staging dir removed (no CLAIM, no attempt bytes) and re-prepared
+   with the fixed package + create-q5 anchor — prepare rc 0, preflight
+   PASS, `AUTHORIZATION_UNVERIFIED`.
+2. **The attempt of record (sealed read-only hereafter):**
+   `artifacts/runtime/canonical-fleet-matched-b-t031-1/`; executed once
+   at HEAD `e560644` (tree clean, `pgrep -x openttd` empty
+   pre-launch); `result.json` `{launches: 1, connections: 1,
+   mutations: 3, requests: 12197, status:
+   CANONICAL_FLEET_MATCHED_VERIFIED}` rc 0; grant consumed.
+3. **The full arm-B flow completed natively:** reload correspondence
+   FIRST typed `EXACT_NATIVE_SEMANTIC_CORRESPONDENCE` (cash 471157
+   before/after, originals `[0,4,2709] [1,5,1557] [2,6,404]`, restored,
+   paused — the SAME frozen canonical world as arm A); the ONE paused
+   capacity-add intervention on service 1 (binding
+   `{purchase_capex: 4429, service: 1, vehicle: 7}` — the fourth
+   vehicle; cash 471157 → 466728); dispatch; FIVE annual receipts
+   economy years 1951–1955 (5 annual + 60 monthly + 20 quarterly
+   observations, elapsed economy days 1826) + telemetry vehicle_count
+   4; closing cash 515195, freight revenue 68383, delivered cargo
+   3960.
+4. **Seal of record:** cleanup all-true (reaped rc 0, sockets closed,
+   credential removed, workspace disposed, remaining_processes []);
+   manifest match True (0 mismatches); post-run verify
+   `CANONICAL_FLEET_MATCHED_VERIFIED`; `pgrep -x openttd` empty.
+5. **The `compare_arms` record (E192; offline, no grant):**
+   `artifacts/runtime/canonical-fleet-matched-compare-t031/matched-comparison.json`,
+   classification `DESCRIPTIVE_MATCHED_AB_COMPARISON`, from the two
+   arms' own arm-record.json (A = t031-3 E190, B = t031-1 E191).
+   OBSERVED deltas (b−a): fourth_vehicle_capex a=0/b=4429; opening
+   cash −4429; closing cash +10910 (504285 → 515195); freight revenue
+   +17443 (50940 → 68383); delivered cargo +980 (2980 → 3960);
+   revenue_per_economy_day +9.55; net_cash_flow +15339; quarter
+   expenses +2104 (18416 − 16312); residuals identical (−1500/−1500).
+   UNKNOWN preserved as UNKNOWN: roi, operating_profit,
+   break_even_time, cost_recovery, gross_revenue_to_capex_ratio,
+   loan_interest, other_expenses, vehicle_operating_expenses. The
+   four guards stand: a positive revenue delta alone does not
+   establish profit; no per-service revenue is implied; no numeric
+   improvement is forecast; UNKNOWN is not zero. Honesty: descriptive
+   only — no profit claim.
+6. **State / next operator action:** T-031 CLOSED (done-ness: both
+   per-arm receipts typed + `compare_arms` record + E-rows). T-032 is
+   the remaining Phase B native closure: it first re-prepares with the
+   fixed package + create-q5 anchor (`rm -rf
+   artifacts/runtime/canonical-fleet-continuous-t032-1` then prepare
+   `--canonical artifacts/runtime/canonical-fleet-create-q5`), then
+   preflight + `AUTHORIZATION_UNVERIFIED`, then its own fresh explicit
+   ONE-LAUNCH grant (five native economy anniversaries, budget
+   7200 s / 3600 polls × 2 s); T-033 re-derives offline after.
+   Evidence index E192.

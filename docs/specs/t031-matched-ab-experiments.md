@@ -47,9 +47,12 @@ qualification lines 109–234, bounded telemetry lines 295–334).
   rounds E184 + E186; attempt 3 `t031-3` EXECUTED once against the
   create-q5 anchor and typed `CANONICAL_FLEET_MATCHED_VERIFIED` rc 0 —
   E190; arm A's done-ness part met),
-  arm B `canonical-fleet-matched-b-t031-1` (re-prepare with the E184
-  fixed package AND the create-q5 anchor before its grant; the pre-fix
-  staging is superseded unsealed state); each its own CLAIM and its
+  arm B `canonical-fleet-matched-b-t031-1` (re-prepared with the E184
+  fixed package AND the create-q5 anchor, then EXECUTED once under its
+  own fresh grant after arm A's attempt completed VERIFIED — typed
+  `CANONICAL_FLEET_MATCHED_VERIFIED` rc 0, E191; the ordering of record
+  held; the `compare_arms` descriptive B-vs-A record stands E192);
+  each its own CLAIM and its
   own fresh explicit authorization (not shared with the T-030 exercise,
   with each other, or with any earlier attempt; all prior grants void).
 - **Arms:** arm A adds nothing (three original vehicles); arm B adds only

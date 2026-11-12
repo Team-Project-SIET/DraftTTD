@@ -1,25 +1,25 @@
 # 03: Arm B native attempt package (T-031)
 
 **Type:** gate package
-**Status:** staged 2026-11-11 at HEAD `2e5fcc9` — prepare rc 0,
-preflight `canonical matched arm B preflight PASS`, verify
-`AUTHORIZATION_UNVERIFIED` rc 1; authorizes nothing by itself; the
-launch requires the operator's separate fresh explicit authorization,
-requested only after arm A's attempt completes (ordering of record
-below). **Update 2026-11-12 (E190):** arm A completed — attempt 3
-`t031-3` EXECUTED once under the operator's fresh arm-A grant and typed
-`CANONICAL_FLEET_MATCHED_VERIFIED` rc 0 (E190: reload correspondence
-`EXACT_NATIVE_SEMANTIC_CORRESPONDENCE`, binding null, five annual
-receipts 1951–1955, cleanup all-true, manifest match True). The
-ordering-of-record condition is now satisfied: **arm B's grant is
-next.** Before it is requested, remove the superseded pre-fix staging
-dir (no CLAIM, no attempt bytes) and re-prepare with the fixed package
-AND the create-q5 anchor:
-`rm -rf artifacts/runtime/canonical-fleet-matched-b-t031-1 &&`
-`canonical_fleet_matched prepare ... --canonical
-artifacts/runtime/canonical-fleet-create-q5 --arm B` (identity
-unchanged `canonical-fleet-matched-b-t031-1`), then preflight + verify
-`AUTHORIZATION_UNVERIFIED`
+**Status:** arm B EXECUTED ONCE 2026-11-12 under the operator's fresh
+explicit arm-B grant at HEAD `e560644` — typed
+`CANONICAL_FLEET_MATCHED_VERIFIED` rc 0 (E191): `{launches: 1,
+connections: 1, mutations: 3, requests: 12197}`; the superseded
+pre-fix staging dir was removed (no CLAIM, no attempt bytes) and arm B
+re-prepared with the fixed package + create-q5 anchor before the
+launch; reload correspondence
+`EXACT_NATIVE_SEMANTIC_CORRESPONDENCE` (same cash 471157 and originals
+as arm A), the ONE paused capacity-add intervention on service 1
+(binding `{purchase_capex: 4429, service: 1, vehicle: 7}` — the fourth
+vehicle), FIVE annual receipts economy years 1951–1955 (5 annual + 60
+monthly + 20 quarterly), telemetry vehicle_count 4; cleanup all-true,
+manifest match True, post-run verify typed, `pgrep -x openttd` empty;
+attempt dir sealed read-only hereafter. Ordering of record held: arm
+A's attempt completed VERIFIED (E190) before arm B's authorization was
+requested. **After both arms (offline): the `compare_arms` descriptive
+B-vs-A record produced to the fresh
+`artifacts/runtime/canonical-fleet-matched-compare-t031/` dir (E192) —
+T-031 CLOSED**
 **Spec:** `docs/specs/t031-matched-ab-experiments.md`
 
 ## Preconditions (all offline-checkable)
@@ -85,10 +85,12 @@ runs; nothing relabeled; attempt dir read-only hereafter.
 
 ```bash
 .venv/bin/python -m app.simulation.openttd.proof.canonical_fleet_matched compare \
-  artifacts/runtime/canonical-fleet-matched-a-t031-1 \
+  artifacts/runtime/canonical-fleet-matched-a-t031-3 \
   --other-arm-directory artifacts/runtime/canonical-fleet-matched-b-t031-1 \
-  --output artifacts/runtime/canonical-fleet-matched-a-t031-1
+  --output artifacts/runtime/canonical-fleet-matched-compare-t031
 ```
 
 `compare_arms` is descriptive-only (OBSERVED deltas, UNKNOWN preserved;
 no profit claim, no per-service revenue implication, no forecast).
+Executed 2026-11-12 (E192): the output lands in its own fresh dir —
+the sealed t031-3 attempt dir is never written.
