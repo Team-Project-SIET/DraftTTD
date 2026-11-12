@@ -2415,3 +2415,40 @@ no headless-only execution.
    re-derivation from the sealed native receipts (no grant, no
    launch); T-034 stands as the re-runnable offline qualification
    gate. Evidence index E193.
+
+## 2026-11-12 T-033 offline re-derivation after Phase B native closure (E194): the consolidated OPEX/ROI record regenerated over the four VERIFIED Phase B attempts — consolidated vehicle-purchase CAPEX £8,858 OBSERVED, arms'/continuous revenue OBSERVED from their own freight_revenue, OPEX categories stay UNKNOWN — T-033 CLOSED
+
+1. **The re-derivation of record (offline; no launch, no connection,
+   no grant):** `app.experiments.phase_b_consolidation` regenerated at
+   `artifacts/experiments/phase-b-consolidation-2026-11-12/`
+   (`phase-b-consolidated-opex.json` + `.md`); a fresh non-retained
+   analysis directory outside the runtime-evidence guard; no retained
+   `artifacts/` byte touched.
+2. **The four sources, all VERIFIED (0 UNKNOWN-PENDING):** T-030
+   `canonical-fleet-exercise-t030-1` (CAPEX £4,429 OBSERVED; revenue
+   UNKNOWN — no arm-record-style financial summary in its flow);
+   T-031-A `canonical-fleet-matched-a-t031-3` (CAPEX £0 OBSERVED;
+   revenue £50,940 OBSERVED; OPEX/ROI DERIVED); T-031-B
+   `canonical-fleet-matched-b-t031-1` (CAPEX £4,429 OBSERVED — the
+   fourth vehicle; revenue £68,383 OBSERVED; DERIVED); T-032
+   `canonical-fleet-continuous-t032-1` (CAPEX £0 OBSERVED; revenue
+   £50,940 OBSERVED; DERIVED). Consolidated vehicle-purchase CAPEX
+   £8,858 GBP OBSERVED. Funding context: E2 OBSERVED 400,000 GBP.
+3. **The latent key fix of record:** the module read the revenue key
+   `income`, but the real receipts key `freight_revenue` — the
+   `financial_attribution` vocabulary of record (term_id
+   `freight_revenue`). `income` was a synthetic fixture key no real
+   receipt has ever carried; the module + tests now read/stage
+   `freight_revenue`; 6 offline tests pass, ruff/format clean.
+4. **The guards carried intact:** UNKNOWN is not zero; missing
+   transactions never manufactured; per-year OPEX/ROI DERIVED only
+   from observed native accounting; no per-service revenue implied;
+   no numeric improvement forecast; a positive revenue delta alone
+   does not establish profit. OPEX categories stay UNKNOWN until
+   their own native observations exist. Honest labels only — no
+   profit claim.
+5. **State / next:** T-033 CLOSED. Phase B closure stands: T-030
+   (E182), T-031 (E190/E191/E192), T-032 (E193), T-033 (E194).
+   T-034 remains the re-runnable offline qualification gate; FD-C-2
+   attempt 7 and the ramrom battery remain operator-gated items for
+   when the operator chooses to advance. Evidence index E194.

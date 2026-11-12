@@ -4675,3 +4675,34 @@ WORLD`
     openttd` empty. **The next operator action is T-033's OFFLINE
     re-derivation (no grant needed), then T-034 stands as the
     re-runnable offline qualification gate.** Evidence index E193.
+
+42. **T-033 offline re-derivation after Phase B native closure
+    (E194; 2026-11-12; no launch, no connection, no grant; the record
+    of record regenerated at
+    `artifacts/experiments/phase-b-consolidation-2026-11-12/`).** The
+    consolidated OPEX/ROI record now aggregates the four VERIFIED
+    Phase B attempts (0 UNKNOWN-PENDING): T-030
+    `canonical-fleet-exercise-t030-1` (CAPEX £4,429 OBSERVED, revenue
+    UNKNOWN — its flow retains no arm-record-style financial summary,
+    and UNKNOWN is not zero), T-031-A `canonical-fleet-matched-a-t031-3`
+    (CAPEX £0 OBSERVED, revenue £50,940 OBSERVED, OPEX/ROI DERIVED
+    from its own financial metrics), T-031-B
+    `canonical-fleet-matched-b-t031-1` (CAPEX £4,429 OBSERVED — the
+    fourth vehicle, revenue £68,383 OBSERVED, DERIVED), T-032
+    `canonical-fleet-continuous-t032-1` (CAPEX £0 OBSERVED, revenue
+    £50,940 OBSERVED, DERIVED). Consolidated vehicle-purchase CAPEX
+    £8,858 OBSERVED (known only because every attempt's own receipts
+    exist). Funding context unchanged: E2 OBSERVED 400,000 GBP. The
+    guards carried intact: UNKNOWN is not zero; missing transactions
+    never manufactured; per-year OPEX/ROI DERIVED only from observed
+    native accounting; no per-service revenue implied; no forecast; a
+    positive revenue delta alone does not establish profit. OPEX
+    categories stay UNKNOWN until their own native observations exist
+    (the compare_arms record shows vehicle_operating_expenses UNKNOWN).
+    Honest labels only — no profit claim. Latent fix of record: the
+    module read the revenue key `income` while the real receipts (and
+    the `financial_attribution` vocabulary of record) key
+    `freight_revenue` — module + tests updated (`income` was a
+    synthetic fixture key that no real receipt has ever carried);
+    6 offline tests pass, ruff/format clean; zero retained bytes
+    touched. **T-033 CLOSED.** Evidence index E194.

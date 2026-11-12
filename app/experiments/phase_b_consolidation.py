@@ -20,7 +20,7 @@ E2_CANONICAL = "canonical-fleet-create-q3"
 
 PHASE_B_SOURCES = (
     ("T-030", "canonical-fleet-exercise-t030-1", "canonical fleet/capacity exercise"),
-    ("T-031-A", "canonical-fleet-matched-a-t031-1", "matched arm A (adds nothing)"),
+    ("T-031-A", "canonical-fleet-matched-a-t031-3", "matched arm A (adds nothing)"),
     ("T-031-B", "canonical-fleet-matched-b-t031-1", "matched arm B (service-1 fourth vehicle)"),
     ("T-032", "canonical-fleet-continuous-t032-1", "five-year continuous operation"),
 )
@@ -118,7 +118,7 @@ def _source_row(ticket, identity, role, root):
         capex_vehicle_purchase=_dispatch_capex(directory),
         opex=_unknown_opex(),
         revenue=dict(
-            amount_gbp=_amount(financial.get("income")),
+            amount_gbp=_amount(financial.get("freight_revenue")),
             provenance="OBSERVED" if financial else "UNKNOWN",
         ),
         opex_roi=(
