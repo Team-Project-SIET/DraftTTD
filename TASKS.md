@@ -4889,3 +4889,34 @@ WORLD`
     `pgrep -x openttd` empty. **Battery bar NOT met by this run;
     every terminal honestly typed. The battery continues per its
     grant: seed 9 next.** Evidence index E200.
+
+49. **Ramrom seed-9 one-shot executed exactly once under the
+    operator's fresh explicit battery grant (E201; 2026-11-12; typed
+    terminal `NO_FEASIBLE_SERVICES` at HEAD `90ca45a`; grant
+    consumed; run dir
+    `artifacts/demos/playable-demo-b326925a06794fef86ff157f134bb53d/`
+    sealed read-only) — THE BATTERY IS COMPLETE: four one-shots, each
+    its own fresh grant, each exactly once, none relabeled; bar
+    unmet, every terminal honestly typed.** Seed-9 facts: captured 1
+    (1372/1372 reads completed, `pause_pairs: 1` — pause pacing
+    again carried the full read set), candidates 0, sole candidate
+    refusal `NO_BOUNDED_CORRIDOR` (20/12 stops disconnected,
+    witness-fallback terminal), `search_truncated: true`; manifest
+    match True, cleanup all-true, `pgrep -x openttd` empty. **The
+    battery record:** (1) seed 2026 (E198) `NO_FEASIBLE_SERVICES`
+    with `NATIVE_CORRIDOR_BOUND`; (2) seed 7 (E199) bounded-
+    observation inconclusive — the battery's only PLANNED run
+    (selected=1, vehicle constructed and RUNNING, observe receipts
+    3/4); (3) seed 8 (E200) `CAPTURE_SCHEDULE_EMPTY` (capacity
+    policy, zero reads); (4) seed 9 (this row) `NO_FEASIBLE_SERVICES`
+    with `NO_BOUNDED_CORRIDOR`. **Battery bar NOT met** (no verified
+    native plan + delivery cycle; seed 7 came closest); the spec's
+    "every terminal honestly typed" clause is fully satisfied.
+    Phase C done-ness item 4 (tracker: bar met OR every terminal
+    honestly typed) — **MET via the OR clause**. Phase C native
+    items now all consumed or honestly terminal: FD-C-2 attempts
+    1–7 (E197), ramrom battery (E198–E201); FD-C-2 stays
+    `INCOMPLETE_EVIDENCE`; no feasibility/infeasibility claim beyond
+    the recorded slices; the E36 disposition rule untouched (closed
+    only on actual DELIVERED receipts — none exist). **Remaining
+    Phase C work is offline-only.** Evidence index E201.

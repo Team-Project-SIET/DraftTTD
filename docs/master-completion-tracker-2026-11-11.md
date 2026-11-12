@@ -109,6 +109,25 @@ E174 → B2 FAILED E176 → B3 FAILED E178 → B4 FAILED E179 → B5 VERIFIED).
   captured 0, reads 0/0, candidates None; manifest match True,
   cleanup all-true, sealed read-only. Battery bar NOT met by this
   run; seed 9 next.**
+  **Seed-9 one-shot EXECUTED once under the battery grant (E201,
+  2026-11-12, at `90ca45a`): typed terminal `NO_FEASIBLE_SERVICES`
+  — captured 1 (1372/1372 reads completed, `pause_pairs: 1`), sole
+  candidate refusal `NO_BOUNDED_CORRIDOR` (20/12 stops
+  disconnected); manifest match True, cleanup all-true, sealed
+  read-only.**
+  **BATTERY COMPLETE — bar NOT met (honestly), every terminal
+  honestly typed:** four one-shots, each its own fresh grant, each
+  exactly once, none relabeled — seed 2026 `NO_FEASIBLE_SERVICES`
+  (E198, `NATIVE_CORRIDOR_BOUND`), seed 7 bounded-observation
+  inconclusive (E199, the battery's only PLANNED run — plan selected
+  and executed natively, observe receipts 3/4), seed 8
+  `CAPTURE_SCHEDULE_EMPTY` (E200, capacity policy, zero reads),
+  seed 9 `NO_FEASIBLE_SERVICES` (E201, `NO_BOUNDED_CORRIDOR`). Seed
+  7 came closest (construction, vehicle, service RUNNING; delivery
+  cycle's bounded verification incomplete). Phase C native items now
+  all consumed or honestly terminal (FD-C-2 attempts 1–7 E197;
+  battery E198–E201); FD-C-2 stays `INCOMPLETE_EVIDENCE`;
+  remaining Phase C work is offline-only.
 
 ### Phases with no definitions on file
 "Closed-Loop Optimization", "Productization", "Final Release" appear 0
@@ -176,8 +195,12 @@ minimal conjunction from the acceptance statements on file
    classification goal proven (explicit bound terminals, zero
    `SEARCH_LIMIT_EXCEEDED`); FD-C-2 stays `INCOMPLETE_EVIDENCE`.
 4. ramrom seed battery bar met, or every terminal honestly typed
-   (ramrom-product.md:78-84) — offline bar met (E196); native
-   per-seed grants outstanding.
+   (ramrom-product.md:78-84) — **DONE via the OR clause (E198–E201,
+   2026-11-12):** the battery is consumed (four one-shots, each its
+   own fresh grant, each exactly once); the bar is honestly NOT met
+   (seed 7 closest — plan selected and executed natively, delivery
+   cycle's bounded verification incomplete); every terminal of
+   every run honestly typed.
 5. E36 dispositioned under its own rule: closed only on actual
    DELIVERED receipts; otherwise stays open — no definition stretched
    (E135, EVIDENCE_INDEX.md:473).
@@ -212,6 +235,8 @@ of `artifacts/` (AI_HANDOFF :36); remote documentation availability
 3. FD-C-2 Attempt 7: **DONE (E197)** — executed once under its fresh
    grant; typed terminal `NATIVE_LOOP_ZERO_SERVICES`; FD-C-2 stays
    `INCOMPLETE_EVIDENCE`.
-4. ramrom battery: offline bar met (E196); **per-seed fresh grants
-   next — seed 2026 re-run as a NEW identity first, then seeds 7/8/9**
-   (spec §bar).
+4. ramrom battery: **CONSUMED (E198–E201)** — offline bar met (E196),
+   then all four one-shots executed once under their own fresh
+   grants; bar honestly NOT met, every terminal honestly typed; the
+   infeasibility/no-plan statement of record stands from the sealed
+   battery bytes (spec §bar).

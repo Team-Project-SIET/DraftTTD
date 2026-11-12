@@ -2694,3 +2694,57 @@ no headless-only execution.
    seed 9 next — the last battery seed; after its terminal is
    sealed, the battery record is completed (bar met or not, every
    terminal listed).** Evidence index E200.
+
+## 2026-11-12 Ramrom seed-9 one-shot executed exactly once under the operator's fresh battery grant (E201): typed terminal `NO_FEASIBLE_SERVICES` (candidates 0, refusal `NO_BOUNDED_CORRIDOR` 20/12 stops disconnected, capture completed 1372/1372 reads under pause pacing) — THE BATTERY IS COMPLETE: four one-shots, each its own fresh grant, each exactly once, none relabeled; bar NOT met, every terminal honestly typed; Phase C done-ness item 4 MET via the OR clause
+
+1. **The attempt of record (sealed read-only hereafter):**
+   `artifacts/demos/playable-demo-b326925a06794fef86ff157f134bb53d/`;
+   executed once at HEAD `90ca45a` (tree clean, `pgrep -x openttd`
+   empty pre-launch); the command of record `run --random-world
+   --seed 9 --towns 3 --industries 3` under the widened product
+   defaults; `result.json` `{launches: 1, connections: 1,
+   funding_mutations: 1, mutations: 0, requests: 0, preflight: PASS,
+   status: FAILED, error: "ValueError: NO_FEASIBLE_SERVICES: no
+   supported full-load road engine and supply"}`; grant consumed.
+2. **Funnel facts of record:** captured 1 (1372/1372 reads
+   completed, `pause_pairs: 1` — pause-during-capture pacing again
+   carried the full read set inside the qualified month); candidates
+   0; sole candidate refusal typed `NO_BOUNDED_CORRIDOR: bounded
+   corridor search exhausted; 20 eligible pickup and 12 eligible
+   delivery stops are disconnected across all supported corridor
+   tiles` (the witness-fallback terminal); `search_truncated: true`.
+3. **Seal of record:** manifest match True; cleanup all-true (reaped
+   rc 0, sockets closed, credential removed, workspace disposed,
+   remaining_processes []); `pgrep -x openttd` empty.
+4. **THE BATTERY RECORD (spec `docs/specs/ramrom-product.md:71-84`):**
+   four one-shots, each its own fresh grant, each exactly once, none
+   relabeled — (1) seed 2026 re-run (E198): `NO_FEASIBLE_SERVICES`,
+   capture completed 832/832 reads under pause pacing, sole
+   candidate refusal `NATIVE_CORRIDOR_BOUND: requires 2..47 road
+   tiles`; (2) seed 7 (E199): `bounded native observation failed or
+   inconclusive` — **the battery's only PLANNED run** (candidates 1,
+   `selected_service_count: 1`, industry-9 → industry-12, vehicle 5
+   constructed and RUNNING; observe receipts 3 of 4); (3) seed 8
+   (E200): `CAPTURE_SCHEDULE_EMPTY` (capacity policy deferred both
+   relationships, spans 26d/28d overshoot the exclusive window
+   ending 712312, zero reads); (4) seed 9 (this round):
+   `NO_FEASIBLE_SERVICES`, capture completed 1372/1372 reads,
+   refusal `NO_BOUNDED_CORRIDOR` (20/12 stops disconnected).
+5. **Battery verdict of record:** the bar (≥1 verified native plan +
+   delivery cycle without a `NO_FEASIBLE_SERVICES` terminal) is
+   **NOT MET** — seed 7 came closest (a native plan was selected and
+   executed natively: construction, vehicle, service RUNNING; the
+   delivery cycle's bounded verification did not complete); the
+   spec's "every terminal honestly typed" clause is fully satisfied.
+   Phase C done-ness item 4 (tracker: bar met OR every terminal
+   honestly typed) — **MET via the OR clause**. The E36 disposition
+   rule stays untouched (closed only on actual DELIVERED receipts —
+   none exist).
+6. **State / next:** Phase C native items are now all consumed or
+   honestly terminal — FD-C-2 attempts 1–7 terminal (E197), ramrom
+   battery consumed (E198–E201); FD-C-2 stays
+   `INCOMPLETE_EVIDENCE`; no feasibility or infeasibility claim
+   beyond the recorded slices. **Remaining Phase C work is
+   offline-only** (per the roadmap's native clause, the Phase C
+   terminal statement stands from these sealed bytes). Evidence
+   index E201.
