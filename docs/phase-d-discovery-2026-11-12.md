@@ -144,3 +144,20 @@ Phase D would be an operator-written scope under one of the three
 headings (or a named continuation of §4's items); until that decision
 exists, nothing is tracked, nothing is scheduled, and no definition of
 done exists for it.
+
+## 8. P1 status (2026-11-12, E204)
+
+P1 (item 3, the offline Phase C decision re-derivation) is **done**:
+the decision of record `INCOMPLETE_EVIDENCE` is re-derived and
+confirmed at the current tree under a successor identity
+(`artifacts/experiments/phase-c-feasibility-2026-11-12/`,
+deterministic, byte-equal across independent derivations; decision
+structure identical to E142's — 2 VERIFIED + 8 PARTIAL), and the
+sealed battery evidence is mapped onto the decision vocabulary by the
+companion `battery-evidence-mapping.md` (non-authoritative, flips no
+engine level; admitting battery diagnostics as engine rows would be a
+`phase-c-feasibility/2` operator decision). No completed-search
+infeasibility row exists; no feasibility is proven. The next open
+items are unchanged: P2 (seed-7 forensics, offline, READY), P3
+(ticket-05 disposition, operator), P4 (map EXIT regression, blocked on
+P3), P5 (operator decisions). Evidence index E204.

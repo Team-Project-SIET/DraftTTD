@@ -1259,6 +1259,21 @@ no `artifacts/` mutation. Record doc:
 #   67183cf6…31fa4, Markdown sha256 edeac983…5dab; two independent
 #   derivations are byte-equal.
 
+# FD-C-2 successor re-derivation at HEAD (E204; derived output,
+#   git-ignored artifacts dir; new identity, never relabeling E142's)
+.venv/bin/python -m app.planning.phase_c_feasibility \
+  artifacts/experiments/phase-c-feasibility-2026-11-12 \
+  --project-root /home/fed/codes/softdev2
+# → outcome INCOMPLETE_EVIDENCE, 19 inputs, decision structure identical
+#   to E142's (2 VERIFIED + 8 PARTIAL, same row counts); only the
+#   supported_map_search_limits digest-changed row differs (eight
+#   loop/capture commits 6dbbcf5→5118f8c refreshed the pinned source
+#   digests); report JSON sha256 dcc916609e6c…2692c, Markdown sha256
+#   1f35b1102e5aa…0ebdb; two independent derivations are byte-equal.
+#   Companion battery-evidence mapping (non-authoritative, flips no
+#   engine level): artifacts/experiments/phase-c-feasibility-2026-11-12/
+#   battery-evidence-mapping.md.
+
 # Focused suites of record (131 tests total)
 .venv/bin/pytest tests/test_v2_semantic_reconciliation.py \
   tests/test_census_authority_policy.py \

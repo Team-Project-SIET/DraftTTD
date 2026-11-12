@@ -2849,3 +2849,60 @@ no headless-only execution.
    operator decisions (E36 rule-bound; ticket-05; GUI probe grant if
    ever wanted; the three headings). This round executed nothing
    beyond the record. Evidence index E203.
+
+## 2026-11-12 P1 executed offline at HEAD `09edf35` (E204): the Phase C decision of record `INCOMPLETE_EVIDENCE` (E142) re-derived and confirmed at the current tree under a successor identity (deterministic, byte-equal across independent derivations); the sealed E197–E201 battery evidence mapped onto the decision vocabulary (companion mapping, flips no engine level); nothing relabeled
+
+1. **Successor derivation of record:** the engine of record
+   `app/planning/phase_c_feasibility.py` (policy
+   `phase-c-feasibility/1`, fixed 19-input `PhaseCInputs`, no
+   extension point) run per the REPRODUCE.md addendum:
+   `.venv/bin/python -m app.planning.phase_c_feasibility
+   artifacts/experiments/phase-c-feasibility-2026-11-12
+   --project-root /home/fed/codes/softdev2` — outcome
+   `INCOMPLETE_EVIDENCE` (rc 0); deterministic, two independent
+   derivations byte-equal (JSON sha256
+   `dcc916609e6c749af5681ae975a1fff69a8898c9077960fcc374ba0b602e692c`,
+   Markdown sha256
+   `1f35b1102e5aa6e35e6df33e769ce619a47260d4f4516953833dfe8e8b40ebdb`);
+   NOT byte-equal to E142's report (sha `67183cf6…31fa4`) because
+   eight loop/capture commits (`6dbbcf5`, `fc77845`, `7b3ac47`,
+   `d6342cc`, `f437d7a`, `09c8641`, `1023cca`, `5118f8c`) touched the
+   engine's pinned source inputs — a NEW identity, never a relabel.
+2. **Decision structure identical to E142's:** all ten dimensions keep
+   their states and row counts (2 VERIFIED + 8 PARTIAL; the
+   `outcome_reason` lists the same eight PARTIAL dimensions); the only
+   content change is the one digest-changed row in
+   `supported_map_search_limits` (its regex pins all still match —
+   E196's targeted pin set green).
+3. **Battery-evidence mapping of record** (companion, non-authoritative,
+   asserts no dimension level):
+   `artifacts/experiments/phase-c-feasibility-2026-11-12/
+   battery-evidence-mapping.md`, facts verified verbatim from the
+   sealed bytes: all six battery diagnostics `search_truncated: true`;
+   attempt-7 cycles 1/2 + seed 2026 (832/832 reads, `pause_pairs 1`,
+   candidates 0, `NATIVE_CORRIDOR_BOUND` / `NO_BOUNDED_CORRIDOR`
+   refusals); **seed 7 (E199) the only PLANNED run** — captured 1,
+   reads 831/831, `candidate_count 1`, `selected_service_count 1`,
+   `error: None`, binding digests `0762af45…`/`126a6767…` (first
+   recorded random-world native P08 candidate + P05 selection); seed 8
+   (E200) the typed capture refusal `CAPTURE_SCHEDULE_EMPTY` (0/0
+   reads); seed 9 (E201) 1372/1372 reads, `NO_BOUNDED_CORRIDOR`
+   (20/12). Findings: capture pacing natively proven handled; **no
+   completed-search infeasibility row exists anywhere**, so the
+   engine's `observed_infeasible` gate admits none and no feasibility
+   is proven.
+4. **Engine cannot consume the battery bytes directly:** policy
+   `phase-c-feasibility/1` takes a fixed 19-input set; admitting the
+   battery diagnostics as engine rows would be a policy-version
+   decision (`phase-c-feasibility/2`), **left to the operator** — the
+   companion mapping is the offline consumption of record and flips no
+   level. Erratum: the report's `recommended_next_action` capture-
+   pacing text is superseded (decided 2026-11-07, built, natively
+   proven); engine text not edited.
+5. **UNKNOWNs preserved:** whether any random-world seed admits a
+   verified native delivery cycle (battery exhausted; new seeds = a
+   new operator decision); random-world OPEX/ROI truth (README :855);
+   why seed 7's fourth observe receipt never landed (P2 forensics'
+   question; no claim made); traversal/transit/backlog behavior beyond
+   seed 7's RUNNING samples. FD-C-2 stays `INCOMPLETE_EVIDENCE`; E36's
+   rule untouched. Evidence index E204.

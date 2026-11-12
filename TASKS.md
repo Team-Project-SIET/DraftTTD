@@ -5000,3 +5000,39 @@ WORLD`
     disposition; P4 = map EXIT regression once P3 closes the map;
     P5 = operator decisions. Nothing invented: no ticket, no phase,
     no definition of done. Evidence index E203.
+
+52. **P1 executed — offline Phase C decision re-derivation confirmed the
+    decision of record at the current tree (E204; 2026-11-12; zero
+    launches, zero AdminPort, no grant, no sealed byte modified, no
+    relabeling; successor report under a new identity).** Command of
+    record (REPRODUCE.md addendum): `.venv/bin/python -m
+    app.planning.phase_c_feasibility
+    artifacts/experiments/phase-c-feasibility-2026-11-12
+    --project-root /home/fed/codes/softdev2` — outcome
+    `INCOMPLETE_EVIDENCE` (rc 0), deterministic (two independent
+    derivations byte-equal; JSON sha256 `dcc91660…2692c`, Markdown
+    sha256 `1f35b110…0ebdb`). NOT byte-equal to E142's report: eight
+    loop/capture commits (`6dbbcf5`→`5118f8c`) touched the engine's
+    pinned source inputs, so refreshed digests flow through — a new
+    identity, never a relabel. Decision structure identical to E142's:
+    2 VERIFIED + 8 PARTIAL, same row counts, only the
+    `supported_map_search_limits` digest-changed row differs (pins
+    still all match, E196). **Battery-evidence mapping** (companion,
+    non-authoritative, flips no level):
+    `artifacts/experiments/phase-c-feasibility-2026-11-12/
+    battery-evidence-mapping.md` — verbatim facts from the sealed E197–
+    E201 bytes: all six diagnostics `search_truncated: true`; seed 7
+    the only PLANNED run (`candidate_count 1`, `selected_service_count
+    1`, binding digests `0762af45…`/`126a6767…`); capture pacing proven
+    handled (832/832, 832/832, 831/831, 1372/1372 with `pause_pairs 1`
+    each); seed 8's new typed refusal `CAPTURE_SCHEDULE_EMPTY`; **no
+    completed-search infeasibility row exists** (every bounded search
+    truncated), so no feasibility is proven. The engine could not
+    consume the battery bytes directly (`phase-c-feasibility/1` fixed
+    19 inputs) — admitting them would be a `phase-c-feasibility/2`
+    policy-version decision, left to the operator. Erratum pointer:
+    the report's `recommended_next_action` capture-pacing text is
+    superseded (decided 2026-11-07, built, natively proven). UNKNOWNs
+    preserved (seed cycle truth; OPEX/ROI; the observe-receipt-4 cause
+    = P2's question). FD-C-2 stays `INCOMPLETE_EVIDENCE`; E36's rule
+    untouched. Evidence index E204.
