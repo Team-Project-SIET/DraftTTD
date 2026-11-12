@@ -1,7 +1,7 @@
 # 05 — Build and prove the loop product
 
 Type: task
-Status: in-progress (offline build complete 2026-11-07; native proof run pending)
+Status: in-progress (offline build complete 2026-11-07; native proof runs consumed 2026-11-12 as honest typed terminals — E197 attempt 7 and E198–E201 battery; the ≥1 verified plan+delivery bar is NOT met; further native proof needs a fresh operator decision)
 Blocked by: 04
 
 ## Question
@@ -665,3 +665,28 @@ themselves):
   mismatch; any requirement to relaunch; cleanup not fully certified;
   any scope creep. On completion, independently verify both cycles
   before any closure claim.
+
+## Battery closure note (2026-11-12, E197 + E198–E201)
+
+The attempt-7 gate above was consumed exactly once under a fresh
+explicit operator grant (E197): typed terminal
+`NATIVE_LOOP_ZERO_SERVICES`, evaluator of record rc 0 with both
+cycles independently verified `ZERO_SERVICE`, and the corridor-bound
+remediation's classification goal proven on fresh bytes (explicit
+`NATIVE_CORRIDOR_BOUND`/`NO_BOUNDED_CORRIDOR` terminals, zero
+`SEARCH_LIMIT_EXCEEDED`). The ramrom seed battery then consumed its
+four one-shots under their own fresh grants (E198–E201): seed 2026
+`NO_FEASIBLE_SERVICES` (capture completed under pause pacing, refusal
+`NATIVE_CORRIDOR_BOUND`), seed 7 `bounded native observation failed
+or inconclusive` (the battery's only PLANNED run — plan selected,
+vehicle constructed, service RUNNING; observe receipts 3 of 4),
+seed 8 `CAPTURE_SCHEDULE_EMPTY` (capacity policy, zero reads), and
+seed 9 `NO_FEASIBLE_SERVICES` (capture completed, refusal
+`NO_BOUNDED_CORRIDOR`). This ticket's native-proof bar (≥1 verified
+plan + delivery cycle) is therefore NOT met by any run of record, and
+every terminal stays honestly typed with no relabeling. The loop
+product's offline build, its sealed budgets and its verify machinery
+stand as built; a future native proof (the GUI-bearing probe or a new
+seed set) requires a fresh operator decision and grants. FD-C-2 stays
+`INCOMPLETE_EVIDENCE`; the Phase C terminal statement of record is
+E202.

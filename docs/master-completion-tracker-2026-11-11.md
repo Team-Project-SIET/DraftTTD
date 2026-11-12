@@ -129,6 +129,69 @@ E174 → B2 FAILED E176 → B3 FAILED E178 → B4 FAILED E179 → B5 VERIFIED).
   battery E198–E201); FD-C-2 stays `INCOMPLETE_EVIDENCE`;
   remaining Phase C work is offline-only.
 
+### Phase C terminal statement and acceptance audit (E202, 2026-11-12, offline at `c654bf9`)
+
+**Terminal statement of record.** The roadmap's infeasibility clause
+(:186-188 — "Phase C ends there with the statement as its terminal
+evidence") did **not** fire, and no feasibility was proven: every
+recorded bounded random-world search carries `search_truncated: true`
+(E142's zero observed-world-infeasibility rows stand), and no verified
+native plan + delivery cycle exists on a random world. **The decision
+of record `INCOMPLETE_EVIDENCE` (E142 report sha `67183cf6…31fa4`,
+pinned offline by `TestRetainedDecision`) stands as the Phase C
+terminal statement**, now carried by the sealed battery bytes: FD-C-1
+verified (E142); FD-C-2 attempts 1–7 terminal, FD-C-2 stays
+`INCOMPLETE_EVIDENCE` (E197); the ramrom battery consumed with the
+bar honestly NOT met and every terminal honestly typed (E198–E201).
+Strongest verified facts: seed 7's plan selection + native
+construction + RUNNING service (the battery's only selected plan;
+digests `0762af45…`/`126a6767…`); pause pacing proven twice; four
+typed terminal classes, zero masking. Roadmap :175's "Service
+execution on random worlds has never been native-verified" is
+superseded by the sealed bytes: service execution was native-attempted
+to battery exhaustion — selection, construction and a running service
+are each once-verified in the seed-7 slice; a verified delivery cycle
+is not; no feasibility or infeasibility claim extends beyond the
+recorded slices; every identity sealed, never relabeled. The E36 rule
+is untouched (closed only on actual DELIVERED receipts — none exist).
+**No Phase D exists on file** (roadmap §4 is the last phase).
+
+**Acceptance audit (every Phase C criterion):**
+
+| # | Criterion (source) | Classification | Evidence |
+|---|---|---|---|
+| 1 | Random World generation, discovery, spectator, cleanup (matrix; roadmap :167) | **MET** | E4, E8 (sealed, unchanged) |
+| 2 | Seed-17 coal-pair feasibility through P08/P05 (roadmap :168-170) | **NOT MET** — honest FAILED terminal with complete-search infeasibility for that slice | E8–E10 |
+| 3 | FD-C-1 offline reconciliation disposition (roadmap :179-182) | **MET** | E142 (verified, not rebuilt; 77+6+0+0; binding `allowed=true`/`p08_complete=false`) |
+| 4 | `SOURCE_SAVE_FUSION` correspondence / fusion gate | **NOT MET** — sealed REJECTED, CLOSED | E16, ADR-010 |
+| 5 | FD-C-2 feasibility statement decision (roadmap :183-188) | **INCOMPLETE_EVIDENCE** — decision of record `INCOMPLETE_EVIDENCE`; attempts 1–7 terminal; neither gate branch fired | E142, E150–E157, E197 |
+| 6 | Standing fences on native work (:190-193: frozen code, finite budgets, one server + encrypted Admin, zero retry/reconnect, certified cleanup, unsupported-world result distinct from delivery) | **MET** in every native run of record | E197–E201 preflight/cleanup/manifest seals |
+| 7 | ramrom offline bar (spec :76-78) | **MET** | E196 (80/0/0/0, re-derivation ran) |
+| 8 | ramrom battery bar: ≥1 verified native plan + delivery cycle without `NO_FEASIBLE_SERVICES` (spec :78-84) | **NOT MET** (honest) | E198–E201 |
+| 9 | ramrom reporting clause: every terminal honestly typed (spec :84) | **MET** | E198–E201 |
+| 10 | Done-ness item 3: attempt 7 consumed → typed terminal adjudicated | **MET** | E197 |
+| 11 | Done-ness item 4: battery bar met OR every terminal honestly typed | **MET via the OR clause** | E198–E201 |
+| 12 | Done-ness item 6: Phase C terminal statement per roadmap :186-193 | **INCOMPLETE_EVIDENCE** — recorded (E202); neither the feasibility nor the infeasibility branch fired | E202 |
+| 13 | E36 disposition under its own rule | **Rule upheld** — stays open; no DELIVERED receipts exist | E135 |
+| 14 | Roadmap :175 "service execution never native-verified" | **Superseded by sealed bytes** — native-attempted to exhaustion; selection/construction/running once-verified (seed-7 slice); delivery cycle unverified | E197–E201 |
+
+**Remaining offline follow-ups on file (none launched; each awaits
+operator direction where it creates new records):** (a) offline Phase
+C decision re-derivation consuming the battery diagnostics as new
+digest-pinned inputs to the E142 engine — a successor decision report
+under a new identity, never relabeling E142's; (b) seed-7 bounded-
+observation-window forensics from the sealed bytes (which
+`verify_observation` phase check failed, what `observation_budget`
+computed) — analysis only, no code change without an operator
+decision; (c) ramrom ticket 05's native-proof clause adjudicated by
+the battery record — operator disposition pending; (d) DG-7 funds
+taxonomy (outstanding since E50) and the three undefined headings
+("Closed-Loop Optimization", "Productization", "Final Release")
+remain open operator decisions — nothing invented for them; DG-9's
+native authorizations were opened and consumed as E197–E201 under
+fresh grants (the roadmap gate table's "⏳ not opened" text is its
+historical record; this tracker is the living authority).
+
 ### Phases with no definitions on file
 "Closed-Loop Optimization", "Productization", "Final Release" appear 0
 times across roadmap-and-scope-2026-11-05.md, requirements-evidence-matrix.md,
