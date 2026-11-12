@@ -4651,3 +4651,27 @@ WORLD`
     preflight + verify `AUTHORIZATION_UNVERIFIED`, then its own fresh
     explicit authorization; T-033 re-derives offline after.** Evidence
     index E192.
+
+41. **T-032 five-year continuous executed exactly once under the
+    operator's fresh explicit T-032 grant (E193; 2026-11-12; typed
+    `CANONICAL_FIVE_YEAR_CONTINUOUS_VERIFIED` rc 0; grant consumed;
+    attempt dir `artifacts/runtime/canonical-fleet-continuous-t032-1/`
+    sealed read-only) — PHASE B NATIVE CLOSURE IS COMPLETE (T-030 E182,
+    T-031 E190/E191/E192, T-032 this row).** Pre-launch: the
+    superseded pre-fix staging dir removed (no CLAIM, no attempt
+    bytes) and T-032 re-prepared with the fixed package + create-q5
+    anchor (prepare rc 0, preflight PASS, `AUTHORIZATION_UNVERIFIED`);
+    its own separate fresh grant, requested only after T-031 closed.
+    At HEAD `7d29994`: `{launches: 1, connections: 1, mutations: 2,
+    requests: 10861}`; reload correspondence
+    `EXACT_NATIVE_SEMANTIC_CORRESPONDENCE` (cash 471157 before/after —
+    the same frozen canonical world as every arm); `continuous-begin`
+    `status: ok` through the E184 fixed armed seal; FIVE complete
+    native economy years observed — annual receipts economy years
+    1951–1955 (elapsed economy days 365→1826), 60 monthly + 20
+    quarterly receipts, per-vehicle telemetry 4/5/6 — within the
+    documented budget (7200 s wall, 3600 polls × 2 s); cleanup
+    all-true, manifest match True, post-run verify typed, `pgrep -x
+    openttd` empty. **The next operator action is T-033's OFFLINE
+    re-derivation (no grant needed), then T-034 stands as the
+    re-runnable offline qualification gate.** Evidence index E193.

@@ -1,21 +1,24 @@
 # 01: Five-year continuous native attempt package (T-032)
 
 **Type:** gate package
-**Status:** staged 2026-11-11 at HEAD `2e5fcc9` — prepare rc 0,
-preflight `canonical five-year continuous preflight PASS`, verify
-`AUTHORIZATION_UNVERIFIED` rc 1; authorizes nothing by itself; the
-launch requires the operator's separate fresh explicit authorization.
-**Update 2026-11-12 (E185/E186):** this staging inherits the create-q3
-anchor, which is bound to the pre-fix bridge digest — the E184 bridge
-fix and the E186 `CREATE` advance to `canonical-fleet-create-q5` mean
-THIS staging is superseded unsealed state (no CLAIM, no attempt bytes):
-before T-032's grant is requested, remove the superseded staging dir
-and re-prepare with the fixed package AND the create-q5 anchor
-(`rm -rf artifacts/runtime/canonical-fleet-continuous-t032-1 &&`
-`canonical_fleet_continuous prepare ... --canonical
-artifacts/runtime/canonical-fleet-create-q5`), then preflight + verify
-`AUTHORIZATION_UNVERIFIED`. Ordering of record: T-031 arms first
-(arm A's attempt completes before arm B; T-032's grant after T-031)
+**Status:** EXECUTED ONCE 2026-11-12 under the operator's fresh
+explicit T-032 grant at HEAD `7d29994` — typed
+`CANONICAL_FIVE_YEAR_CONTINUOUS_VERIFIED` rc 0 (E193):
+`{launches: 1, connections: 1, mutations: 2, requests: 10861}`; the
+superseded pre-fix staging dir was removed (no CLAIM, no attempt
+bytes) and this stage re-prepared with the fixed package + create-q5
+anchor before the launch; reload correspondence
+`EXACT_NATIVE_SEMANTIC_CORRESPONDENCE` (cash 471157 before/after),
+`continuous-begin` `status: ok` through the E184 fixed armed seal,
+FIVE complete native economy years observed
+(`continuous-annual-{325,643,952,1256,1551}.json`, economy years
+1951–1955, elapsed economy days 365→1826) + 60 monthly + 20 quarterly
++ per-vehicle telemetry 4/5/6; cleanup all-true, manifest match True,
+post-run verify typed, `pgrep -x openttd` empty; attempt dir sealed
+read-only hereafter. Ordering of record held: T-031 arms completed
+(E190/E191/E192, T-031 CLOSED) before T-032's grant was requested.
+**T-032 CLOSED; the next operator action is T-033's offline
+re-derivation (no grant needed)**
 **Spec:** `docs/specs/t032-five-year-continuous.md`
 
 ## Preconditions (all offline-checkable)

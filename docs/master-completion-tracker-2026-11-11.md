@@ -29,7 +29,7 @@ T-034 as the standing qualification gate (re-runnable any round)".
 | --- | --- | --- | --- |
 | T-030 fleet & capacity exercise | ×1 | **EXECUTED 2026-11-11 under the operator's fresh grant (E182): terminal `CANONICAL_FLEET_EXERCISE_VERIFIED` rc 0 — CLOSED.** `canonical-fleet-exercise-t030-1/` sealed; exercise-correspondence typed `EXACT_NATIVE_SEMANTIC_CORRESPONDENCE`; capacity-add £4,429; dispatch + re-pause receipts; cleanup all-true, manifest 0 mismatches, post-run verify rc 0 | Native exercise receipts + canonical correspondence record + E-row — **MET** |
 | T-031 matched arms | ×2, arm A strictly before arm B's authorization (03:19-22); separate grant per arm (02:37-41, 03:43-44) | **DONE — CLOSED.** Arm A attempt 3 `canonical-fleet-matched-a-t031-3` VERIFIED once under its fresh grant (E190: `CANONICAL_FLEET_MATCHED_VERIFIED` rc 0, binding null, five annual receipts 1951–1955, sealed). Arm B `canonical-fleet-matched-b-t031-1` VERIFIED once under its own fresh grant after arm A completed (E191: rc 0, mutations 3, binding `{purchase_capex: 4429, service: 1, vehicle: 7}` — the fourth vehicle, five annual receipts, sealed; ordering of record held). `compare_arms` descriptive B-vs-A record produced offline (E192: closing cash +10910, freight revenue +17443, delivered cargo +980, revenue/day +9.55, capex 4429; UNKNOWN preserved; four guards stand; no profit claim). Attempt history: t031-1 FAILED E183, t031-2 FAILED E185; fix/diagnosis rounds E184/E186/E187/E188; create-q5 anchor verified E189 | Per-arm receipts typed `CANONICAL_FLEET_MATCHED_VERIFIED` (E190 + E191) + `compare_arms` descriptive B-vs-A record (E192) + E-rows — **MET; T-031 CLOSED** |
-| T-032 five-year continuous | ×1 | `canonical-fleet-continuous-t032-1/`: prepare rc 0, preflight PASS, `AUTHORIZATION_UNVERIFIED`; ticket 01 updated | Per-year OPEX/ROI derived only from observed accounting + E-row (monitor budget 7200 s wall / five native economy years) |
+| T-032 five-year continuous | ×1 | **DONE — CLOSED.** `canonical-fleet-continuous-t032-1/` EXECUTED once under the operator's fresh T-032 grant at HEAD `7d29994` (E193): typed `CANONICAL_FIVE_YEAR_CONTINUOUS_VERIFIED` rc 0 — launches 1 / connections 1 / mutations 2 / requests 10861; reload correspondence `EXACT_NATIVE_SEMANTIC_CORRESPONDENCE` (cash 471157), `continuous-begin` ok through the E184 fixed armed seal, FIVE complete native economy years observed (annual receipts economy years 1951–1955, elapsed economy days 365→1826, + 60 monthly + 20 quarterly + telemetry 4/5/6) within the documented budget; cleanup all-true, manifest match True, sealed read-only. Pre-launch: superseded pre-fix staging replaced (re-prepared with the fixed package + create-q5 anchor); ordering held (T-031 closed first) | Per-year OPEX/ROI derived only from observed accounting + E-row — **native receipts exist and are sealed (E193); the offline derivation is T-033's job** |
 | T-033 consolidated OPEX/ROI | 0 (offline) | resolved E164; re-derives offline after each attempt — all four native sources `UNKNOWN_PENDING_NATIVE_AUTHORIZATION` | Aggregation record; OBSERVED/DERIVED/CONTROLLED segregation; UNKNOWN stays UNKNOWN |
 | T-034 standing regression | 0 (offline) | resolved E165 (6286 passed / 56 legacy-red by ID / 0 errors / 50 skipped at `f0f0155`); re-runnable gate | Regression suite result + E-row |
 
@@ -112,7 +112,11 @@ minimal conjunction from the acceptance statements on file
    rc 0 — arm A's done-ness part met). Arm B t031-1 EXECUTED and
    VERIFIED (E191, rc 0, after arm A completed; ordering held); the
    `compare_arms` record produced offline (E192) — T-031 CLOSED.
-2. T-031 `compare_arms` descriptive record lands; T-032 per-year
+   The canonical-fleet-continuous-t032-1 launch EXECUTED and VERIFIED
+   (E193, `CANONICAL_FIVE_YEAR_CONTINUOUS_VERIFIED` rc 0) — the
+   four-launch ledger of record is complete.
+2. T-031 `compare_arms` descriptive record lands (E192 — done); T-032
+   per-year
    OPEX/ROI derived only from observed accounting; T-033 re-derives
    with UNKNOWN preserved (roadmap :151-157).
 3. FD-C-2 Attempt 7 consumed under a fresh grant → typed terminal
@@ -146,9 +150,9 @@ of `artifacts/` (AI_HANDOFF :36); remote documentation availability
 1. **T-030** — DONE (E182): the one authorized launch verified
    (`CANONICAL_FLEET_EXERCISE_VERIFIED` rc 0, sealed
    `canonical-fleet-exercise-t030-1/`); grant consumed and void.
-2. **T-032** (staging `canonical-fleet-continuous-t032-1` superseded —
-   re-prepare with the fixed package + create-q5 anchor before its
-   grant): grant next — T-031 is complete.
+2. **T-033** (offline re-derivation from the sealed native receipts —
+   no grant, no launch): derive the per-year OPEX/ROI and insight
+   records from T-032's sealed receipts only; UNKNOWN stays UNKNOWN.
 3. FD-C-2 Attempt 7: fresh grant when the operator chooses to advance
    Phase C (E160 readiness audit stands at its recorded HEAD).
 4. ramrom battery: offline bar first, then per-seed grants (spec §bar).

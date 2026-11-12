@@ -2379,3 +2379,39 @@ no headless-only execution.
    ONE-LAUNCH grant (five native economy anniversaries, budget
    7200 s / 3600 polls × 2 s); T-033 re-derives offline after.
    Evidence index E192.
+
+## 2026-11-12 T-032 five-year continuous executed exactly once under the operator's fresh explicit T-032 grant (E193): TYPED `CANONICAL_FIVE_YEAR_CONTINUOUS_VERIFIED` RC 0 — five complete native economy years observed; PHASE B NATIVE CLOSURE IS COMPLETE (T-030 + T-031 + T-032) — T-033's offline re-derivation is next
+
+1. **Ordering of record held:** T-031 closed first (E190 + E191 +
+   E192); T-032's grant requested only after, its own separate fresh
+   grant. Pre-launch: the superseded pre-fix staging dir removed (no
+   CLAIM, no attempt bytes) and T-032 re-prepared with the fixed
+   package + create-q5 anchor — prepare rc 0, preflight
+   `canonical five-year continuous preflight PASS`, verify
+   `AUTHORIZATION_UNVERIFIED`.
+2. **The attempt of record (sealed read-only hereafter):**
+   `artifacts/runtime/canonical-fleet-continuous-t032-1/`; executed
+   once at HEAD `7d29994` (tree clean, `pgrep -x openttd` empty
+   pre-launch); `result.json` `{launches: 1, connections: 1,
+   mutations: 2, requests: 10861, status:
+   CANONICAL_FIVE_YEAR_CONTINUOUS_VERIFIED}` rc 0; grant consumed.
+3. **The full flow completed natively:** reload correspondence FIRST
+   typed `EXACT_NATIVE_SEMANTIC_CORRESPONDENCE` (cash 471157
+   before/after — the same frozen canonical world as every arm);
+   `continuous-begin` answered `status: ok` through the E184 fixed
+   armed seal; FIVE complete native economy years observed:
+   `continuous-annual-{325,643,952,1256,1551}.json` (economy years
+   1951–1955, elapsed economy days 365→1826) + 60 monthly + 20
+   quarterly receipts + per-vehicle telemetry 4/5/6 — within the
+   documented budget (7200 s wall, 3600 polls × 2 s).
+4. **Seal of record:** cleanup all-true (reaped rc 0, sockets closed,
+   credential removed, workspace disposed, remaining_processes []);
+   manifest match True (0 mismatches); post-run verify
+   `CANONICAL_FIVE_YEAR_CONTINUOUS_VERIFIED`; `pgrep -x openttd`
+   empty.
+5. **State / next operator action:** PHASE B NATIVE CLOSURE IS
+   COMPLETE — T-030 CLOSED (E182), T-031 CLOSED (E190/E191/E192),
+   T-032 CLOSED (E193). The remaining roadmap item is T-033's OFFLINE
+   re-derivation from the sealed native receipts (no grant, no
+   launch); T-034 stands as the re-runnable offline qualification
+   gate. Evidence index E193.
