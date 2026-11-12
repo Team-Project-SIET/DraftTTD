@@ -2452,3 +2452,45 @@ no headless-only execution.
    T-034 remains the re-runnable offline qualification gate; FD-C-2
    attempt 7 and the ramrom battery remain operator-gated items for
    when the operator chooses to advance. Evidence index E194.
+
+## 2026-11-12 T-034 standing regression re-run at the Phase B closure HEAD (E195): gate of record CLEAN at `3b2b618` — the E165 legacy-red set reproduced exactly by ID (6379 collected / 6272 passed / 56 failed / 0 errors / 51 skipped), zero failures in any round-touched file; T-034 CLOSED and PHASE B FULLY CLOSED
+
+1. **First gate at the closure HEAD `dc86b51` (offline, background,
+   ~full suite):** 6379 collected / 58 failed / 0 errors / 51 skipped.
+   51 × `test_p08_controlled_e2e.py` (legacy E159 scope) + the 5
+   E165-verified singles + TWO NEW round-adjacent IDs.
+2. **Both new IDs diagnosed fixture-stale (no app-code change):**
+   (1) `test_canonical_fleet_gui.py::test_preflight_passes_on_real_
+   staging_unpatched` — `verify_created_source` binds
+   `directory.name == CREATE`; the E167-era test pinned the
+   superseded `canonical-fleet-create-q3` anchor while E186/E189
+   advanced the `CREATE` constant of record to `canonical-fleet-
+   create-q5` — the module correctly refused the stale anchor; the
+   test's canonical now follows `driver.CREATE` (self-advancing,
+   skip-typed on clones without retained bytes). (2)
+   `test_native_save_path.py::test_real_failure_save_seam_ignores_
+   prior_script_fatal_only` — the test's local Backend double
+   borrowed only `health`/`_check_logs` from `NativeBackend`; E179's
+   behavior-preserving split moved the fatal scan into `_scan_fatal`;
+   the double now borrows `_scan_fatal = NativeBackend._scan_fatal`;
+   the app is fine (`FreshWorldBackend` resolves `_scan_fatal`
+   through its MRO to `NativeBackend`).
+3. **Fix round `3b2b618`** (two test files only, +6/−2): both files
+   green (43 tests), ruff/format/compile clean; whitespace clean.
+4. **FINAL GATE OF RECORD at `3b2b618`:** 6379 collected / 6272
+   passed / 56 failed / 0 errors / 51 skipped — the E165 legacy-red
+   set reproduced EXACTLY by ID (51 in `test_p08_controlled_e2e.py`
+   + the 5 verified singles); the two fixed IDs gone; ZERO failures
+   in any file this Phase B continuation touched; skips 51 = E165's
+   50 + the round's known skip-typed pin-drift test (honest).
+5. **Independent parts re-verified:** statics `ruff check app/
+   tests/` = 12 pre-existing errors in three never-touched files
+   (matching E165 by ID); manifest sweep 214 manifests / 0 mismatches
+   (six new manifests from the continuation's attempts all verified);
+   pins hold (protected save `51e45689…`, OpenGFX `43a0c1da…`,
+   binary `276d5b69…`); `pgrep -x openttd` empty; zero launches; zero
+   AdminPort; no retained `artifacts/` byte touched.
+6. **State / next:** T-034 CLOSED — **PHASE B FULLY CLOSED**
+   (T-030 E182 → T-031 E190/E191/E192 → T-032 E193 → T-033 E194 →
+   T-034 E195). Remaining operator-gated items per the tracker:
+   FD-C-2 attempt 7 (Phase C), ramrom battery. Evidence index E195.

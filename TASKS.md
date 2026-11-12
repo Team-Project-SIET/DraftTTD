@@ -4706,3 +4706,38 @@ WORLD`
     synthetic fixture key that no real receipt has ever carried);
     6 offline tests pass, ruff/format clean; zero retained bytes
     touched. **T-033 CLOSED.** Evidence index E194.
+
+43. **T-034 standing full 15.3 regression re-run at the Phase B
+    closure HEAD — gate of record CLEAN at `3b2b618` (E195;
+    2026-11-12; offline only, no launch, no grant; two background
+    full-suite runs, junitxml machine-counted).** First gate at the
+    closure HEAD `dc86b51`: 6379 collected / 58 failed / 0 errors /
+    51 skipped — 51 × `test_p08_controlled_e2e.py` (legacy E159
+    scope) + the 5 E165-verified singles + TWO NEW round-adjacent
+    IDs, both diagnosed fixture-stale with NO app-code change:
+    (1) `test_canonical_fleet_gui.py::test_preflight_passes_on_real_
+    staging_unpatched` — the E167-era test pinned the superseded
+    `canonical-fleet-create-q3` anchor while `verify_created_source`
+    now binds the E186/E189 `CREATE` constant of record (create-q5);
+    the module correctly refused the stale anchor; the test's
+    canonical now follows `driver.CREATE` (self-advancing, skip-typed
+    on clones). (2) `test_native_save_path.py::test_real_failure_save_
+    seam_ignores_prior_script_fatal_only` — the local Backend double
+    borrowed only pre-E179 `_check_logs`; E179's behavior-preserving
+    split moved the fatal scan into `_scan_fatal`; the double now
+    borrows `_scan_fatal` (the app is fine — `FreshWorldBackend`
+    resolves it via its MRO). Fix round `3b2b618` (two test files
+    only): both files green (43 tests), ruff/format/compile clean.
+    FINAL GATE at `3b2b618`: **6379 collected / 6272 passed /
+    56 failed / 0 errors / 51 skipped** — the E165 legacy-red set
+    reproduced EXACTLY by ID; the two fixed IDs gone; ZERO failures
+    in any round-touched file; skips 51 = E165's 50 + the round's
+    known skip-typed pin-drift test. Independent parts: statics 12
+    pre-existing errors in three never-touched files (matching E165
+    by ID); manifest sweep 214 / 0 mismatches (six new manifests from
+    the continuation's attempts all verified); pins hold (save
+    `51e45689…`, OpenGFX `43a0c1da…`, binary `276d5b69…`); `pgrep -x
+    openttd` empty; zero retained bytes touched. **T-034 CLOSED.
+    PHASE B FULLY CLOSED (T-030 → T-031 → T-032 → T-033 → T-034);
+    remaining operator-gated items: FD-C-2 attempt 7 (Phase C),
+    ramrom battery.** Evidence index E195.
