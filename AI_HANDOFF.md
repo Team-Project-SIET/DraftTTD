@@ -2531,3 +2531,53 @@ no headless-only execution.
    verified native plan + delivery cycle without a
    `NO_FEASIBLE_SERVICES` terminal, every terminal honestly typed.
    Evidence index E196.
+
+## 2026-11-12 FD-C-2 attempt 7 executed exactly once under the operator's fresh attempt-7 grant (E197): typed terminal `NATIVE_LOOP_ZERO_SERVICES`, evaluator of record rc 0 with both cycles independently verified — the remediation's classification goal proven on fresh bytes (explicit `NATIVE_CORRIDOR_BOUND`/`NO_BOUNDED_CORRIDOR` terminals, zero `SEARCH_LIMIT_EXCEEDED`); FD-C-2 stays `INCOMPLETE_EVIDENCE` — the ramrom seed battery's grants are next
+
+1. **The attempt of record (sealed read-only hereafter):**
+   `artifacts/demos/playable-demo-743dee713b2841baa1bcbc0f115ee901/`;
+   executed once at HEAD `ac504f8` (tree clean, `pgrep -x openttd`
+   empty pre-launch); the byte-unchanged command of record
+   (`--headless --random-world --seed 2026 --towns 3 --industries 3
+   --stop-on-delivery --cycles 2`, pinned binary + pinned OpenGFX);
+   `result.json` `{launches: 1, connections: 2, funding_mutations: 1,
+   funding_requests: 2, mutations: 0, requests: 0,
+   loop_cycles_planned: 2, loop_cycles_delivered: 0, preflight: PASS,
+   status: NATIVE_LOOP_ZERO_SERVICES}`; grant consumed.
+2. **Evaluator of record:** `freight_delivery verify <run-dir>` rc 0
+   — both cycles independently `"status": "ZERO_SERVICE"` with the
+   verbatim `NO_FEASIBLE_SERVICES: no supported full-load road engine
+   and supply`.
+3. **The remediation's classification goal is proven on fresh native
+   bytes:** cycle 1's sole candidate refusal is typed
+   `NATIVE_CORRIDOR_BOUND: requires 2..47 road tiles` (the `71f6e7d`
+   corridor-interior-bound fix's explicit terminal — first native
+   appearance); cycle 2's is the witness-fallback
+   `NO_BOUNDED_CORRIDOR` (38 eligible pickup / 20 eligible delivery
+   stops disconnected across all supported corridor tiles); ZERO
+   `SEARCH_LIMIT_EXCEEDED` anywhere in the run — the E159 masking
+   class is gone; the pair loop no longer consumes the budget on
+   over-bound paths.
+4. **Funnel facts of record (both cycles):** compatible 16; captured
+   1 (the n0 328-tile pair; 832/832 capture reads completed;
+   `pause_pairs: 1`); 10 × `CAPTURE_TILE_BUDGET`;
+   `CANDIDATE_SEARCH_LIMIT controls 146`; `pair_checks: 146`;
+   `search_truncated: true` throughout; candidate_count 0.
+5. **Seal of record:** cleanup all-true (reaped rc 0, sockets closed,
+   credential removed, workspace disposed, remaining_processes []);
+   manifest match True; `pgrep -x openttd` empty; loop report
+   `…-loop-report/loops.md` (cycle 1 ZERO_SERVICE; cycle 2
+   ZERO_SERVICE abandoned world).
+6. **State / next:** FD-C-2 stays `INCOMPLETE_EVIDENCE` — a typed
+   failure proves nothing beyond its own slice; no feasibility or
+   infeasibility claim for any other territory; attempts 1–7 all
+   terminal, never relabeled. **The next operator actions are the
+   ramrom seed battery's per-seed fresh grants** (offline bar met
+   E196): seed 2026 re-run as a NEW identity first (E139 never
+   relabeled; command of record `python -m app.openttd_demo run
+   --random-world --seed 2026 --towns 3 --industries 3` under the
+   widened product defaults `--capture-tiles 2048 --capture-seconds
+   120 --capture-pad 6`), then seeds 7/8/9; the battery bar is ≥1
+   verified native plan + delivery cycle without a
+   `NO_FEASIBLE_SERVICES` terminal, every terminal honestly typed.
+   Evidence index E197.

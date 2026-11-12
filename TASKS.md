@@ -4773,3 +4773,39 @@ WORLD`
     seeds 7/8/9. **Next operator actions: the FD-C-2 attempt-7 grant
     (first, per the operator's ordering), then the ramrom seed
     battery's per-seed grants.** Evidence index E196.
+
+45. **FD-C-2 attempt 7 executed exactly once under the operator's
+    fresh explicit attempt-7 grant (E197; 2026-11-12; typed terminal
+    `NATIVE_LOOP_ZERO_SERVICES` at HEAD `ac504f8`; grant consumed;
+    run dir `artifacts/demos/playable-demo-743dee713b2841baa1bcbc0f115ee901/`
+    sealed read-only) — the E160 remediation package's first native
+    attempt, and Phase C done-ness item 3 ("attempt 7 consumed under
+    a fresh grant → typed terminal adjudicated") is MET.**
+    `result.json` `{launches: 1, connections: 2, funding_mutations:
+    1, funding_requests: 2, mutations: 0, requests: 0,
+    loop_cycles_planned: 2, loop_cycles_delivered: 0, preflight:
+    PASS, status: NATIVE_LOOP_ZERO_SERVICES}` — exactly as granted
+    (one launch, one connection per cycle, funding on cycle-1 only).
+    Evaluator of record rc 0, both cycles independently
+    `ZERO_SERVICE` with the verbatim `NO_FEASIBLE_SERVICES` error.
+    The remediation's classification goal is proven on fresh bytes:
+    cycle 1's sole candidate refusal is the `71f6e7d` fix's explicit
+    `NATIVE_CORRIDOR_BOUND: requires 2..47 road tiles` (first native
+    appearance) and cycle 2's is the witness-fallback
+    `NO_BOUNDED_CORRIDOR` (38/20 stops disconnected); ZERO
+    `SEARCH_LIMIT_EXCEEDED` anywhere — the E159 masking class is
+    gone. Funnel: compatible 16, captured 1 (832/832 reads,
+    pause_pairs 1), 10 × `CAPTURE_TILE_BUDGET`,
+    `CANDIDATE_SEARCH_LIMIT controls 146`, `search_truncated: true`
+    throughout; `pair_checks: 146`. Honest conclusion: the fix
+    repaired the refusal CLASSIFICATION exactly as designed and seed
+    2026's corridor infeasibility for the one capturable pair stands.
+    **FD-C-2 stays `INCOMPLETE_EVIDENCE`** — a typed failure proves
+    nothing beyond its own slice; attempts never relabeled. Seal:
+    cleanup all-true, manifest match True, `pgrep -x openttd` empty.
+    **Remaining Phase C native items: the ramrom seed battery
+    (offline bar met E196) — per-seed fresh grants, seed 2026 re-run
+    as a NEW identity first (E139 never relabeled), then seeds 7/8/9;
+    the battery bar is ≥1 verified native plan + delivery cycle
+    without a `NO_FEASIBLE_SERVICES` terminal, every terminal
+    honestly typed.** Evidence index E197.

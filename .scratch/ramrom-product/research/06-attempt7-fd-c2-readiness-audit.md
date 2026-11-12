@@ -1,5 +1,23 @@
 # 06 — Final offline readiness audit of the FD-C-2 remediation
 
+> **UPDATE 2026-11-12 (E197):** this package was EXECUTED exactly once
+> under the operator's fresh explicit attempt-7 grant at HEAD
+> `ac504f8` — typed terminal `NATIVE_LOOP_ZERO_SERVICES`, evaluator of
+> record rc 0 with both cycles independently `ZERO_SERVICE` (verbatim
+> `NO_FEASIBLE_SERVICES: no supported full-load road engine and
+> supply`). The remediation's classification goal is proven on fresh
+> native bytes: cycle 1's candidate refusal is the fix's explicit
+> `NATIVE_CORRIDOR_BOUND: requires 2..47 road tiles`, cycle 2's is the
+> witness-fallback `NO_BOUNDED_CORRIDOR` (38/20 stops disconnected);
+> zero `SEARCH_LIMIT_EXCEEDED` anywhere. Funnel: compatible 16,
+> captured 1 (832/832 reads, pause_pairs 1), 10 × `CAPTURE_TILE_
+> BUDGET`, `CANDIDATE_SEARCH_LIMIT controls 146`, `search_truncated:
+> true`. FD-C-2 stays `INCOMPLETE_EVIDENCE`. Run dir
+> `artifacts/demos/playable-demo-743dee713b2841baa1bcbc0f115ee901`
+> sealed read-only; cleanup all-true, manifest match True. Nothing
+> below is changed — the package text stands as the pre-execution
+> record.
+
 Audited 2026-11-11, fully offline (no native execution, no AdminPort, no
 evidence byte written). Scope: the FD-C-2 remediation chain
 `71f6e7d` (fix + sealed pins) + `9194184` (docs, E159, includes E159's

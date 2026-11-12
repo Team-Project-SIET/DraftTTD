@@ -49,8 +49,23 @@ E174 → B2 FAILED E176 → B3 FAILED E178 → B4 FAILED E179 → B5 VERIFIED).
   re-confirmed fresh at the Phase B closure HEAD `ccdab65` (E196:
   `p08_road.py`/`freight_delivery.py` untouched since the audit; fix
   body in place; seven-file set 172/0/0/0; statics clean; prereqs
-  re-proven; `pgrep -x openttd` empty) — waits on a fresh explicit
-  operator grant.
+  re-proven; `pgrep -x openttd` empty) — and **EXECUTED exactly once
+  under the operator's fresh attempt-7 grant (E197, 2026-11-12, at
+  `ac504f8`): typed terminal `NATIVE_LOOP_ZERO_SERVICES`, evaluator
+  of record rc 0 with both cycles independently `ZERO_SERVICE`
+  (verbatim `NO_FEASIBLE_SERVICES` error); the remediation's
+  classification goal proven on fresh bytes — cycle 1's refusal is
+  the fix's explicit `NATIVE_CORRIDOR_BOUND: requires 2..47 road
+  tiles` (first native appearance), cycle 2's the witness-fallback
+  `NO_BOUNDED_CORRIDOR` (38/20 stops disconnected), ZERO
+  `SEARCH_LIMIT_EXCEEDED` anywhere; funnel: compatible 16, captured
+  1 (832/832 reads, pause_pairs 1), 10 × `CAPTURE_TILE_BUDGET`,
+  `CANDIDATE_SEARCH_LIMIT controls 146`, `search_truncated: true`.
+  FD-C-2 stays `INCOMPLETE_EVIDENCE`; run dir
+  `playable-demo-743dee713b2841baa1bcbc0f115ee901` sealed read-only;
+  cleanup all-true, manifest match True. Phase C done-ness item 3
+  ("attempt 7 consumed under a fresh grant → typed terminal
+  adjudicated") — MET.**
 - Tile V2 capture native-VERIFIED but SOURCE_SAVE_FUSION sealed
   REJECTED (83 disagreements, E16): P08 stands at
   `INCOMPLETE_TILE_CLASSIFICATION`; the fusion gate is CLOSED.
@@ -128,9 +143,13 @@ minimal conjunction from the acceptance statements on file
    receipts sealed); T-033 re-derived with UNKNOWN preserved (E194 —
    done).
 3. FD-C-2 Attempt 7 consumed under a fresh grant → typed terminal
-   adjudicated (E160; backlog-07:272).
+   adjudicated — **DONE (E197, 2026-11-12):** `NATIVE_LOOP_ZERO_
+   SERVICES` typed, evaluator rc 0 both cycles verified, remediation
+   classification goal proven (explicit bound terminals, zero
+   `SEARCH_LIMIT_EXCEEDED`); FD-C-2 stays `INCOMPLETE_EVIDENCE`.
 4. ramrom seed battery bar met, or every terminal honestly typed
-   (ramrom-product.md:78-84).
+   (ramrom-product.md:78-84) — offline bar met (E196); native
+   per-seed grants outstanding.
 5. E36 dispositioned under its own rule: closed only on actual
    DELIVERED receipts; otherwise stays open — no definition stretched
    (E135, EVIDENCE_INDEX.md:473).
@@ -162,6 +181,9 @@ of `artifacts/` (AI_HANDOFF :36); remote documentation availability
    (`artifacts/experiments/phase-b-consolidation-2026-11-12/`); the
    T-034 gate re-run clean at `3b2b618` (E195) — **PHASE B FULLY
    CLOSED**.
-3. FD-C-2 Attempt 7: fresh grant when the operator chooses to advance
-   Phase C (E160 readiness audit stands at its recorded HEAD).
-4. ramrom battery: offline bar first, then per-seed grants (spec §bar).
+3. FD-C-2 Attempt 7: **DONE (E197)** — executed once under its fresh
+   grant; typed terminal `NATIVE_LOOP_ZERO_SERVICES`; FD-C-2 stays
+   `INCOMPLETE_EVIDENCE`.
+4. ramrom battery: offline bar met (E196); **per-seed fresh grants
+   next — seed 2026 re-run as a NEW identity first, then seeds 7/8/9**
+   (spec §bar).
