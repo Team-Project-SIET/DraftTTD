@@ -1,8 +1,24 @@
 # 01: Five-year continuous native attempt package (T-032)
 
 **Type:** gate package
-**Status:** prepared 2026-11-11 — authorizes nothing by itself; the
-launch requires the operator's separate fresh explicit authorization
+**Status:** EXECUTED ONCE 2026-11-12 under the operator's fresh
+explicit T-032 grant at HEAD `7d29994` — typed
+`CANONICAL_FIVE_YEAR_CONTINUOUS_VERIFIED` rc 0 (E193):
+`{launches: 1, connections: 1, mutations: 2, requests: 10861}`; the
+superseded pre-fix staging dir was removed (no CLAIM, no attempt
+bytes) and this stage re-prepared with the fixed package + create-q5
+anchor before the launch; reload correspondence
+`EXACT_NATIVE_SEMANTIC_CORRESPONDENCE` (cash 471157 before/after),
+`continuous-begin` `status: ok` through the E184 fixed armed seal,
+FIVE complete native economy years observed
+(`continuous-annual-{325,643,952,1256,1551}.json`, economy years
+1951–1955, elapsed economy days 365→1826) + 60 monthly + 20 quarterly
++ per-vehicle telemetry 4/5/6; cleanup all-true, manifest match True,
+post-run verify typed, `pgrep -x openttd` empty; attempt dir sealed
+read-only hereafter. Ordering of record held: T-031 arms completed
+(E190/E191/E192, T-031 CLOSED) before T-032's grant was requested.
+**T-032 CLOSED; the next operator action is T-033's offline
+re-derivation (no grant needed)**
 **Spec:** `docs/specs/t032-five-year-continuous.md`
 
 ## Preconditions (all offline-checkable)
@@ -14,7 +30,7 @@ launch requires the operator's separate fresh explicit authorization
   `43a0c1dabf39cb865394f3a6cc36d4da5c10ecfaaf55652043104806810903be`.
 - `pgrep -x openttd` empty before the run.
 - E2 manifest re-verified inside
-  `artifacts/runtime/canonical-fleet-create-q3/` (0 mismatches); no
+  `artifacts/runtime/canonical-fleet-create-q5/` (0 mismatches); no
   byte modified by the check.
 - Budget note of record: `monitoring_budgets(3)` allows
   `monitor_seconds=7200` (2 h) wall-clock and 3600 polls × 2 s; the
@@ -26,7 +42,7 @@ launch requires the operator's separate fresh explicit authorization
 ```bash
 .venv/bin/python -m app.simulation.openttd.proof.canonical_fleet_continuous prepare \
   artifacts/runtime/canonical-fleet-continuous-t032-1 \
-  --canonical artifacts/runtime/canonical-fleet-create-q3
+  --canonical artifacts/runtime/canonical-fleet-create-q5
 .venv/bin/python -m app.simulation.openttd.proof.canonical_fleet_continuous preflight \
   artifacts/runtime/canonical-fleet-continuous-t032-1
 .venv/bin/python -m app.simulation.openttd.proof.canonical_fleet_continuous verify \

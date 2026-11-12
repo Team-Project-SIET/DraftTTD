@@ -25,7 +25,7 @@ from . import canonical_fleet_exercise as exercise
 from . import freight_delivery as freight
 from .harness import write_json
 
-ARM_A = "canonical-fleet-matched-a-t031-1"
+ARM_A = "canonical-fleet-matched-a-t031-3"
 ARM_B = "canonical-fleet-matched-b-t031-1"
 ARMS = {"A": ARM_A, "B": ARM_B}
 MATCHED_VERIFIED = "CANONICAL_FLEET_MATCHED_VERIFIED"

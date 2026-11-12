@@ -37,7 +37,9 @@ def fresh_creation_fixture(tmp_path):
     """A receipt-complete FRESH_WORLD_CREATE_VERIFIED attempt (offline)."""
     directory = tmp_path / fresh.FRESH_CREATE
     directory.mkdir(parents=True)
-    (directory / "effective-openttd.cfg").write_text("[network]\n")
+    (directory / "effective-openttd.cfg").write_text(
+        "[network]\n[game_scripts]\nRoadFreightProof = \n"
+    )
     save_path = directory / "fresh-world.sav"
     save_path.write_bytes(b"fresh-world-save-bytes")
     world_generation = dict(
@@ -178,8 +180,10 @@ def test_create_prepare_stages_fresh_world_offline(tmp_path):
     config = (root / "openttd.cfg").read_text()
     assert "pause_on_newgame = false" in config
     assert f"map_x = {fresh.FRESH_MAP_X}" in config
-    assert "[game_scripts]" not in config
-    assert not (root / "game" / "RoadFreightProof").exists()
+    assert "[game_scripts]" in config
+    assert "RoadFreightProof = " in config
+    assert (root / "game" / "RoadFreightProof").is_dir()
+    assert "bridge_sha256" in metadata
     assert (prepared.directory / "PRELAUNCH.sha256").is_file()
 
 
@@ -228,6 +232,9 @@ def test_gui_prepare_stages_fresh_save_offline(tmp_path, monkeypatch):
     assert "admin_password = " in (root / "secrets.cfg").read_text()
     config = (root / "openttd.cfg").read_text()
     assert "[game_scripts]" in config
+    # inherited from the creation source's own config; never re-appended
+    # (OpenTTD wipes runtime GameScript config on save load — GSDT rules).
+    assert config.count("[game_scripts]") == 1
     assert (root / "game" / "RoadFreightProof").is_dir()
     argv = metadata["argv"]
     assert argv[argv.index("-g") + 1].endswith("source.sav")
@@ -243,6 +250,32 @@ def test_gui_preflight_passes_offline(tmp_path, monkeypatch):
     prepared = fresh.prepare_gui(tmp_path / fresh.FRESH_GUI, fresh_world=creation)
     metadata = fresh.preflight_gui(driver.reopen(prepared.directory))
     assert metadata["fresh_save_sha256"] == sha256(creation / "fresh-world.sav")
+
+
+def test_health_tolerates_only_the_documented_reload_death(tmp_path):
+    """The E176/E177 documented contract: the fleetless preconstruction
+    save's GameScript restarts and refuses the already-prepared world —
+    the death summary is expected evidence and must not trip the shared
+    fatal-log scan. Scoped: tolerated only while the expected throw is in
+    the same logs; a death without the throw, or any other fatal marker,
+    still raises."""
+    backend = object.__new__(fresh.FreshWorldBackend)
+    out = tmp_path / "stdout.log"
+    err = tmp_path / "stderr.log"
+    backend._prepared = SimpleNamespace(spec=SimpleNamespace(stdout_path=out, stderr_path=err))
+    out.write_text("")
+    err.write_text("dbg: [script:4] [18] [I] FREIGHT_GAME_TIME_START\n")
+    fresh.FreshWorldBackend._check_logs(backend)
+    err.write_text(
+        "Your script made an error: NETWORK_REQUIRES_EMPTY_WORLD\nThe script died unexpectedly.\n"
+    )
+    fresh.FreshWorldBackend._check_logs(backend)
+    err.write_text("The script died unexpectedly.\n")
+    with pytest.raises(RuntimeError):
+        fresh.FreshWorldBackend._check_logs(backend)
+    err.write_text("Your script made an error: NETWORK_REQUIRES_EMPTY_WORLD\nError compiling\n")
+    with pytest.raises(RuntimeError):
+        fresh.FreshWorldBackend._check_logs(backend)
 
 
 def test_require_fresh_welcome_rejects_demo_seed():
@@ -271,6 +304,77 @@ def test_require_fresh_welcome_rejects_demo_seed():
     ):
         with pytest.raises(ValueError, match="fresh-world secure runtime identity mismatch"):
             fresh.require_fresh_welcome(wrong, expected)
+
+
+def test_seal_attempt_awaits_cleanup_and_writes_receipts(tmp_path, monkeypatch):
+    """The t036-1 failure class of record: DemoBackend.cleanup is async; the
+    shared seal never awaited it, so the crashed first attempt left the
+    server alive and no cleanup/result/manifest bytes. The seal must await
+    the backend cleanup and still write the receipts on the failure path."""
+    recorded = {}
+
+    def fake_verify_endpoints(prepared, cleanup):
+        recorded["verified"] = True
+        return dict(endpoint_closure_verified=True)
+
+    monkeypatch.setattr(fresh, "verify_cleanup_endpoints", fake_verify_endpoints)
+    directory = tmp_path / fresh.FRESH_CREATE
+    directory.mkdir()
+    write_json(
+        directory / "PRELAUNCH.json",
+        dict(
+            schema=fresh.SCHEMA,
+            qualification_id=fresh.FRESH_CREATE,
+            execution_contract=fresh.CREATE_CONTRACT,
+        ),
+    )
+    (directory / "PRELAUNCH.sha256").write_text(sha256(directory / "PRELAUNCH.json") + "\n")
+    logs = tmp_path / "logs"
+    logs.mkdir()
+    (logs / "stdout.log").write_bytes(b"stdout-bytes")
+    root = tmp_path / "ws"
+    root.mkdir()
+    workspace = SimpleNamespace(logs=logs, root=root, close=lambda: None)
+    prepared = SimpleNamespace(
+        directory=directory,
+        endpoints=(13971, 23971),
+        spec=SimpleNamespace(workspace=workspace),
+        key_path=tmp_path / "absent-key",
+    )
+
+    class FakeBackend:
+        async def cleanup(self, prepared):
+            recorded["cleaned"] = True
+            return dict(reaped=True, remaining_processes=[], cleanup_error=None)
+
+    result = dict(status="FAILED", launches=1)
+    asyncio.run(fresh._seal_attempt(prepared, result, FakeBackend()))
+    assert recorded == {"cleaned": True, "verified": True}
+    cleanup = json.loads((directory / "cleanup.json").read_bytes())
+    assert cleanup["reaped"] is True and cleanup["endpoint_closure_verified"] is True
+    assert (directory / "stdout.log").read_bytes() == b"stdout-bytes"
+    sealed = json.loads((directory / "result.json").read_bytes())
+    assert sealed["status"] == "FAILED"
+    write_json(
+        directory / "CLAIM.json",
+        dict(consumed=True, prelaunch_digest=sha256(directory / "PRELAUNCH.json")),
+    )
+    assert (directory / "artifact-manifest.sha256").is_file()
+    assert fresh.verify_create(directory) == "ATTEMPT_NOT_VERIFIED: FAILED"
+
+
+def test_verify_cli_never_reopens_workspace(tmp_path, monkeypatch):
+    """The t036-2 verify sweep defect class: after a VERIFIED run the owned
+    cleanup disposed the workspace, so reopening it crashes; the verify
+    command must read sealed receipts only."""
+    directory = fresh_creation_fixture(tmp_path)
+    monkeypatch.setattr(
+        fresh.driver,
+        "reopen",
+        lambda *a, **k: pytest.fail("verify must not reopen the disposed workspace"),
+    )
+    monkeypatch.setattr("sys.argv", ["fresh_world_gui", "verify", str(directory)])
+    assert fresh.main() == 0
 
 
 def test_verify_states_offline(tmp_path):

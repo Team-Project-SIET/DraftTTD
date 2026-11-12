@@ -54,7 +54,7 @@ def test_observed_capex_and_revenue_labeled_from_own_receipts(tmp_path):
     )
     _stage(
         tmp_path,
-        "canonical-fleet-matched-a-t031-1",
+        "canonical-fleet-matched-a-t031-3",
         status="CANONICAL_FLEET_MATCHED_VERIFIED",
         purchase_capex=0,
     )
@@ -63,14 +63,14 @@ def test_observed_capex_and_revenue_labeled_from_own_receipts(tmp_path):
         "canonical-fleet-matched-b-t031-1",
         status="CANONICAL_FLEET_MATCHED_VERIFIED",
         purchase_capex=31200,
-        financial=dict(income=100, delivered_cargo=7),
+        financial=dict(freight_revenue=100, delivered_cargo=7),
     )
     _stage(
         tmp_path,
         "canonical-fleet-continuous-t032-1",
         status="FAILED",
         purchase_capex=0,
-        financial=dict(income=42),
+        financial=dict(freight_revenue=42),
     )
     record = pbc.consolidate(tmp_path)
     rows = {row["ticket"]: row for row in record["sources"]}

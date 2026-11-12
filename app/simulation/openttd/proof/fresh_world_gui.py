@@ -6,15 +6,21 @@ at attempt time, in TWO separately authorized attempts:
 
 1. `fresh-world-create-*`: ONE dedicated-server launch generates a NEW world
    from the explicit seed and map parameters of record (`-g <flat
-   heightmap> -G <seed>` + the proven [game_creation] config; native marker
-   "Map generated, starting game"), then console-saves it into the attempt
-   directory where its digest is pinned (world.json). No admin connection,
-   no canonical input, no bridge staged.
+   heightmap> -G <seed>` + the proven [game_creation] config with
+   `[game_scripts] RoadFreightProof` and the byte-pinned bridge staged, so
+   the save embeds the GameScript in its GSDT; native marker "Map
+   generated, starting game"), then console-saves it into the attempt
+   directory where its digest is pinned (world.json). No admin
+   connection, no canonical input.
 2. `fresh-world-gui-probe-*`: the byte-pinned bridge host launches from the
    digest-pinned fresh save, the runtime welcome frame must report the fresh
-   seed and map size (the demo lane's seed 42 refuses typed), and a real
-   desktop GUI client joins the running fresh world as a spectator (the
-   T-035 join machinery, verified server-side).
+   seed and map size (the demo lane's seed 42 refuses typed) — the welcome
+   tripwire is the world proof and the connection gate, because the pinned
+   bridge's reload contract only resumes a constructed-fleet save while the
+   fresh save is fleetless preconstruction (its GameScript restarts, refuses
+   the already-prepared world and dies; the death lines are retained
+   evidence) — and a real desktop GUI client joins the running fresh world
+   as a spectator (the T-035 join machinery, verified server-side).
 
 No canonical/demo world input exists anywhere in this family: the creation
 stage accepts none structurally, the GUI stage refuses any directory that is
@@ -60,8 +66,8 @@ from .harness import (
 )
 from .road_mutation import save, wait_log
 
-FRESH_CREATE = "fresh-world-create-t036-1"
-FRESH_GUI = "fresh-world-gui-probe-t036-1"
+FRESH_CREATE = "fresh-world-create-t036-3"
+FRESH_GUI = "fresh-world-gui-probe-t036-5"
 FRESH_CREATE_VERIFIED = "FRESH_WORLD_CREATE_VERIFIED"
 FRESH_GUI_VERIFIED = "FRESH_WORLD_GUI_PROBE_VERIFIED"
 SCHEMA = "fresh-world-prelaunch-v1"
@@ -84,8 +90,14 @@ JOIN_MARKER = f"*** {CLIENT_NAME} has joined the game"
 JOIN_SECONDS = gui_probe.JOIN_SECONDS
 OBSERVATION_SECONDS = gui_probe.OBSERVATION_SECONDS
 
+# The GameScript of record is configured at GENERATION time: OpenTTD 15.3
+# stores the GameScript selection inside the save itself (GSDT chunk), so a
+# world generated without it never runs one and no runtime config append can
+# inject it into a loaded save (the fresh-world-gui-probe-t036-1 FAILED
+# round). Placement and case mirror the proven canonical-CREATE staging.
 WORLD_SECTIONS = (
     "\n[misc]\ngraphicsset = OpenGFX\n[ai]\nai_in_multiplayer = true\n"
+    "[game_scripts]\nRoadFreightProof = \n"
     "[game_creation]\n"
     f"map_x = {FRESH_MAP_X}\nmap_y = {FRESH_MAP_Y}\n"
     f"landscape = {FRESH_LANDSCAPE}\nstarting_year = {FRESH_STARTING_YEAR}\n"
@@ -178,6 +190,26 @@ class FreshWorldBackend(freight.PlannerBackend):
     """The proven backend minus the canonical planning-frame wiring; the
     launch identity check is the fresh attempt's own sealed argv."""
 
+    # The pinned bridge's reload contract kills this save's GameScript: a
+    # fleetless preconstruction save restarts the script, which refuses the
+    # already-prepared world (E176/E177). The death is documented expected
+    # evidence — tolerate the death summary ONLY while the expected throw is
+    # in the same logs; any other fatal marker (and any death without the
+    # expected throw) still raises.
+    DOCUMENTED_RELOAD_DEATH = "NETWORK_REQUIRES_EMPTY_WORLD"
+
+    def _check_logs(self) -> None:
+        assert self._prepared is not None
+        text = "\n".join(
+            p.read_text(errors="replace")
+            for p in (self._prepared.spec.stdout_path, self._prepared.spec.stderr_path)
+        )
+        if self.DOCUMENTED_RELOAD_DEATH in text:
+            text = "\n".join(
+                line for line in text.splitlines() if "The script died unexpectedly" not in line
+            )
+        self._scan_fatal(text)
+
     def validate_launch(self, prepared):
         metadata = json.loads((prepared.directory / "PRELAUNCH.json").read_bytes())
         if (
@@ -231,6 +263,14 @@ def prepare_create(directory):
         workspace, key, secret = _stage_fresh_workspace(directory, reservation)
         (workspace.root / "heightmap.png").write_bytes(freight.flat_heightmap())
         shutil.copyfile(workspace.root / "heightmap.png", directory / "heightmap.png")
+        # the byte-pinned bridge must exist at generation time: the scanner
+        # resolves the [game_scripts] entry only from the runtime's game/ tree.
+        package = driver.package_bytes()
+        require_bridge_validation(package)
+        target = workspace.game / "RoadFreightProof"
+        target.mkdir()
+        for name, data in package.items():
+            (target / name).write_bytes(data)
         graphics = stage_opengfx(freight.GRAPHICS_ARCHIVE, workspace.root / "baseset/OpenGFX")
         write_json(
             directory / "graphics-identity.json",
@@ -271,6 +311,7 @@ def prepare_create(directory):
             public_key=key.public_hex,
             game_port=reservation.game_port,
             admin_port=reservation.admin_port,
+            bridge_sha256=driver.bridge_digest(package),
             frozen=frozen,
             world_generation=WORLD_GENERATION
             | dict(heightmap_sha256=sha256(directory / "heightmap.png")),
@@ -381,10 +422,14 @@ def prepare_gui(directory, *, fresh_world):
         # mirror of the E167 fix line with the FRESH save as the source:
         # preflight and the -g launch argv both resolve this exact path.
         shutil.copyfile(Path(fresh_world) / "fresh-world.sav", workspace.root / "source.sav")
-        # the dedicated host of record runs the byte-pinned bridge; its ready
-        # marker gates the admin connection.
-        config = workspace.config.read_text() + "\n[game_scripts]\nRoadFreightProof = \n"
-        workspace.config.write_text(config)
+        # The staged save carries the GameScript of record (GSDT chunk): the
+        # byte-pinned bridge package is staged only so the scanner can resolve
+        # the saved GameScript name; a runtime config append can never inject
+        # a GameScript into a loaded save. The pinned bridge's reload contract
+        # only resumes a constructed-fleet save, so this fleetless save's
+        # GameScript restarts, refuses the already-prepared world and dies —
+        # its death lines are retained evidence; the welcome tripwire (seed,
+        # map size) is the world proof and gates the admin flow.
         target = workspace.game / "RoadFreightProof"
         target.mkdir()
         for name, data in package.items():
@@ -520,9 +565,9 @@ def preflight_gui(prepared):
     return metadata
 
 
-def _seal_attempt(prepared, result, backend):
+async def _seal_attempt(prepared, result, backend):
     """The shared owned-cleanup finally block (exercise.run semantics)."""
-    cleanup = backend.cleanup(prepared)
+    cleanup = await backend.cleanup(prepared)
     for name in ("stdout.log", "stderr.log"):
         source = prepared.spec.workspace.logs / name
         if source.is_file():
@@ -591,7 +636,7 @@ async def run_create(prepared, *, authorize_one_launch=False):
             except Exception as failure:
                 result["failure_save_error"] = str(failure)
     finally:
-        _seal_attempt(prepared, result, backend)
+        await _seal_attempt(prepared, result, backend)
     return result
 
 
@@ -642,7 +687,23 @@ async def run_gui(prepared, *, authorize_one_launch=False):
         async with asyncio.timeout(metadata["budgets"]["total_seconds"]):
             await backend.launch(prepared)
             result["launches"] = 1
-            await wait_log(backend, prepared, "FREIGHT_DELIVERY_READY")
+            # Native bind wait: the AdminPort listener binds ~1 s after the
+            # process spawns, and open_connection refuses instantly (no
+            # retry) — the first post-fix run raced the bind and lost
+            # (AuthDisconnected, fresh-world-gui-probe-t036-3). The bind
+            # line is emitted by the network core, independent of the
+            # GameScript (which dies by documented reload-contract below).
+            # No GameScript marker gate: the pinned bridge's reload contract
+            # only resumes a constructed-fleet save, and this save is
+            # fleetless preconstruction — its GameScript restarts, refuses
+            # the already-prepared world and dies before any marker could
+            # appear. The welcome tripwire below is the world proof: it
+            # reports the loaded save's seed and map size natively.
+            await wait_log(
+                backend,
+                prepared,
+                "Listening on 127.0.0.1:" + str(prepared.endpoints[1]) + " (IPv4)",
+            )
             session = await freight.PlannerDeliverySession.connect_secure(
                 "127.0.0.1",
                 prepared.endpoints[1],
@@ -675,7 +736,7 @@ async def run_gui(prepared, *, authorize_one_launch=False):
             except Exception as failure:
                 result["failure_save_error"] = str(failure)
     finally:
-        _seal_attempt(prepared, result, backend)
+        await _seal_attempt(prepared, result, backend)
     return result
 
 
@@ -712,16 +773,16 @@ def main():
         return 0
     if args.directory.name not in (FRESH_CREATE, FRESH_GUI):
         raise ValueError("unknown fresh-world attempt directory")
-    prepared = driver.reopen(args.directory)
-    if args.command == "preflight":
-        if prepared.directory.name == FRESH_CREATE:
-            preflight_create(prepared)
-            print("fresh-world create preflight PASS")
-        else:
-            preflight_gui(prepared)
-            print("fresh-world GUI probe preflight PASS")
-        return 0
-    if args.command == "run":
+    if args.command in ("preflight", "run"):
+        prepared = driver.reopen(args.directory)
+        if args.command == "preflight":
+            if prepared.directory.name == FRESH_CREATE:
+                preflight_create(prepared)
+                print("fresh-world create preflight PASS")
+            else:
+                preflight_gui(prepared)
+                print("fresh-world GUI probe preflight PASS")
+            return 0
         run = run_create if prepared.directory.name == FRESH_CREATE else run_gui
         result = asyncio.run(run(prepared, authorize_one_launch=args.authorize_one_launch))
         print(json.dumps(result, sort_keys=True))
@@ -729,6 +790,8 @@ def main():
             FRESH_CREATE_VERIFIED if prepared.directory.name == FRESH_CREATE else FRESH_GUI_VERIFIED
         )
         return 0 if result["status"] == expected else 1
+    # verify reads sealed receipts only: the run-time workspace is disposed
+    # by owned cleanup, so reopening it here would crash a VERIFIED attempt.
     status = (
         verify_create(args.directory)
         if args.directory.name == FRESH_CREATE

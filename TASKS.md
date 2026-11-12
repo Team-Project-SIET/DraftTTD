@@ -4079,3 +4079,892 @@ no push, sealed bytes untouched. Evidence index E156.
     done-ness criteria; Phase B native closure outstanding (T-030 ×1,
     T-031 arm A ×1 + arm B ×1, T-032 ×1, each its own fresh grant,
     each inheriting both exercise-core fixes). Evidence index E171.
+
+23. **T-036 creation attempt executed once under the operator's explicit
+    grant A (E172; 2026-11-11; fix commit `6a2e893`; typed FAILED, never
+    relabeled; grant A consumed and void).** Gate round: HEAD `91a7c6a`,
+    tree clean, `pgrep -x openttd` empty, fresh preflight PASS, all
+    package pins re-verified (seed 1181, map 6/6, heightmap pin, argv
+    tail `-G 1181`, PRELAUNCH seal, CLAIM absent, budget 300 s); the
+    operator answered "Grant A: authorize the one launch" in-session.
+    The one launch DID: pid 40019 with the exact staged argv; stderr
+    `Map generated, starting game` (native proof a NEW seed-1181 64×64
+    temperate world was generated); stdout `Map successfully saved to
+    '…/fresh-world-create-t036-1/fresh-world.sav'`; `world.json`
+    `fresh_save_sha256` `77b5431650e9c31d…` matching the save (10536
+    bytes); CLAIM consumed; connections 0 by design. Typed FAILED of
+    record: the shared seal called async `DemoBackend.cleanup` without
+    await — owned reap never ran, finally crashed,
+    cleanup/result/manifest never written, server stayed alive; owned
+    containment: pid 40019 SIGTERM'd operator-side, reaped rc 0; no
+    retry. t036-1 bytes preserved untouched as terminal failed history;
+    no synthetic receipts substituted. Fix of record (offline, zero
+    native): `_seal_attempt` async + awaits `backend.cleanup(prepared)`;
+    both run functions await it; regression test
+    `test_seal_attempt_awaits_cleanup_and_writes_receipts` pins the
+    failure-path receipt write; suites green (63); statics clean.
+    Identity advanced to `fresh-world-create-t036-2` (stale-supersession;
+    t036-1 unreachable from the family by name); t036-2 staged →
+    preflight PASS → `AUTHORIZATION_UNVERIFIED` rc 1. **The re-RUN
+    awaits a FRESH explicit one-launch grant (grant A2).** No VERIFIED
+    creation yet; GUI stage blocked until one verifies; T-035 stays
+    terminal VERIFIED at E170. Evidence index E172.
+
+24. **T-036 creation attempt executed once under the operator's explicit
+    grant A2 (E173; 2026-11-11; FRESH_WORLD_CREATE_VERIFIED rc 0,
+    terminal; grant A2 consumed and void).** Preconditions fresh (HEAD
+    `ff00d60`, tree clean, pgrep empty); preflight PASS re-validated
+    inside run(). The one launch: dedicated 15.3 server pid 43421;
+    stderr `Map generated, starting game` (a NEW seed-1181 64×64
+    temperate 1950 world generated natively); console save
+    `fresh-world.sav` (10536 bytes) digest-pinned in `world.json`
+    (`8e7d0109012863ec931a9d20f4c492e1297a84d3b953ba90e0e8c767bc2a645e`,
+    match true); connections 0 by design. Cleanup certified all-true
+    (pid 43421 quit → reaped rc 0, listener closed, reservation
+    released, workspace disposed, credential removed, sockets closed);
+    manifest 0 mismatches; post-run `verify` →
+    `FRESH_WORLD_CREATE_VERIFIED` rc 0; `pgrep -x openttd` empty; dir
+    sealed read-only. Second fix of record (`de42d10`, offline): the
+    first verify sweep crashed reopening the disposed workspace —
+    verify CLI is receipts-only now, pinned by
+    `test_verify_cli_never_reopens_workspace`; sealed bytes untouched.
+    Genealogy: t036-1 (grant A, typed FAILED at the seal seam after
+    native generation + save, bytes preserved, E172) → t036-2 (grant
+    A2, VERIFIED, terminal). **GUI stage next under its OWN fresh grant
+    B** (staging → preflight → run `--authorize-one-launch` → verify
+    `FRESH_WORLD_GUI_PROBE_VERIFIED` against
+    `--fresh-world artifacts/runtime/fresh-world-create-t036-2`). Not
+    claimed: fresh world not yet SEEN in the GUI; no Phase B criterion
+    satisfied; Phase B native closure outstanding (T-030 ×1, T-031 arm
+    A ×1 + arm B ×1, T-032 ×1). Evidence index E173.
+
+25. **T-036 first GUI attempt executed once under the operator's explicit
+    grant B (E174; 2026-11-11; fix commit `9731d2b`; typed FAILED, never
+    relabeled; grant B consumed and void).** Gate round: HEAD `9256fdc`,
+    tree clean; Stage A re-verified offline (receipts-only
+    `FRESH_WORLD_CREATE_VERIFIED`, manifest 12/12, save digest == pin);
+    `fresh-world-gui-probe-t036-1` staged offline → **preflight PASS**
+    (source dir + digest + welcome tripwire bound); the operator
+    answered "Grant B — launch now" in-session. The one launch:
+    dedicated 15.3 up, listeners bound, **zero `[script:` lines in
+    stderr** (31 grf + 21 net — identical to VERIFIED T-035 up to the
+    final GRFInfo pairs), 45 s `wait_log` window elapsed → typed
+    `TimeoutError: explicit native readiness marker missing:
+    FREIGHT_DELIVERY_READY`; `failure.sav` retained; CLAIM consumed;
+    connections 0 (the gate precedes the connect). Root cause of record
+    (read-only + OpenTTD 15.3 `src/saveload/game_sl.cpp`): a loaded
+    save's GameScript selection lives in the save's GSDT chunk — on load
+    OpenTTD wipes runtime GameScript config
+    (`GameConfig::GetConfig(SSS_FORCE_GAME)->Change(std::nullopt)`) and
+    starts only what the save names; the E173-verified creation save was
+    generated WITHOUT `[game_scripts]`/bridge (E171 design), so its GSDT
+    is empty and the GUI stage's config append could never inject a
+    GameScript into it (config form drift noted, moot). Seal of record:
+    cleanup all-true (reaped rc 0, listener closed, reservation
+    released, workspace disposed, credential removed, sockets closed);
+    manifest 0 mismatches; `verify` → `ATTEMPT_NOT_VERIFIED: FAILED`
+    rc 1. Fix of record (offline, zero native): creation stage stages
+    the byte-pinned bridge + carries `[game_scripts] RoadFreightProof = `
+    before `[game_creation]` (mirroring the proven canonical-CREATE
+    staging) so the generated world embeds the GameScript in its GSDT;
+    `bridge_sha256` pinned; the GUI stage drops the refuted append,
+    keeps only the package the saved name resolves against; tests
+    updated (`tests/test_fresh_world_gui.py` 18 green — creation
+    staging asserts section + bridge + pin, GUI staging asserts exactly
+    one inherited `[game_scripts]`, never re-appended; lane suites 46
+    green); statics clean. Identities advanced (stale-supersession):
+    `fresh-world-create-t036-2` → `fresh-world-create-t036-3`,
+    `fresh-world-gui-probe-t036-1` → `fresh-world-gui-probe-t036-2`;
+    both superseded dirs stay sealed terminal history, never relabeled.
+    t036-3 re-staged: prepare → **preflight PASS** →
+    `AUTHORIZATION_UNVERIFIED` rc 1; staged config carries
+    `[game_scripts] RoadFreightProof = ` (lines 21-22), bridge staged,
+    `bridge_sha256` pinned, argv tail `-G 1181` unchanged. **The
+    creation re-RUN awaits a FRESH explicit one-launch grant (grant
+    A3); the GUI re-stage + re-run await A3's VERIFIED result and then
+    their OWN fresh grant (grant B2); grants A, A2, B all consumed and
+    void.** Not claimed: the fresh world still not SEEN in the GUI; no
+    Phase B criterion satisfied; Phase B native closure outstanding
+    (T-030 ×1, T-031 arm A ×1 + arm B ×1, T-032 ×1). Evidence index
+    E174.
+
+26. **T-036 creation re-run executed once under the operator's explicit
+    grant A3 (E175; 2026-11-11; fix commit `9731d2b` proven at the
+    creation seam; grant A3 consumed and void).** Gate round: HEAD
+    `5726bc0`, tree clean, `pgrep -x openttd` empty, t036-3 verify
+    `AUTHORIZATION_UNVERIFIED` (staged config `[game_scripts]
+    RoadFreightProof = ` lines 21-22, bridge staged, `bridge_sha256`
+    pinned, argv tail `-G 1181`); the operator answered "Grant A3 —
+    launch now" in-session. The one launch DID: `result.json`
+    `{status: FRESH_WORLD_CREATE_VERIFIED, launches: 1, connections: 0}`
+    rc 0; stderr `Map generated, starting game` AND the full GameScript
+    boot the E174 run never had — `FREIGHT_GAME_TIME_START`, six
+    `FREIGHT_NETWORK_INDUSTRY_BUILT`, `FREIGHT_NETWORK_WORLD_READY
+    cleared_bound=78`, `BRIDGE_STARTED protocol=1 api=15`,
+    `FREIGHT_DELIVERY_READY` (stderr lines 61-70) — direct evidence the
+    generated world's GSDT embeds the GameScript; `world.json` pins
+    seed 1181 / 64×64 / temperate / 1950 / heightmap digest and
+    `fresh_save_sha256`
+    `fddd6f5d28a578cc784aa25c330fd1141a5c5f73f5e2258aeebae9c3ea7c2b35`
+    matching the save; `PRELAUNCH.json` pins `bridge_sha256`
+    `0fa190a0b3770a28aff92b10c89c5c83d2ef267095f285d3f05e2921de6fc12e`.
+    Seal of record: cleanup all-true (reaped rc 0, listener closed,
+    reservation released, workspace disposed, credential removed,
+    sockets closed); manifest 0 mismatches; post-run `verify` →
+    `FRESH_WORLD_CREATE_VERIFIED` rc 0; `pgrep -x openttd` empty; dir
+    sealed read-only. **The GUI stage `fresh-world-gui-probe-t036-2` is
+    next: `gui --fresh-world artifacts/runtime/fresh-world-create-t036-3`
+    → preflight → its OWN fresh grant B2 → one run (seed-1181 welcome
+    tripwire, server-side join, GUI liveness, `FREIGHT_DELIVERY_READY`
+    gate).** Not claimed: the fresh world still not SEEN in the GUI; no
+    Phase B criterion satisfied; Phase B native closure outstanding
+    (T-030 ×1, T-031 arm A ×1 + arm B ×1, T-032 ×1). Evidence index
+    E175.
+
+27. **T-036 first post-fix GUI attempt executed once under the operator's
+    explicit grant B2 (E176; 2026-11-11; typed FAILED, never relabeled;
+    grant B2 consumed and void).** Gate round: HEAD `6231f08`, tree
+    clean, `pgrep -x openttd` empty; `fresh-world-gui-probe-t036-2`
+    staged offline from the E175-verified save → **preflight PASS**
+    (save digest + bridge pin + one inherited `[game_scripts]`, argv
+    `-g source.sav`); the operator answered "Grant B2 — launch now"
+    in-session. The one launch: the save's GSDT **boot the GameScript**
+    (`FREIGHT_GAME_TIME_START date=712223 tick=1` — the E174 fix proven
+    at the load seam), then the bridge's reload contract refused the
+    save: `ContinuousFreightProof::Load()` returns early for a
+    `preconstruction` save (no fleet at tick 1) without setting
+    `restored_fleet`, so the restarted script's `PrepareDemo()` hit
+    `throw "NETWORK_REQUIRES_EMPTY_WORLD"` (the world already carries
+    the 6 industries built at generation) and died ("The script died
+    unexpectedly."); the server stayed alive the whole 45 s
+    `wait_log` window, then owned shutdown; typed
+    `RuntimeError: Native script/asset error`; `failure.sav` retained
+    (10888 bytes); connections 0. Root cause depth: T-035's E2 source
+    save was `constructed` (fleet + funding completed → restore path →
+    marker); the `restored_fleet` guard is the pinned bridge's ONLY
+    reload-tolerance; every `PrepareDemo` variant demands an empty
+    world. Seal of record: cleanup all-true; manifest 0 mismatches;
+    `verify` → `ATTEMPT_NOT_VERIFIED: FAILED` rc 1; `pgrep -x openttd`
+    empty. Fix shapes pending operator approval: (a) full canonical-
+    shape fresh creation at seed 1181 (constructed-fleet save via the
+    proven `canonical_fleet.py` CREATE machinery, ~1200 s creation
+    budget, AdminPort in creation) or (b) minimal preconstruction
+    creation kept (the E175 save stays the source) with the GUI gate
+    corrected to welcome-tripwire-first + server-side join + GUI
+    liveness (script-death lines retained as the documented
+    reload-contract limit). Identities will advance under
+    stale-supersession when the operator picks. **Not claimed:** the
+    fresh world still not SEEN in the GUI; no Phase B criterion
+    satisfied; Phase B native closure outstanding (T-030 ×1, T-031 arm
+    A ×1 + arm B ×1, T-032 ×1). Evidence index E176.
+
+28. **T-036 gate-correction fix of record (E177; 2026-11-11; fix commit
+    `3eb8f5e`; operator approved the "correct the GUI gate" shape
+    in-session; offline, zero native).** The GUI run now connects the
+    AdminPort directly after launch — the pre-connect
+    `wait_log("FREIGHT_DELIVERY_READY")` gate is gone — and the native
+    welcome tripwire `require_fresh_welcome` (revision `15.3`, seed
+    `1181`, 64×64 reported by the loaded save) is the world proof and
+    the connection gate. WHY: the pinned bridge's reload contract only
+    resumes a `constructed`-fleet save (`ContinuousFreightProof::Load()`
+    sets `restored_fleet` only on the `constructed` branch) while the
+    fresh save is fleetless `preconstruction` — its GameScript
+    restarts, refuses the already-prepared world
+    (`NETWORK_REQUIRES_EMPTY_WORLD`) and dies before any marker could
+    appear; the death lines are retained as documented evidence. The
+    E175-verified `fresh-world-create-t036-3` save stays the source of
+    record (no creation re-run, no grant A4). Tests: 18 + 46 green
+    (count unchanged — a gate deletion documented at the why-level);
+    ruff/format/py_compile/scoped ty clean. Identity advanced
+    (stale-supersession): `fresh-world-gui-probe-t036-2` →
+    `fresh-world-gui-probe-t036-3`; re-staged: prepare → **preflight
+    PASS** → `AUTHORIZATION_UNVERIFIED` rc 1 (source t036-3, save
+    digest + bridge pin verified, argv `-g source.sav`). **The one GUI
+    launch awaits a FRESH explicit grant B3; grants A, A2, B, A3, B2
+    all consumed and void.** Not claimed: the fresh world still not
+    SEEN in the GUI; no Phase B criterion satisfied; Phase B native
+    closure outstanding (T-030 ×1, T-031 arm A ×1 + arm B ×1, T-032
+    ×1). Evidence index E177.
+
+29. **T-036 first gate-corrected GUI attempt executed once under the
+    operator's explicit grant B3 (E178; 2026-11-11; typed FAILED, never
+    relabeled; grant B3 consumed and void; fix completed under the
+    approved shape, commit `7a5319b`).** Gate round: HEAD `cc1ae2a`,
+    tree clean, `pgrep -x openttd` empty; t036-3 staged → **preflight
+    PASS**; the operator answered "Grant B3 — launch now" in-session.
+    The one launch: the server came up (game+admin listeners bound
+    `127.0.0.1:58175`/`44797`), the E176 contract played out exactly as
+    documented (the save's GSDT booted the GameScript, the restarted
+    script refused the already-prepared world
+    `NETWORK_REQUIRES_EMPTY_WORLD` and died, 11 `[script:` lines, the
+    server alive until owned shutdown) — but the Python-side connect
+    fired before the bind landed: `open_connection` converts
+    ECONNREFUSED to an instant `AuthDisconnected` (no retry) and
+    `backend.launch` returns at process spawn; the failure-path console
+    save raced the startup console reader (`failure_save_error: owned
+    native save completion missing`; NO `failure.sav` — its absence is
+    part of the record, never substituted). Seal of record: cleanup
+    all-true; manifest 0 mismatches; `verify` →
+    `ATTEMPT_NOT_VERIFIED: FAILED` rc 1; `pgrep -x openttd` empty. Fix
+    of record (offline, zero native): `run_gui` awaits the native bind
+    marker `Listening on 127.0.0.1:<admin_port> (IPv4)` (network core,
+    GameScript-independent) between launch and connect; the welcome
+    tripwire stays the world proof and the connection gate; tests 18 +
+    46 green; statics clean. Identity advanced (stale-supersession):
+    `fresh-world-gui-probe-t036-3` → `fresh-world-gui-probe-t036-4`;
+    re-staged: prepare → **preflight PASS** → `AUTHORIZATION_UNVERIFIED`
+    rc 1. **The one GUI launch awaits a FRESH explicit grant B4;
+    grants A, A2, B, A3, B2, B3 all consumed and void.** Not claimed:
+    the fresh world still not SEEN in the GUI; no Phase B criterion
+    satisfied; Phase B native closure outstanding (T-030 ×1, T-031 arm
+    A ×1 + arm B ×1, T-032 ×1). Evidence index E178.
+
+30. **T-036 second gate-corrected GUI attempt executed once under the
+    operator's explicit grant B4 (E179; 2026-11-11; typed FAILED, never
+    relabeled; grant B4 consumed and void; fix landed `420574a`).**
+    Gate round: HEAD `c51e1a5`, tree clean; t036-4 staged → **preflight
+    PASS**; the operator answered "Grant B4 — launch now" in-session.
+    The one launch: the E178 bind wait held, the AdminPort connect +
+    authenticate SUCCEEDED (connections 1), the welcome tripwire PASSED
+    (`runtime-identity.json` sealed: revision `15.3`, seed `1181`,
+    width/height `64` — the E176-corrected gate proven, the world proof
+    of record), the documented contract played out
+    (`NETWORK_REQUIRES_EMPTY_WORLD` + death summary), the GUI client
+    spawned (its `gui-client/` home retained) — and the join-marker
+    wait's `health()` polls hit the shared fatal-log scan
+    (`NativeBackend._check_logs` treats `The script died unexpectedly`
+    as fatal) before any join marker could appear. `failure.sav`
+    console-saved (10936 bytes — the E178 failure-path race fix
+    proven). Seal of record: cleanup all-true; manifest 0 mismatches;
+    `verify` → `ATTEMPT_NOT_VERIFIED: FAILED` rc 1; `pgrep -x openttd`
+    empty. Fix of record (offline, zero native): `native.py`
+    `_check_logs` split into `_check_logs` + `_scan_fatal`
+    (behavior-preserving refactor); `FreshWorldBackend._check_logs`
+    strips the death-summary lines ONLY when
+    `NETWORK_REQUIRES_EMPTY_WORLD` is present in the same logs; any
+    other fatal marker or a death without the expected throw still
+    raises; new test pins all four branches; tests 19 + 46 green;
+    statics clean. Identity advanced (stale-supersession):
+    `fresh-world-gui-probe-t036-4` → `fresh-world-gui-probe-t036-5`;
+    re-staged: prepare → **preflight PASS** → `AUTHORIZATION_UNVERIFIED`
+    rc 1. **The one GUI launch awaits a FRESH explicit grant B5;
+    grants A, A2, B, A3, B2, B3, B4 all consumed and void.** Not
+    claimed: the fresh world still not SEEN in the GUI; no Phase B
+    criterion satisfied; Phase B native closure outstanding (T-030 ×1,
+    T-031 arm A ×1 + arm B ×1, T-032 ×1). Evidence index E179.
+
+31. **T-036 third gate-corrected GUI attempt executed once under the
+    operator's explicit grant B5 (E180; 2026-11-11; typed
+    `FRESH_WORLD_GUI_PROBE_VERIFIED` rc 0 — T-036 CLOSED, the fresh
+    world SEEN in the real KDE GUI; grant B5 consumed and void).**
+    Gate round: HEAD `73312ed`, tree clean; t036-5 staged → **preflight
+    PASS**; the operator answered "Grant B5 — launch now" in-session.
+    The one launch landed every approved proof: the E178 bind wait
+    held (`Listening on 127.0.0.1:36069`/`42105 (IPv4)`), the AdminPort
+    connect + authenticate SUCCEEDED (connections 1), the welcome
+    tripwire PASSED (`runtime-identity.json` sealed: revision `15.3`,
+    seed `1181`, width/height 64 — the world proof of record), the
+    documented GameScript reload-contract death played out and was
+    tolerated by the E179 scoped health scan (`NETWORK_REQUIRES_EMPTY_
+WORLD`
+    stderr line 53, death summary line 62 — retained evidence, the
+    join-wait polls survived), the real desktop GUI client joined as
+    spectator and the SERVER-SIDE JOIN MARKER LANDED (`stdout.log`
+    line 7: `*** Fresh World GUI Probe has joined the game (Client #2)`;
+    `gui-client.json`: client name `Fresh World GUI Probe`,
+    `join_verified: true`, spectator company 255,
+    `OBSERVATION_WINDOW_ELAPSED`, client terminated before server
+    cleanup) → owned stop, one launch, one connection, one join. Seal
+    of record: cleanup all-true (reaped rc 0, quit_requested, listener
+    closed, connection closed, reservation released, workspace
+    disposed, credential removed, sockets closed,
+    admin_frame_accounting total_post_auth_frames 0); manifest match
+    True (0 mismatches); post-run `verify` →
+    `FRESH_WORLD_GUI_PROBE_VERIFIED` rc 0; `pgrep -x openttd` empty.
+    **Not claimed by T-036 anymore (closed):** no Phase B criterion
+    satisfied by T-036 itself; Phase B native closure outstanding
+    (T-030 ×1, T-031 arm A ×1 + arm B ×1, T-032 ×1, each its own fresh
+    grant). Evidence index E180.
+
+32. **T-036 closed-round follow-up executed offline (E181; 2026-11-11;
+    zero native, no grant consumed).** Master completion tracker
+    compiled and committed: `docs/master-completion-tracker-2026-11-11.md`
+    — all remaining work mapped across Phase B/C/Random World;
+    verbatim finding that "Closed-Loop Optimization", "Productization",
+    "Final Release" and any "Definition of Done" phrase exist nowhere
+    in the sources, so the tracker's acceptance conjunction is labeled
+    RECONSTRUCTED; terminal-FAILED history and the UNKNOWN ledger
+    carried without relabeling. Phase B front fully staged at HEAD
+    `2e5fcc9`: T-030 `canonical-fleet-exercise-t030-1`, T-031 arms
+    `canonical-fleet-matched-{a,b}-t031-1`, T-032
+    `canonical-fleet-continuous-t032-1` — each prepare rc 0, preflight
+    PASS, verify `AUTHORIZATION_UNVERIFIED` rc 1. Preconditions
+    re-checked: E2 canonical manifest match True (save
+    `51e45689…1297eb` == pin), binary pin `276d5b69…904c` at the
+    harness default path, OpenGFX pin `43a0c1da…03be`, `pgrep -x
+    openttd` empty, stash untouched. Ticket statuses updated (T-030
+    02, T-031 02+03, T-032 01). Ordering of record: T-030 → T-031 arm
+    A → arm B → T-032, each its own fresh grant. Offline suites green:
+    19/19 fresh-GUI + 58/58 canonical trio. **The next operator action
+    is the fresh explicit T-030 one-launch grant** (grant text in
+    `.scratch/phase-b-t030/issues/02-attempt-package.md`). Evidence
+    index E181.
+
+33. **T-030 canonical fleet exercise executed exactly once under the
+    operator's fresh explicit grant (E182; 2026-11-11; typed
+    `CANONICAL_FLEET_EXERCISE_VERIFIED` rc 0 — T-030 CLOSED; grant
+    consumed and void).** The operator gave the exact package grant
+    text in-session (HEAD `5845d8b`, tree clean). The one launch
+    proved the sealed contract end to end: reload correspondence
+    FIRST (`reload-correspondence.json` + `reload-readback.sav`: cash
+    471157 before/after, originals `[0,4,2709] [1,5,1557] [2,6,404]`,
+    `restored: true`, paused), then the paused arm-B exercise —
+    `capacity-add` £4,429 (cash 471157 → 466728, capacity 20, cargo
+    1), `canonical-arm` (state 2, paused), `canonical-dispatch-read`
+    (state 0, paused), `canonical-dispatched` (`paused: false`),
+    `canonical-after-intervention` (re-paused, state 2);
+    `exercise-correspondence.json` typed
+    `EXACT_NATIVE_SEMANTIC_CORRESPONDENCE` binding dispatch digest
+    `d79909b8…`, reload digest `54e5d8b6…` and observation digest
+    `b5232d66…` to the E2 source save `51e45689…1297eb` == pin;
+    `purchase_capex: 4429`; `result.json` `{launches: 1, connections:
+    1, mutations: 3}`; 1052 map-page pairs + 6 station + 3 vehicle
+    receipts retained. Seal: cleanup all-true; manifest match True; 0
+    mismatches; post-run verify rc 0; `pgrep -x openttd` empty.
+    Honesty: OPEX/ROI stay UNKNOWN; no profit claim. **Not claimed
+    anymore: T-030's done-ness (native exercise receipts + canonical
+    correspondence record + E-row) is MET. Remaining Phase B: T-031
+    arm A ×1 (next grant), arm B ×1 (after arm A completes), T-032 ×1;
+    T-033 re-derives offline after each.** Evidence index E182.
+
+34. **T-031 arm A attempt 1 executed exactly once under the operator's
+    fresh explicit arm-A grant (E183; 2026-11-11; terminal FAILED rc 1
+    — grant consumed and void, never retried, never relabeled; sealed
+    read-only at `artifacts/runtime/canonical-fleet-matched-a-t031-1/`)
+    plus the operator-approved offline fix round (E184; 2026-11-11; no
+    native run, no connection, no grant).** Attempt 1 at HEAD `baacc20`:
+    stage 1 completed (reload correspondence cash 471157 before/after,
+    originals `[0,4,2709] [1,5,1557] [2,6,404]`, restored, paused;
+    arm-A dispatch binding null, purchase_capex 0; mutations 2), then
+    the post-dispatch `continuous-begin` (five-anniversary monitoring,
+    observation-only) hit the pinned bridge's armed-state guard
+    `canonical.nut:129` (`if(canonical_armed)throw
+    "CANONICAL_MUTATIONS_SEALED"` — no unseal path) →
+    `GameScriptError` script death at `main.nut:129` via
+    `network-parent.nut:19` → single-unanswered-request →
+    `ExchangeReadTimeout` 20 s; `failure.sav` 11828 bytes retained;
+    cleanup all-true, manifest match True, `pgrep -x openttd` empty;
+    the stage-1 string the except path left in `result.json.status`
+    was correctly REFUSED by verify (`ATTEMPT_NOT_VERIFIED` rc 1) — a
+    labeling defect, never a relabel. Fix round E184: (1) guard now
+    lets the `continuous-*` observation family through the armed seal
+    (`q.type.find("continuous-")==0` falls to
+    `HandleContinuousRequest(q)`; everything else sealed); (2)
+    `exercise.run` except block types `result["status"] = "FAILED"`;
+    (3) VM record regenerated as NEW q4 path (25/25 cases rc 0 at
+    pinned exact 15.3 Squirrel source `14ec60f248547d4d062a1160f0fc26d742319888`,
+    q3 dir untouched; only `main.nut` changed q3→q4) and
+    `SUSPENSION_VALIDATION` re-pointed q3→q4; (4) retained-provenance
+    zip re-pointed to the t031-1 stage seal (4/4 helper pins == q4
+    record; q3 zip 3/4); (5) three regression tests added (two armed
+    seal guard tests + failure-status typing test); (6) suites rc 0 →
+    87 passed, 1 skip-typed, ruff/format/py_compile clean, scoped
+    `uvx ty` leaves only the 2 pre-existing tolerated diagnostics;
+    (7) identity advance `ARM_A = canonical-fleet-matched-a-t031-2`
+    (arm B stays `canonical-fleet-matched-b-t031-1`, superseded
+    unsealed staging to be re-prepared after arm A completes), re-staged
+    `artifacts/runtime/canonical-fleet-matched-a-t031-2/` — prepare rc
+    0, preflight PASS, verify `AUTHORIZATION_UNVERIFIED` rc 1, staged
+    main.nut carries the fixed guard, q4 pin held. **The next operator
+    action is the fresh explicit arm-A grant for t031-2** (grant text
+    in `.scratch/phase-b-t031/issues/02-arm-a-attempt-package.md`).
+    Evidence index E184.
+
+35. **T-031 arm A attempt 2 executed exactly once under the operator's
+    fresh explicit arm-A grant (E185; 2026-11-12; terminal FAILED rc 1
+    — grant consumed and void, never retried, never relabeled; sealed
+    read-only at `artifacts/runtime/canonical-fleet-matched-a-t031-2/`)
+    plus the diagnosis-only round (E186; 2026-11-12; no code defect —
+    the gate behaved exactly as designed; no contract change; identity
+    advances; no native run, no grant).** Attempt 2 at HEAD `28e7570`
+    under the E184 fixed bridge: the native world loaded and answered
+    everything (1043 request/receipt pairs, NO GameScript death), and
+    the Python-side correspondence gate refused the attempt:
+    `compare_canonical(created, loaded)` → `ValueError: canonical
+    correspondence mismatch: bridge_sha256` — the arm flow collects the
+    loaded observation with the STAGED post-fix bridge `6c6a703c…`
+    (`metadata["bridge_sha256"]`), while the `created` anchor
+    (`canonical-fleet-create-q3/canonical-provenance.json`) is sealed
+    under the pre-fix bridge `0fa190a0…`; the E184 guard fix changed
+    the bridge digest, so the create-q3 anchor is bridge-generation-
+    bound. `result.json` `{launches: 1, connections: 1, mutations: 0,
+    status: FAILED}`; cleanup all-true, manifest match True,
+    `failure.sav` 14480 bytes, verify `ATTEMPT_NOT_VERIFIED: FAILED`
+    rc 1 (correct typed refusal), `pgrep -x openttd` empty. E186 round:
+    `CREATE` advanced `canonical-fleet-create-q3` →
+    `canonical-fleet-create-q4` (create-q3 stays sealed retained
+    history; the fresh create stages the fixed bridge pinned to the q4
+    VM record); `ARM_A` advanced to `canonical-fleet-matched-a-t031-3`
+    (staging only after the create-q4 anchor exists, with `--canonical
+    artifacts/runtime/canonical-fleet-create-q4`); arm B
+    `canonical-fleet-matched-b-t031-1` unchanged (staging doubly
+    superseded — re-prepare with the fixed package AND the create-q4
+    anchor after arm A completes); T-032 staging likewise superseded
+    (re-prepare after create-q4). Suites re-run rc 0 after the
+    identity advances; ruff/format/py_compile clean. **The next
+    operator action was the fresh explicit canonical-fleet-create-q4
+    one-launch grant (consumed by E187); then arm A t031-3 re-stages
+    against the new anchor and asks for its own fresh grant.**
+    Evidence index E186.
+
+37. **Canonical create-q4 executed exactly once under the operator's
+    fresh explicit create grant (E187; 2026-11-12; terminal FAILED rc
+    1 `KeyError: 'world'` — grant consumed and void, never retried,
+    never relabeled; sealed read-only at
+    `artifacts/runtime/canonical-fleet-create-q4/`) plus the
+    operator-approved offline fix round (E188; 2026-11-12; no native
+    run, no grant).** Attempt at HEAD `402a0e4`: the run got deep —
+    capital-initialize/read receipts, 758 planning-n0 pairs,
+    network-facts-{0,1,2}, network-candidates, `qualified.sav` — then
+    died at `plan_network_world`'s `PreparedWorldManifest`
+    construction: commit `ce28899` (2026-10-22, after create-q3 ran)
+    made `freight_native_network` read `metadata["world"]` (seed/width)
+    in four sites while the canonical create prepare never staged
+    those facts — a latent create-path integration gap exposed by the
+    first fresh create attempt of the fixed bridge; NO GameScript
+    death (the native world generated and answered everything);
+    cleanup all-true, manifest match True, `pgrep -x openttd` empty.
+    Fix round E188: (1) `canonical_fleet.prepare` metadata now stages
+    `world = {source: NATIVE_GENERATED_CANONICAL, seed: 42, width: 64,
+    height: 64}` (the actual create-world facts; all four consumers
+    read real staged facts); (2) `CREATE` advanced
+    `canonical-fleet-create-q4` → `canonical-fleet-create-q5` (q4
+    stays sealed terminal-FAILED retained history; consumed identities
+    never re-prepared); (3) the q5 stage re-staged fresh — prepare rc
+    0, `CANONICAL PREFLIGHT PASS; ZERO LAUNCHES` re-run offline,
+    `world` facts verified in the staged PRELAUNCH, bridge
+    `6c6a703c…` == the fixed bridge, authorization gate refuses
+    without `--authorize-one-launch` rc 2; (4) regression test
+    `test_prepare_stages_the_world_facts_the_native_network_consumers_read`
+    added; (5) suites rc 0, ruff/format/py_compile clean. **The next
+    operator action is the fresh explicit canonical-fleet-create-q5
+    one-launch grant** (ticket
+    `.scratch/phase-b-canonical-create-q5/issues/01-create-attempt-package.md`);
+    then arm A t031-3 re-stages against the new anchor and asks for
+    its own fresh grant; arm B's grant only after arm A completes.
+    Evidence index E188.
+
+38. **Canonical create-q5 executed exactly once under the operator's
+    fresh explicit create grant (E189; 2026-11-12; typed
+    `CANONICAL_CREATED_PENDING_FRESH_PROCESS_RELOAD` rc 0 — the
+    fixed-bridge native anchor EXISTS; grant consumed).** At HEAD
+    `74b6a21` (tree clean, `pgrep -x openttd` empty pre-launch):
+    `result.json` `{launches: 1, connections: 1, mutations: 27}`;
+    seal complete — cleanup all-true (reaped rc 0, sockets closed,
+    credential removed, workspace disposed, remaining_processes []),
+    manifest match True (0 mismatches), `canonical.sav` 14444 bytes,
+    `canonical-provenance.json` observation sealed under the FIXED
+    bridge `6c6a703c…`, `pgrep -x openttd` empty; attempt dir sealed
+    read-only hereafter. Downstream staged immediately: arm A
+    `canonical-fleet-matched-a-t031-3` prepared against the new
+    anchor — prepare rc 0, `canonical matched arm A preflight PASS`,
+    verify `AUTHORIZATION_UNVERIFIED` rc 1. The bridge-generation
+    chain of record is complete: q4 VM record (E184) + q5 native
+    anchor (E189) both bind the fixed bridge `6c6a703c…`. **The next
+    operator action is the fresh explicit arm-A grant for t031-3**
+    (grant text in
+    `.scratch/phase-b-t031/issues/02-arm-a-attempt-package.md`);
+    arm B's grant only after arm A's attempt completes; then T-032.
+    Evidence index E189.
+
+39. **T-031 arm A attempt 3 executed exactly once under the operator's
+    fresh explicit arm-A grant (E190; 2026-11-12; typed
+    `CANONICAL_FLEET_MATCHED_VERIFIED` rc 0 — arm A's done-ness part
+    is MET under the fixed bridge; grant consumed; attempt dir
+    `artifacts/runtime/canonical-fleet-matched-a-t031-3/` sealed
+    read-only).** At HEAD `da11430` (tree clean, `pgrep -x openttd`
+    empty pre-launch): `{launches: 1, connections: 1, mutations: 2,
+    requests: 10889}`; reload correspondence FIRST typed
+    `EXACT_NATIVE_SEMANTIC_CORRESPONDENCE` (cash 471157 before/after,
+    originals `[0,4,2709] [1,5,1557] [2,6,404]`, restored, paused);
+    arm-A dispatch binding null / purchase_capex 0 (arm A constructs
+    nothing); exercise correspondence
+    `EXACT_NATIVE_SEMANTIC_CORRESPONDENCE`; service-receipt-{0,1,2}
+    vehicles 4/5/6 spending 0; the post-dispatch `continuous-begin`
+    observation — the exact request the E183 attempt died on — passed
+    the E184 fixed armed seal and the FIVE-ANNIVERSARY horizon
+    completed (annual receipts economy years 1951–1955, elapsed
+    economy days 366→1826, + 60 monthly + per-vehicle telemetry 4/5/6);
+    cleanup all-true, manifest match True, post-run verify typed,
+    `pgrep -x openttd` empty. The bridge-generation chain is proven
+    end to end: q4 VM record (E184) + q5 native anchor (E189) + arm A
+    verified under `6c6a703c…`. **The next operator action is arm B's
+    fresh grant: arm B first re-prepares with the fixed package +
+    create-q5 anchor (`rm -rf
+    artifacts/runtime/canonical-fleet-matched-b-t031-1` then prepare
+    `--canonical artifacts/runtime/canonical-fleet-create-q5 --arm B`,
+    identity unchanged), then preflight + verify
+    `AUTHORIZATION_UNVERIFIED`, then its own fresh explicit
+    authorization; T-031 done-ness completes only with the
+    `compare_arms` descriptive B-vs-A record after arm B; then
+    T-032.** Evidence index E190.
+
+40. **T-031 arm B executed exactly once under the operator's fresh
+    explicit arm-B grant (E191; 2026-11-12; typed
+    `CANONICAL_FLEET_MATCHED_VERIFIED` rc 0; grant consumed; attempt
+    dir `artifacts/runtime/canonical-fleet-matched-b-t031-1/` sealed
+    read-only) plus the offline `compare_arms` record (E192; 2026-11-12;
+    no launch, no grant) — T-031's done-ness is MET and T-031 is
+    CLOSED.** Pre-launch of record: the superseded pre-fix staging dir
+    removed (no CLAIM, no attempt bytes) and arm B re-prepared with
+    the fixed package + create-q5 anchor (identity unchanged), then
+    the fresh grant asked only after arm A's attempt completed
+    VERIFIED (ordering of record held; separate grant per arm). At
+    HEAD `e560644`: `{launches: 1, connections: 1, mutations: 3,
+    requests: 12197}`; reload correspondence
+    `EXACT_NATIVE_SEMANTIC_CORRESPONDENCE` (same cash 471157 and
+    originals as arm A — the same frozen canonical world); the ONE
+    paused capacity-add intervention on service 1 (binding
+    `{purchase_capex: 4429, service: 1, vehicle: 7}` — the fourth
+    vehicle, cash 471157 → 466728); FIVE annual receipts economy
+    years 1951–1955 (5 annual + 60 monthly + 20 quarterly, elapsed
+    economy days 1826); telemetry vehicle_count 4; cleanup all-true,
+    manifest match True, post-run verify typed, `pgrep -x openttd`
+    empty. `compare_arms` record (E192) at
+    `artifacts/runtime/canonical-fleet-matched-compare-t031/matched-comparison.json`,
+    classification `DESCRIPTIVE_MATCHED_AB_COMPARISON`, inputs the two
+    arms' own arm-record.json files: OBSERVED deltas b−a = capex
+    +4429 (opening −4429), closing_cash +10910 (504285 → 515195),
+    freight_revenue +17443 (50940 → 68383), delivered_cargo +980
+    (2980 → 3960), revenue_per_economy_day +9.55, net_cash_flow
+    +15339, expenses +2104, residuals identical; UNKNOWN preserved as
+    UNKNOWN (roi, operating_profit, break_even_time, cost_recovery,
+    gross_revenue_to_capex_ratio, loan_interest, other_expenses,
+    vehicle_operating_expenses); the four guards stand (a positive
+    revenue delta alone does not establish profit; no per-service
+    revenue implied; no forecast; UNKNOWN ≠ 0). Honesty: the record is
+    descriptive — no profit claim. **The next operator action is
+    T-032's fresh one-launch grant: T-032 first re-prepares with the
+    fixed package + create-q5 anchor (`rm -rf
+    artifacts/runtime/canonical-fleet-continuous-t032-1` then prepare
+    `--canonical artifacts/runtime/canonical-fleet-create-q5`), then
+    preflight + verify `AUTHORIZATION_UNVERIFIED`, then its own fresh
+    explicit authorization; T-033 re-derives offline after.** Evidence
+    index E192.
+
+41. **T-032 five-year continuous executed exactly once under the
+    operator's fresh explicit T-032 grant (E193; 2026-11-12; typed
+    `CANONICAL_FIVE_YEAR_CONTINUOUS_VERIFIED` rc 0; grant consumed;
+    attempt dir `artifacts/runtime/canonical-fleet-continuous-t032-1/`
+    sealed read-only) — PHASE B NATIVE CLOSURE IS COMPLETE (T-030 E182,
+    T-031 E190/E191/E192, T-032 this row).** Pre-launch: the
+    superseded pre-fix staging dir removed (no CLAIM, no attempt
+    bytes) and T-032 re-prepared with the fixed package + create-q5
+    anchor (prepare rc 0, preflight PASS, `AUTHORIZATION_UNVERIFIED`);
+    its own separate fresh grant, requested only after T-031 closed.
+    At HEAD `7d29994`: `{launches: 1, connections: 1, mutations: 2,
+    requests: 10861}`; reload correspondence
+    `EXACT_NATIVE_SEMANTIC_CORRESPONDENCE` (cash 471157 before/after —
+    the same frozen canonical world as every arm); `continuous-begin`
+    `status: ok` through the E184 fixed armed seal; FIVE complete
+    native economy years observed — annual receipts economy years
+    1951–1955 (elapsed economy days 365→1826), 60 monthly + 20
+    quarterly receipts, per-vehicle telemetry 4/5/6 — within the
+    documented budget (7200 s wall, 3600 polls × 2 s); cleanup
+    all-true, manifest match True, post-run verify typed, `pgrep -x
+    openttd` empty. **The next operator action is T-033's OFFLINE
+    re-derivation (no grant needed), then T-034 stands as the
+    re-runnable offline qualification gate.** Evidence index E193.
+
+42. **T-033 offline re-derivation after Phase B native closure
+    (E194; 2026-11-12; no launch, no connection, no grant; the record
+    of record regenerated at
+    `artifacts/experiments/phase-b-consolidation-2026-11-12/`).** The
+    consolidated OPEX/ROI record now aggregates the four VERIFIED
+    Phase B attempts (0 UNKNOWN-PENDING): T-030
+    `canonical-fleet-exercise-t030-1` (CAPEX £4,429 OBSERVED, revenue
+    UNKNOWN — its flow retains no arm-record-style financial summary,
+    and UNKNOWN is not zero), T-031-A `canonical-fleet-matched-a-t031-3`
+    (CAPEX £0 OBSERVED, revenue £50,940 OBSERVED, OPEX/ROI DERIVED
+    from its own financial metrics), T-031-B
+    `canonical-fleet-matched-b-t031-1` (CAPEX £4,429 OBSERVED — the
+    fourth vehicle, revenue £68,383 OBSERVED, DERIVED), T-032
+    `canonical-fleet-continuous-t032-1` (CAPEX £0 OBSERVED, revenue
+    £50,940 OBSERVED, DERIVED). Consolidated vehicle-purchase CAPEX
+    £8,858 OBSERVED (known only because every attempt's own receipts
+    exist). Funding context unchanged: E2 OBSERVED 400,000 GBP. The
+    guards carried intact: UNKNOWN is not zero; missing transactions
+    never manufactured; per-year OPEX/ROI DERIVED only from observed
+    native accounting; no per-service revenue implied; no forecast; a
+    positive revenue delta alone does not establish profit. OPEX
+    categories stay UNKNOWN until their own native observations exist
+    (the compare_arms record shows vehicle_operating_expenses UNKNOWN).
+    Honest labels only — no profit claim. Latent fix of record: the
+    module read the revenue key `income` while the real receipts (and
+    the `financial_attribution` vocabulary of record) key
+    `freight_revenue` — module + tests updated (`income` was a
+    synthetic fixture key that no real receipt has ever carried);
+    6 offline tests pass, ruff/format clean; zero retained bytes
+    touched. **T-033 CLOSED.** Evidence index E194.
+
+43. **T-034 standing full 15.3 regression re-run at the Phase B
+    closure HEAD — gate of record CLEAN at `3b2b618` (E195;
+    2026-11-12; offline only, no launch, no grant; two background
+    full-suite runs, junitxml machine-counted).** First gate at the
+    closure HEAD `dc86b51`: 6379 collected / 58 failed / 0 errors /
+    51 skipped — 51 × `test_p08_controlled_e2e.py` (legacy E159
+    scope) + the 5 E165-verified singles + TWO NEW round-adjacent
+    IDs, both diagnosed fixture-stale with NO app-code change:
+    (1) `test_canonical_fleet_gui.py::test_preflight_passes_on_real_
+    staging_unpatched` — the E167-era test pinned the superseded
+    `canonical-fleet-create-q3` anchor while `verify_created_source`
+    now binds the E186/E189 `CREATE` constant of record (create-q5);
+    the module correctly refused the stale anchor; the test's
+    canonical now follows `driver.CREATE` (self-advancing, skip-typed
+    on clones). (2) `test_native_save_path.py::test_real_failure_save_
+    seam_ignores_prior_script_fatal_only` — the local Backend double
+    borrowed only pre-E179 `_check_logs`; E179's behavior-preserving
+    split moved the fatal scan into `_scan_fatal`; the double now
+    borrows `_scan_fatal` (the app is fine — `FreshWorldBackend`
+    resolves it via its MRO). Fix round `3b2b618` (two test files
+    only): both files green (43 tests), ruff/format/compile clean.
+    FINAL GATE at `3b2b618`: **6379 collected / 6272 passed /
+    56 failed / 0 errors / 51 skipped** — the E165 legacy-red set
+    reproduced EXACTLY by ID; the two fixed IDs gone; ZERO failures
+    in any round-touched file; skips 51 = E165's 50 + the round's
+    known skip-typed pin-drift test. Independent parts: statics 12
+    pre-existing errors in three never-touched files (matching E165
+    by ID); manifest sweep 214 / 0 mismatches (six new manifests from
+    the continuation's attempts all verified); pins hold (save
+    `51e45689…`, OpenGFX `43a0c1da…`, binary `276d5b69…`); `pgrep -x
+    openttd` empty; zero retained bytes touched. **T-034 CLOSED.
+    PHASE B FULLY CLOSED (T-030 → T-031 → T-032 → T-033 → T-034);
+    remaining operator-gated items: FD-C-2 attempt 7 (Phase C),
+    ramrom battery.** Evidence index E195.
+
+44. **Phase C opened offline — FD-C-2 attempt-7 package re-confirmed
+    READY at the Phase B closure HEAD and the ramrom seed battery's
+    offline bar is MET (E196; 2026-11-12; zero launches, zero
+    AdminPort, no grant consumed, no evidence byte written).**
+    FD-C-2: `p08_road.py` + `freight_delivery.py` untouched since the
+    E160 audit (`9194184`); the fix body of record in place
+    (`CORRIDOR_INTERIOR 2..47`, bound-skip line 426, witness pruning
+    without budget charge line 409); the seven-file targeted set of
+    record re-run fresh **172 collected / 0 failed / 0 errors /
+    0 skipped** (the audit's 154 + routing 18, including the three
+    sealed FD-C-2 pins + the attempt-6 e2e pin); scoped statics
+    clean; prereqs re-proven (`app.openttd_demo check` rc 0 "no game
+    launched", binary/OpenGFX pins re-hashed today, `pgrep -x
+    openttd` empty); sealed integrity covered by the T-034 sweep
+    (214/0). **READY_FOR_OPERATOR_AUTHORIZATION stands** — attempt 7
+    needs its own fresh explicit grant: ONE launch, byte-unchanged
+    command of record `--headless --random-world --seed 2026 --towns
+    3 --industries 3 --stop-on-delivery --cycles 2`, no retries, stop
+    on unexpected failure, evaluator `freight_delivery verify <run-
+    dir>` rc 0 with both cycles independently verified; FD-C-2 stays
+    `INCOMPLETE_EVIDENCE` until fresh digest-pinned bytes exist;
+    attempts 1–6 terminal, all prior grants void. Ramrom offline bar
+    (spec :71-84): the widened-shape allocation tests + the retained
+    strip re-derivation (`TestRetainedDecision` over the E139/E141
+    `planning-diagnostic.json` fixtures) re-run fresh **80 collected
+    / 0 failed / 0 skipped** — no skip-typed, the re-derivation ran
+    for real. The bar's native clause stays operator-gated per seed:
+    seed 2026 re-run as a NEW identity (E139 never relabeled), then
+    seeds 7/8/9. **Next operator actions: the FD-C-2 attempt-7 grant
+    (first, per the operator's ordering), then the ramrom seed
+    battery's per-seed grants.** Evidence index E196.
+
+45. **FD-C-2 attempt 7 executed exactly once under the operator's
+    fresh explicit attempt-7 grant (E197; 2026-11-12; typed terminal
+    `NATIVE_LOOP_ZERO_SERVICES` at HEAD `ac504f8`; grant consumed;
+    run dir `artifacts/demos/playable-demo-743dee713b2841baa1bcbc0f115ee901/`
+    sealed read-only) — the E160 remediation package's first native
+    attempt, and Phase C done-ness item 3 ("attempt 7 consumed under
+    a fresh grant → typed terminal adjudicated") is MET.**
+    `result.json` `{launches: 1, connections: 2, funding_mutations:
+    1, funding_requests: 2, mutations: 0, requests: 0,
+    loop_cycles_planned: 2, loop_cycles_delivered: 0, preflight:
+    PASS, status: NATIVE_LOOP_ZERO_SERVICES}` — exactly as granted
+    (one launch, one connection per cycle, funding on cycle-1 only).
+    Evaluator of record rc 0, both cycles independently
+    `ZERO_SERVICE` with the verbatim `NO_FEASIBLE_SERVICES` error.
+    The remediation's classification goal is proven on fresh bytes:
+    cycle 1's sole candidate refusal is the `71f6e7d` fix's explicit
+    `NATIVE_CORRIDOR_BOUND: requires 2..47 road tiles` (first native
+    appearance) and cycle 2's is the witness-fallback
+    `NO_BOUNDED_CORRIDOR` (38/20 stops disconnected); ZERO
+    `SEARCH_LIMIT_EXCEEDED` anywhere — the E159 masking class is
+    gone. Funnel: compatible 16, captured 1 (832/832 reads,
+    pause_pairs 1), 10 × `CAPTURE_TILE_BUDGET`,
+    `CANDIDATE_SEARCH_LIMIT controls 146`, `search_truncated: true`
+    throughout; `pair_checks: 146`. Honest conclusion: the fix
+    repaired the refusal CLASSIFICATION exactly as designed and seed
+    2026's corridor infeasibility for the one capturable pair stands.
+    **FD-C-2 stays `INCOMPLETE_EVIDENCE`** — a typed failure proves
+    nothing beyond its own slice; attempts never relabeled. Seal:
+    cleanup all-true, manifest match True, `pgrep -x openttd` empty.
+    **Remaining Phase C native items: the ramrom seed battery
+    (offline bar met E196) — per-seed fresh grants, seed 2026 re-run
+    as a NEW identity first (E139 never relabeled), then seeds 7/8/9;
+    the battery bar is ≥1 verified native plan + delivery cycle
+    without a `NO_FEASIBLE_SERVICES` terminal, every terminal
+    honestly typed.** Evidence index E197.
+
+46. **Ramrom seed-2026 re-run executed exactly once under the
+    operator's fresh explicit seed-2026 grant (E198; 2026-11-12;
+    typed terminal `FAILED` / `NO_FEASIBLE_SERVICES` at HEAD
+    `fc25760`; grant consumed; run dir
+    `artifacts/demos/playable-demo-1a5b456bd6f441c4bdc1ed10ef4af47b/`
+    sealed read-only) — the battery's first one-shot, a NEW identity
+    (E139/E141 untouched).** Command of record under the widened
+    product defaults (2048 seal); `result.json` `{launches: 1,
+    connections: 1, funding_mutations: 1, mutations: 0, requests: 0,
+    preflight: PASS, status: FAILED, error: "ValueError:
+    NO_FEASIBLE_SERVICES: no supported full-load road engine and
+    supply"}`. Funnel facts: captured 1 with 832/832 reads completed
+    AND `pause_pairs: 1` — the E141 month-pace gate did NOT fire (the
+    pause-during-capture pacing carried n0 through its complete read
+    set); 10 × `CAPTURE_TILE_BUDGET`; `CANDIDATE_SEARCH_LIMIT
+    controls 146`; candidate refusal typed `NATIVE_CORRIDOR_BOUND:
+    requires 2..47 road tiles` (the explicit bound terminal);
+    `search_truncated: true`. Seed-2026 progress ledger: E139
+    (capture budget refused 14/16) → E141 (month-pace gate at read
+    703) → this run (capture completed, corridor refused explicitly)
+    — none relabeled. Honest evaluator set for this terminal class:
+    manifest match True, cleanup all-true, `pgrep -x openttd` empty
+    (loop-flavor `verify` and the `report` subcommand do not apply —
+    no network receipts or loop-product artifacts exist by design of
+    the typed failure). **Battery bar NOT met by this run (it needs a
+    verified plan + delivery cycle without `NO_FEASIBLE_SERVICES`);
+    the reporting clause (every terminal honestly typed) holds.
+    Seeds 7, 8, 9 remain fresh one-shots, each under its own fresh
+    grant.** Evidence index E198.
+
+47. **Ramrom seed-7 one-shot executed exactly once under the
+    operator's fresh explicit battery grant (E199; 2026-11-12; typed
+    terminal `bounded native observation failed or inconclusive` at
+    HEAD `90ca45a`; grant consumed; run dir
+    `artifacts/demos/playable-demo-d140ff9223ea4314a587e8d28808e8bb/`
+    sealed read-only) — THE FIRST BATTERY SEED TO PRODUCE A NATIVE
+    PLAN.** `result.json` `{launches: 1, connections: 1, mutations:
+    10, requests: 25, qualification_requests: 260,
+    supplemental_requests: 832, preflight: PASS, status: FAILED,
+    selected_services: [1]}`; funnel: captured 1 (831/831 reads,
+    `pause_pairs: 1`), **candidate_count 1, `selected_service_count:
+    1`** (industry-9 → industry-12, 22 cargo units);
+    `network-bindings.json` seals `execution_plan_digest 0762af45…` +
+    `native_plan_digest 126a6767…`; the vehicle was constructed (cash
+    497,104 → 486,178) and reached RUNNING (vehicle 5, backlog 6 at
+    ticks 6043/8166/9709), then the bounded observation window closed
+    without the delivery cycle's receipt set. Terminal provenance:
+    the designed observation gate `freight_delivery.py:199`
+    (`verify_observation`); the evaluator of record reproduces it
+    honestly with `KeyError: 's0-observe-3'` (3 of 4 observe receipts
+    exist). Seal: manifest match True, cleanup all-true, `pgrep -x
+    openttd` empty; `search_truncated: true`. **Battery bar NOT met
+    by this run (plan selected and executed natively, but the
+    delivery cycle's bounded verification did not complete); every
+    terminal honestly typed. The battery continues per its grant:
+    seed 8 next.** Evidence index E199.
+
+48. **Ramrom seed-8 one-shot executed exactly once under the
+    operator's fresh explicit battery grant (E200; 2026-11-12; typed
+    terminal `CAPTURE_SCHEDULE_EMPTY` at HEAD `90ca45a`; grant
+    consumed; run dir
+    `artifacts/demos/playable-demo-49d9e9f8348743a7831819a860aca5be/`
+    sealed read-only).** `result.json` `{launches: 1, connections: 1,
+    funding_mutations: 1, mutations: 0, requests: 0, preflight:
+    PASS, status: FAILED, error: "CaptureCapacityError:
+    CAPTURE_SCHEDULE_EMPTY: 2 relationship(s) deferred by capacity
+    policy (capture open); [9, 6, 8]: INSUFFICIENT_CAPACITY:
+    estimated live-rate span 26d from planned start 712290 reaches
+    712315; exclusive window ends 712312 | [8, 13, 3]:
+    INSUFFICIENT_CAPACITY: estimated live-rate span 28d from planned
+    start 712290 reaches 712317; exclusive window ends 712312"}`.
+    Funnel: captured 0, reads 0/0, candidates None,
+    `search_truncated: true` — the capture SCHEDULER's capacity
+    policy typed the refusal (both spans overshoot the exclusive
+    window ending 712312). Third distinct honestly-typed battery
+    terminal class. Seal: manifest match True, cleanup all-true,
+    `pgrep -x openttd` empty. **Battery bar NOT met by this run;
+    every terminal honestly typed. The battery continues per its
+    grant: seed 9 next.** Evidence index E200.
+
+49. **Ramrom seed-9 one-shot executed exactly once under the
+    operator's fresh explicit battery grant (E201; 2026-11-12; typed
+    terminal `NO_FEASIBLE_SERVICES` at HEAD `90ca45a`; grant
+    consumed; run dir
+    `artifacts/demos/playable-demo-b326925a06794fef86ff157f134bb53d/`
+    sealed read-only) — THE BATTERY IS COMPLETE: four one-shots, each
+    its own fresh grant, each exactly once, none relabeled; bar
+    unmet, every terminal honestly typed.** Seed-9 facts: captured 1
+    (1372/1372 reads completed, `pause_pairs: 1` — pause pacing
+    again carried the full read set), candidates 0, sole candidate
+    refusal `NO_BOUNDED_CORRIDOR` (20/12 stops disconnected,
+    witness-fallback terminal), `search_truncated: true`; manifest
+    match True, cleanup all-true, `pgrep -x openttd` empty. **The
+    battery record:** (1) seed 2026 (E198) `NO_FEASIBLE_SERVICES`
+    with `NATIVE_CORRIDOR_BOUND`; (2) seed 7 (E199) bounded-
+    observation inconclusive — the battery's only PLANNED run
+    (selected=1, vehicle constructed and RUNNING, observe receipts
+    3/4); (3) seed 8 (E200) `CAPTURE_SCHEDULE_EMPTY` (capacity
+    policy, zero reads); (4) seed 9 (this row) `NO_FEASIBLE_SERVICES`
+    with `NO_BOUNDED_CORRIDOR`. **Battery bar NOT met** (no verified
+    native plan + delivery cycle; seed 7 came closest); the spec's
+    "every terminal honestly typed" clause is fully satisfied.
+    Phase C done-ness item 4 (tracker: bar met OR every terminal
+    honestly typed) — **MET via the OR clause**. Phase C native
+    items now all consumed or honestly terminal: FD-C-2 attempts
+    1–7 (E197), ramrom battery (E198–E201); FD-C-2 stays
+    `INCOMPLETE_EVIDENCE`; no feasibility/infeasibility claim beyond
+    the recorded slices; the E36 disposition rule untouched (closed
+    only on actual DELIVERED receipts — none exist). **Remaining
+    Phase C work is offline-only.** Evidence index E201.
+
+50. **Phase C terminal statement and acceptance audit recorded
+    offline at HEAD `c654bf9` (E202; 2026-11-12; zero launches, zero
+    AdminPort, no grant, no evidence byte written, no relabeling).**
+    Terminal statement of record: the roadmap's infeasibility clause
+    (:186-188) did NOT fire and no feasibility was proven — every
+    recorded bounded random-world search carries
+    `search_truncated: true` (E142's zero observed-world-
+    infeasibility rows stand) and no verified native plan + delivery
+    cycle exists — so the decision of record `INCOMPLETE_EVIDENCE`
+    (E142, sha `67183cf6…31fa4`, pinned by `TestRetainedDecision`)
+    stands as the Phase C terminal statement, now carried by the
+    sealed battery bytes: FD-C-1 verified (E142); FD-C-2 attempts
+    1–7 terminal, stays `INCOMPLETE_EVIDENCE` (E197); ramrom battery
+    consumed, bar honestly NOT met, every terminal typed
+    (E198–E201). Strongest verified facts: seed 7's plan selection +
+    native construction + RUNNING service (the only battery run to
+    reach a selected plan; digests `0762af45…`/`126a6767…`); pause
+    pacing proven twice; four typed terminal classes, zero masking.
+    Roadmap :175's "service execution never native-verified" is
+    superseded: attempted to battery exhaustion; selection/
+    construction/running once-verified in the seed-7 slice; delivery
+    unverified; no claim beyond recorded slices. E36 rule untouched.
+    **No Phase D exists on file** — the three undefined headings
+    ("Closed-Loop Optimization", "Productization", "Final Release")
+    need an operator decision before any tracking. Acceptance audit
+    (full table in the tracker Phase C section): generation/
+    discovery/spectator/cleanup MET (E4/E8); seed-17 pair
+    feasibility NOT MET with slice infeasibility proof (E8–E10);
+    FD-C-1 MET (E142); SOURCE_SAVE_FUSION NOT MET sealed REJECTED
+    (E16/ADR-010); FD-C-2 decision INCOMPLETE_EVIDENCE; fences
+    MET (E197–E201 seals); ramrom offline bar MET (E196); battery
+    bar NOT MET honestly; reporting clause MET; done-ness items 3/4
+    MET, item 6 recorded INCOMPLETE_EVIDENCE; E36 upheld (E135).
+    **Remaining offline follow-ups on file (none launched):** (a)
+    offline decision re-derivation consuming the battery
+    diagnostics as new digest-pinned inputs to the E142 engine
+    (successor report, new identity — never relabeling E142's);
+    (b) seed-7 observation-window forensics from sealed bytes
+    (which `verify_observation` phase check failed, what
+    `observation_budget` computed; analysis only, no code change
+    without operator decision); (c) ramrom ticket 05 native-proof
+    clause adjudicated by the battery record, awaiting operator
+    disposition; (d) DG-7 funds taxonomy and the three undefined
+    headings remain open operator decisions; DG-9's authorizations
+    were opened and consumed as E197–E201 (tracker is the living
+    authority over the roadmap's historical gate table). Evidence
+    index E202.

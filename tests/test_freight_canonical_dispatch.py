@@ -297,3 +297,35 @@ def test_actual_gs_dispatch_ack_requires_unpaused_native_world():
     )
     assert ack.paused is False
     assert ack.originals == []
+
+
+def test_actual_armed_seal_allows_continuous_observation_family():
+    # t031-1 root cause: the armed guard killed the script on the first
+    # post-dispatch continuous-* observation instead of answering it.
+    from test_freight_capacity_execution import plain
+
+    vm = canonical_vm()
+    vm.execute('bridge.Handle({protocol=1,type="canonical-arm",request_id="arm",service=-1});')
+    bridge = vm.get_roottable()["bridge"]
+    assert bridge.canonical_armed is True
+    vm.execute(
+        'bridge.Handle({protocol=1,type="continuous-begin",request_id="continuous-begin",service=-1});'
+    )
+    reply = plain(vm.get_roottable()["replies"][1])
+    assert reply["type"] == "continuous-begin-result"
+    assert reply["request_id"] == "continuous-begin"
+    assert reply["status"] == "rejected"
+    assert "CANONICAL_MUTATIONS_SEALED" not in reply["error"]
+    assert bridge.canonical_armed is True
+
+
+def test_actual_armed_seal_still_seals_non_continuous_traffic():
+    vm = canonical_vm()
+    vm.execute('bridge.Handle({protocol=1,type="canonical-arm",request_id="arm",service=-1});')
+    with pytest.raises(Exception, match="CANONICAL_MUTATIONS_SEALED"):
+        vm.execute(
+            'bridge.Handle({protocol=1,op="select",request_id="select",plan=null,arg=0,max_cost=0});'
+        )
+    with pytest.raises(Exception, match="CANONICAL_MUTATIONS_SEALED"):
+        vm.execute("bridge.Handle(5);")
+    assert vm.get_roottable()["bridge"].canonical_armed is True

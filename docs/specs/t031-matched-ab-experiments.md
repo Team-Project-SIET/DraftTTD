@@ -38,8 +38,21 @@ qualification lines 109–234, bounded telemetry lines 295–334).
   `canonical-parent.nut` already carries the full
   `continuous-begin/company/service/telemetry` producer set, so the arms
   run telemetry without changing package bytes.
-- **Identities, never shared:** arm A `canonical-fleet-matched-a-t031-1`,
-  arm B `canonical-fleet-matched-b-t031-1`; each its own CLAIM and its
+- **Identities, never shared:** arm A `canonical-fleet-matched-a-t031-3`
+  (attempt 1 `t031-1` terminal FAILED E183 — armed seal killed the
+  script on the post-dispatch `continuous-begin`; attempt 2 `t031-2`
+  terminal FAILED E185 — the correspondence gate correctly refused the
+  bridge change, the create-q3 anchor being bound to the pre-fix
+  bridge `0fa190a0…`; both grants consumed and void; fix/diagnosis
+  rounds E184 + E186; attempt 3 `t031-3` EXECUTED once against the
+  create-q5 anchor and typed `CANONICAL_FLEET_MATCHED_VERIFIED` rc 0 —
+  E190; arm A's done-ness part met),
+  arm B `canonical-fleet-matched-b-t031-1` (re-prepared with the E184
+  fixed package AND the create-q5 anchor, then EXECUTED once under its
+  own fresh grant after arm A's attempt completed VERIFIED — typed
+  `CANONICAL_FLEET_MATCHED_VERIFIED` rc 0, E191; the ordering of record
+  held; the `compare_arms` descriptive B-vs-A record stands E192);
+  each its own CLAIM and its
   own fresh explicit authorization (not shared with the T-030 exercise,
   with each other, or with any earlier attempt; all prior grants void).
 - **Arms:** arm A adds nothing (three original vehicles); arm B adds only
@@ -98,10 +111,31 @@ E92 readback-fidelity fix — live digest `ad96fd42…` vs the record's
 `8353a172…`), so the old check would have refused EVERY fresh prepare at
 grant time. The record's package byte-pin still matches exactly.
 `require_retained_vm_helpers` now verifies the record's helper digests
-against the retained q3 `frozen-source.zip` (fail-closed evidence
+against the retained stage-sealed `frozen-source.zip` (fail-closed evidence
 integrity), while the live tree's newer helpers are sealed per-stage in
 the stage's own frozen-source seal. The frozen driver's identical check is
 left byte-untouched: consumed q3 identities are never re-prepared.
+
+**E184 update:** the fix round regenerated the VM record as
+`artifacts/validation/canonical-fleet-reload-q4/suspension.json` (25/25
+cases rc 0 at the pinned exact 15.3 Squirrel source commit
+`14ec60f248547d4d062a1160f0fc26d742319888`; q3 dir untouched) for the
+fixed package bytes (armed seal now lets the observation-only
+`continuous-*` family through), and re-pointed the retained-provenance
+zip to the t031-1 attempt's stage seal — its 4 VM_HELPER entries are
+byte-identical to the q4 record's pins (the q3 zip matched only 3/4,
+helpers having evolved since the q3 era). `SUSPENSION_VALIDATION` now
+points at q4; the q3 record stays retained history.
+
+**E186 update:** the bridge change also invalidates the NATIVE anchor —
+the arm attempt `t031-2` proved the create-q3 save loads and answers
+under the fixed bridge, but `compare_canonical` correctly refused
+`bridge_sha256` (created `0fa190a0…` vs loaded `6c6a703c…`). The
+contract-preserving path is a fresh canonical create under the fixed
+bridge: `CREATE` advanced to `canonical-fleet-create-q4` (staged bytes
+pin to the q4 VM record), and the arms + T-032 re-stage against the new
+anchor. The exact-correspondence contract (including bridge identity)
+is unchanged — no weakening, no relabeling.
 
 ## Tickets
 

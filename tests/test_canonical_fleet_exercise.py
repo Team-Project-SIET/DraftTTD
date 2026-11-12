@@ -7,6 +7,7 @@ the conductor wiring are all controlled; nothing launches or connects.
 import asyncio
 import json
 import zipfile
+from dataclasses import dataclass
 from types import SimpleNamespace
 
 import pytest
@@ -92,7 +93,7 @@ def test_prepare_seals_current_helpers_despite_record_pin_drift():
 
     current = driver.PROJECT / "tests/support/canonical_protocol_vm.nut"
     if validation["helper_sha256"].get(str(current)) == sha256(current):
-        pytest.skip("q3-era helper pin still matches the live tree")
+        pytest.skip("live helper pins match the q4 record")
     exercise.require_retained_vm_helpers(validation)
     assert sha256(current) != validation["helper_sha256"].get(str(current))
 
@@ -327,3 +328,93 @@ def test_verify_states(tmp_path):
         f"{digest}  result.json\n{'0' * 64}  tamper.json\n"
     )
     assert exercise.verify(tmp_path) == "MANIFEST_MISMATCH: tamper.json"
+
+
+def test_run_failure_types_failed_not_stale_stage_status(tmp_path, monkeypatch):
+    """A mid-attempt stage status must never survive run()'s failure path.
+
+    t031-1 secondary defect: conduct left the stage-1 string in result["status"],
+    so the retained result.json claimed a verified exercise on a FAILED attempt.
+    """
+
+    @dataclass
+    class FakeWelcome:
+        revision: str
+        seed: int
+        width: int
+        height: int
+
+    class FakeSession:
+        state = exercise.AuthState.ACTIVE
+        protocol = 7
+        welcome = FakeWelcome("15.3", 42, 64, 64)
+
+        async def authenticate(self, *args, **kwargs):
+            return None
+
+    class FakeTransport:
+        def __init__(self, session, protocol):
+            pass
+
+        async def subscribe(self):
+            return None
+
+    class FakeBackend:
+        process = None
+
+        def __init__(self, *, authorized_one_launch=False):
+            assert authorized_one_launch is True
+
+        async def launch(self, prepared):
+            return None
+
+        async def cleanup(self, prepared):
+            return dict(reaped=True, cleanup_error=None, remaining_processes=[])
+
+    def observe(direction: str, frame: bytes) -> None:
+        pass
+
+    async def connect_secure(*args, frame_observer=observe, **kwargs):
+        # The two establishment frames the real secure authentication streams.
+        frame_observer("outbound", b"\x00\x00\x02establishment-out")
+        frame_observer("inbound", b"\x00\x00\x03establishment-in")
+        return FakeSession()
+
+    async def wait_log(backend, prepared, marker):
+        assert marker == "FREIGHT_DELIVERY_READY"
+
+    def fake_preflight(prepared, *, identity, contract):
+        assert identity == exercise.EXERCISE
+        return dict(budgets=dict(total_seconds=5.0))
+
+    def fake_cleanup_endpoints(prepared, cleanup):
+        return dict(reaped=True, remaining_processes=[], cleanup_error=None)
+
+    async def stale_conduct(backend, prepared, session, result):
+        result["status"] = "CANONICAL_FLEET_EXERCISE_VERIFIED"  # stage-1 marker
+        raise RuntimeError("five-anniversary monitoring exploded")
+
+    monkeypatch.setattr(exercise, "preflight", fake_preflight)
+    monkeypatch.setattr(exercise.driver, "CanonicalBackend", FakeBackend)
+    monkeypatch.setattr(exercise, "wait_log", wait_log)
+    monkeypatch.setattr(exercise.AuthorizedKey, "from_bytes", classmethod(lambda cls, raw: raw))
+    monkeypatch.setattr(exercise.freight.PlannerDeliverySession, "connect_secure", connect_secure)
+    monkeypatch.setattr(exercise, "GameScriptTransport", FakeTransport)
+    monkeypatch.setattr(exercise, "verify_cleanup_endpoints", fake_cleanup_endpoints)
+
+    prepared = exercise_prepared(tmp_path)
+    logs = tmp_path / "workspace-logs"
+    logs.mkdir()
+    prepared.endpoints = (39001, 39002)
+    prepared.key_path = tmp_path / "admin.key"
+    prepared.key_path.write_bytes(b"controlled")
+    prepared.spec = SimpleNamespace(
+        workspace=SimpleNamespace(logs=logs, root=tmp_path / "disposed-root", close=lambda: None)
+    )
+
+    result = asyncio.run(exercise.run(prepared, authorize_one_launch=True, conduct=stale_conduct))
+    assert result["status"] == "FAILED"
+    assert result["error"] == "RuntimeError: five-anniversary monitoring exploded"
+    assert result["launches"] == 1 and result["connections"] == 1 and result["mutations"] == 0
+    retained = json.loads((tmp_path / "result.json").read_bytes())
+    assert retained["status"] == "FAILED"

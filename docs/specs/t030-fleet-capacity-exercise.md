@@ -90,3 +90,23 @@ no staging beyond the new attempt's prepare/preflight/verify (offline,
 argv never executed), and never modifies retained evidence. The native
 attempt waits for a fresh explicit operator authorization after
 independent review and Gate C signing.
+
+## Outcome of record (2026-11-11)
+
+The attempt of record `canonical-fleet-exercise-t030-1` executed exactly
+once under the operator's fresh explicit grant at HEAD `5845d8b` and is
+terminal `CANONICAL_FLEET_EXERCISE_VERIFIED` (E182): reload
+correspondence first (`reload-correspondence.json` +
+`reload-readback.sav`, cash 471157 before/after, three original
+services, `restored: true`, paused), then the paused arm-B exercise —
+capacity-add £4,429 (cash 471157 → 466728, capacity 20, cargo 1),
+`canonical-arm` (originals state 2, paused), `canonical-dispatched`
+(unpaused), `canonical-after-intervention` (re-paused, state 2) — with
+`exercise-correspondence.json` typed
+`EXACT_NATIVE_SEMANTIC_CORRESPONDENCE` binding the dispatch, reload and
+observation digests to the E2 source save
+`51e45689ae40dfa53c2cc150a05076fcb6e5cc2f38ec4eff56908372ab1297eb`.
+`result.json` `{launches: 1, connections: 1, mutations: 3}`; cleanup
+all-true, manifest match True, post-run verify rc 0, `pgrep -x openttd`
+empty. OPEX/ROI stay UNKNOWN: this exercise observes the capacity
+purchase and dispatch mechanics, not a profit claim.

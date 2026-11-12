@@ -1,8 +1,29 @@
 # 02: Arm A native attempt package (T-031)
 
 **Type:** gate package
-**Status:** prepared 2026-11-11 — authorizes nothing by itself; the
-launch requires the operator's separate fresh explicit authorization
+**Status:** arm A t031-3 EXECUTED ONCE 2026-11-12 under the operator's
+fresh explicit arm-A grant at HEAD `da11430` — typed
+`CANONICAL_FLEET_MATCHED_VERIFIED` rc 0 (E190): `{launches: 1,
+connections: 1, mutations: 2, requests: 10889}`; reload correspondence
+`EXACT_NATIVE_SEMANTIC_CORRESPONDENCE` (cash 471157 before/after,
+originals `[0,4,2709] [1,5,1557] [2,6,404]`, restored, paused), arm-A
+dispatch binding null / purchase_capex 0 (arm A constructs nothing),
+exercise correspondence `EXACT_NATIVE_SEMANTIC_CORRESPONDENCE`,
+service-receipt-{0,1,2} vehicles 4/5/6 spending 0, FIVE annual
+receipts `continuous-annual-{326,643,953,1257,1555}.json` (economy
+years 1951–1955, 1826 elapsed economy days) + 60 monthly, per-vehicle
+telemetry 4/5/6; cleanup all-true, manifest match True, post-run
+verify `CANONICAL_FLEET_MATCHED_VERIFIED`, `pgrep -x openttd` empty;
+attempt dir sealed read-only hereafter. Attempt history: t031-1
+terminal FAILED E183 (armed seal killed the script on the
+post-dispatch `continuous-begin`); t031-2 terminal FAILED E185
+(correspondence gate correctly refused the bridge change — create-q3
+anchor bound to the pre-fix bridge `0fa190a0…`); the E186–E188 rounds
+fixed the bridge and regenerated the anchor (create-q5, E189); grants
+for both consumed attempts void; identities advance, never a retry.
+**ARM A'S DONE-NESS PART IS MET; arm B's grant is next** (arm B
+re-prepares with the fixed package + create-q5 anchor first — see
+ticket 03)
 **Spec:** `docs/specs/t031-matched-ab-experiments.md`
 
 ## Preconditions (all offline-checkable)
@@ -15,21 +36,21 @@ launch requires the operator's separate fresh explicit authorization
   (`artifacts/runtime/verified-assets/opengfx-8.0-all.zip`).
 - `pgrep -x openttd` empty before the run.
 - E2 manifest re-verified inside
-  `artifacts/runtime/canonical-fleet-create-q3/` (0 mismatches); no
+  `artifacts/runtime/canonical-fleet-create-q5/` (0 mismatches); no
   byte modified by the check.
 
 ## Commands of record (one launch, one connection, no retry/reconnect)
 
 ```bash
 .venv/bin/python -m app.simulation.openttd.proof.canonical_fleet_matched prepare \
-  artifacts/runtime/canonical-fleet-matched-a-t031-1 \
-  --canonical artifacts/runtime/canonical-fleet-create-q3 --arm A
+  artifacts/runtime/canonical-fleet-matched-a-t031-3 \
+  --canonical artifacts/runtime/canonical-fleet-create-q5 --arm A
 .venv/bin/python -m app.simulation.openttd.proof.canonical_fleet_matched preflight \
-  artifacts/runtime/canonical-fleet-matched-a-t031-1 --arm A
+  artifacts/runtime/canonical-fleet-matched-a-t031-3 --arm A
 .venv/bin/python -m app.simulation.openttd.proof.canonical_fleet_matched verify \
-  artifacts/runtime/canonical-fleet-matched-a-t031-1 --arm A   # AUTHORIZATION_UNVERIFIED
+  artifacts/runtime/canonical-fleet-matched-a-t031-3 --arm A   # AUTHORIZATION_UNVERIFIED
 .venv/bin/python -m app.simulation.openttd.proof.canonical_fleet_matched run \
-  artifacts/runtime/canonical-fleet-matched-a-t031-1 --arm A --authorize-one-launch
+  artifacts/runtime/canonical-fleet-matched-a-t031-3 --arm A --authorize-one-launch
 ```
 
 ## Grant text style (of record)
@@ -47,7 +68,7 @@ T-030 exercise, or with any earlier attempt (all prior grants void).
   nothing) + `exercise-correspondence.json`.
 - Per-service receipts 0/1/2 (three originals, no
   `additional_vehicles`), telemetry bindings exactly three.
-- `arm-record.json` (identity `canonical-fleet-matched-a-t031-1`,
+- `arm-record.json` (identity `canonical-fleet-matched-a-t031-3`,
   `dispatch_purchase_capex=0`, five-anniversary summary, provenance
   labels: in-run construction spending OBSERVED-zero; originals'
   historical construction cost UNKNOWN, belonging to the E2 create

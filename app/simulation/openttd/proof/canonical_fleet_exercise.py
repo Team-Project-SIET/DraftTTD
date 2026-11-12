@@ -58,7 +58,10 @@ VM_HELPERS = (
     "tests/support/canonical_protocol_vm.nut",
 )
 RETAINED_VM_FROZEN_SOURCE = (
-    PROJECT / "artifacts/runtime/canonical-fleet-reload-q3/frozen-source.zip"
+    # The t031-1 attempt's retained stage seal: its VM_HELPER entries are
+    # byte-identical to the q4 record's validator run (helpers untouched by
+    # the E184 armed-seal fix round, which changed only package/proof files).
+    PROJECT / "artifacts/runtime/canonical-fleet-matched-a-t031-1/frozen-source.zip"
 )
 EXERCISE_CONTRACT = dict(
     mode="canonical-fleet-exercise",
@@ -89,11 +92,13 @@ def require_bridge_validation(package):
 
 
 def require_retained_vm_helpers(validation):
-    """The q3 record's helper pins bind the RETAINED q3-era tooling bytes.
+    """The record's helper pins bind the RETAINED stage-sealed tooling bytes.
 
-    The retained frozen-source.zip proves the record's validator provenance;
-    the live tree's helpers may legitimately be newer (E92 readback fidelity)
-    and are sealed per-stage in the stage's own frozen-source seal.
+    The retained frozen-source.zip (the t031-1 attempt's stage seal, whose
+    helper bytes are exactly the q4 record's validator run) proves the
+    record's validator provenance; the live tree's helpers may legitimately
+    be newer (E92 readback fidelity) and are sealed per-stage in the stage's
+    own frozen-source seal.
     """
     with zipfile.ZipFile(RETAINED_VM_FROZEN_SOURCE) as z:
         for name in VM_HELPERS:
@@ -511,6 +516,9 @@ async def run(
             await (conduct or conduct_exercise)(backend, prepared, session, result)
     except BaseException as error:
         result["error"] = type(error).__name__ + ": " + str(error)
+        # Never leave a mid-attempt stage status in the retained result: the
+        # typed terminal is FAILED (verify refuses it; nothing is relabeled).
+        result["status"] = "FAILED"
         try:
             result.update(driver.failure_details(prepared, error))
         except (OSError, ValueError) as reporting_error:
