@@ -334,8 +334,11 @@ def test_preflight_passes_on_real_staging_unpatched(tmp_path):
     """The t035-1 refusal class of record: preflight must pass over a REAL
     staging from the retained E2 evidence with verify_created_source and
     verify_save UNPATCHED (E167). Skip-typed as missing evidence on clones
-    without the retained bytes (E151 precedent)."""
-    canonical = Path(__file__).resolve().parents[1] / "artifacts/runtime/canonical-fleet-create-q3"
+    without the retained bytes (E151 precedent). The canonical anchor is
+    the module's CREATE constant of record — create-q3 at E167, advanced
+    to create-q5 by the E186/E189 bridge-fix rounds (identities advance,
+    never a retry); verify_created_source refuses any other name."""
+    canonical = Path(__file__).resolve().parents[1] / "artifacts/runtime" / driver.CREATE
     binary = freight_delivery.BINARY
     graphics = freight_delivery.GRAPHICS_ARCHIVE
     if (
