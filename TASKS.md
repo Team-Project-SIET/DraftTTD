@@ -5067,3 +5067,42 @@ WORLD`
     never landed — `KeyError: 's0-observe-3'`, 3 of 4; research note
     at a new identity, no grant, no code change). UNKNOWNs preserved
     (E203/E204 lists stand). Evidence index E205.
+
+54. **P2 executed — seed-7 observation-window forensics answered all
+    three named questions from the sealed E199 bytes; the designed
+    gate fired as designed (E206; 2026-11-12; read-only, zero
+    launches, zero AdminPort, no grant, no sealed byte modified, no
+    code change; research note
+    `.scratch/ramrom-product/research/
+    02-seed7-observation-window-forensics.md`).** Q1 — the failing
+    check is the status check: receipt 3 (`s0-observe-2`) returned
+    `WINDOW_EXHAUSTED`, not `OBSERVED` (run terminal `ValueError:
+    bounded native observation failed or inconclusive` at
+    `freight_delivery.py:199`). Q2 — the observation budget computed
+    **4440** ticks (distance 34 = 5+27+2 at width 256;
+    min(4440, 2048+128·34) = min(4440, 6400); .nut agrees) and was
+    never binding (774 ticks elapsed, 775 polls — both inside). Q3 —
+    the fourth observe receipt was **never issued**: the run
+    terminalized at receipt 3's inline verification
+    (`freight_native_network.py:1133-1135`); the evaluator's
+    `KeyError: 's0-observe-3'` is the 4-record lookup at `:1551` over
+    the 3 receipts on file. Root cause: the designed 60-economy-day
+    guard (`main.nut:151`, shared across all four phases from the
+    pre-start date 712290) vs a 32-tile-Manhattan haul — the
+    full-load wait consumed 50 of the 60 days (loading completed at
+    day 712340, `s[11]=f[5]=22`); receipt 3 landed at day 712351
+    (**+61 > 60**) with the vehicle still ≥ 24 Manhattan tiles short
+    of the destination and moving. Pace estimate (derived, not a
+    claim): ≥ 12 tiles in ≤ 775 ticks ≈ 1.1–1.2 tiles/day at the
+    record's 74-ticks-per-day roll (ADR-0001); the remaining leg
+    needs ~20+ more days. **Conclusion of record:** the observation
+    window is distance- and production-rate-sensitive; seed-7's plan
+    is the first on-file random-world plan to expose that boundary;
+    corridor-lineage deliveries (short hauls) are not relabeled. Any
+    window redesign is a fresh operator decision (fresh grants where
+    native). UNKNOWNs preserved: per-tile trajectory/route length
+    (`frames.json` hex not parsed), the industry's production curve,
+    whether any pacing/policy variant fits the fences, and
+    `observation_budget` transit-time adequacy in general (E203 item
+    stands). No decision of record changed; FD-C-2 stays
+    `INCOMPLETE_EVIDENCE`; E36's rule untouched. Evidence index E206.

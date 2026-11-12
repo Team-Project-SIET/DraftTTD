@@ -176,3 +176,28 @@ grant) — with this closure the ramrom map's tasks are all closed and
 the EXIT regression gate (the 53 legacy offline reds) is **unblocked**;
 (d) **P2 ordered** as the next round (the seed-7 observation-window
 forensics, read-only, no grant, no code change). Evidence index E205.
+
+## 10. P2 status (2026-11-12, E206)
+
+P2 (item 4, the seed-7 observation-window forensics) is **done** —
+research note of record
+[.scratch/ramrom-product/research/02-seed7-observation-window-forensics.md](../.scratch/ramrom-product/research/02-seed7-observation-window-forensics.md).
+All three named questions answered from the sealed E199 bytes: (Q1)
+the failing `verify_observation` check is the status check — receipt 3
+returned `WINDOW_EXHAUSTED`, not `OBSERVED`; (Q2) the observation
+budget computed 4440 ticks (capped; 2048+128·34=6400 at width 256) and
+was never binding (774 ticks elapsed); (Q3) the fourth observe receipt
+was never issued — the run terminalized at receipt 3's inline
+verification and the evaluator's `KeyError: 's0-observe-3'` is the
+4-record lookup at `freight_native_network.py:1551`. Root cause of
+record: the designed 60-economy-day guard (`main.nut:151`, shared
+across all four phases from the pre-start date 712290) vs a
+32-tile-Manhattan haul — the full-load wait consumed 50 of the 60
+days and the vehicle was still ≥ 24 Manhattan tiles short of the
+destination at expiry: **the designed gate fired as designed; no code
+defect and no capture defect.** The observation window is distance-
+and production-rate-sensitive; any future window redesign is a fresh
+operator decision (fresh grants where native). The queue after P2:
+P4 (the map EXIT regression, unblocked and ordered "right after P2" in
+the E205 session round 2), then P5 (operator decisions). Evidence
+index E206.

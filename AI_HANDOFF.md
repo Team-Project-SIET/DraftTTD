@@ -2942,3 +2942,49 @@ no headless-only execution.
    a new identity, no grant, no code change (any change = a separate
    operator decision). UNKNOWNs preserved (E203/E204 lists stand).
    Evidence index E205.
+
+## 2026-11-12 P2 executed offline at HEAD `f7b481a` (E206): the seed-7 observation-window forensics answered all three named questions from the sealed E199 bytes — the designed 60-economy-day guard fired as designed (full-load wait consumed 50 of the 60 days; a 32-tile-Manhattan haul cannot complete inside the window); the budget computed 4440 ticks and was never binding; the fourth observe receipt was never issued; no code defect and no capture defect
+
+1. **Q1 — the failing check:** the run terminal (`result.json`) is
+   `"ValueError: bounded native observation failed or inconclusive"`
+   (`freight_delivery.py:199`); receipt 3 (`s0-observe-2-response.json`)
+   came back `"status": "WINDOW_EXHAUSTED"`, not `"OBSERVED"` — the
+   status check fired first (the phase-2 specific check would also
+   have failed: vehicle at tile 38858 vs destination 33228, still
+   loaded s[11]=22).
+2. **Q2 — the observation budget:** 4440 ticks (capped; 2048+128·34 =
+   6400 at width 256, distance 34 = 5+27+2; .nut agrees) and never
+   binding: 774 ticks elapsed, 775 polls — both inside the allowance.
+3. **Q3 — the fourth receipt:** never issued. The live loop verifies
+   each observe inline (`freight_native_network.py:1133-1135`); the
+   observe-2 verification raised and the run terminalized FAILED, so
+   `s0-observe-3` was never requested; the evaluator's offline
+   re-verify then raised `KeyError: 's0-observe-3'` at the 4-record
+   lookup (`:1541`, `:1551`).
+4. **Root cause (the 60-economy-day guard, `main.nut:151`):** one
+   shared 60-day economy budget across all four phases from the
+   pre-start date 712290 (`observation_economy_days: 60`,
+   `PRELAUNCH.json`); receipts at +29 (OBSERVED), +50 (OBSERVED —
+   full native source loading completed only then, 22 units), **+61 >
+   60 → WINDOW_EXHAUSTED**; at expiry the vehicle was ≥ 24 Manhattan
+   tiles short of the destination and still moving (no
+   `MOVEMENT_STALLED`). Derived pace estimate (supporting color, not a
+   claim): ≥ 12 tiles in ≤ 775 ticks ≈ 1.1–1.2 tiles/day at the
+   record's 74-ticks-per-day roll (ADR-0001); the remaining leg needs
+   ~20+ more days — the phase-2 arrival was economically unreachable
+   inside the window.
+5. **Conclusion of record:** the designed gate fired as designed — no
+   code defect, no capture defect. The observation window is
+   distance- and production-rate-sensitive; seed-7's plan is the
+   first on-file random-world plan long enough (and its source
+   industry slow enough) to expose that boundary; corridor-lineage
+   deliveries (short hauls) are not relabeled. Any future window
+   redesign is a fresh operator decision (fresh grants where native).
+   **UNKNOWNs preserved:** the exact per-tile trajectory and true
+   route length (`frames.json`, 2763 raw hex AdminPort frames, not
+   parsed this round); the source industry's production curve;
+   whether any pacing/policy variant completes a 32-tile haul inside
+   the fences (design question); `observation_budget` transit-time
+   adequacy in general (the E203 UNKNOWN stands). Research note
+   `.scratch/ramrom-product/research/02-seed7-observation-window-
+   forensics.md`; no decision of record changed. Evidence index E206.
