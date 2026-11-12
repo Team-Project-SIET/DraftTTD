@@ -2988,3 +2988,71 @@ no headless-only execution.
    adequacy in general (the E203 UNKNOWN stands). Research note
    `.scratch/ramrom-product/research/02-seed7-observation-window-
    forensics.md`; no decision of record changed. Evidence index E206.
+
+## 2026-11-12 P4 executed offline at HEAD `74c8152` (E207): the first full-suite exit-regression run of record completed end-to-end — 57 failed / 6271 passed / 54 skipped (6382 collected exactly, no collection errors); the legacy-53 structure is recognizable (P08 ×51 exact, structural-world ×1 exact, corridor family ×1 at the map's count but the VM ladder test failed while the triage's named target passed) and 4 additional reds exist beyond the legacy set; the exit gate does NOT pass, nothing relabeled, nothing force-fit
+
+**What happened:** The operator-ordered P4 round ran the first recorded
+full-suite regression offline (no OpenTTD launch, no AdminPort, no grant, no
+`--run-openttd`/`--run-postgres`, no sealed byte touched):
+
+```bash
+.venv/bin/pytest tests/ -p no:cacheprovider
+# 57 failed, 6271 passed, 54 skipped in 3797.26s (1:03:17)   rc=1
+```
+
+There was no full-suite command of record on file (REPRODUCE.md records
+focused suites only; full-tree health was UNKNOWN) — this is the named first
+full-suite round. Two earlier launch attempts died to an agent-side
+interruption and a server restart before producing a complete capture;
+neither is recorded as a run outcome. The fresh capture
+(`/tmp/opencode/exit-regression-2026-11-12/pytest-full.out`) is transient;
+the durable record is research note
+`.scratch/ramrom-product/research/07-exit-regression-full-suite-2026-11-12.md`
+plus the ledgers.
+
+1. **Conservation:** 57 + 6271 + 54 = 6382 = the collected count exactly; the
+   54 skips are the offline self-skips of the native/postgres-gated tests.
+2. **Group A — controlled P08 e2e ×51, reproduced exactly:** mechanism
+   spot-check matches the legacy triage's frozen-fixture digest drift
+   (`PlanningFactError: controlled accepted bytes mismatch` at
+   `tests/test_p08_controlled_e2e.py:227` via `:537`).
+3. **Group C — structural-world fixture ×1, same test ID:** manifest sha256
+   drift in `tests/fixtures/cargo_catalog_checkpoint` (computed
+   `1c025d4a…39953ce` vs sealed `f52aaac8…9123233b`, `:702`). The earlier
+   "may pass on Linux (CRLF)" hypothesis is NOT confirmed — it failed on
+   Linux with a digest mismatch.
+4. **Corridor family — ×1 at the map's count, but not the triage's named
+   test:** FAILED `tests/test_corridor_cargoflow2_vm.py::
+   test_ladder_of_record_runs_green` (`AssertionError: package dropped
+   request finance-00: no reply`, `tests/test_corridor_cargoflow2.py:580`);
+   the triage's named target
+   `test_delivered_verdict_never_fires_on_the_terminal_class` PASSED. The two
+   on-file descriptions of the historical corridor red disagree; both facts
+   recorded, no force-fit, no adjudication this round.
+5. **4 additional reds NOT in the legacy 53:**
+   `tests/test_classification_execution.py::test_sealed_budgets`
+   (`assert 410 == 103`, `:121`);
+   `tests/test_terrain_classification_preparation.py::
+   test_prepare_materializes_a_pending_authorization_candidate` (budgets
+   410 pages / 208280 bytes vs sealed 103 / 52324, `:58`);
+   `tests/test_world_correspondence.py::
+   test_fallback_schedule_is_sealed_and_explicit`
+   (`assert 208280 == (103 * 508)`, `:53`);
+   `tests/test_qualification_preparation.py::
+   test_finalization_failure_cannot_publish_qualification[terminal]`
+   (runtime workspace retained after FAILED finalization, `:386`). Items 1–3
+   share one signature — computed budgets now 410 pages / 208280 bytes
+   (= 410 × 508) where the tests seal 103 / 52324 (= 103 × 508); item 4 is a
+   separate mechanism.
+6. **Outcome of record:** the exit gate does NOT pass (57 reds vs the
+   known-red 53). The 4 additional reds' new-vs-pre-existing status is
+   UNKNOWN — no prior full-suite baseline exists on file; this is the first
+   recorded full-suite run. Root causes and any fixes remain separate
+   operator decisions (the triage report's fix-branch proposals stand
+   unexecuted, per E36's rule); the gate stays sealed/open exactly as the
+   map states.
+7. **UNKNOWNs preserved:** new-vs-pre-existing for the 4 extras; which
+   description the historical corridor red intended; Group C's actual
+   fixture-drift mechanism; flakiness/ordering sensitivity (single offline
+   capture only). Nothing relabeled; every historical outcome keeps its
+   sealed identity. Evidence index E207.

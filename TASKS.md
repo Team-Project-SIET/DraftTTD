@@ -5106,3 +5106,49 @@ WORLD`
     `observation_budget` transit-time adequacy in general (E203 item
     stands). No decision of record changed; FD-C-2 stays
     `INCOMPLETE_EVIDENCE`; E36's rule untouched. Evidence index E206.
+
+55. **P4 executed — first full-suite exit-regression run of record
+    completed end-to-end offline; the exit gate does NOT pass (E207;
+    2026-11-12; zero launches, zero AdminPort, no grant, no
+    `--run-openttd`/`--run-postgres`, no sealed byte modified, no
+    relabeling, no force-fit; research note
+    `.scratch/ramrom-product/research/07-exit-regression-full-suite-2026-11-12.md`;
+    docs ONE commit this; no push).** Summary of record: **57 failed /
+    6271 passed / 54 skipped in 3797.26 s (1:03:17)** from
+    `.venv/bin/pytest tests/ -p no:cacheprovider` (no full-suite
+    command existed on file — REPRODUCE.md records focused suites
+    only; this is the named first full-suite round); 57 + 6271 + 54 =
+    6382 = collected exactly, no collection errors; the 54 skips are
+    the offline self-skips of the native/postgres-gated tests.
+    Legacy-53 comparison: Group A (controlled P08 e2e) **×51 exact**
+    (mechanism spot-check matches the triage's frozen-fixture digest
+    drift: `PlanningFactError: controlled accepted bytes mismatch`);
+    Group C (structural-world fixture) **×1 exact same test ID**
+    (`cargo_catalog_checkpoint` manifest sha256 drift; the "may pass
+    on Linux (CRLF)" hypothesis NOT confirmed — failed on Linux with
+    a digest mismatch); corridor family **×1 at the map's count** but
+    the failing test is `test_corridor_cargoflow2_vm.py::
+    test_ladder_of_record_runs_green` (`package dropped request
+    finance-00: no reply`) while the triage's named target
+    `test_delivered_verdict_never_fires_on_the_terminal_class` PASSED
+    — both on-file descriptions recorded, which one the historical 53
+    intended is not adjudicated this round. **4 additional reds NOT in
+    the legacy 53:** `test_sealed_budgets` (`assert 410 == 103`),
+    `test_prepare_materializes_a_pending_authorization_candidate`
+    (budgets 410 pages / 208280 bytes vs sealed 103 / 52324),
+    `test_fallback_schedule_is_sealed_and_explicit`
+    (`assert 208280 == (103 * 508)`), and
+    `test_finalization_failure_cannot_publish_qualification[terminal]`
+    (workspace retained after FAILED finalization) — items 1–3 share
+    one signature (computed 410×508 budgets vs sealed 103×508
+    constants); item 4 is a separate mechanism. **Outcome of record:**
+    the exit gate does NOT pass (57 reds vs the known-red 53); the 4
+    extras' new-vs-pre-existing status is UNKNOWN (no prior full-suite
+    baseline on file — first run of record); root causes and fixes
+    remain separate operator decisions (the triage report's
+    fix-branch proposals stand unexecuted, per E36's rule); the gate
+    stays sealed/open exactly as the map states. UNKNOWNs preserved:
+    new-vs-pre-existing for the 4 extras; the historical corridor
+    red's intended test; Group C's actual fixture-drift mechanism;
+    flakiness/ordering sensitivity (single capture only). Evidence
+    index E207.

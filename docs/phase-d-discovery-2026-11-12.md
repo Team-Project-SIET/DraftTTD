@@ -201,3 +201,52 @@ operator decision (fresh grants where native). The queue after P2:
 P4 (the map EXIT regression, unblocked and ordered "right after P2" in
 the E205 session round 2), then P5 (operator decisions). Evidence
 index E206.
+
+## 11. P4 status (2026-11-12, E207)
+
+The operator-ordered P4 round — the first recorded full-suite exit-gate
+regression — completed end-to-end offline at HEAD `74c8152`. Command of
+record (none existed on file; REPRODUCE.md records focused suites only):
+
+```bash
+.venv/bin/pytest tests/ -p no:cacheprovider
+# 57 failed, 6271 passed, 54 skipped in 3797.26s (1:03:17)   rc=1
+```
+
+6382 tests across 239 files, no collection errors (57 + 6271 + 54 = 6382
+exactly); the 54 skips are the offline self-skips of the
+native/postgres-gated tests. Compared against the 53 legacy known-reds:
+
+- **Group A (controlled P08 e2e) ×51 — reproduced exactly**, mechanism
+  matching the legacy triage's frozen-fixture digest drift.
+- **Group C (structural-world fixture) ×1 — reproduced exactly** (same test
+  ID; `cargo_catalog_checkpoint` manifest sha256 drift; the "may pass on
+  Linux (CRLF)" hypothesis is NOT confirmed — failed on Linux with a digest
+  mismatch).
+- **Corridor family ×1 — at the map's count, but the failing test is
+  `test_corridor_cargoflow2_vm.py::test_ladder_of_record_runs_green`**
+  ("package dropped request finance-00: no reply"); the triage's named
+  target `test_delivered_verdict_never_fires_on_the_terminal_class` PASSED.
+  The two on-file descriptions of the historical red disagree; both facts
+  recorded, no force-fit.
+- **4 additional reds NOT in the legacy 53:** `test_sealed_budgets`
+  (`assert 410 == 103`), `test_prepare_materializes_a_pending_
+  authorization_candidate` (budgets 410 pages / 208280 bytes vs sealed
+  103 / 52324), `test_fallback_schedule_is_sealed_and_explicit`
+  (`assert 208280 == (103 * 508)`), and
+  `test_finalization_failure_cannot_publish_qualification[terminal]`
+  (workspace retained after FAILED finalization). Items 1–3 share one
+  signature (computed 410 × 508 budgets vs sealed 103 × 508 constants);
+  item 4 is a separate mechanism.
+
+**Outcome of record:** the exit gate does NOT pass (57 reds vs 53). The 4
+additional reds' new-vs-pre-existing status is UNKNOWN (no prior full-suite
+baseline exists on file — this is the first recorded full-suite run). Root
+causes and any fixes remain separate operator decisions (the triage report's
+fix-branch proposals stand unexecuted, per E36's rule); the gate stays
+sealed/open exactly as the map states. Research note of record:
+`.scratch/ramrom-product/research/07-exit-regression-full-suite-2026-11-12.md`.
+UNKNOWNs preserved: new-vs-pre-existing for the 4 extras; the historical
+corridor red's intended test; Group C's actual fixture-drift mechanism;
+flakiness/ordering sensitivity (single offline capture only). Nothing
+relabeled. Evidence index E207.
