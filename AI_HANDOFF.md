@@ -2624,3 +2624,44 @@ no headless-only execution.
    grant** (same command shape, `--seed N`); after the battery, the
    Phase C statement per the roadmap's native clause is recorded from
    whatever the battery produced. Evidence index E198.
+
+## 2026-11-12 Ramrom seed-7 one-shot executed exactly once under the operator's fresh battery grant (E199): THE FIRST BATTERY SEED TO PRODUCE A NATIVE PLAN (PLANNED, selected=1, vehicle constructed and RUNNING) — terminal typed `bounded native observation failed or inconclusive` (the designed observation gate; observe receipts 3 of 4); battery bar still unmet; seed 8 next
+
+1. **The attempt of record (sealed read-only hereafter):**
+   `artifacts/demos/playable-demo-d140ff9223ea4314a587e8d28808e8bb/`;
+   executed once at HEAD `90ca45a` (tree clean, `pgrep -x openttd`
+   empty pre-launch); the command of record `run --random-world
+   --seed 7 --towns 3 --industries 3` under the widened product
+   defaults; `result.json` `{launches: 1, connections: 1, mutations:
+   10, requests: 25, qualification_requests: 260,
+   supplemental_requests: 832, preflight: PASS, status: FAILED,
+   selected_services: [1], error: "ValueError: bounded native
+   observation failed or inconclusive"}`; grant consumed.
+2. **Funnel facts of record:** captured 1 (831/831 reads completed,
+   `pause_pairs: 1`); candidate_count 1; **`selected_service_count:
+   1`** — P08/P05 selected service industry-9 → industry-12 (22 cargo
+   units), the first selected plan of the battery;
+   `network-bindings.json` seals `execution_plan_digest 0762af45…`,
+   `native_plan_digest 126a6767…`, policy digest; the vehicle was
+   constructed (cash 497,104 → 486,178) and reached RUNNING (vehicle
+   5, backlog 6 at ticks 6043/8166/9709).
+3. **Terminal of record:** the designed observation gate
+   `app/simulation/openttd/freight_delivery.py:199`
+   (`verify_observation` — the 2048-seal observation-window
+   budget/phase checks); the evaluator of record `freight_delivery
+   verify` reproduces it honestly with `KeyError: 's0-observe-3'` (3
+   of the 4 required observe receipts exist — the fourth never
+   landed inside the bounded window). A typed terminal, not an
+   unexpected crash and not a manifest mismatch.
+4. **Seal of record:** manifest match True; cleanup all-true (reaped
+   rc 0, sockets closed, credential removed, workspace disposed,
+   remaining_processes []); `pgrep -x openttd` empty;
+   `search_truncated: true`.
+5. **State / next:** the battery bar (≥1 verified native plan +
+   delivery cycle without a `NO_FEASIBLE_SERVICES` terminal) is NOT
+   met by this run — the plan was selected and executed natively but
+   the delivery cycle's bounded verification did not complete; every
+   terminal honestly typed. **The battery continues per its grant:
+   seed 8 next, then seed 9; the whole battery stops immediately on
+   any unexpected failure, manifest mismatch, or uncertified
+   cleanup.** Evidence index E199.

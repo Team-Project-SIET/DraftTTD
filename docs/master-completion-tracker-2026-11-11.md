@@ -90,6 +90,17 @@ E174 → B2 FAILED E176 → B3 FAILED E178 → B4 FAILED E179 → B5 VERIFIED).
   manifest match True, cleanup all-true, sealed read-only. Battery
   bar NOT met by this run (honestly); seeds 7/8/9 next, each its own
   fresh grant.**
+  **Seed-7 one-shot EXECUTED once under the battery grant (E199,
+  2026-11-12, at `90ca45a`): the FIRST battery seed to produce a
+  native plan — `PLANNED`, candidate_count 1, `selected_service_
+  count: 1` (industry-9 → industry-12, 22 cargo units); the vehicle
+  was constructed and reached RUNNING; terminal typed `bounded
+  native observation failed or inconclusive` (the designed
+  observation gate `freight_delivery.py:199`; evaluator reproduces
+  with `KeyError: 's0-observe-3'` — 3 of 4 observe receipts);
+  manifest match True, cleanup all-true, sealed read-only. Battery
+  bar NOT met by this run (delivery cycle's bounded verification
+  incomplete); seed 8 next.**
 
 ### Phases with no definitions on file
 "Closed-Loop Optimization", "Productization", "Final Release" appear 0

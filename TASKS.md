@@ -4839,3 +4839,30 @@ WORLD`
     the reporting clause (every terminal honestly typed) holds.
     Seeds 7, 8, 9 remain fresh one-shots, each under its own fresh
     grant.** Evidence index E198.
+
+47. **Ramrom seed-7 one-shot executed exactly once under the
+    operator's fresh explicit battery grant (E199; 2026-11-12; typed
+    terminal `bounded native observation failed or inconclusive` at
+    HEAD `90ca45a`; grant consumed; run dir
+    `artifacts/demos/playable-demo-d140ff9223ea4314a587e8d28808e8bb/`
+    sealed read-only) — THE FIRST BATTERY SEED TO PRODUCE A NATIVE
+    PLAN.** `result.json` `{launches: 1, connections: 1, mutations:
+    10, requests: 25, qualification_requests: 260,
+    supplemental_requests: 832, preflight: PASS, status: FAILED,
+    selected_services: [1]}`; funnel: captured 1 (831/831 reads,
+    `pause_pairs: 1`), **candidate_count 1, `selected_service_count:
+    1`** (industry-9 → industry-12, 22 cargo units);
+    `network-bindings.json` seals `execution_plan_digest 0762af45…` +
+    `native_plan_digest 126a6767…`; the vehicle was constructed (cash
+    497,104 → 486,178) and reached RUNNING (vehicle 5, backlog 6 at
+    ticks 6043/8166/9709), then the bounded observation window closed
+    without the delivery cycle's receipt set. Terminal provenance:
+    the designed observation gate `freight_delivery.py:199`
+    (`verify_observation`); the evaluator of record reproduces it
+    honestly with `KeyError: 's0-observe-3'` (3 of 4 observe receipts
+    exist). Seal: manifest match True, cleanup all-true, `pgrep -x
+    openttd` empty; `search_truncated: true`. **Battery bar NOT met
+    by this run (plan selected and executed natively, but the
+    delivery cycle's bounded verification did not complete); every
+    terminal honestly typed. The battery continues per its grant:
+    seed 8 next.** Evidence index E199.
