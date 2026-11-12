@@ -2581,3 +2581,46 @@ no headless-only execution.
    verified native plan + delivery cycle without a
    `NO_FEASIBLE_SERVICES` terminal, every terminal honestly typed.
    Evidence index E197.
+
+## 2026-11-12 Ramrom seed-2026 re-run executed exactly once under the operator's fresh seed-2026 grant (E198): typed terminal `FAILED` / `NO_FEASIBLE_SERVICES` — the funnel moved deeper than E139 and E141 (capture completed under pause pacing, corridor refused explicitly); battery bar still unmet (honestly); seeds 7/8/9 grants next
+
+1. **The attempt of record (sealed read-only hereafter):**
+   `artifacts/demos/playable-demo-1a5b456bd6f441c4bdc1ed10ef4af47b/`;
+   executed once at HEAD `fc25760` (tree clean, `pgrep -x openttd`
+   empty pre-launch); the command of record `run --random-world
+   --seed 2026 --towns 3 --industries 3` under the widened product
+   defaults (`--capture-tiles 2048 --capture-seconds 120
+   --capture-pad 6`, profile `random-rectangle-2048-v1`); NEW
+   identity; `result.json` `{launches: 1, connections: 1,
+   funding_mutations: 1, mutations: 0, requests: 0, preflight: PASS,
+   status: FAILED, error: "ValueError: NO_FEASIBLE_SERVICES: no
+   supported full-load road engine and supply"}`; grant consumed.
+2. **Funnel facts of record:** captured 1 (832/832 reads completed,
+   `pause_pairs: 1` — the E141 month-pace gate did not fire;
+   pause-during-capture pacing works); 10 × `CAPTURE_TILE_BUDGET`;
+   `CANDIDATE_SEARCH_LIMIT controls 146`; `pair_checks: 146`;
+   candidate_count 0; sole candidate refusal typed
+   `NATIVE_CORRIDOR_BOUND: requires 2..47 road tiles`;
+   `search_truncated: true` throughout.
+3. **Seed-2026 progress ledger of record:** E139 (capture budget
+   refused 14/16 before any facts) → E141 (capture succeeded, month-
+   pace gate fired at read 703) → E198 this run (capture completed
+   under pause pacing, corridor refused explicitly) — three
+   identities, none relabeled.
+4. **Seal of record:** manifest match True; cleanup all-true (reaped
+   rc 0, sockets closed, credential removed, workspace disposed,
+   remaining_processes []); `pgrep -x openttd` empty. Honest
+   evaluator set for this terminal class: the loop-flavor
+   `freight_delivery verify` does not apply (no network receipts
+   staged — `prepared-source-links.json` absent by design of the
+   typed failure) and the `report` subcommand expects loop-product
+   artifacts equally absent; the manifest + cleanup + verbatim
+   diagnostic facts are the verification, with the funnel shape's
+   offline reproducibility pinned by the sealed replay tests.
+5. **State / next:** the battery bar (≥1 verified native plan +
+   delivery cycle without a `NO_FEASIBLE_SERVICES` terminal) is NOT
+   met by this run; every terminal stays honestly typed. **Seeds 7,
+   8, 9 remain fresh one-shots, each under its own fresh explicit
+   grant** (same command shape, `--seed N`); after the battery, the
+   Phase C statement per the roadmap's native clause is recorded from
+   whatever the battery produced. Evidence index E198.

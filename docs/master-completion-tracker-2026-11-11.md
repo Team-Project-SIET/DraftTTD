@@ -81,6 +81,15 @@ E174 → B2 FAILED E176 → B3 FAILED E178 → B4 FAILED E179 → B5 VERIFIED).
   terminal honestly typed. Command of record:
   `python -m app.openttd_demo run --random-world --seed N` (profile
   `random-rectangle-2048-v1`, 2048-tile seal).
+  **Seed-2026 re-run EXECUTED once under its fresh grant (E198,
+  2026-11-12, at `fc25760`): typed terminal `FAILED` /
+  `NO_FEASIBLE_SERVICES` — the funnel moved deeper than E139 and
+  E141 (captured 1, 832/832 reads completed with `pause_pairs: 1` —
+  the month-pace gate did not fire; sole candidate refusal the
+  explicit `NATIVE_CORRIDOR_BOUND`); `search_truncated: true`;
+  manifest match True, cleanup all-true, sealed read-only. Battery
+  bar NOT met by this run (honestly); seeds 7/8/9 next, each its own
+  fresh grant.**
 
 ### Phases with no definitions on file
 "Closed-Loop Optimization", "Productization", "Final Release" appear 0

@@ -4809,3 +4809,33 @@ WORLD`
     the battery bar is ≥1 verified native plan + delivery cycle
     without a `NO_FEASIBLE_SERVICES` terminal, every terminal
     honestly typed.** Evidence index E197.
+
+46. **Ramrom seed-2026 re-run executed exactly once under the
+    operator's fresh explicit seed-2026 grant (E198; 2026-11-12;
+    typed terminal `FAILED` / `NO_FEASIBLE_SERVICES` at HEAD
+    `fc25760`; grant consumed; run dir
+    `artifacts/demos/playable-demo-1a5b456bd6f441c4bdc1ed10ef4af47b/`
+    sealed read-only) — the battery's first one-shot, a NEW identity
+    (E139/E141 untouched).** Command of record under the widened
+    product defaults (2048 seal); `result.json` `{launches: 1,
+    connections: 1, funding_mutations: 1, mutations: 0, requests: 0,
+    preflight: PASS, status: FAILED, error: "ValueError:
+    NO_FEASIBLE_SERVICES: no supported full-load road engine and
+    supply"}`. Funnel facts: captured 1 with 832/832 reads completed
+    AND `pause_pairs: 1` — the E141 month-pace gate did NOT fire (the
+    pause-during-capture pacing carried n0 through its complete read
+    set); 10 × `CAPTURE_TILE_BUDGET`; `CANDIDATE_SEARCH_LIMIT
+    controls 146`; candidate refusal typed `NATIVE_CORRIDOR_BOUND:
+    requires 2..47 road tiles` (the explicit bound terminal);
+    `search_truncated: true`. Seed-2026 progress ledger: E139
+    (capture budget refused 14/16) → E141 (month-pace gate at read
+    703) → this run (capture completed, corridor refused explicitly)
+    — none relabeled. Honest evaluator set for this terminal class:
+    manifest match True, cleanup all-true, `pgrep -x openttd` empty
+    (loop-flavor `verify` and the `report` subcommand do not apply —
+    no network receipts or loop-product artifacts exist by design of
+    the typed failure). **Battery bar NOT met by this run (it needs a
+    verified plan + delivery cycle without `NO_FEASIBLE_SERVICES`);
+    the reporting clause (every terminal honestly typed) holds.
+    Seeds 7, 8, 9 remain fresh one-shots, each under its own fresh
+    grant.** Evidence index E198.
