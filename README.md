@@ -1,5 +1,7 @@
 # OpenTTD transport planning and playable freight demo
 
+![nameOfProduct (Alt Text)(patch.png)]
+
 Python selects freight services, builds them through OpenTTD 15.3's GameScript
 bridge, and verifies deliveries from native readbacks. P08 generates bounded road
 candidates; P05 uses OR-Tools CP-SAT to select services; P07 compares the plan with
