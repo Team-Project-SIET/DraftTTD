@@ -118,7 +118,8 @@ def test_execution_argv_shapes():
 def test_sealed_budgets():
     sealed = budgets(SOURCE_SAVE_MODE)
     assert sealed["requests"] == sealed["session_requests"] == 90
-    assert sealed["pages_limit"] == 103
+    # Widened 2048-tile ceiling (commit 5e398db, 2026-11-07); literal pin, not derived.
+    assert sealed["pages_limit"] == 410
     assert sealed["tile_facts_requests"] == 0
     assert sealed["retries"] == sealed["reconnects"] == sealed["mutations"] == 0
     assert sealed["launches"] == sealed["connections"] == 1

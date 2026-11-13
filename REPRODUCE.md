@@ -1831,3 +1831,57 @@ PYTHONDONTWRITEBYTECODE=1 .venv/bin/pytest tests/test_canonical_reload_only.py \
 - **Blocked:** the run command itself (fresh explicit grant; all prior
   grants void). No launch, no AdminPort, no staging executed this
   round; no `artifacts/` byte touched.
+
+## 2026-11-12 addendum — Phase D quality floor / full-suite command of record (checked)
+
+Offline only: no OpenTTD launch, no AdminPort, no `--run-openttd` /
+`--run-postgres`, no native anything; `artifacts/` and `CONTEXT.md` byte-
+untouched. M0 of the Phase D scope proposal was granted in-session
+2026-11-12 (approval of record:
+`docs/phase-d-scope-proposal-2026-11-12.md`; the quality-floor dispositions
+of record — repair ×4, typed seal ×1 — are decision ticket 07
+[`.scratch/phase-d-scope/issues/07-legacy-red-triage-disposition.md`],
+executed by ticket 10). The full-suite command of record (none existed on
+file before E207's first baseline; executed exactly once, 2026-11-12, at the
+post-ticket-10 quality-floor tree, capture dir created fresh for the run):
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 .venv/bin/pytest tests/ -p no:cacheprovider > /tmp/opencode/quality-floor-rerun-2026-11-12/pytest-full.out 2>&1
+```
+
+Exact result of record: **6327 passed, 55 skipped, 0 failed, 0 errors,
+in 3361.43 s (0:56:01), exit code 0** — collected 6382, conserving E207's
+collected count exactly (6327 + 55 = 6382; no collection errors, nothing
+interrupted). Delta vs the E207 baseline: the 57 legacy reds are gone via
+ticket 07's dispositions as executed by ticket 10 (P08 controlled e2e ×51,
+budget-seal ×3, corridor VM ladder ×1, structural-world fixture ×1 → passed),
+and skips moved 54 → 55 solely by the one typed seal. The M1 exit gate is
+**green-or-honestly-triaged, and it is green**: 0 failed; the 55 skips are
+E207's 54 offline self-skips of the native/postgres-gated tests plus exactly
+one typed seal,
+`tests/test_qualification_preparation.py::test_finalization_failure_cannot_publish_qualification[terminal]`,
+whose reason and provenance live in the test file per ticket 07's disposition
+record ([.scratch/phase-d-scope/issues/07-legacy-red-triage-disposition.md](.scratch/phase-d-scope/issues/07-legacy-red-triage-disposition.md) `## Answer`;
+focused skip-pair check: `[integrity]` passed, `[terminal]` skipped). Any
+unexpected red at a future re-run is recorded verbatim for a typed
+disposition — never patched to pass, never force-fit.
+
+E207 ([.scratch/ramrom-product/research/07-exit-regression-full-suite-2026-11-12.md](.scratch/ramrom-product/research/07-exit-regression-full-suite-2026-11-12.md);
+`EVIDENCE_INDEX.md` row E207) remains the first full-suite baseline of
+record, unchanged and never relabeled; this run is the post-disposition
+verification, a new fact of record under its own identity (transient capture
+`/tmp/opencode/quality-floor-rerun-2026-11-12/pytest-full.out`).
+
+Discipline of record for Phase D rounds, recorded here:
+
+- **Version / release notes:** every Phase D gate round appends its own dated
+  addendum to this file carrying its attempt identity and its evidence-row
+  pointer (the round's `EVIDENCE_INDEX.md` row); retained `artifacts/` bytes
+  stay transfer-only via separate reviewed archives, never committed; there
+  are no packaging, CI or ops runbooks — this file and the evidence index
+  are the release record.
+- **Full-suite gate cadence:** the command above is re-run in full
+  (i) before any native round (this run discharges the first such gate),
+  (ii) after any change touching test seals, frozen fixtures, or sealed
+  budget constants, and (iii) at Phase D close, before the bar statement of
+  record.

@@ -55,9 +55,10 @@ def test_prepare_materializes_a_pending_authorization_candidate(prepared):
     assert plan["region"] == [170, 171, 15, 30]
     assert plan["pages_count"] == 90 and plan["tiles"] == 450 and plan["bands"] == 2
     assert len(plan["pages"]) == 90
+    # Widened 2048-tile ceiling (commit 5e398db, 2026-11-07); literal pin, not derived.
     assert stored["budgets"] == {
-        "pages_limit": 103,
-        "total_response_bytes_limit": 103 * 508,
+        "pages_limit": 410,
+        "total_response_bytes_limit": 410 * 508,
         "requests": 90,
         "gsadmin_bytes_per_page": 508,
         "observation_seconds": 600,

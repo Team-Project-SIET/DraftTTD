@@ -554,3 +554,85 @@ def test_run_demo_maps_the_operator_soft_end_to_a_clean_zero_exit(tmp_path, monk
     monkeypatch.setattr(native, "run", run)
     assert demo.main(["run", "--headless", "--stop-on-delivery"]) == 0
     assert "ended-by-operator" in capsys.readouterr().out
+
+
+# --- Watcher stage reporting (random-world waiting-line diagnosis) ----------
+
+
+def test_pipeline_stage_names_the_blocked_stage_from_run_markers(tmp_path):
+    assert demo.pipeline_stage(tmp_path).startswith("Staging the native run")
+    (tmp_path / "before.sav").write_bytes(b"")
+    assert demo.pipeline_stage(tmp_path).startswith("World launched; qualification preparing")
+    (tmp_path / "qualification-log-window.json").write_bytes(b"{}")
+    stage = demo.pipeline_stage(tmp_path)
+    assert stage.startswith("Qualification running; native economy-month rollover waits")
+    assert "operational samples UNKNOWN" in stage
+    assert "elapsed 41s" in demo.pipeline_stage(tmp_path, 41.2)
+    (tmp_path / "qualification-session.json").write_bytes(b"{}")
+    assert demo.pipeline_stage(tmp_path).startswith(
+        "World qualified; P08 bounded relationship discovery running"
+    )
+    (tmp_path / "network-candidates.json").write_bytes(
+        json.dumps({"relationships": [1, 2, 3, 4, 5, 6]}).encode()
+    )
+    assert demo.pipeline_stage(tmp_path).startswith(
+        "Capturing bounded planning facts 0/6 relationships"
+    )
+    (tmp_path / "network-facts-0.json").write_bytes(b"{}")
+    (tmp_path / "network-facts-1.json").write_bytes(b"{}")
+    assert demo.pipeline_stage(tmp_path).startswith(
+        "Capturing bounded planning facts 2/6 relationships"
+    )
+    (tmp_path / "qualified.sav").write_bytes(b"")
+    assert demo.pipeline_stage(tmp_path).startswith(
+        "Qualified world saved; P05 bounded optimizer selecting services"
+    )
+
+
+def test_pipeline_stage_reports_the_typed_planning_failure(tmp_path):
+    # The retained 5c585485 shape: compatible relationships captured, zero
+    # candidates, NO_FEASIBLE_SERVICES terminal.
+    (tmp_path / "planning-diagnostic.json").write_bytes(
+        json.dumps(
+            {
+                "status": "FAILED",
+                "compatible_relationships": [1, 2, 3, 4, 5, 6],
+                "candidate_count": 0,
+                "selected_service_count": None,
+            }
+        ).encode()
+    )
+    assert demo.pipeline_stage(tmp_path) == (
+        "FAILED: Random planning: FAILED; compatible=6 candidates=0 "
+        "selected=None; delivery/finance UNKNOWN until native receipts"
+    )
+
+
+def test_pipeline_stage_tolerates_mid_write_markers(tmp_path):
+    (tmp_path / "planning-diagnostic.json").write_bytes(b'{"status": "FAI')
+    assert demo.pipeline_stage(tmp_path) is None
+    (tmp_path / "planning-diagnostic.json").unlink()
+    (tmp_path / "network-candidates.json").write_bytes(b'{"relationships": [')
+    assert demo.pipeline_stage(tmp_path).startswith("Staging the native run")
+
+
+def test_watcher_prints_the_exact_blocked_stage_not_the_generic_wait(tmp_path, capsys):
+    (tmp_path / "before.sav").write_bytes(b"")
+    (tmp_path / "qualification-log-window.json").write_bytes(b"{}")
+    viewer = demo.Viewer(tmp_path, headless=False, view_seconds=0)
+    viewer.backend = SimpleNamespace(client_soft=None)
+    viewer.process = SimpleNamespace(returncode=None, poll=lambda: None)  # ty: ignore[invalid-assignment]
+
+    async def one_tick():
+        task = asyncio.create_task(viewer.progress(tmp_path))
+        await asyncio.sleep(0.05)
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
+
+    asyncio.run(one_tick())
+    out = capsys.readouterr().out
+    assert "Qualification running; native economy-month rollover waits" in out
+    assert "Waiting for qualified world" not in out

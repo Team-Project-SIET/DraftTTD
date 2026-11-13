@@ -16,7 +16,12 @@ from app.demo_operations import (
     terminal_status,
     write_operational_report,
 )
-from app.demo_random import DemoBudgets, RandomWorldSettings, prepare_random
+from app.demo_random import (
+    DemoBudgets,
+    RandomWorldSettings,
+    diagnostic_status,
+    prepare_random,
+)
 from app.simulation.openttd.proof import freight_delivery as native
 from app.simulation.openttd.proof.harness import BINARY_SHA256, PROJECT, sha256
 from app.simulation.openttd.runtime.config import RuntimeWorkspace
@@ -78,6 +83,54 @@ def show_results(directory):
         flush=True,
     )
     print("Operating costs / ROI: UNKNOWN. These are short delivery batches.", flush=True)
+
+
+def pipeline_stage(directory, elapsed=0.0):
+    """Furthest completed backend stage, from the progress markers the native
+    runner already writes between exchanges. The watcher prints this instead of
+    a static waiting line, so a slow or blocked run names its exact stage and
+    keeps the honest ``operational samples UNKNOWN`` label until a plan exists.
+    Markers are staged non-atomically of record: a mid-write file reads as
+    absent or malformed and is retried on the next watcher tick."""
+    diagnostic = directory / "planning-diagnostic.json"
+    if diagnostic.is_file():
+        try:
+            value = json.loads(diagnostic.read_bytes())
+        except json.JSONDecodeError:
+            return None
+        return "FAILED: " + diagnostic_status(value)
+    if (directory / "qualified.sav").is_file():
+        return (
+            "Qualified world saved; P05 bounded optimizer selecting services; "
+            f"elapsed {elapsed:.0f}s; operational samples UNKNOWN."
+        )
+    candidates = directory / "network-candidates.json"
+    if candidates.is_file():
+        try:
+            total = len(json.loads(candidates.read_bytes())["relationships"])
+            captured = len(list(directory.glob("network-facts-*.json")))
+        except json.JSONDecodeError, KeyError, TypeError:
+            pass
+        else:
+            return (
+                f"Capturing bounded planning facts {captured}/{total} relationships; "
+                f"elapsed {elapsed:.0f}s; operational samples UNKNOWN."
+            )
+    for message, markers in (
+        (
+            "World qualified; P08 bounded relationship discovery running",
+            ("qualification-session.json", "world-planning-observation.json"),
+        ),
+        (
+            "Qualification running; native economy-month rollover waits",
+            ("qualification-log-window.json",),
+        ),
+        ("World launched; qualification preparing", ("before.sav",)),
+        ("Run claimed; native world launching", ("CLAIM.json",)),
+    ):
+        if any((directory / marker).is_file() for marker in markers):
+            return f"{message}; elapsed {elapsed:.0f}s; operational samples UNKNOWN."
+    return f"Staging the native run; elapsed {elapsed:.0f}s; operational samples UNKNOWN."
 
 
 class Viewer:
@@ -154,6 +207,7 @@ class Viewer:
         )
 
     async def progress(self, directory):
+        started = asyncio.get_running_loop().time()
         shown = set()
         service_count = 0
         previous_status = None
@@ -191,11 +245,11 @@ class Viewer:
                     previous_status = status
                     last_status_time = now
             elif asyncio.get_running_loop().time() - last_status_time >= 10:
-                print(
-                    "Waiting for qualified world and P08/P05 plan; operational samples UNKNOWN.",
-                    flush=True,
-                )
-                last_status_time = asyncio.get_running_loop().time()
+                now = asyncio.get_running_loop().time()
+                stage = pipeline_stage(directory, now - started)
+                if stage is not None:
+                    print(stage, flush=True)
+                    last_status_time = now
             await asyncio.sleep(0.5)
 
     async def delivered(self, backend, prepared):

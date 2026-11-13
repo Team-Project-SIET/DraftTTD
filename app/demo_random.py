@@ -3,6 +3,7 @@
 import json
 import subprocess
 import sys
+from collections import Counter
 from dataclasses import dataclass
 from hashlib import sha256
 from html import escape
@@ -192,7 +193,9 @@ def relationship_region(
     return dict(x=x, y=y, width=width, height=height) | (
         {"profile": "random-rectangle-2048-v1"}
         if tile_limit == 2048
-        else {"profile": "random-rectangle-512-v1"} if tile_limit == 512 else {}
+        else {"profile": "random-rectangle-512-v1"}
+        if tile_limit == 512
+        else {}
     )
 
 
@@ -253,12 +256,43 @@ def planning_diagnostic(world: WorldPlanningObservation, metadata: dict) -> dict
 
 
 def diagnostic_status(value: dict) -> str:
-    return (
+    line = (
         f"Random planning: {value['status']}; "
         f"compatible={len(value['compatible_relationships'])} "
         f"candidates={value['candidate_count']} selected={value['selected_service_count']}; "
         "delivery/finance UNKNOWN until native receipts"
     )
+    # The typed NO_FEASIBLE_SERVICES terminal names the engine/supply class for
+    # every empty-package shape; the per-pair refusal codes recorded here are
+    # the only record of what actually refused each pair, so surface them.
+    if value.get("search_truncated"):
+        line += "; search truncated"
+    counts = Counter(
+        str(r["reason"]).split(":", 1)[0].strip()
+        for r in value.get("capture_rejections") or ()
+        if "source" in r and r.get("reason")
+    )
+    if counts:
+        line += "; capture refusals: " + ", ".join(
+            f"{count}x {code}" for code, count in sorted(counts.items())
+        )
+    deferred = Counter(
+        str(r["reason"]).split(":", 1)[0].strip()
+        for r in (value.get("capture_preflight") or {}).get("deferred") or ()
+        if r.get("reason")
+    )
+    if deferred:
+        line += "; capture deferred: " + ", ".join(
+            f"{count}x {code}" for code, count in sorted(deferred.items())
+        )
+    for rejection in value.get("candidate_rejections") or ():
+        if "source" in rejection and rejection.get("reason"):
+            code = str(rejection["reason"]).split(":", 1)[0]
+            line += (
+                f"; candidate refusal {rejection['source']}->{rejection['destination']} "
+                f"cargo {rejection['cargo']}: {code}"
+            )
+    return line
 
 
 def write_planning_diagnostic(directory: Path, value: dict) -> None:
