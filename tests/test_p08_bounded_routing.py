@@ -196,6 +196,50 @@ def test_witness_fallback_recovers_a_beyond_four_stop_pair(world):
     assert solution.plan.routes
 
 
+def test_pair_loop_budget_exhaustion_falls_back_to_witnesses(world, monkeypatch):
+    """A per-pair budget exhaustion must not mask a real supported witness.
+
+    The 2048-tile capture profile widened regions eightfold past the
+    expansion bound calibrated at the 256-tile scale (16x256): per-pair BFS
+    sweeps can exhaust it while the completed reachability sweep already
+    holds real supported witnesses. The pair selection reserves each BFS's
+    worst case and falls back to the complete supported-graph witness
+    candidates (same E159 completeness contract) instead of typing a
+    masking SEARCH_LIMIT_EXCEEDED; the sweep's own budget still fails
+    closed.
+    """
+    import app.planning.p08_road as module
+
+    d = region_facts(world, width=12, height=3)
+    block(d, lambda t: t["x"] == 6, "water")
+    restrict_delivery(d, {(8, 1), (9, 1), (10, 1), (11, 1), (5, 1)})
+    m = mapped(world, d)
+    cargo_id = next(s.cargo_id for s in m.facts.coverage_scopes if s.role == "pickup")
+    (pickups, tiles), (deliveries, _) = (
+        eligible_stops(m.facts, cargo_id, "pickup", limit=None),
+        eligible_stops(m.facts, cargo_id, "delivery", limit=None),
+    )
+    witnesses, sweep_expansions, exhausted = corridor_reachability(
+        pickups, deliveries, tiles, m.manifest.width_tiles, budget=MAX_PATH_EXPANSIONS
+    )
+    assert not exhausted and witnesses
+    witnesses = {z: p for z, p in witnesses.items() if p[0] != z}
+    assert witnesses
+    # The sweep completes exactly at this budget; every per-pair BFS cannot.
+    assert sweep_expansions < len(tiles)
+    monkeypatch.setattr(module, "MAX_PATH_EXPANSIONS", sweep_expansions)
+    r = generated(world, d)
+    assert isinstance(r, ControlledRoadScenario), r
+    assert r.search_expansions <= sweep_expansions
+    assert len(r.corridor) == 6  # (0,1) .. (5,1): the admissible four interior tiles
+    corridor_adjacent(r)
+    # The fallback candidate is the same one the unbounded-budget run assembles.
+    assert scenario_hash(r.scenario) == scenario_hash(generated(world, d).scenario)
+    solution = optimize_candidate_network(r.scenario)
+    validate_execution_plan(solution.plan, r.scenario)
+    assert solution.plan.routes
+
+
 def test_rejection_reason_flows_to_planning_diagnostics(world):
     """The pipeline records `str(code) + ': ' + detail`; keep that composition stable."""
     d = region_facts(world, width=8, height=3)
