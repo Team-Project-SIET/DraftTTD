@@ -307,6 +307,30 @@ def console(backend, command: str):
     backend.process.stdin.flush()
 
 
+async def console_ack(backend, prepared, command: str, marker: str, *, timeout: float = 10):
+    """Write one console command and await its execution echo in the fresh log
+    tail (same offset machinery as save), so at most one unacknowledged console
+    command is ever in flight and a later save line can never be swallowed
+    behind an unexecuted command by the OpenTTD dedicated input loop
+    (ticket 06, Attempt-5 loss class). The acknowledgement is never retried."""
+    logs = (prepared.spec.stdout_path, prepared.spec.stderr_path)
+    offsets = [log.stat().st_size for log in logs]
+    console(backend, command)
+    deadline = time.monotonic() + timeout
+    while True:
+        backend.health()
+        fresh = []
+        for log, offset in zip(logs, offsets, strict=True):
+            with log.open("rb") as stream:
+                stream.seek(offset)
+                fresh.append(stream.read().decode(errors="replace"))
+        if marker in "\n".join(fresh):
+            return
+        if time.monotonic() >= deadline:
+            raise TimeoutError("console echo acknowledgement missing")
+        await asyncio.sleep(0.05)
+
+
 def owned_save_path(prepared, name: str) -> Path:
     """Resolve a native console filename within the authorized artifact directory."""
     if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]*", name) is None:

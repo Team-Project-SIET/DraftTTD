@@ -50,7 +50,8 @@ def test_fallback_schedule_is_sealed_and_explicit():
     assert schedule["facts_pages"] == 90
     assert schedule["classification_pages"] == 90
     assert schedule["session_requests"] == 180
-    assert schedule["facts_response_bytes_limit"] == 103 * 508
+    # Widened 2048-tile ceiling (commit 5e398db, 2026-11-07); literal pin, not derived.
+    assert schedule["facts_response_bytes_limit"] == 410 * 508
     assert "never silently grown" in schedule["statement"]
     plan = wc.same_session_facts_plan("same-session-facts-bank")
     assert len(plan) == 90

@@ -17,6 +17,7 @@ from app.planning.domain import Contract, PreparedWorldManifest
 from app.planning.optimizer import optimize_candidate_network
 from app.planning.p08_adapter import MonthlyBatchPolicy, adapt_planning_facts
 from app.planning.p08_road import NoRoadScenario, generate_road_scenario
+from app.simulation.openttd.capture_scheduling import CaptureWindowExceeded, qualified_capture_month
 from app.simulation.openttd.freight_planning import compile_freight_service
 from app.simulation.openttd.gamescript_bridge import BridgePackage
 from app.simulation.openttd.industry_inventory import IndustryInventoryWorld
@@ -206,6 +207,17 @@ async def collect_qualified_world(backend, prepared, session, accounting):
     backend.accounting = accounting
     backend.structural_session = StructuralRecordedSession(session)
     backend.query_operation_baseline = 0
+    # One shared per-attempt stderr carries every cycle's bridge markers; a
+    # fresh session only claims the bytes written after it existed.
+    backend.stderr_window = prepared.spec.stderr_path.stat().st_size
+    # Self-record the claimed window origin (E158): the retained replay cuts
+    # this exact byte range instead of re-deriving it from the staged log.
+    from .proof.harness import write_json
+
+    write_json(
+        prepared.directory / "qualification-log-window.json",
+        dict(schema="qualification-stderr-window-v1", start=int(backend.stderr_window)),
+    )
     package = prepared.spec.workspace.game / "RoadFreightProof"
     bridge_digest = hashlib.sha256(
         b"".join(
@@ -244,7 +256,10 @@ async def collect_qualified_world(backend, prepared, session, accounting):
     write_json(
         prepared.directory / "qualification-session.json", _public_evidence(asdict(result.evidence))
     )
-    write_json(prepared.directory / "qualification-prefix-frames.json", backend.planning_frames)
+    write_json(
+        prepared.directory / "qualification-prefix-frames.json",
+        backend.planning_frames[getattr(backend, "planning_frames_start", 0) :],
+    )
     write_json(
         prepared.directory / "qualification-log-prefixes.json",
         {
@@ -259,6 +274,29 @@ async def collect_qualified_world(backend, prepared, session, accounting):
     return WorldPlanningObservation(result.verification.stability.final, result)
 
 
+def loop_cycle(directory) -> int:
+    """Cycle of record for a loop cycle directory; a missing marker is cycle 1."""
+    path = Path(directory) / "loop-cycle.json"
+    if not path.is_file():
+        return 1
+    marker = json.loads(path.read_bytes())
+    if marker.get("schema") != "ramrom-loop-cycle-v1" or type(marker.get("cycle")) is not int:
+        raise ValueError("loop cycle marker invalid: " + str(path))
+    if not 1 <= marker["cycle"] <= 8:
+        raise ValueError("loop cycle marker out of range: " + str(path))
+    return marker["cycle"]
+
+
+def cycle_request_id(base: str, cycle: int = 1) -> str:
+    """planner_used dedup persists for the lifetime of one GameScript
+    instance, so every read channel id must be unique across cycles. Cycle 1
+    keeps the legacy identifiers byte-exact; later cycles add a deterministic
+    suffix (`<base>-c<cycle>`, ValidRequestID: alnum plus `-`/`_`, <=64)."""
+    if cycle <= 1:
+        return base
+    return base + "-c" + str(cycle)
+
+
 async def capture_planning_facts(
     backend,
     prepared,
@@ -270,9 +308,10 @@ async def capture_planning_facts(
     prefix="",
     capture_budget=None,
 ):
-    from .proof.freight_delivery import exchange
+    from .proof.freight_delivery import ExchangeReadTimeout, exchange
     from .proof.harness import sha256, write_json
 
+    cycle = loop_cycle(prepared.directory)
     backend.planning_read_count = 0
     backend.planning_read_attempts = 0
     # Discover relationships from qualified structure, not the demo's assumed IDs.
@@ -314,13 +353,18 @@ async def capture_planning_facts(
         else None
     )
     responses = []
+    # E156 runtime guard: validate every exchange bracket against the active
+    # qualified observation month while capture proceeds; the produced
+    # request/response discs stay on disk, no facts artifact is written, and
+    # counts never report the offending exchange as received data.
+    window_month = qualified_capture_month(world)
 
     async def read(kind, arg=0):
         backend.health()
         if len(responses) >= tile_limit + 34:
             raise ValueError("CAPTURE_REQUEST_BUDGET: planning reads exhausted")
         request = PlanningRead(
-            request_id=f"planning-{prefix}{len(responses)}",
+            request_id=cycle_request_id(f"planning-{prefix}{len(responses)}", cycle),
             kind=kind,
             arg=arg,
             src=src,
@@ -333,8 +377,25 @@ async def capture_planning_facts(
                 response = await (read_exchange or exchange)(
                     backend.session, request, prepared.directory, response_type=PlanningReadback
                 )
+        except ExchangeReadTimeout:
+            # A dropped (already used) request id surfaces as the typed
+            # per-exchange timeout; keep it distinct from the capture budget.
+            raise
         except TimeoutError as error:
             raise ValueError("CAPTURE_TIME_BUDGET: planning capture deadline expired") from error
+        if not (
+            window_month.start_date <= response.before <= response.after < window_month.end_date
+        ):
+            raise CaptureWindowExceeded(
+                relationship=(src, dst, cargo),
+                request_id=request.request_id,
+                cycle=cycle,
+                before=response.before,
+                after=response.after,
+                month_start=window_month.start_date,
+                month_end=window_month.end_date,
+                exchanges_so_far=len(responses),
+            )
         responses.append(response)
         backend.planning_read_count = len(responses)
         return response.data
@@ -484,7 +545,7 @@ async def plan_same_world(
     seal_read = await exchange(
         session,
         PlanningRead(
-            request_id="planning-seal",
+            request_id=cycle_request_id("planning-seal", loop_cycle(prepared.directory)),
             kind="settings",
             arg=0,
             src=scopes["pickup"].industry_id,

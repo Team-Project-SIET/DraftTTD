@@ -371,6 +371,84 @@ def test_qualified_month_failure_retains_failed_diagnostic(tmp_path, monkeypatch
     assert "controlled qualification failure" in (tmp_path / "planning-diagnostic.html").read_text()
 
 
+def test_diagnostic_status_names_every_refusal_class_of_record():
+    """The retained seed-17 run b67a8909 shape: 16 compatible relationships,
+    none plan-feasible — 13 lost to the capture tile budget, 2 deferred by the
+    scheduler's capacity policy, the one captured pair corridor-refused. The
+    typed NO_FEASIBLE_SERVICES terminal names only the engine/supply class, so
+    the one-line status must carry what actually refused each pair."""
+    value = dict(
+        status="FAILED",
+        compatible_relationships=[{}] * 16,
+        candidate_count=0,
+        selected_service_count=None,
+        search_truncated=True,
+        capture_rejections=[
+            {"source": s, "destination": d, "cargo": c, "reason": "CAPTURE_TILE_BUDGET"}
+            for s, d, c in (
+                (0, 1, 1),
+                (0, 14, 1),
+                (3, 2, 7),
+                (7, 5, 4),
+                (7, 18, 4),
+                (7, 5, 6),
+                (7, 18, 6),
+                (8, 4, 3),
+                (9, 13, 8),
+                (9, 19, 8),
+                (10, 1, 1),
+                (10, 14, 1),
+                (11, 5, 4),
+            )
+        ],
+        capture_preflight=dict(
+            deferred=[
+                dict(
+                    relationship=[7, 15, 6],
+                    position=1,
+                    reason="INSUFFICIENT_CAPACITY: estimated live-rate span 14d "
+                    "from planned start 712303 reaches 712316; exclusive window ends 712312",
+                ),
+                dict(
+                    relationship=[9, 6, 8],
+                    position=2,
+                    reason="INSUFFICIENT_CAPACITY: estimated live-rate span 27d "
+                    "from planned start 712303 reaches 712329; exclusive window ends 712312",
+                ),
+            ]
+        ),
+        candidate_rejections=[
+            dict(
+                source=7,
+                destination=15,
+                cargo=4,
+                reason="NO_BOUNDED_CORRIDOR: bounded corridor search exhausted; "
+                "12 eligible pickup and 71 eligible delivery stops are disconnected "
+                "across all supported corridor tiles; no feasibility outside this slice implied",
+            )
+        ],
+    )
+    assert diagnostic_status(value) == (
+        "Random planning: FAILED; compatible=16 candidates=0 selected=None; "
+        "delivery/finance UNKNOWN until native receipts; search truncated; "
+        "capture refusals: 13x CAPTURE_TILE_BUDGET; "
+        "capture deferred: 2x INSUFFICIENT_CAPACITY; "
+        "candidate refusal 7->15 cargo 4: NO_BOUNDED_CORRIDOR"
+    )
+    # Diagnostic-shaped dicts without refusal keys keep the legacy line exactly.
+    assert diagnostic_status(
+        dict(
+            status="FAILED",
+            compatible_relationships=[1, 2, 3, 4, 5, 6],
+            candidate_count=0,
+            selected_service_count=None,
+        )
+    ) == (
+        "Random planning: FAILED; compatible=6 candidates=0 "
+        "selected=None; delivery/finance UNKNOWN until native receipts"
+    )
+
+
 def test_long_candidate_is_not_passed_to_p05_when_executor_cannot_build_it():
     data = controlled_flat_coal_data()
     data["region"] = dict(x=10, y=10, width=128, height=4, profile="random-rectangle-512-v1")

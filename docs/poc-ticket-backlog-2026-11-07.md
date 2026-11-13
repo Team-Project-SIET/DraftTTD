@@ -158,3 +158,218 @@ operator.
   per-cycle replay via `verify` printing `verified_loop_cycles`, pacing
   fences observed. Command of record in the ticket file. The 53-legacy-red
   FULL regression remains the wayfinder EXIT gate, not run this round.
+
+## Status log (2026-11-08, Phase C continuation — execution-mode decision: spectator GUI stays product scope, attempt of record stays `--headless`)
+
+- Docs-only decision round: no launch, no AdminPort connection, no staging,
+  no `artifacts/` byte modified, no operator grant consumed; one commit, no
+  push. Decision of record
+  [docs/gui-headless-execution-mode-decision-2026-11-08.md](gui-headless-execution-mode-decision-2026-11-08.md);
+  recorded at E148 (`EVIDENCE_INDEX.md`), the TASKS ledger,
+  `AI_HANDOFF.md`, `REPRODUCE.md` addendum #6, ticket-05 (appended
+  section) and `.scratch/ramrom-product/map.md`.
+- **The GUI-vs-headless discrepancy is resolved without changing anything of
+  the record.** Spec §1 (lines 17–21) and §3 item 3 (lines 104–108) give the
+  finished product a spectator window whose close ends a phase softly; the
+  qualification command of record runs `--headless --stop-on-delivery`
+  (ticket-05 lines 194–208; `REPRODUCE.md` addenda #2–#5), launches no
+  graphical client, and can never exercise that window close. Decided: the
+  attempt of record keeps `--headless` — every acceptance bar is
+  receipt-based (spec §2 lines 78–84; ticket-05 lines 196–207) and names no
+  GUI, and the loop line's native history is headless (E139/E141/E145).
+- **The spectator GUI and its window-close soft end stay owed as
+  product-definition scope** for their own later, separately granted
+  GUI-bearing probe (without `--stop-on-delivery`, with the viewing hold,
+  ended-by-operator never typed as a system failure — E140's historical
+  window close typed FAILED `RuntimeError: Graphical client exited (0)`).
+  Until that probe runs, the window-close soft end is natively
+  unexercised; a headless attempt's only operator soft end is Ctrl+C.
+- **Offline checks:** staging suite `tests/test_random_capture_budgets.py`
+  13 passed; `git diff --check` clean; source digests of record unchanged
+  (`258ba9dbe19c7284`, `2cce3070c125bd41`, `f6a432e2b771231b`). No code
+  change; the native command of record is unchanged and remains gated on a
+  fresh explicit operator grant.
+
+## Status log (2026-11-08, Phase C continuation — GUI product scope §1/§3.3 implemented offline: typed `ENDED_BY_OPERATOR` soft end)
+
+- Offline implementation round: no OpenTTD launch, no AdminPort connection,
+  no staging, no claim consumption, no native receipt, no `artifacts/` byte
+  modified; one commit, no push. Recorded at E149 (`EVIDENCE_INDEX.md`), the
+  TASKS ledger, `AI_HANDOFF.md`, `REPRODUCE.md` addendum #7, ticket-05 (GUI
+  build-record section) and `.scratch/ramrom-product/map.md`.
+- **The operator's spectator window close is now the typed soft end of
+  record.** `OperatorWindowClosed` (a typed ended-by-operator soft end,
+  never a system failure) plus `backend.client_soft` and `soft_gate()` in
+  `app/simulation/openttd/proof/freight_delivery.py` (`4bbff81a0cd5fc52`):
+  the attempt stops at the next AdminPort exchange boundary (`query()`,
+  both scenario-capital exchanges, the planner admission exchange, the
+  `before` save) and `run` types `result["status"] = "ENDED_BY_OPERATOR"`
+  with `operator_soft_end` and no `error` key; the unchanged `finally`
+  still seals receipts, saves, frames, cleanup and the manifest, and every
+  verifier keeps refusing the non-verified root status.
+- **Viewer classification** in `app/openttd_demo.py` (`db2051dea8885642`):
+  `Viewer.check_client_exit()` types an owned client's rc 0 exit as the
+  operator soft end and a non-zero exit as the exact E140-shape
+  `RuntimeError: Graphical client exited (...)`; the startup
+  `require_alive()` keeps its hard typing; a close during the delivered
+  view-hold never retypes a verified run; `run_demo` maps the soft end to
+  a clean rc 0.
+- **Tests of record:** 5 new offline tests in `tests/test_openttd_demo.py`
+  (`9c38d38f334d77fc`) under the file's autouse no-native guard; the
+  adjacent tuple (13 files total) 265 passed / 0 failed; ruff/format/
+  `py_compile`/`git diff --check` clean; `uvx ty check` clean on both app
+  files with the one pre-existing counted `viewer.log.closed` diagnostic on
+  the test file.
+- **Kept separate from Phase C headless verification:** the headless loop
+  command of record, its budgets, AdminPort boundaries and the
+  staging/lifecycle suites are untouched and still green; `--stop-on-delivery`
+  still short-circuits the view hold headlessly.
+- **Native GUI verification pending:** the `IMPLEMENTATION VERIFIED` /
+  `NATIVE GUI VERIFICATION PENDING` split of E149 holds — the spectator
+  window process, the real close interaction and the ended-by-operator
+  record need the GUI-bearing native probe (product line without
+  `--stop-on-delivery`) behind its own fresh per-attempt grant; no
+  feasibility or product-scope claim is made until that evidence exists.
+
+## Status log (2026-11-08, Phase C continuation — attempt-1 loop qualification consumed one grant and FAILED; sealed; offline fix)
+
+- The operator's verbatim one-attempt grant authorized the Phase C loop
+  qualification attempt of record; it executed exactly once with the
+  unchanged command of record (headless, `--seed 2026`, `--cycles 2`) and
+  FAILED with exit 1 before any cycle completed; the stop constraint was
+  honored with no retry, no relaunch and no seed change. Recorded at E150
+  (`EVIDENCE_INDEX.md`), the TASKS ledger, `AI_HANDOFF.md`,
+  `REPRODUCE.md` addendum #8, ticket-05 attempt-1 record and
+  `.scratch/ramrom-product/map.md`.
+- **Sealed failure of record (run dir
+  `artifacts/demos/playable-demo-246dc3a4f4fc4b40aee0f73696455473`,
+  read-only hereafter):** `status=FAILED`, error
+  `FileNotFoundError: [Errno 2] No such file or directory:
+  '.../loop-cycle-1/graphics-identity.json'`, launches 1 / connections 1 /
+  requests 0 / mutations 0, cycle-1 funding retained (2 requests, 1
+  mutation), `failure_save_error="owned native save completion missing"`,
+  cleanup fully reaped/disposed at root and cycle level, no `loop-cycle-2`.
+- **Native pacing datum (first of its kind):** the cycle-1 diagnostic shows
+  the capture phase completed 832/832 read pairs inside the qualified M2
+  month with `pause_pairs=1` and no `pause_resume_error` — the E143 pacing
+  fence held natively; `compatible_relationships=16`;
+  `captured_relationships=0`, `search_truncated=true`.
+- **FD-C-2 stays `INCOMPLETE_EVIDENCE`:** the attempt failed before any
+  performing search completed and every captured search is truncated; no
+  feasibility or infeasibility claim may be built on attempt 1.
+- **Root cause + fix (offline, smallest):** the cycle flow digests
+  `graphics-identity.json` from the cycle dir while E143's per-cycle copy
+  set carried only `PRELAUNCH.json`, `PRELAUNCH.sha256`, `CLAIM.json` and
+  `frozen-source.zip`; the copy set now includes a content-identical
+  `graphics-identity.json` (`freight_delivery.py` `6f913b555e05ca05`,
+  superseding E143's guaranteed per-cycle list), pinned by
+  `test_loop_cycle_recording_copies_the_graphics_identity_per_cycle`
+  (`tests/test_openttd_demo.py` `2934214451eb1e2d`). Adjacent tuple
+  266 passed / 0 failed; ruff/format/`py_compile`/`git diff --check`
+  clean; `ty` clean on both app files with the single pre-existing counted
+  test-file diagnostic.
+- **Gate of record:** the command of record stays byte-unchanged; the next
+  Phase C attempt waits on a fresh explicit operator grant (consumed
+  grants: E141, E142, E145, attempt-1 — all void for reuse); the
+  GUI-bearing native probe remains a separate later grant; the 53-legacy-red
+  FULL regression stays the wayfinder EXIT gate.
+- **E151 offline follow-up (2026-11-08):** the full run-time cycle-1
+  chain audit found nothing further missing after the E150 fix — every
+  plain-constant `prepared.directory` read in
+  `freight_native_network.py` + `freight_runtime_planning.py`
+  classifies per occurrence into exactly six names (root-stage copies
+  `PRELAUNCH.json`/`graphics-identity.json`, the per-cycle staging
+  self-write `runtime-identity.json`, the chain self-write
+  `qualification-prefix-frames.json`, and exchange-disc packets
+  `capacity-add-response.json`/`capacity-read-response.json`), pinned by
+  an AST drift-guard test in `tests/test_freight_loops.py` (three new
+  tests: drift guard, staged-cycle-dir e2e capture through the real
+  `capture_planning_facts` — 450 tiles / 900 coverage, digest-bound
+  `content_digest`, `generation_seed` 17 from the per-cycle identity —
+  and the sealed attempt-1 read-only pin re-deriving its manifest and
+  typed FAILED identity). 13-file adjacent tuple 269 passed / 0 failed
+  plus `tests/random_distance` 13; hygiene clean; `ty` clean on touched
+  files; no app code changed (digests unchanged from E150).
+- **Gate of record:** unchanged — Attempt 2 waits on a fresh explicit
+  operator grant with the byte-unchanged command of record; consumed
+  grants (E141, E142, E145, attempt-1) void for reuse; FD-C-2 stays
+  `INCOMPLETE_EVIDENCE`; the 53-legacy-red FULL regression stays the
+  wayfinder EXIT gate.
+- **E152 attempt-2 (2026-11-08, native):** the fresh explicit grant ran
+  the byte-unchanged command of record once; it failed typed and was
+  sealed (`playable-demo-e6852692d0ef40199db0c71b101b2dda`:
+  `duplicate/out-of-order native read evidence`, launches 1 /
+  connections 2, owned failure save completed and retained, cleanup
+  fully certified at root and both cycles). Outcomes: the E150
+  per-cycle copy set is proven live (the crash seam of attempt 1
+  passed); cycle 1 completed a full native recording to a typed
+  zero-service terminal (`NATIVE_LOOP_ZERO_SERVICES`, 9,702/9,702
+  capture pairs, `pause_pairs=6`, truncated search / candidates 0);
+  cycle 2 died at its first qualification clock poll — per-cycle poll
+  counters restart at 1 under the constant `freight-plan` session id,
+  so every clock request id appears twice in the ONE shared server
+  `stderr.log` and the typed duplicate guard fired before cycle-2's own
+  markers (same defect family as E150: per-attempt-shared artifact
+  consumed per-cycle; new surface).
+- **FD-C-2:** still `INCOMPLETE_EVIDENCE` (truncated search, candidates
+  0; zero-service observed, never a completed feasibility search). All
+  three retained manifests re-derive equal; the loop-receipt instrument
+  refuses the dir typed, no forced relabel; no native process remains.
+- **Gate of record:** no fix under the consumed attempt-2 grant; an
+  offline repair round (per-cycle qualification id namespace or
+  cycle-scoped stderr window) is a separate operator-approved step;
+  Attempt 3 then needs a fresh explicit operator grant with the
+  byte-unchanged command of record. The GUI-bearing native probe
+  remains a separate later grant; the 53-legacy-red FULL regression
+  stays the wayfinder EXIT gate.
+- **E153 fix round (2026-11-08, offline):** the shared-stderr cycle-restart
+  defect is repaired at its parse seam. `collect_qualified_world` pins
+  `backend.stderr_window` (byte offset of the ONE shared attempt
+  `stderr.log` when the fresh cycle's qualification session exists — the
+  real anchor, since the freight loop never runs
+  `configure_transport`), and both stderr parse sites
+  (`qualification_native.evidence()` and the parent
+  `structural_native.evidence()`) slice from that offset; window absent
+  ⇒ whole file (corridor and single-cycle unchanged). Parent `setup()`
+  startup read stays whole-file (launch-time marker). Request ids stay
+  byte-identical `freight-plan-clock-N`; per-cycle id namespacing was
+  rejected (world-identity digest churn). Red-first tests in
+  `tests/test_qualification_preparation.py` drive the REAL evidence():
+  counter reset + legitimate cross-cycle reuse (RED with the verbatim
+  sealed `ValueError: duplicate/out-of-order native read evidence`,
+  GREEN after, cycle-1's quadruple provably excluded), same-cycle
+  duplicates and out-of-order rows still refuse. Verification:
+  qualification family 227 passed + 1 skipped; adjacent tuple of record
+  282 passed; ruff/format/py_compile/ty and `git diff --check` clean.
+  Pre-existing clone failure `test_structural_world.py` (catalog/
+  enrichment fixtures) stash-proven unrelated. FD-C-2 stays
+  `INCOMPLETE_EVIDENCE`; Attempt 3 needs a fresh explicit operator
+  grant with the byte-unchanged command of record; the GUI-bearing
+  native probe remains a separate later grant.
+- **E154 attempt-3 (2026-11-08, native):** the explicit grant ran the
+  byte-unchanged command of record once; the E153 window fix is proven
+  live — cycle-2 completed its entire qualification session
+  (`phase=COMPLETED`, `failure=None`, 85 clock polls; every clock id
+  exactly 2× in the one shared stderr, byte-identical ids, no
+  duplicate-guard trip; the E152 defect class is closed). Cycle 1
+  reproduced the typed zero-service terminal exactly (9,702/9,702
+  capture pairs, 16 compatible / 6 captured / truncated / candidates
+  0). Cycle 2 burned the remaining sealed budget during qualification
+  re-collection + P08 pair checks (`pair_checks=146`) before any
+  capture; the outer `asyncio.timeout(total_seconds=1800)` expired and
+  the attempt sealed FAILED (`error=TimeoutError: `, `failure.sav`
+  retained, cleanup certified). Classification: the loop's
+  `total_seconds` scaling underestimates per-cycle requalification cost
+  (§3.2 one-connection-per-cycle design) — a budget-seal amendment
+  decision for the operator, not a code defect.
+- **FD-C-2:** still `INCOMPLETE_EVIDENCE` from fresh digest-pinned
+  evidence — no completed feasibility search exists (cycle-1 truncated
+  zero-candidate observed terminal; cycle-2 interrupted before
+  capture). All three retained manifests re-derive equal; the
+  loop-receipt instrument refuses the dir typed, no forced relabel; no
+  native process remains.
+- **Gate of record:** Attempt 4 needs (a) the operator's budget-seal
+  amendment decision and (b) a fresh explicit operator grant with the
+  command of record byte-unchanged. The GUI-bearing native probe
+  remains a separate later grant; the 53-legacy-red FULL regression
+  stays the wayfinder EXIT gate.

@@ -5,20 +5,22 @@ runs inside the real Squirrel VM against the controlled stub world of
 ``tests/test_corridor_cargoflow2.py`` (imported, never copied). This suite owns
 the handler's refusal ladder and halt discipline (any terminal non-planned
 status halts the ladder prefix-preservingly), the sealed plan latch, the
-planned ladder of record end to end (the 25 exchanges against the plans and
-funds model of record), the wait-window machinery's echo class
-(``CLOCK_STALLED``/``WINDOW_EXHAUSTED`` frames carry exactly the anchor/tick/day
-echoes against the stub clock), the arrival watch's bounded timeout class, the
-per-window latch bound (overflow refuses, never truncates), the one-shot
-32-request budget with duplicate drop, the native-fact throw logging and the
-request-shape drops the entry ladder enforces. Nothing here launches OpenTTD,
-connects to an AdminPort or writes any native or save state: only the tests'
-own VM world is mutated.
+planned ladder of record end to end (the delivered composition's 26 exchanges
+against the plans and funds model of record), the wait-window machinery's echo
+class (``CLOCK_STALLED``/``WINDOW_EXHAUSTED`` frames carry exactly the
+anchor/tick/day echoes against the stub clock), the arrival watch's bounded
+timeout class, the per-window latch bound (overflow refuses, never truncates),
+the one-shot 32-request budget with duplicate drop, the native-fact throw
+logging and the request-shape drops the entry ladder enforces. Nothing here
+launches OpenTTD, connects to an AdminPort or writes any native or save state:
+only the tests' own VM world is mutated.
 """
 
 from __future__ import annotations
 
 import tests.test_corridor_cargoflow2 as t2
+from app.simulation.openttd import corridor_cargoflow2 as cf
+from app.simulation.openttd.proof import corridor_cargoflow2_native as work
 from tests.test_corridor_cargoflow2 import (
     ANCHOR,
     OTHER_PLAN,
@@ -28,7 +30,6 @@ from tests.test_corridor_cargoflow2 import (
     expect_drop,
     make_request,
     reply,
-    run_probe_vm,
     squirrel_table,
     sweep_days,
     vm_root,
@@ -80,16 +81,68 @@ def witnessed_prefix(**knobs):
     return vm
 
 
+def run_delivered_probe_vm():
+    """The exact 26 delivered planned exchanges in order (the production path
+    offline).
+
+    Re-keyed to the delivered composition of record (the shipped package's
+    planned ladder table advanced at commit 8ec7b91, 2026-11-06: 26 rows with
+    flow-12 riding the settle rung and both tails at their planned step 60 —
+    the v1 schedule's 55 tail is what the old drive pinned, and its tail
+    requests were silently dropped by the delivered entry-ladder shape rule).
+    The drive walks the delivered (2, 2) arm's own schedule and plan; the v1
+    25-row drive stays in ``tests.test_corridor_cargoflow2.run_probe_vm``
+    untouched. The stub world of record semantics carry over unchanged: the
+    same anchored launch-day instant, the same law ticks and day sweeps, and
+    the stub's own fee walk against the wire contract's zero-residual funds
+    fence — two independent implementations agree or the run halts.
+    """
+    schedule = work.cargoflow2_schedule(2)
+    plan = work.cargoflow2_pipeline_plan(2, 2)
+    t2._DRIVER = {"vehicle": -1}
+    vm = build_vm()
+    sweep_days(vm, 0)
+    witness_arrival(vm, at_tick=40)
+    exchanges: list[tuple[cf.Cargoflow2Request, cf.Cargoflow2Readback]] = []
+    prev_offset = 0
+    for row in schedule:
+        offset = int(row["offset"])
+        if row["op"] == "flow" and offset > 0:
+            sweep_days(vm, 1)
+            law_tick = cf.CARGOFLOW2_DAY_ROLL_ANCHOR + cf.DAY_TICKS * (offset - 1)
+            # The row's (offset − prev_offset) Sleeps advance the roll-day
+            # sweep one ended day each; pre-shape the window start so the
+            # exit instant lands exactly at the row's law tick.
+            vm.execute(f"::ticks = {law_tick - (offset - prev_offset)};")
+            prev_offset = offset
+        elif row["op"] in ("finance", "finish"):
+            # The tail rows read the flow-12 instant unchanged: no further
+            # day sweep after the ladder's last step (their own events are
+            # read-only, their echo instant already holds the roll tick).
+            sweep_days(vm, 0)
+        request = work._cargoflow2_exchange_request(row, t2.PRELAUNCH, plan, t2._DRIVER)
+        readback = drive(vm, request)
+        probes = cf.cargoflow2_phase_outcome(
+            exchanges + [(request, readback)], prelaunch_digest=t2.PRELAUNCH, plan=plan
+        )
+        assert probes["failed"] is None, (row["exchange"], probes["failed"])
+        exchanges.append((request, readback))
+        if row["op"] == "purchase":
+            t2._DRIVER["vehicle"] = readback.vehicle
+    phase = cf.cargoflow2_phase_outcome(exchanges, prelaunch_digest=t2.PRELAUNCH, plan=plan)
+    return vm, exchanges, phase
+
+
 def test_ladder_of_record_runs_green():
-    """The exact 25 planned exchanges verify against the world of record."""
-    _, exchanges, phase = run_probe_vm()
-    assert len(exchanges) == 25
+    """The exact 26 delivered planned exchanges verify against the world of record."""
+    _, exchanges, phase = run_delivered_probe_vm()
+    assert len(exchanges) == 26
     assert phase["failed"] is None and phase["pending"] == []
     assert phase["verification"] == "CARGOFLOW2_COMPLETE"
     # The stub world of record never fills its queue: the honest verdict
     # class of this green ladder, never folded into delivery.
     assert phase["verdict"]["verdict"] == "CARGOFLOW2_QUEUE_NEVER_FILLED"
-    assert len(phase["receipts"]) == 25
+    assert len(phase["receipts"]) == 26
 
 
 def test_handler_on_stage_and_latch_refusals():

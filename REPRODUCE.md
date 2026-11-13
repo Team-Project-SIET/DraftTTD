@@ -1259,6 +1259,21 @@ no `artifacts/` mutation. Record doc:
 #   67183cf6…31fa4, Markdown sha256 edeac983…5dab; two independent
 #   derivations are byte-equal.
 
+# FD-C-2 successor re-derivation at HEAD (E204; derived output,
+#   git-ignored artifacts dir; new identity, never relabeling E142's)
+.venv/bin/python -m app.planning.phase_c_feasibility \
+  artifacts/experiments/phase-c-feasibility-2026-11-12 \
+  --project-root /home/fed/codes/softdev2
+# → outcome INCOMPLETE_EVIDENCE, 19 inputs, decision structure identical
+#   to E142's (2 VERIFIED + 8 PARTIAL, same row counts); only the
+#   supported_map_search_limits digest-changed row differs (eight
+#   loop/capture commits 6dbbcf5→5118f8c refreshed the pinned source
+#   digests); report JSON sha256 dcc916609e6c…2692c, Markdown sha256
+#   1f35b1102e5aa…0ebdb; two independent derivations are byte-equal.
+#   Companion battery-evidence mapping (non-authoritative, flips no
+#   engine level): artifacts/experiments/phase-c-feasibility-2026-11-12/
+#   battery-evidence-mapping.md.
+
 # Focused suites of record (131 tests total)
 .venv/bin/pytest tests/test_v2_semantic_reconciliation.py \
   tests/test_census_authority_policy.py \
@@ -1328,3 +1343,545 @@ OPENTTD_BINARY and OPENTTD_OPENGFX_ARCHIVE before Python starts):
 .venv/bin/python -m app.simulation.openttd.proof.freight_delivery verify <run-dir>
 # → truthfully prints verified_loop_cycles for every loop-cycle directory
 ```
+
+## 2026-11-07 addendum #3 — loop verify/record fix round (checked)
+
+Offline only: no launch, no AdminPort, no `artifacts/` mutation. Makes
+addendum #2's verify promises true (E143 had claimed them without evidence):
+per-cycle directories now carry their own `frames.json` slice, scoped
+`result.json`/`cycle-result.json`, cleanup/log copies with final manifests,
+`qualification-prefix-frames.json` sliced per connection, funding replayed
+exactly once per attempt, prior-cycle plan digests skip construction-line
+provenance, and `verify_loop_receipt` replays delivery cycles with the
+exclude/foreign threading the run used (zero cycles reproduce the typed
+error + diagnostic). Records: ticket build section
+`.scratch/ramrom-product/issues/05-build-loop-product.md`.
+
+```bash
+# Cycles suites of record (all green together)
+.venv/bin/pytest tests/test_freight_loops.py tests/test_native_freight_network.py \
+  tests/test_freight_network.py tests/test_network_world_preparation.py \
+  tests/test_freight_continuous.py tests/test_openttd_demo.py \
+  tests/test_freight_delivery.py
+# → 160 passed (151 previous + 9 new offline loop-verify tests)
+
+# Touch-path hygiene (this round's files, ty now fully clean on them)
+.venv/bin/ruff check app/openttd_demo.py \
+  app/simulation/openttd/proof/freight_delivery.py \
+  app/simulation/openttd/freight_native_network.py \
+  app/simulation/openttd/freight_runtime_planning.py \
+  app/simulation/openttd/freight_planning_replay.py \
+  tests/test_freight_loops.py
+.venv/bin/ruff format --check app/openttd_demo.py \
+  app/simulation/openttd/proof/freight_delivery.py \
+  app/simulation/openttd/freight_native_network.py \
+  app/simulation/openttd/freight_runtime_planning.py \
+  app/simulation/openttd/freight_planning_replay.py \
+  tests/test_freight_loops.py
+.venv/bin/python -m py_compile app/simulation/openttd/proof/freight_delivery.py \
+  app/simulation/openttd/freight_native_network.py \
+  app/simulation/openttd/freight_runtime_planning.py \
+  app/simulation/openttd/freight_planning_replay.py
+git diff --check
+uvx ty check app/openttd_demo.py \
+  app/simulation/openttd/proof/freight_delivery.py \
+  app/simulation/openttd/freight_native_network.py \
+  app/simulation/openttd/freight_runtime_planning.py \
+  app/simulation/openttd/freight_planning_replay.py \
+  tests/test_freight_loops.py
+# → ruff/format/compile/diff-check clean; ty "All checks passed!" on all six
+#   touched paths (the prior round's E501/UP031 lint regressions and the
+#   verify-side type errors are fixed, not counted).
+
+# Offline preflight of record (no launch): pinned binary/OpenGFX, sealed
+# --cycles 2 budgets, typed verify surface
+.venv/bin/python -c "from app.openttd_demo import check; check(graphical=False)"
+#   (same pinned checks as `run`: OpenTTD 15.3 binary sha256 + OpenGFX
+#   archive identity both pass; no process is started).
+# A python console of record printed, for the command-of-record seal at
+# --cycles 2 (network_service_limit=3, scenario=high-budget-500k,
+# demo budgets 2048-tile/120s capture):
+#   requests 87→174, mutations 33→66, supplemental_requests 33345→66690,
+#   total_seconds 1200→2400, construction_commands 192→384,
+#   selected_services 3, launches 1 (loop-scaled == network_budgets(): True)
+# and `verify` on a loop root without recordings fails typed:
+#   ValueError: loop cycle recording missing: loop-cycle-1  (rc 1)
+```
+
+The native command of record and its per-cycle verify command remain exactly
+the addendum #2 block above; nothing changed there.
+
+## 2026-11-07 addendum #4 — E145 attempt failed pre-launch; E146 staging seam fix (checked)
+
+The ONE granted `--cycles 2` attempt of record died typed before launch:
+`STAGING_SEAM_DRIFT: delivery.nut seam drequests>=87 matched 0 times,
+expected 1`. Retained immutable directory:
+`artifacts/demos/playable-demo-7b178d7093d9452a8f4d08806efa1b60`. Root
+cause and repair recorded in `AI_HANDOFF.md` (E145/E146),
+`EVIDENCE_INDEX.md` (rows E145, E146) and the ticket-05 file.
+
+```bash
+# Staging suites of record touched by the repair (all green together,
+# incl. the retained frozen-source stage_random byte-parity test)
+.venv/bin/pytest tests/test_random_capture_budgets.py \
+  tests/test_demo_random_native.py tests/test_native_freight_network.py \
+  tests/test_network_world_preparation.py tests/test_freight_loops.py \
+  tests/test_scenario_capital.py tests/test_freight_canonical_persistence.py \
+  tests/test_freight_canonical_transport.py tests/test_freight_continuous.py \
+  tests/test_freight_finance.py tests/test_openttd_demo.py \
+  tests/test_freight_delivery.py tests/test_freight_network.py
+# → 256 passed (2 new staging tests: audited pre-stage seam + scaled
+#   --cycles 2 composition of record)
+
+# Touch-path hygiene (this round's files)
+.venv/bin/ruff check app/demo_random_native.py \
+  app/simulation/openttd/proof/freight_delivery.py \
+  tests/test_random_capture_budgets.py
+.venv/bin/ruff format --check app/demo_random_native.py \
+  app/simulation/openttd/proof/freight_delivery.py \
+  tests/test_random_capture_budgets.py
+.venv/bin/python -m py_compile app/demo_random_native.py \
+  app/simulation/openttd/proof/freight_delivery.py
+git diff --check
+uvx ty check app/demo_random_native.py \
+  app/simulation/openttd/proof/freight_delivery.py \
+  tests/test_random_capture_budgets.py
+# → all clean; ty "All checks passed!"
+
+# Offline staging preflight now part of the preflight of record (no launch):
+# the full composition of record completes the stage audit and stamps the
+# scaled floor (asserted by the two new tests; the CLI prelaunch path runs
+# the same composition before any process starts).
+```
+
+The native command of record and the per-cycle verify command are unchanged
+from addenda #2/#3. The next attempt requires a fresh explicit operator
+grant.
+
+## 2026-11-08 addendum #5 — E147: `--cycles 2` staging lifecycle proven offline (checked)
+
+Offline only; no launch, no AdminPort, no claim, no `artifacts/` mutation.
+The E146 repair is pinned end-to-end; no app code changed. Records:
+`EVIDENCE_INDEX.md` row E147, TASKS ledger row, ticket-05 section.
+
+```bash
+# Staging suite (now 13 offline tests incl. the four lifecycle pins)
+.venv/bin/pytest tests/test_random_capture_budgets.py
+# → 13 passed
+
+# Suites of record (all green together):
+# adjacent tuple (E146's 13-file tuple)
+.venv/bin/pytest tests/test_random_capture_budgets.py \
+  tests/test_demo_random_native.py tests/test_native_freight_network.py \
+  tests/test_network_world_preparation.py tests/test_freight_loops.py \
+  tests/test_scenario_capital.py tests/test_freight_canonical_persistence.py \
+  tests/test_freight_canonical_transport.py tests/test_freight_continuous.py \
+  tests/test_freight_finance.py tests/test_openttd_demo.py \
+  tests/test_freight_delivery.py tests/test_freight_network.py
+# → 260 passed
+# planning tuple
+.venv/bin/pytest tests/test_planning_execution.py tests/test_planning_transport.py \
+  tests/test_freight_planning.py tests/p07_proof_harness.py \
+  tests/test_planning_transport_live.py
+# → 120 passed, 1 skipped (the live P03 proof self-skips without --run-openttd)
+
+# Hygiene (touched path)
+.venv/bin/ruff check tests/test_random_capture_budgets.py
+.venv/bin/ruff format --check tests/test_random_capture_budgets.py
+.venv/bin/python -m py_compile tests/test_random_capture_budgets.py
+git diff --check
+uvx ty check tests/test_random_capture_budgets.py
+# → all clean; ty "All checks passed!"
+```
+
+The documented 53-legacy-red FULL regression stays the wayfinder EXIT gate
+(not this round's gate). The native command of record and per-cycle verify
+command remain unchanged from addenda #2/#3; the next attempt requires a
+fresh explicit operator grant.
+
+## 2026-11-08 addendum #6 — E148: GUI vs `--headless` execution-mode decision of record (checked)
+
+Docs-only decision round: no launch, no AdminPort, no staging, no `artifacts/`
+mutation, no grant consumed; one commit, no push. Decision of record:
+`docs/gui-headless-execution-mode-decision-2026-11-08.md` (spec §1/§3.3
+spectator clauses are product-definition scope for their own later
+GUI-bearing probe; the qualification attempt of record keeps `--headless`
+because every acceptance bar is receipt-based and the loop line's native
+history is headless). No code change; source digests of record unchanged.
+
+```bash
+# Decision round checks (docs-only; the staging suite re-proves the
+# untouched staging path at the unchanged digests)
+.venv/bin/pytest tests/test_random_capture_budgets.py
+# → 13 passed
+git diff --check
+# → clean (ruff/py_compile not applicable: no code touched)
+```
+
+The native command of record is unchanged (addenda #2–#5, ticket-05 lines
+194–208); the next attempt still requires a fresh explicit operator grant.
+
+## 2026-11-08 addendum #7 — E149: GUI product scope §1/§3.3 implemented offline (typed `ENDED_BY_OPERATOR` soft end) (checked)
+
+Offline implementation round: no launch, no AdminPort connection, no
+staging, no `artifacts/` mutation, no grant consumed; one commit, no push.
+The E148 owed element's code half: the operator's spectator window close is
+now the typed soft end of record (`ENDED_BY_OPERATOR`, `operator_soft_end`,
+no `error` key), stopping the attempt at the next AdminPort exchange
+boundary; a non-zero client exit keeps the exact E140-shape typed failure;
+headless loop behavior and the command of record are byte-preserved.
+
+```bash
+# Deterministic offline tests of record (all fake-driven; the suite's
+# autouse guard forbids any native process)
+.venv/bin/pytest tests/test_openttd_demo.py
+# → includes the 5 new GUI-scope pins; the file's part of the adjacent tuple
+
+# Adjacent tuple of record (13 files): 265 passed / 0 failed
+.venv/bin/pytest tests/test_openttd_demo.py tests/test_freight_delivery.py \
+  tests/test_freight_loops.py tests/test_random_capture_budgets.py \
+  tests/test_demo_random_native.py tests/test_native_freight_network.py \
+  tests/test_network_world_preparation.py tests/test_freight_network.py \
+  tests/test_freight_continuous.py tests/test_scenario_capital.py \
+  tests/test_freight_canonical_persistence.py \
+  tests/test_freight_canonical_transport.py tests/test_freight_finance.py
+
+# Hygiene (touched paths)
+.venv/bin/ruff check app/openttd_demo.py \
+  app/simulation/openttd/proof/freight_delivery.py tests/test_openttd_demo.py
+.venv/bin/ruff format --check app/openttd_demo.py \
+  app/simulation/openttd/proof/freight_delivery.py
+.venv/bin/python -m py_compile app/openttd_demo.py \
+  app/simulation/openttd/proof/freight_delivery.py tests/test_openttd_demo.py
+git diff --check
+uvx ty check app/openttd_demo.py app/simulation/openttd/proof/freight_delivery.py
+# → app files clean; test file carries the one pre-existing book-recorded
+#   `viewer.log.closed` diagnostic (counted, never repaired)
+```
+
+What is NOT claimed: no native GUI evidence exists — the spectator window
+process, the real window close, the view hold and the ended-by-operator
+record stay unproven natively behind a fresh per-attempt grant (GUI run
+without `--stop-on-delivery`). The `--headless` loop command of record and
+its per-cycle verify command remain unchanged (addenda #2–#5).
+
+## 2026-11-08 addendum #8 — E150: attempt-1 loop qualification recorded FAILED; per-cycle `graphics-identity.json` fix (checked)
+
+The verbatim one-attempt grant ran the command of record once on
+2026-11-08; it failed and was sealed. Post-mortem and fix offline; sealed
+run dir read-only. Run dir of record:
+`artifacts/demos/playable-demo-246dc3a4f4fc4b40aee0f73696455473`
+(`status=FAILED`, error `FileNotFoundError: [Errno 2] No such file or
+directory: '.../loop-cycle-1/graphics-identity.json'`,
+`failure_save_error="owned native save completion missing"`, cleanup fully
+reaped at root and cycle level, no `loop-cycle-2`, ATTEMPT-EXIT=1).
+
+```bash
+# Post-mortem readback of the sealed attempt (read-only; never mutate):
+.venv/bin/python - <<'PY'
+import json
+from pathlib import Path
+d = Path("artifacts/demos/playable-demo-246dc3a4f4fc4b40aee0f73696455473")
+result = json.loads((d / "result.json").read_bytes())
+diag = json.loads((d / "loop-cycle-1/planning-diagnostic.json").read_bytes())
+print(result["status"], "|", result["error"])
+print("capture", diag["capture_requests_attempted"], diag["capture_requests_completed"],
+      "pause_pairs", diag["pause_pairs"], "truncated", diag["search_truncated"])
+PY
+
+# Offline pin test of record (the fix: per-cycle content-identical
+# graphics-identity.json copy; drives the loop harness to cycle-1 staging):
+.venv/bin/pytest "tests/test_openttd_demo.py::test_loop_cycle_recording_copies_the_graphics_identity_per_cycle"
+
+# Adjacent tuple of record (13 files): 266 passed / 0 failed (same files as
+# addendum #7, at digests freight_delivery 6f913b555e05ca05, tests 2934214451eb1e2d)
+```
+
+The `--headless` loop command of record and its per-cycle verify command
+remain unchanged; the next attempt still requires a fresh explicit
+operator grant, and the sealed attempt-1 dir keeps its FAILED terminal
+identity forever — it is never relabeled, rerun or regenerated.
+
+## 2026-11-08 addendum #9 — E151: cycle-chain artifact audit closed + e2e offline tests + attempt-1 pin (checked)
+
+Offline-only follow-up of record after the E150 fix (no app code changed;
+the only tree change is 283 lines in `tests/test_freight_loops.py`).
+
+- **Audit of record:** every plain-constant `prepared.directory` read in
+  the run-time cycle chain (`freight_native_network.py` +
+  `freight_runtime_planning.py`) classifies into exactly six names —
+  root-stage copies (`PRELAUNCH.json`, `graphics-identity.json`), the
+  per-cycle staging self-write (`runtime-identity.json`), the chain
+  self-write before read (`qualification-prefix-frames.json`), and
+  exchange-disc packets (`capacity-add-response.json`,
+  `capacity-read-response.json`). No unclassified remainder; nothing
+  further missing.
+- **Pinned by tests of record (all offline, controlled):**
+
+```bash
+# The three new tests + the suite (26 passed: 23 prior + 3 new):
+.venv/bin/pytest tests/test_freight_loops.py -q
+
+# 13-file adjacent tuple of record at 269 passed (E150's 266 + 3) plus the
+# new controlled-harness import source (13 more), one run, rc 0:
+.venv/bin/pytest tests/test_random_capture_budgets.py tests/test_demo_random_native.py tests/test_native_freight_network.py tests/test_network_world_preparation.py tests/test_freight_loops.py tests/test_scenario_capital.py tests/test_freight_canonical_persistence.py tests/test_freight_canonical_transport.py tests/test_freight_continuous.py tests/test_freight_finance.py tests/test_openttd_demo.py tests/test_freight_delivery.py tests/test_freight_network.py tests/test_random_distance.py -q
+
+# Hygiene of record:
+.venv/bin/ruff check tests/test_freight_loops.py
+.venv/bin/ruff format --check tests/test_freight_loops.py
+.venv/bin/python -m py_compile tests/test_freight_loops.py
+uvx ty check tests/test_freight_loops.py app/simulation/openttd/proof/freight_delivery.py app/simulation/openttd/freight_native_network.py app/simulation/openttd/freight_runtime_planning.py
+git diff --check
+```
+
+- Digests of record unchanged from E150 (freight_delivery
+  `6f913b555e05ca05`, openttd_demo `db2051dea8885642`,
+  test_openttd_demo `2934214451eb1e2d`); the one pre-existing counted
+  `viewer.log.closed` diagnostic in `test_openttd_demo.py` stands
+  untouched.
+- The command of record stays byte-unchanged; Attempt 2 still waits on a
+  fresh explicit operator grant, and the sealed attempt-1 dir keeps its
+  FAILED terminal identity forever.
+
+## 2026-11-08 addendum #10 — E152: attempt-2 sealed FAILED; copy set proven live; shared-log id collision certified (checked)
+
+The fresh explicit Attempt-2 grant ran the byte-unchanged command of
+record once; it stopped typed on the first unexpected failure
+(`ATTEMPT-EXIT=1`). Run dir of record (sealed, read-only forever):
+`artifacts/demos/playable-demo-e6852692d0ef40199db0c71b101b2dda`.
+
+```bash
+# Post-mortem readback of the sealed attempt (read-only; never mutate):
+.venv/bin/python - <<'PY'
+import json
+from pathlib import Path
+from app.simulation.openttd.proof.freight_delivery import verify_loop_receipt
+from app.simulation.openttd.proof.harness import manifest
+d = Path("artifacts/demos/playable-demo-e6852692d0ef40199db0c71b101b2dda")
+r = json.loads((d / "result.json").read_bytes())
+print(r["status"], "|", r["error"], "| launches", r["launches"], "connections", r["connections"])
+for c in ("loop-cycle-1", "loop-cycle-2"):
+    print(c, "manifest-equal:", manifest(d / c) == (d / c / "artifact-manifest.sha256").read_text())
+diag = json.loads((d / "loop-cycle-1/planning-diagnostic.json").read_bytes())
+print("cycle1 capture", diag["capture_requests_completed"], "pause_pairs", diag["pause_pairs"],
+      "captured", diag["captured_relationships"], "truncated", diag["search_truncated"])
+print("cycle1 zero-service:", json.loads((d / "loop-cycle-1/cycle-result.json").read_bytes())["status"])
+try:
+    verify_loop_receipt(d)
+    print("VERIFY-OK")
+except ValueError as e:
+    print("VERIFY-TYPED-REFUSAL:", e)
+PY
+
+# Shared-log collision certification ((stderr clock ids appear exactly
+# twice — once per cycle) in the one shared per-attempt stderr log:
+grep -o "request_id=[^ ]*-clock-[0-9]*" artifacts/demos/playable-demo-e6852692d0ef40199db0c71b101b2dda/stderr.log | sort | uniq -c | awk '$1>1' | head -12
+```
+
+- **Classification:** same family as E150 — a per-attempt-shared
+  artifact (the single server `stderr.log` of the one-launch loop)
+  consumed by the qualification evidence parser with per-cycle-reset
+  identity state (poll counters restart at 1 under the constant session
+  id `freight-plan`); second instance, new surface.
+- **FD-C-2:** still `INCOMPLETE_EVIDENCE` (cycle-1 search truncated,
+  candidates 0; the zero-service terminal is observed, never a completed
+  feasibility search).
+- **Next:** no fix under the consumed grant; an offline repair round
+  (per-cycle qualification id namespace or cycle-scoped stderr window)
+  is a separate operator-approved step; Attempt 3 then needs a fresh
+  explicit operator grant with the byte-unchanged command of record.
+
+## 2026-11-08 addendum #11 — E153: shared-stderr cycle-restart fix landed offline (checked)
+
+The E152 defect (per-cycle qualification polls re-parsing the ONE shared
+attempt `stderr.log` with restart-at-1 poll counters) is fixed with a
+per-cycle stderr byte-window. All commands below are offline; no native
+run, no artifact mutation.
+
+```bash
+# Red-first regression tests (drive the real evidence() over one shared
+# stderr): the restart/reuse test failed RED before the fix with the
+# verbatim sealed error and passes after; guards intact:
+.venv/bin/pytest tests/test_qualification_preparation.py -k "restarted_cycle_poll or same_cycle_duplicate or out_of_order_markers" -q
+
+# Qualification family (227 passed + 1 skipped):
+.venv/bin/pytest tests/test_qualification_preparation.py tests/test_qualification_native.py tests/test_qualification_coordinator.py tests/test_qualification_accounting.py tests/test_qualification_dispatch_repair.py tests/test_two_rollover_qualification.py -q
+
+# Adjacent tuple of record (282 passed, matches 269 + 13 controlled):
+.venv/bin/pytest tests/test_random_capture_budgets.py tests/test_demo_random_native.py tests/test_native_freight_network.py tests/test_network_world_preparation.py tests/test_freight_loops.py tests/test_scenario_capital.py tests/test_freight_canonical_persistence.py tests/test_freight_canonical_transport.py tests/test_freight_continuous.py tests/test_freight_finance.py tests/test_openttd_demo.py tests/test_freight_delivery.py tests/test_freight_network.py tests/test_random_distance.py -q
+
+# Hygiene of record (all four touched files):
+.venv/bin/ruff check tests/test_qualification_preparation.py app/simulation/openttd/freight_runtime_planning.py app/simulation/openttd/proof/qualification_native.py app/simulation/openttd/proof/structural_native.py
+.venv/bin/ruff format --check tests/test_qualification_preparation.py app/simulation/openttd/freight_runtime_planning.py app/simulation/openttd/proof/qualification_native.py app/simulation/openttd/proof/structural_native.py
+.venv/bin/python -m py_compile tests/test_qualification_preparation.py app/simulation/openttd/freight_runtime_planning.py app/simulation/openttd/proof/qualification_native.py app/simulation/openttd/proof/structural_native.py
+uvx ty check tests/test_qualification_preparation.py app/simulation/openttd/freight_runtime_planning.py app/simulation/openttd/proof/qualification_native.py app/simulation/openttd/proof/structural_native.py
+git diff --check
+```
+
+- **Design note of record:** `configure_transport` never runs in the
+  freight loop chain — the per-cycle transport is constructed directly
+  in `collect_qualified_world`, which is therefore the binary window
+  anchor. Window absent ⇒ whole file, so corridor and single-cycle
+  behavior is byte-identical; the parent `setup()` startup-marker read
+  stays whole-file because BRIDGE_STARTED is written at launch time.
+- **Pre-existing clone failure (verified unrelated):**
+  `tests/test_structural_world.py::test_real_catalog_and_enrichment_
+  regression_fixtures_are_valid_but_separate_runs` fails identically
+  with the fix stashed at clean `cf23bdf`; it is outside the tuple of
+  record and was not modified.
+- **Gate:** Attempt 3 needs a fresh explicit operator grant with the
+  byte-unchanged command of record; FD-C-2 stays `INCOMPLETE_EVIDENCE`.
+
+## 2026-11-08 addendum #12 — E154: attempt-3 sealed FAILED at the budget seal; window fix proven live (checked)
+
+The explicit Attempt-3 grant ran the byte-unchanged command of record
+once; it stopped typed on the first unexpected failure
+(`ATTEMPT-EXIT=1`, `error=TimeoutError:`). Run dir of record (sealed,
+read-only forever):
+`artifacts/demos/playable-demo-f4a9e00063814bb381af2903fb4a5a88`.
+
+```bash
+# Post-mortem readback of the sealed attempt (read-only; never mutate):
+.venv/bin/python - <<'PY'
+import json
+from pathlib import Path
+from app.simulation.openttd.proof.freight_delivery import verify_loop_receipt, network_budgets
+from app.simulation.openttd.proof.harness import manifest
+d = Path("artifacts/demos/playable-demo-f4a9e00063814bb381af2903fb4a5a88")
+r = json.loads((d / "result.json").read_bytes())
+print(r["status"], "|", r["error"], "| launches", r["launches"], "connections", r["connections"])
+for c in (d / "loop-cycle-1", d / "loop-cycle-2"):
+    print(c.name, "manifest-equal:",
+          manifest(c) == (c / "artifact-manifest.sha256").read_text())
+q2 = json.loads((d / "loop-cycle-2/qualification-session.json").read_bytes())
+print("cycle-2 qualification:", q2["phase"], "| failure:", q2["failure"], "| clock usage:", q2["phase_usage"][0])
+d2 = json.loads((d / "loop-cycle-2/planning-diagnostic.json").read_bytes())
+print("cycle-2 diag:", d2["pair_checks"], "pair checks,", d2["capture_requests_completed"], "captures,",
+      d2["search_truncated"], d2["candidate_count"])
+try:
+    verify_loop_receipt(d)
+    print("VERIFY-OK")
+except ValueError as e:
+    print("VERIFY-TYPED-REFUSAL:", e)
+PY
+
+# Window-fix live certification: every clock id exactly 2x in the ONE
+# shared stderr (one full quadruple per cycle, byte-identical ids):
+grep -o "request_id=[^ ]*-clock-[0-9]*" artifacts/demos/playable-demo-f4a9e00063814bb381af2903fb4a5a88/stderr.log | sort | uniq -c | awk '$1>1' | head
+```
+
+- **Classification:** the attempt budget itself expired mid-cycle-2 P08
+  (`total_seconds=1800` for two cycles; per-cycle requalification under
+  the §3.2 one-connection-per-cycle design costs more than the scaled
+  budget allows). Budget seal amendment is an OPERATOR decision; no
+  code defect regressed; E153 validated live.
+- **FD-C-2:** still `INCOMPLETE_EVIDENCE` (cycle 1 truncated
+  zero-candidate observed terminal; cycle 2 interrupted before any
+  capture; no completed feasibility search).
+- **Gate:** Attempt 4 needs (a) any budget-seal amendment decision and
+  (b) a fresh explicit operator grant with the command of record
+  byte-unchanged. The GUI-bearing native probe remains a separate later
+  grant.
+
+## 2026-11-11 addendum #13 — E161: T-030 exercise conductor built offline; commands of record for the canonical-fleet-exercise stage (checked)
+
+The Phase B opener built the runnable T-030 exercise stage of record
+(`app/simulation/openttd/proof/canonical_fleet_exercise.py`, commit
+`c6ec803`, additive — the frozen `proof/canonical_fleet.py` reload
+lane untouched). Commands of record (attempt package:
+`.scratch/phase-b-t030/issues/02-attempt-package.md`; staging is
+offline and argv never executes; the RUN command is
+operator-gated and must not be executed without a fresh explicit
+grant):
+
+```
+# Offline focused regression (12 tests):
+PYTHONDONTWRITEBYTECODE=1 .venv/bin/pytest tests/test_canonical_fleet_exercise.py -q
+# Full lane set of record (three groups, 126 passed / 0 failed):
+PYTHONDONTWRITEBYTECODE=1 .venv/bin/pytest tests/test_canonical_fleet_exercise.py \
+    tests/test_canonical_fleet_driver.py -q
+PYTHONDONTWRITEBYTECODE=1 .venv/bin/pytest tests/test_freight_canonical_dispatch.py \
+    tests/test_freight_canonical_integration.py tests/test_freight_canonical_transport.py -q
+PYTHONDONTWRITEBYTECODE=1 .venv/bin/pytest tests/test_canonical_reload_only.py \
+    tests/test_canonical_reload_context.py tests/test_canonical_failure_reporting.py \
+    tests/test_freight_canonical_runtime.py -q
+# Stage (offline; identity dir name is checked == canonical-fleet-exercise-t030-1):
+.venv/bin/python -m app.simulation.openttd.proof.canonical_fleet_exercise \
+    prepare artifacts/runtime/canonical-fleet-exercise-t030-1 \
+    --canonical artifacts/runtime/canonical-fleet-create-q3
+# Preflight (offline):
+.venv/bin/python -m app.simulation.openttd.proof.canonical_fleet_exercise \
+    preflight artifacts/runtime/canonical-fleet-exercise-t030-1
+# Independent verify (offline; after a run):
+.venv/bin/python -m app.simulation.openttd.proof.canonical_fleet_exercise \
+    verify artifacts/runtime/canonical-fleet-exercise-t030-1
+# THE RUN — fresh explicit operator authorization required (one launch):
+# .venv/bin/python -m app.simulation.openttd.proof.canonical_fleet_exercise \
+#     run artifacts/runtime/canonical-fleet-exercise-t030-1 --authorize-one-launch
+```
+
+- **Byte-pin of record:** the staged bridge package must equal the
+  q3-era validation record
+  `artifacts/validation/canonical-fleet-reload-q3/suspension.json`
+  (source_commit `14ec60f2…`, per-file SHA-256s); verified matching at
+  HEAD `c6ec803`; any drift refuses prepare/preflight.
+- **Static checks of record:** `ruff check` + `ruff format --check` +
+  `py_compile` + scoped `uvx ty check` on the two touched paths — all
+  clean; `git diff --check` clean.
+- **Blocked:** the run command itself (fresh explicit grant; all prior
+  grants void). No launch, no AdminPort, no staging executed this
+  round; no `artifacts/` byte touched.
+
+## 2026-11-12 addendum — Phase D quality floor / full-suite command of record (checked)
+
+Offline only: no OpenTTD launch, no AdminPort, no `--run-openttd` /
+`--run-postgres`, no native anything; `artifacts/` and `CONTEXT.md` byte-
+untouched. M0 of the Phase D scope proposal was granted in-session
+2026-11-12 (approval of record:
+`docs/phase-d-scope-proposal-2026-11-12.md`; the quality-floor dispositions
+of record — repair ×4, typed seal ×1 — are decision ticket 07
+[`.scratch/phase-d-scope/issues/07-legacy-red-triage-disposition.md`],
+executed by ticket 10). The full-suite command of record (none existed on
+file before E207's first baseline; executed exactly once, 2026-11-12, at the
+post-ticket-10 quality-floor tree, capture dir created fresh for the run):
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 .venv/bin/pytest tests/ -p no:cacheprovider > /tmp/opencode/quality-floor-rerun-2026-11-12/pytest-full.out 2>&1
+```
+
+Exact result of record: **6327 passed, 55 skipped, 0 failed, 0 errors,
+in 3361.43 s (0:56:01), exit code 0** — collected 6382, conserving E207's
+collected count exactly (6327 + 55 = 6382; no collection errors, nothing
+interrupted). Delta vs the E207 baseline: the 57 legacy reds are gone via
+ticket 07's dispositions as executed by ticket 10 (P08 controlled e2e ×51,
+budget-seal ×3, corridor VM ladder ×1, structural-world fixture ×1 → passed),
+and skips moved 54 → 55 solely by the one typed seal. The M1 exit gate is
+**green-or-honestly-triaged, and it is green**: 0 failed; the 55 skips are
+E207's 54 offline self-skips of the native/postgres-gated tests plus exactly
+one typed seal,
+`tests/test_qualification_preparation.py::test_finalization_failure_cannot_publish_qualification[terminal]`,
+whose reason and provenance live in the test file per ticket 07's disposition
+record ([.scratch/phase-d-scope/issues/07-legacy-red-triage-disposition.md](.scratch/phase-d-scope/issues/07-legacy-red-triage-disposition.md) `## Answer`;
+focused skip-pair check: `[integrity]` passed, `[terminal]` skipped). Any
+unexpected red at a future re-run is recorded verbatim for a typed
+disposition — never patched to pass, never force-fit.
+
+E207 ([.scratch/ramrom-product/research/07-exit-regression-full-suite-2026-11-12.md](.scratch/ramrom-product/research/07-exit-regression-full-suite-2026-11-12.md);
+`EVIDENCE_INDEX.md` row E207) remains the first full-suite baseline of
+record, unchanged and never relabeled; this run is the post-disposition
+verification, a new fact of record under its own identity (transient capture
+`/tmp/opencode/quality-floor-rerun-2026-11-12/pytest-full.out`).
+
+Discipline of record for Phase D rounds, recorded here:
+
+- **Version / release notes:** every Phase D gate round appends its own dated
+  addendum to this file carrying its attempt identity and its evidence-row
+  pointer (the round's `EVIDENCE_INDEX.md` row); retained `artifacts/` bytes
+  stay transfer-only via separate reviewed archives, never committed; there
+  are no packaging, CI or ops runbooks — this file and the evidence index
+  are the release record.
+- **Full-suite gate cadence:** the command above is re-run in full
+  (i) before any native round (this run discharges the first such gate),
+  (ii) after any change touching test seals, frozen fixtures, or sealed
+  budget constants, and (iii) at Phase D close, before the bar statement of
+  record.

@@ -51,6 +51,38 @@ def test_prepare_identity_rejects_attempt20_before_any_write(tmp_path):
     assert not directory.exists()
 
 
+def test_prepare_stages_the_world_facts_the_native_network_consumers_read(tmp_path, monkeypatch):
+    """The create metadata must carry seed/width/height (E188): ce28899's
+    PreparedWorldManifest and receipt verification read metadata['world'],
+    and the q4 create attempt died KeyError 'world' right after its
+    qualified save because the canonical prepare never staged them.
+    """
+    from app.simulation.openttd.proof.graphics import GraphicsIdentity
+
+    fake = GraphicsIdentity(
+        directory=tmp_path / "gfx",
+        archive_sha256="a" * 64,
+        descriptor_sha256="b" * 64,
+        grfs=(),
+        files=(),
+    )
+    monkeypatch.setattr(driver, "stage_opengfx", lambda *args, **kwargs: fake)
+    captured = {}
+
+    def capture(directory, payload):
+        if directory.name != "PRELAUNCH.json":
+            return
+        captured.update(payload)
+        raise ValueError("prelaunch captured")
+
+    monkeypatch.setattr(driver, "write_json", capture)
+    with pytest.raises(ValueError, match="prelaunch captured"):
+        driver.prepare(tmp_path / driver.CREATE, stage=driver.CREATE)
+    assert captured["world"] == dict(
+        source="NATIVE_GENERATED_CANONICAL", seed=42, width=64, height=64
+    )
+
+
 @pytest.mark.parametrize("identity", ["canonical-fleet-create-q1", "canonical-fleet-create-q2"])
 def test_prepare_never_reuses_consumed_creation_identity(tmp_path, monkeypatch, identity):
     def forbidden(*args, **kwargs):

@@ -147,3 +147,125 @@ def test_unsupported_sealed_game_time_versions_rejected(version):
 
     with pytest.raises(ValueError, match="unsupported game-time"):
         validate_game_time_version({"game_time_metrics_version": version})
+
+
+# --- Cycle-scoped receipt game-time identities (planner_used/dused fix) ------
+
+
+class _DuplicateRequest(Exception):
+    """Offline model of a dedup guard rejecting an already-used id."""
+
+
+def _delivery_plan():
+    from app.simulation.openttd.freight_delivery import DeliveryPlan
+
+    plan = DeliveryPlan(
+        prelaunch_digest="0" * 64,
+        source_save_digest="0" * 64,
+        admission_digest="0" * 64,
+        a=(1, 2, 3, 4, 5, 6, 7, 8),
+        f=tuple(range(8)),
+    )
+    return plan, plan.digest
+
+
+def receipt_dir(tmp_path, cycle, *, capture_start=False):
+    """Structure one cycle dir the way the producer and the verifier of record
+    name the readback discs: literal legacy names at cycle 1, maker-suffixed
+    names later."""
+    from app.simulation.openttd.freight_native_network import receipt_game_time
+    from app.simulation.openttd.freight_runtime_planning import cycle_request_id
+
+    cycle_dir = tmp_path / f"loop-cycle-{cycle}"
+    cycle_dir.mkdir(parents=True, exist_ok=True)
+    if cycle > 1:
+        (cycle_dir / "loop-cycle.json").write_text(
+            json.dumps(dict(schema="ramrom-loop-cycle-v1", cycle=cycle, loop_cycles=8))
+        )
+    for stage, day, accepted in (
+        ("read-9", 102, 0),
+        ("observe-1", 105, 0),
+        ("finish", 109, 108),
+    ):
+        state = [0] * 30
+        state[0], state[1], state[21] = 500, day, accepted
+        name = cycle_request_id(f"s0-{stage}", cycle) + "-response.json"
+        (cycle_dir / name).write_text(json.dumps({"s": state}))
+    if capture_start:
+        plan, digest = _delivery_plan()
+        (cycle_dir / "native-plan-0.json").write_text(plan.model_dump_json())
+        state = [0] * 30
+        state[0], state[1], state[21] = 150, 101, 0
+        name = cycle_request_id("select-0", cycle) + "-response.json"
+        (cycle_dir / name).write_text(json.dumps({"s": state}))
+        (cycle_dir / "stderr.log").write_text(
+            "FREIGHT_GAME_TIME_START date=100 tick=100\n"
+            f"FREIGHT_GAME_TIME_CONSTRUCTION plan={digest} date=102 tick=190\n"
+        )
+    return receipt_game_time(cycle_dir, 0, capture_start=capture_start), cycle_dir
+
+
+@pytest.mark.parametrize("capture_start", [False, True])
+def test_receipt_game_time_cycle_identities_are_unique_and_replay_consistent(
+    tmp_path, capture_start
+):
+    """Cycle 1 and cycle 2 replay the same milestone figures with the same
+    per-cycle identities: the reader derives exactly the disc names the
+    producer emitted, dedup accepts both cycles, and cycle 1 keeps the
+    legacy byte-exact names."""
+    first, first_dir = receipt_dir(tmp_path, 1, capture_start=capture_start)
+    second, second_dir = receipt_dir(tmp_path, 2, capture_start=capture_start)
+    # Same payload semantics per cycle: identical milestone figures...
+    figures = [
+        "construction_observed_by_date",
+        "pickup_observed_by_date",
+        "final_cargo_delivery_date",
+    ]
+    assert {key: first[key] for key in figures} == {key: second[key] for key in figures}
+    if capture_start:
+        assert first["start_basis"] == second["start_basis"]
+        assert first["construction_completion_date"] == second["construction_completion_date"]
+        assert first["total_elapsed_economy_days"] == second["total_elapsed_economy_days"] == 8
+        assert first["evidence_refs"][-1] == "stderr.log"
+        assert first["planning_completion_observed_by_date"] == 101
+        assert second["planning_completion_observed_by_date"] == 101
+        assert "select-0-response.json" not in second["evidence_refs"]
+        assert (second_dir / "select-0-c2-response.json").is_file()
+    # ...while evidence_refs carry exactly the per-cycle discs of record.
+
+    from app.simulation.openttd.freight_runtime_planning import cycle_request_id
+
+    legacy_stages = ("read-9", "observe-1", "finish")
+    legacy = [f"s0-{stage}" for stage in legacy_stages]
+    disc_refs = [name + "-response.json" for name in legacy] + (
+        ["stderr.log"] if capture_start else []
+    )
+    assert first["evidence_refs"] == disc_refs
+    suffix = [cycle_request_id(name, 2) + "-response.json" for name in legacy] + (
+        ["stderr.log"] if capture_start else []
+    )
+    assert second["evidence_refs"] == suffix
+    if capture_start:
+        assert first["evidence_refs"][-1] == "stderr.log"
+        assert first["planning_completion_observed_by_date"] == 101
+        assert second["planning_completion_observed_by_date"] == 101
+        assert "select-0-response.json" not in second["evidence_refs"]
+        assert (second_dir / "select-0-c2-response.json").is_file()
+
+    # Persistent modeled dedup guard: every identity is unique across the
+    # two cycles and accepted exactly once; an unsuffixed cycle-2 replay is
+    # still rejected.
+    used = set()
+    schedule_cycle1 = legacy + (["select-0"] if capture_start else [])
+    schedule_cycle2 = [cycle_request_id(name, 2) for name in schedule_cycle1]
+    assert len(set(schedule_cycle1 + schedule_cycle2)) == len(schedule_cycle1 + schedule_cycle2)
+
+    def send(request_id):
+        if request_id in used:
+            raise _DuplicateRequest(request_id)
+        used.add(request_id)
+
+    for request_id in schedule_cycle1 + schedule_cycle2:
+        send(request_id)
+    with pytest.raises(_DuplicateRequest, match=schedule_cycle1[-1]):
+        send(schedule_cycle1[-1])  # the GameScript contract: a replayed id drops

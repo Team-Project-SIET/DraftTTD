@@ -97,7 +97,9 @@ class QualificationNativeBackend(StructuralNativeBackend):
             self.health()
             await self.secure_connection.require_quiescent()
             evidence = parse_native_read_evidence(
-                prepared.spec.stderr_path.read_bytes(), request.request_id, request.command
+                prepared.spec.stderr_path.read_bytes()[getattr(self, "stderr_window", 0) :],
+                request.request_id,
+                request.command,
             )
             if len(evidence.sequence) == 4:
                 evidence.require_complete(exchange)

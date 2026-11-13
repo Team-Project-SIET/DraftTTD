@@ -35,10 +35,81 @@ Arbitrary-world planning and larger networks are not verified MVP capabilities.
 
 ## How to run the program
 
-There are two ways to run this program, and everything below runs offline
-except an explicitly authorized native launch.
+Everything below runs offline except an explicitly authorized native launch.
+The exact commands of record live in [REPRODUCE.md](REPRODUCE.md); a
+customer-facing walkthrough with readiness status is
+[docs/customer-live-demo-workflow.md](docs/customer-live-demo-workflow.md).
 
-### Offline pipeline (no OpenTTD needed)
+### Offline demo CLI (no OpenTTD process, no authorization)
+
+From the repository root after `uv sync --locked`; none of these commands
+launches OpenTTD or creates a launch claim:
+
+```bash
+# Validate the pinned binary, graphics and desktop prerequisites:
+.venv/bin/python -m app.openttd_demo check
+
+# Offline planning on the bundled deterministic scenario:
+.venv/bin/python -m app.openttd_demo plan
+
+# Offline random-world planning (writes a generation recipe —
+# not an observed world or a selected plan):
+.venv/bin/python -m app.openttd_demo plan --random-world --seed 17 \
+  --map-size 256 --climate temperate --terrain 0 --towns 1 --industries 2 \
+  --max-candidates 16 --max-services 4 --max-vehicles 4 --planning-seconds 30
+
+# Offline P07 report from a completed native run, and a descriptive
+# comparison of two reports (fresh sibling outputs; sources preserved):
+.venv/bin/python -m app.openttd_demo report --source /absolute/path/to/completed-demo
+.venv/bin/python -m app.openttd_demo compare \
+  --source /absolute/path/to/report-a --compare-with /absolute/path/to/report-b
+```
+
+`check` validates binary/assets/desktop only (`--headless` adds no-desktop
+prerequisite checking). P07 reporting needs completed native receipts;
+comparisons across distinct seeds/configurations are descriptive, not causal
+matched experiments.
+
+### Random world: offline planning vs native run
+
+`app.openttd_demo` is the only entry point — the fixed demo and the
+random-world profile differ by flags, not by program, and there is no
+random-world path outside this CLI (world/planner settings also require
+`--random-world` or the parser refuses them):
+
+- **Offline (no launch, no authorization):** `plan --random-world …` (shown
+  above) writes a generation recipe — a sealed seed and budget plan, not an
+  observed world or a selected plan. Offline planning is the entire offline
+  surface; there is no offline random-world execution.
+
+- **Native (operator-gated, one attempt):** the run shape below is a command
+  reference, not authority to invoke it or retry historical runs — a real
+  round requires fresh preparation, an independent preflight and explicit
+  one-shot authority:
+
+  ```bash
+  .venv/bin/python -m app.openttd_demo run --random-world --seed 17 \
+    --map-size 256 --climate temperate --terrain 0 --towns 1 --industries 2 \
+    --max-candidates 16 --max-services 4 --max-vehicles 4 --planning-seconds 30 \
+    --stop-on-delivery
+  ```
+
+  Capture defaults are the widened seal of record (`--capture-tiles 2048`,
+  `--capture-seconds 120`, `--capture-pad 6`); `--cycles N` (1..8) seals loop
+  cycles and requires `--random-world`. While a native run executes, the
+  progress line names the exact blocked backend stage — world launch,
+  qualification (two native economy-month rollover waits), bounded capture
+  progress (`captured/total` relationships), then P05 selection — with elapsed
+  time, instead of a single static waiting line; `operational samples UNKNOWN`
+  stays printed until a P08/P05 plan exists, and a typed planning failure is
+  surfaced verbatim from `planning-diagnostic.json`. Random-world **delivery
+  is unproven** (Phase C `INCOMPLETE_EVIDENCE`, E142/E204; the seed battery was
+  consumed with its bar honestly not met, E198–E201): a run demonstrates
+  generation, qualification and planning, not verified delivery. See
+  [random-world documentation](docs/random-world-demo.md) and
+  [REPRODUCE.md](REPRODUCE.md).
+
+### Offline corridor pipeline (no launch needed)
 
 The D5 corridor deliverable pipeline (Cargoflow-2) lives in
 `app/simulation/openttd/proof/corridor_cargoflow2_native.py`. It stages a
@@ -71,8 +142,7 @@ Omit `--route-version 2 --schedule-version 2` to stage the historical v1 arm
 instead: its 25-row ladder stays byte-equal to the recorded candidates 6 and
 7. Staging depends on the retained prerequisite lineage under `artifacts/`,
 which Git ignores — on a fresh clone the lineage evidence is missing and the
-checks report that, rather than the code being broken. The exact commands of
-record live in [REPRODUCE.md](REPRODUCE.md).
+checks report that, rather than the code being broken.
 
 ### Native demo and native launches (operator-gated)
 
@@ -80,6 +150,15 @@ The playable graphical demo (`python -m app.openttd_demo`, Quick start above)
 needs `OPENTTD_BINARY` (the pinned OpenTTD 15.3 binary, sha256
 `276d5b69…904c`) and `OPENTTD_OPENGFX_ARCHIVE` (OpenGFX 8.0, sha256
 `43a0c1da…03be`) exported before Python starts.
+
+Stable command of record — starts the dedicated server and the graphical
+spectator (`--view-seconds` rides the total runtime deadline; the CLI defaults
+to `run` when the command is omitted, and `--headless` still launches the
+native server):
+
+```bash
+.venv/bin/python -m app.openttd_demo --view-seconds 300
+```
 
 A native launch of a staged corridor candidate runs **at most once per
 candidate** and is never authorized by preparation or preflight: the operator
@@ -113,7 +192,9 @@ widened capture seal of record (2048-tile perpendicular-grown rectangles,
 keeping every typed rejection honest.
 Native proof runs (seed 2026 re-certification and the seed 7/8/9 battery)
 require separate per-attempt authorization; seed 17's historical smoke stays
-FAILED and is never relabeled.
+FAILED and is never relabeled. The FD-C-2 line and Phase C stand
+`INCOMPLETE_EVIDENCE` (E142, re-confirmed E204), the battery's bar was honestly
+not met (E198–E201), and random-world delivery remains unproven.
 Fixed Scenario remains the stable default. See [random-world documentation](docs/random-world-demo.md),
 [distance support](docs/random-world-distance-support.md),
 [the V2 completion record](docs/p08-classification-v2-native-capture-completion.md),
@@ -177,6 +258,72 @@ The standalone `--demo` result uses native OD selection. `--demo --planner` inst
 qualifies that generated world, captures the missing planning facts, runs P08/P05,
 and admits the selected service. Controlled planning inputs cannot authorize native
 execution. Attempt 4 proves standalone delivery; Attempt 9 proves planner-driven delivery.
+
+## Customer handover status (2026-11-12)
+
+Verdict of record (`docs/CUSTOMER_HANDOVER_GAP_ANALYSIS.md`,
+`docs/PROJECT_CLOSURE_PLAN.md`): **CONDITIONALLY READY WITH DISCLOSED LIMITATIONS.**
+
+Customer presentation materials: the ten-topic customer documentation set is
+indexed in `docs/CUSTOMER_PRESENTATION_INDEX.md` (scope, architecture, UML,
+SOLID, live demo workflow, use cases, error handling, future development,
+security/threat analysis, requirements traceability).
+
+**Natively verified fixed-demo MVP:** one server, one graphical spectator, one
+encrypted Admin connection; 3 services, 60 coal, £1,022 revenue with fresh P07
+reporting and cleanup (E1). Standalone delivery is proven by Attempt 4
+(20 units, verified receipt) and planner-driven delivery by Attempt 9 (20 coal
+units, attributed payment); Attempt 12 delivered two P05-selected services in one
+world. Canonical create/reload correspondence is E2.
+
+**Corridor construction and census:** corridor/stops/depot construction PROVEN for
+exactly the reviewed v3 scope (E35); the D5 A0 survey and A1 corridor extension are
+VERIFIED with the receipt-bound after-save `3748e00c…5420bd` (E40, E44); the
+acceptance census lifecycle returned `SURVEY_COMPLETION_VERIFIED` (E49). Corridor
+construction proves infrastructure build, not cargo delivery.
+
+**Phase B closure and regression state:** Phase B is fully closed (T-030 → T-034,
+E182–E195), including five complete native economy years 1951–1955 observed through
+the canonical continuous pipeline (`CANONICAL_FIVE_YEAR_CONTINUOUS_VERIFIED`, E193)
+and the standing full 15.3 regression gate at the Phase B closure HEAD (E195).
+The first full-suite baseline of record is E207 (57 failed / 54 skipped, exit 1 at
+`74c8152` — unchanged, never relabeled). The post-disposition verification run of
+record is **green: 6327 passed / 55 skipped / 0 failed / 0 errors, exit 0**
+(E208; command of record in `REPRODUCE.md`; the 55th skip is the single typed seal
+from ticket 07's disposition).
+
+**Open disclosures (all standing, nothing relabeled):**
+
+- **E36 remains OPEN:** no corridor DELIVERED receipts exist. Every corridor
+  cargo-flow round executed natively terminated `NATIVE_CARGOFLOW2_COMPLETE` with
+  the verdict `CARGOFLOW2_LOADED_NEVER_DELIVERED` (E124, E133, E134); the diagnosis
+  of record is the plan's ladder composition, not a world or machinery defect
+  (E128). Closure still requires valid native DELIVERED receipts; the rule is
+  unchanged. See the disclose-only statement in
+  `docs/PROJECT_CLOSURE_PLAN.md` §3.1.
+- **FD-C-2 and Phase C remain `INCOMPLETE_EVIDENCE`** (E142, re-confirmed E204);
+  attempts 1–7 ended in typed terminals (E150–E157, E197).
+- **Random-world delivery is UNPROVEN:** the seed battery was consumed with its bar
+  honestly not met (E198–E201); the seed-7 plan exposed the observation-window
+  boundary, and any window redesign is a fresh operator decision.
+- **OPEX, ROI, and profitability remain UNKNOWN** (ADR-0001 decision D5: revenue is
+  never reported as profit). Consolidated CAPEX £8,858 and per-attempt revenues are
+  OBSERVED; margins are DERIVED (E194).
+- **GUI capability probes are VERIFIED (E170, E180), but the GUI product scope owed
+  by E148/E149 is unbuilt** and remains a separate operator decision.
+
+**Phase D status:** the scope proposal was operator-approved at M0 (2026-11-12,
+`docs/phase-d-scope-proposal-2026-11-12.md`); the offline M1 quality floor is
+discharged (E208). The native rounds (tickets 24–26 battery seeds 11/12/13,
+27–28 delivered-class candidate/contingency, 29 GUI capstone; total budget ≤ 8
+launches) are **optional future work under per-round explicit grants — not
+automatic MVP handover blockers.** The offline M2 backbone (tickets 12–23) is
+likewise not an MVP handover requirement.
+
+Phase A is terminally closed (E127) carrying E36 and E114 (twin-vs-native
+cross-reality UNKNOWN). Full capability classification:
+`docs/CUSTOMER_HANDOVER_GAP_ANALYSIS.md`; evidence rows E1–E208:
+`EVIDENCE_INDEX.md`.
 
 ## Architecture
 

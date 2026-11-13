@@ -132,10 +132,13 @@ def _assert_seam_counts(name, value):
             )
 
 
-def stage_random(out: dict[str, bytes], budgets: dict) -> dict[str, bytes]:
+def stage_random(
+    out: dict[str, bytes], budgets: dict, *, seam_requests: int | None = None
+) -> dict[str, bytes]:
     """Compose from the proven serial executor, changing only explicit profile seams."""
     budget = DemoBudgets.from_sealed(budgets)
     limit = min(budget.max_services, budget.max_vehicles)
+    seam = f"drequests>={seam_requests if seam_requests is not None else 29 * limit}".encode()
     for seam_name in (
         "delivery.nut",
         "network-parent.nut",
@@ -156,7 +159,7 @@ def stage_random(out: dict[str, bytes], budgets: dict) -> dict[str, bytes]:
     )
     main = main.replace(b"services.len()>=3", f"services.len()>={limit}".encode())
     main = main.replace(b"services.len()>3", f"services.len()>{limit}".encode())
-    main = main.replace(b"drequests>=87", f"drequests>={29 * limit}".encode())
+    main = main.replace(b"drequests>=87", seam)
     out = dict(out, **{"main.nut": main})
     for name in (
         "delivery.nut",
@@ -185,7 +188,7 @@ def stage_random(out: dict[str, bytes], budgets: dict) -> dict[str, bytes]:
             b"GSMap.GetTileX(t)<1||GSMap.GetTileY(t)<1||"
             b"GSMap.GetTileX(t)>254||GSMap.GetTileY(t)>254",
         )
-        value = value.replace(b"drequests>=87", f"drequests>={29 * limit}".encode())
+        value = value.replace(b"drequests>=87", seam)
         value = value.replace(
             b"planner_requests>=1168",
             f"planner_requests>={budget.supplemental_request_limit}".encode(),

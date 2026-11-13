@@ -240,6 +240,7 @@ def test_real_failure_save_seam_ignores_prior_script_fatal_only(tmp_path, monkey
         _prepared = prepared
         health = NativeBackend.health
         _check_logs = NativeBackend._check_logs
+        _scan_fatal = NativeBackend._scan_fatal
 
         async def launch(self, value):
             self.health()

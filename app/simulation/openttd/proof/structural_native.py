@@ -322,7 +322,7 @@ class StructuralNativeBackend(CargoPageNativeBackend):
         deadline = time.monotonic() + 10
         while True:
             self.health()
-            raw = prepared.spec.stderr_path.read_bytes()
+            raw = prepared.spec.stderr_path.read_bytes()[getattr(self, "stderr_window", 0) :]
             evidence = parser(raw, request.request_id)
             if len(evidence.ordered_sequence) == 4:
                 await self.secure_connection.require_quiescent()

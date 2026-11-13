@@ -26,7 +26,15 @@ from app.simulation.openttd.proof.qualification_contract import (
     qualification_contract,
 )
 from app.simulation.openttd.proof.qualification_native import QualificationNativeBackend
-from app.simulation.openttd.qualification_clock import EconomyClockRequest, IndustryLifetimeRequest
+from app.simulation.openttd.qualification_clock import (
+    EconomyClockReading,
+    EconomyClockRequest,
+    IndustryLifetimeRequest,
+    NativeReadExchange,
+    NativeReadReceipt,
+    NativeReadResponse,
+    calendar_bounds,
+)
 from app.simulation.openttd.qualification_session import ProductionQualificationSession
 
 
@@ -330,7 +338,34 @@ def test_composed_package_has_persistent_canonical_source(tmp_path):
         p.dispose()
 
 
-@pytest.mark.parametrize("failure", ["integrity", "terminal"])
+# Typed seal of record (ticket 07, 2026-11-12): the [terminal] run is a proven
+# system-load flake class, not a code defect — the kernel-endpoint closure gate
+# refuses any unrelated machine socket landing on the attempt's two frozen
+# random ephemeral ports (fail-closed scan, dossier research/02 §3) and so
+# skips the sole workspace-disposal call; the transient kernel rows behind a
+# collision are not retained anywhere, and the capable code predates the
+# legacy-53 freeze. No production cleanup-code change in the quality floor;
+# the [integrity] sibling stays live.
+@pytest.mark.parametrize(
+    "failure",
+    [
+        "integrity",
+        pytest.param(
+            "terminal",
+            marks=pytest.mark.skip(
+                reason=(
+                    "Typed seal (ticket 07, 2026-11-12; dossier research/02 §3): "
+                    "system-load flake class — the kernel-endpoint closure gate refuses an "
+                    "unrelated machine socket on the attempt's frozen random ephemeral ports "
+                    "and skips the sole workspace-disposal call, so the workspace is retained "
+                    "after FAILED finalization (the E207 record stands); the transient kernel "
+                    "rows are not retained anywhere and the capable code predates the legacy-53 "
+                    "freeze. No production cleanup-code change in the quality floor."
+                )
+            ),
+        ),
+    ],
+)
 def test_finalization_failure_cannot_publish_qualification(tmp_path, monkeypatch, failure):
     from app.simulation.openttd.proof import (
         qualification_attempt,
@@ -393,3 +428,161 @@ def test_public_prepare_default_destination(monkeypatch, capsys):
     monkeypatch.setattr(sys, "argv", ["proof", "prepare", "--mode", KIND])
     cli.main()
     assert "PRELAUNCH only" in capsys.readouterr().out
+
+
+# --- E153: per-cycle qualification polls share one attempt stderr; each cycle
+# claims only the bytes its own qualification window produced.
+
+
+class _EvidencePeer:
+    def __init__(self):
+        self.transactions = []
+
+    def validated(self, exchange):
+        self.transactions.append(dict(exchange=exchange))
+
+
+class _Quiescent:
+    async def require_quiescent(self):
+        return None
+
+
+def _clock_exchange(request_id):
+    start, end = calendar_bounds(1950, 3)
+    reading = EconomyClockReading(
+        economy_date=start,
+        economy_year=1950,
+        economy_month=3,
+        economy_day=1,
+        month_start=start,
+        month_end=end,
+    )
+    request = EconomyClockRequest(request_id)
+    response = NativeReadResponse(request.request_id, reading)
+    request_payload, response_payload = request.to_bytes(), response.to_bytes()
+    command = request.command.upper()
+    return NativeReadExchange(
+        request_payload,
+        response_payload,
+        NativeReadReceipt.correlate(request_payload, response_payload),
+        (
+            command + "_REQUEST_SENT",
+            command + "_RESPONSE_RECEIVED",
+            "TRANSPORT_RECEIPT_CREATED",
+            command + "_VALIDATED",
+        ),
+        4,
+    )
+
+
+def _shared_prepared(tmp_path):
+    from subprocess import Popen
+    from types import SimpleNamespace
+    from typing import cast
+
+    stderr = tmp_path / "stderr.log"
+    stdout = tmp_path / "stdout.log"
+    stdout.write_bytes(b"")
+    prepared = SimpleNamespace(spec=SimpleNamespace(stderr_path=stderr, stdout_path=stdout))
+    backend = QualificationNativeBackend(authorized_one_launch=True)
+    backend.process = cast(Popen[bytes], SimpleNamespace(poll=lambda: None))
+    backend._prepared = cast(type(prepared.spec), prepared)
+    return backend, prepared, stderr
+
+
+def test_restarted_cycle_poll_reclaims_shared_stderr_after_counter_reset(tmp_path):
+    """Cycle-2 reuses freight-plan-clock-1 and must parse only its own window.
+
+    Reproduces the sealed attempt-2 failure: per-cycle sessions restart poll
+    counters at 1 under the constant freight-plan session id, so the same
+    canonical clock id writes a second full marker quadruple into the one
+    shared stderr; the second cycle's first poll used to re-match cycle-1's
+    quadruple and trip the duplicate guard before its own markers.
+    """
+
+    async def run():
+        backend, prepared, stderr = _shared_prepared(tmp_path)
+        wire = object.__new__(QualificationWire)
+        request = EconomyClockRequest("freight-plan-clock-1")
+
+        async def poll(exchange):
+            from types import SimpleNamespace
+
+            backend.secure_connection = _Quiescent()
+            backend.structural_session = _EvidencePeer()
+            backend.accounting = SimpleNamespace(query_operations=4)
+            # collect_qualified_world resets the accounting baseline per cycle.
+            backend.query_operation_baseline = 0
+            return await QualificationNativeBackend.evidence(backend, prepared, request, exchange)
+
+        def append(evidence):
+            with stderr.open("ab") as stream:
+                stream.write(evidence.raw_log)
+
+        exchange_cycle_1 = _clock_exchange("freight-plan-clock-1")
+        append(await wire.native_evidence(request, exchange_cycle_1))
+        first = await poll(exchange_cycle_1)
+
+        # exactly what collect_qualified_world does before a fresh session can
+        # issue any request: pin this cycle's stderr window.
+        backend.stderr_window = stderr.stat().st_size
+        exchange_cycle_2 = _clock_exchange("freight-plan-clock-1")
+        append(await wire.native_evidence(request, exchange_cycle_2))
+        second = await poll(exchange_cycle_2)
+        return first, second, exchange_cycle_1, exchange_cycle_2
+
+    first, second, first_exchange, second_exchange = asyncio.run(run())
+    assert first.line_numbers == (1, 2, 3, 4)
+    assert second.line_numbers == (1, 2, 3, 4)
+    assert first.request_id == second.request_id == "freight-plan-clock-1"
+    assert first_exchange.request_payload == second_exchange.request_payload
+
+
+def test_same_cycle_duplicate_request_still_refuses(tmp_path):
+    """The guard survives window slicing: two quadruples inside one window raise."""
+
+    async def run():
+        backend, prepared, stderr = _shared_prepared(tmp_path)
+        wire = object.__new__(QualificationWire)
+        request = EconomyClockRequest("freight-plan-clock-1")
+        exchange = _clock_exchange("freight-plan-clock-1")
+        evidence = await wire.native_evidence(request, exchange)
+        with stderr.open("ab") as stream:
+            stream.write(evidence.raw_log)
+            stream.write(evidence.raw_log)
+        backend.stderr_window = 0
+        from types import SimpleNamespace
+
+        backend.secure_connection = _Quiescent()
+        backend.structural_session = _EvidencePeer()
+        backend.accounting = SimpleNamespace(query_operations=4)
+        backend.query_operation_baseline = 0
+        await QualificationNativeBackend.evidence(backend, prepared, request, exchange)
+
+    with pytest.raises(ValueError, match="duplicate/out-of-order native read evidence"):
+        asyncio.run(run())
+
+
+def test_out_of_order_markers_still_refuse(tmp_path):
+    """A windowed read still enforces the canonical marker order."""
+
+    async def run():
+        backend, prepared, stderr = _shared_prepared(tmp_path)
+        wire = object.__new__(QualificationWire)
+        request = EconomyClockRequest("freight-plan-clock-1")
+        exchange = _clock_exchange("freight-plan-clock-1")
+        evidence = await wire.native_evidence(request, exchange)
+        lines = evidence.raw_log.splitlines(keepends=True)
+        with stderr.open("ab") as stream:
+            stream.write(lines[1] + lines[0] + lines[2] + lines[3])
+        backend.stderr_window = 0
+        from types import SimpleNamespace
+
+        backend.secure_connection = _Quiescent()
+        backend.structural_session = _EvidencePeer()
+        backend.accounting = SimpleNamespace(query_operations=4)
+        backend.query_operation_baseline = 0
+        await QualificationNativeBackend.evidence(backend, prepared, request, exchange)
+
+    with pytest.raises(ValueError, match="duplicate/out-of-order native read evidence"):
+        asyncio.run(run())

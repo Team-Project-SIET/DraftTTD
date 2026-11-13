@@ -16,7 +16,12 @@ from app.demo_operations import (
     terminal_status,
     write_operational_report,
 )
-from app.demo_random import DemoBudgets, RandomWorldSettings, prepare_random
+from app.demo_random import (
+    DemoBudgets,
+    RandomWorldSettings,
+    diagnostic_status,
+    prepare_random,
+)
 from app.simulation.openttd.proof import freight_delivery as native
 from app.simulation.openttd.proof.harness import BINARY_SHA256, PROJECT, sha256
 from app.simulation.openttd.runtime.config import RuntimeWorkspace
@@ -80,6 +85,54 @@ def show_results(directory):
     print("Operating costs / ROI: UNKNOWN. These are short delivery batches.", flush=True)
 
 
+def pipeline_stage(directory, elapsed=0.0):
+    """Furthest completed backend stage, from the progress markers the native
+    runner already writes between exchanges. The watcher prints this instead of
+    a static waiting line, so a slow or blocked run names its exact stage and
+    keeps the honest ``operational samples UNKNOWN`` label until a plan exists.
+    Markers are staged non-atomically of record: a mid-write file reads as
+    absent or malformed and is retried on the next watcher tick."""
+    diagnostic = directory / "planning-diagnostic.json"
+    if diagnostic.is_file():
+        try:
+            value = json.loads(diagnostic.read_bytes())
+        except json.JSONDecodeError:
+            return None
+        return "FAILED: " + diagnostic_status(value)
+    if (directory / "qualified.sav").is_file():
+        return (
+            "Qualified world saved; P05 bounded optimizer selecting services; "
+            f"elapsed {elapsed:.0f}s; operational samples UNKNOWN."
+        )
+    candidates = directory / "network-candidates.json"
+    if candidates.is_file():
+        try:
+            total = len(json.loads(candidates.read_bytes())["relationships"])
+            captured = len(list(directory.glob("network-facts-*.json")))
+        except json.JSONDecodeError, KeyError, TypeError:
+            pass
+        else:
+            return (
+                f"Capturing bounded planning facts {captured}/{total} relationships; "
+                f"elapsed {elapsed:.0f}s; operational samples UNKNOWN."
+            )
+    for message, markers in (
+        (
+            "World qualified; P08 bounded relationship discovery running",
+            ("qualification-session.json", "world-planning-observation.json"),
+        ),
+        (
+            "Qualification running; native economy-month rollover waits",
+            ("qualification-log-window.json",),
+        ),
+        ("World launched; qualification preparing", ("before.sav",)),
+        ("Run claimed; native world launching", ("CLAIM.json",)),
+    ):
+        if any((directory / marker).is_file() for marker in markers):
+            return f"{message}; elapsed {elapsed:.0f}s; operational samples UNKNOWN."
+    return f"Staging the native run; elapsed {elapsed:.0f}s; operational samples UNKNOWN."
+
+
 class Viewer:
     """Own only the GUI client launched for this run; never touch a user's client."""
 
@@ -90,8 +143,10 @@ class Viewer:
         self.process = None
         self.log = None
         self.watcher = None
+        self.backend = None
 
     async def ready(self, backend, prepared):
+        self.backend = backend
         self.watcher = asyncio.create_task(self.progress(prepared.directory))
         if self.headless:
             print("Headless mode: GUI/playability is not being tested.", flush=True)
@@ -135,13 +190,30 @@ class Viewer:
                 f"see {self.root / 'client/client.log'}"
             )
 
+    def check_client_exit(self):
+        """Typed client-exit classification of record (spec §1/§3.3): the
+        operator's window close is the soft ended-by-operator end; a crashed
+        client stays the honest typed failure of E140's shape."""
+        code = None if self.process is None else self.process.poll()
+        if code is None:
+            return
+        if code == 0:
+            message = "spectator window closed by operator (client exited 0)"
+            if self.backend is not None:
+                self.backend.client_soft = message
+            raise native.OperatorWindowClosed(message)
+        raise RuntimeError(
+            f"Graphical client exited ({code}); see {self.root / 'client/client.log'}"
+        )
+
     async def progress(self, directory):
+        started = asyncio.get_running_loop().time()
         shown = set()
         service_count = 0
         previous_status = None
         last_status_time = 0.0
         while True:
-            self.require_alive()
+            self.check_client_exit()
             if "plan" not in shown:
                 try:
                     rows = selections(directory)
@@ -173,17 +245,17 @@ class Viewer:
                     previous_status = status
                     last_status_time = now
             elif asyncio.get_running_loop().time() - last_status_time >= 10:
-                print(
-                    "Waiting for qualified world and P08/P05 plan; operational samples UNKNOWN.",
-                    flush=True,
-                )
-                last_status_time = asyncio.get_running_loop().time()
+                now = asyncio.get_running_loop().time()
+                stage = pipeline_stage(directory, now - started)
+                if stage is not None:
+                    print(stage, flush=True)
+                    last_status_time = now
             await asyncio.sleep(0.5)
 
     async def delivered(self, backend, prepared):
         if self.watcher is not None and self.watcher.done():
             await self.watcher  # Surface a client startup/runtime failure.
-        self.require_alive()
+        self.check_client_exit()
         show_results(prepared.directory)
         if self.headless or self.view_seconds == 0:
             return
@@ -336,6 +408,14 @@ def run_demo(
         (output / "loops.md").write_text("\n".join(lines) + "\n")
         print(f"Loop results: {output / 'loops.md'}", flush=True)
         return 0 if result["status"] == "NATIVE_LOOP_DELIVERED_VERIFIED" else 1
+    if result["status"] == "ENDED_BY_OPERATOR":
+        print(
+            f"Spectator window closed by operator; run ended softly "
+            f"(ended-by-operator, never a system failure). "
+            f"Sealed receipts and cleanup records: {root}",
+            flush=True,
+        )
+        return 0
     print(f"Demo failed: {result.get('error', result['status'])}. Logs: {root}", file=sys.stderr)
     return 1
 
