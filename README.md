@@ -2,7 +2,7 @@
 
 ![nameOfProduct (Alt Text)](<Patch.png>)
 
-## system architure ที่ตั้งใจอยากให้เป้น
+## system architure ที่ตั้งใจอยากให้เป็น
 
 ![system arch (Alt Text)](<sysarch.png>)
 
