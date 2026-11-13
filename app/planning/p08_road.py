@@ -413,14 +413,19 @@ def generate_road_scenario(
             # the aggregate expansion budget for an identical full component
             # sweep the reachability pass already ran once.
             continue
+        # The 2048-tile capture profile widened regions eightfold past the
+        # expansion bound calibrated at the 256-tile scale (16x256), so a
+        # per-pair BFS sweep can exhaust it while the completed reachability
+        # sweep above already holds real supported witnesses. Reserve each
+        # BFS's worst case (one expansion per vacant tile) and fall back to
+        # the complete supported-graph witness candidates instead of typing
+        # a masking SEARCH_LIMIT_EXCEEDED; the reachability sweep's own
+        # budget still fails closed above, and every recorded expansion
+        # count stays inside the bound.
+        if expansions + len(tiles) > MAX_PATH_EXPANSIONS:
+            break
         path, work = shortest_path(a, z, tiles, value.manifest.width_tiles)
         expansions += work
-        if expansions > MAX_PATH_EXPANSIONS:
-            return NoRoadScenario(
-                RoadOutcome.SEARCH_LIMIT_EXCEEDED,
-                "aggregate path expansion bound exceeded",
-                value,
-            )
         if len(path) < 3:
             continue
         if not (CORRIDOR_INTERIOR_MIN <= len(path) - 2 <= CORRIDOR_INTERIOR_MAX):
