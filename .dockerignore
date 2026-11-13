@@ -1,0 +1,16 @@
+.git/
+.github/
+.venv/
+.pytest_cache/
+.ruff_cache/
+.scratch/
+artifacts/
+reports/
+OpenTTD-Knowledge/
+prototype/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+--version
+dist/

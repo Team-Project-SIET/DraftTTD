@@ -1,0 +1,113 @@
+name: CD — Build, Stage & Verify Deployment
+
+on:
+  push:
+    branches:
+      - main
+      - devmodule2
+      - "Rarekk/**"
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-stage:
+    name: Build Wheel & Hermetic Release Bundle
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python 3.14
+        run: uv python install 3.14.6
+
+      - name: Build Python sdist and wheel
+        run: uv build
+
+      - name: Stage GameScript & Security release bundle
+        run: |
+          mkdir -p dist/release-bundle/gamescript
+          mkdir -p dist/release-bundle/security-docs
+          cp -r app/simulation/openttd/freight_delivery_package/* dist/release-bundle/gamescript/
+          cp docs/security/*.md dist/release-bundle/security-docs/
+          cp dist/*.whl dist/*.tar.gz dist/release-bundle/
+          (cd dist/release-bundle && find . -type f ! -name "SHA256SUMS.txt" | sort | xargs sha256sum > SHA256SUMS.txt)
+          cat dist/release-bundle/SHA256SUMS.txt
+
+      - name: Upload staged release bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: logistics-optimizer-release-${{ github.sha }}
+          path: dist/release-bundle/
+          retention-days: 30
+
+  container-deploy-verify:
+    name: Containerize & Verify Clean-Room Deployment
+    runs-on: ubuntu-latest
+    needs: build-and-stage
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download release bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: logistics-optimizer-release-${{ github.sha }}
+          path: staged-release/
+
+      - name: Verify SHA-256 release bundle integrity (CWE-354)
+        run: |
+          (cd staged-release && sha256sum -c SHA256SUMS.txt)
+
+      - name: Install uv for clean-room wheel verification
+        uses: astral-sh/setup-uv@v5
+
+      - name: Verify clean-room wheel installation & CLI
+        run: |
+          uv venv /tmp/clean-deploy-venv --python 3.14.6
+          uv pip install --python /tmp/clean-deploy-venv/bin/python staged-release/*.whl
+          /tmp/clean-deploy-venv/bin/transport-experiment --help > deployment-receipt.txt
+          /tmp/clean-deploy-venv/bin/python -m app.openttd_demo plan >> deployment-receipt.txt
+
+      - name: Validate Docker Compose database topology
+        run: |
+          POSTGRES_DB=softdev2 \
+          POSTGRES_USER=softdev2 \
+          POSTGRES_PASSWORD=ci_placeholder \
+          POSTGRES_PORT=5432 \
+          PGADMIN_DEFAULT_EMAIL=admin@example.com \
+          PGADMIN_DEFAULT_PASSWORD=ci_placeholder \
+          PGADMIN_PORT=5050 \
+          docker compose config --quiet
+
+      - name: Build production Docker container
+        run: |
+          docker build -t logistics-optimizer:${{ github.sha }} -t logistics-optimizer:latest .
+
+      - name: Run containerized deployment smoke test
+        run: |
+          docker run --rm logistics-optimizer:latest plan | tee -a deployment-receipt.txt
+
+      - name: Publish CD installation summary
+        run: |
+          echo "### CD Deployment & Installation Proof" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Image:** \`logistics-optimizer:${{ github.sha }}\` (non-root user \`appuser\`)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Bundle Integrity:** \`sha256sum -c SHA256SUMS.txt\` PASSED" >> "$GITHUB_STEP_SUMMARY"
+          echo '```text' >> "$GITHUB_STEP_SUMMARY"
+          cat deployment-receipt.txt >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload deployment receipt artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cd-deployment-receipt-${{ github.sha }}
+          path: deployment-receipt.txt
+          retention-days: 30

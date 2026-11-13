@@ -1,0 +1,123 @@
+name: CI — Lint, Security & Offline Verification
+
+on:
+  push:
+    branches:
+      - main
+      - devmodule2
+      - "Rarekk/**"
+      - "feature/**"
+  pull_request:
+    branches:
+      - main
+      - devmodule2
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-and-hygiene:
+    name: Static Analysis & Security Hygiene
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python 3.14
+        run: uv python install 3.14.6
+
+      - name: Install locked dependencies
+        run: uv sync --locked --dev
+
+      - name: Check Git diff hygiene
+        run: git diff --check
+
+      - name: Verify security documentation & authority files
+        run: |
+          test -f docs/security/README.md
+          test -f docs/security/threat-model-dfd.md
+          test -f docs/security/risk-register.md
+          test -f docs/security/secure-coding-standards.md
+          test -f docs/security/traceability-matrix.md
+          test -d docs/authority
+
+      - name: Run Ruff lint on core modules
+        run: |
+          uv run ruff check \
+            app/planning \
+            app/experiments \
+            app/database \
+            app/config.py \
+            app/openttd_demo.py \
+            app/demo_operations.py \
+            app/demo_random.py \
+            app/demo_random_native.py \
+            app/demo_smoke_preflight.py
+
+  offline-test-suite:
+    name: Offline Planning, Crypto & Protocol Tests
+    runs-on: ubuntu-latest
+    needs: lint-and-hygiene
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python 3.14
+        run: uv python install 3.14.6
+
+      - name: Install locked dependencies
+        run: uv sync --locked --dev
+
+      - name: Run deterministic offline, crypto & planning suites
+        run: |
+          uv run pytest -v --junitxml=ci-test-results.xml \
+            tests/test_ed25519_cryptography.py \
+            tests/test_ed25519_rfc8032.py \
+            tests/test_secure_admin.py \
+            tests/test_secure_admin_crypto.py \
+            tests/test_admin_protocol.py \
+            tests/test_admin_session.py \
+            tests/test_planning.py \
+            tests/test_planning_optimizer.py \
+            tests/test_gamescript_protocol.py \
+            tests/test_gamescript_transport.py \
+            tests/test_demo_random.py \
+            tests/test_random_capture_schema.py \
+            tests/test_demo_operations.py \
+            tests/test_execution_domain.py \
+            tests/test_database_core.py \
+            tests/test_experiments.py
+
+      - name: Verify CLI offline planner entrypoint
+        run: |
+          uv run python -m app.openttd_demo plan
+
+      - name: Publish test summary
+        if: always()
+        run: |
+          echo "### CI Verification Report" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Toolchain:** Python 3.14.6 + \`uv sync --locked\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Scope:** Offline planning, Ed25519/Monocypher crypto, protocol & DB core" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Native Gate:** OpenTTD binary launch disabled (user-gated)" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload JUnit test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-junit-report
+          path: ci-test-results.xml
+          retention-days: 14
