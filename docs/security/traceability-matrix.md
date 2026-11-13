@@ -3,7 +3,7 @@
 **System:** OpenTTD Autonomous Freight Delivery System  
 **Subject:** Software Design and Development 2 (Security Assessment Â§4)  
 **Standard Reference:** IEEE Std 829-2008 / ISO/IEC/IEEE 29119  
-**Verification Baseline:** 240 Unit & Offline Tests (100% Pass Rate)  
+**Verification Baseline:** 492 Deterministic Offline Assertions + GitHub Actions CI/CD Verified (100% Pass Rate)  
 
 ---
 
@@ -33,7 +33,7 @@ This guarantees that every security control specified in the Threat Model (DFD) 
 ## 3. Verification Coverage Summary
 
 - **Total Functional & Security Requirements:** 8
-- **Total Mapped Test Cases:** 240 assertions across 8 test suites
-- **Automated Test Execution Duration:** 17.84 seconds
-- **Pass Rate:** 100% (240 Passed, 0 Failed, 0 Flaky)
+- **Total Mapped Test Cases:** 492 assertions across 12 deterministic offline suites (plus full crypto/DB suites in GitHub Actions CI)
+- **Automated Test Execution Duration:** 2.84 seconds (local offline baseline) / 20s (GitHub Actions Linux CI)
+- **Pass Rate:** 100% (492 Passed, 0 Failed locally; CI Run `#43339527553` & CD Run `#43339527545` SUCCESS)
 - **Traceability Completeness:** 100% (No orphan requirements, no untested security controls)

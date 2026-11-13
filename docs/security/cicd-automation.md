@@ -99,3 +99,14 @@ Observed Output:
 - On the local Windows host, Windows Application Control policy blocks loading the native `monocypher` `.pyd` DLL (`ImportError: DLL load failed while importing monocypher`).
 - On GitHub Actions (`ubuntu-latest`) and inside the Debian Bookworm `Dockerfile` runtime, `pymonocypher==4.0.3.2` and `openttdlab==0.0.75` install cleanly via `uv sync --locked` without OS DLL restrictions, allowing full crypto and CLI smoke tests to execute natively.
 - Native OpenTTD binary launch (`--run-openttd`) remains strictly user-gated and is never invoked automatically in CI/CD.
+
+---
+
+## 5. Verified GitHub Actions Remote Execution (Commit `9850aa2`)
+
+Both CI and CD pipelines executed on GitHub Actions (`ubuntu-latest`) on branch `Rarekk/consolidated-delivery` and passed all stages:
+
+| Pipeline | Run ID | Jobs & Verification Steps | Result | Artifacts Generated |
+| :--- | :---: | :--- | :---: | :--- |
+| **CI** | `43339527553` | 1. Static Analysis & Security Hygiene (12s)<br>2. Offline Planning, Crypto & Protocol Tests (20s) | **SUCCESS** | `ci-junit-report` (6,741 bytes) |
+| **CD** | `43339527545` | 1. Build Wheel & Hermetic Release Bundle<br>2. Verify `SHA256SUMS.txt` Integrity (CWE-354)<br>3. Clean-Room Wheel Install & CLI Check<br>4. Docker Compose Config + Docker Build + Smoke Test | **SUCCESS** | `logistics-optimizer-release` (7,957,932 bytes)<br>`cd-deployment-receipt` (700 bytes) |

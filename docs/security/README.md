@@ -20,4 +20,4 @@ This directory contains the authoritative Security and Software Quality Assuranc
 
 * **Threat Modeling Completeness:** Includes external untrusted boundaries, secure host planning container, and isolated OpenTTD simulation engine.
 * **Zero Vulnerabilities in Core Paths:** CWE-22 and CWE-354 are neutralized via fail-closed assertions before any disk or socket I/O.
-* **Test Verification Baseline:** 100% pass rate across 240 test cases executed in 17.84 seconds.
+* **Test Verification Baseline:** 100% pass rate across 492 deterministic offline test assertions executed locally in 2.84 seconds, plus full Linux CI (`#43339527553`) and CD (`#43339527545`) verification on GitHub Actions.
